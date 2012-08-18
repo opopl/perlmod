@@ -1,0 +1,6 @@
+Revision history for Perl extension OP::Base.
+
+0.01  Sat Aug 18 13:11:07 2012
+	- original version; created by h2xs 1.23 with options
+		-XAn OP::Base
+
