@@ -1,3 +1,4 @@
+# package OP::Base; {{{
 package OP::Base;
 
 use 5.010001;
@@ -8,6 +9,7 @@ use warnings;
 use File::Basename;
 use Getopt::Long;
 use Pod::Usage;
+use FindBin;
 
 require Exporter;
 
@@ -20,28 +22,61 @@ our @ISA = qw(Exporter);
 # This allows declaration	use OP::Base ':all';
 # If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
 # will save memory.
-our %EXPORT_TAGS = ( 'all' => [ qw(
-	
-) ] );
 
-our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
+our %EXPORT_TAGS = ( 
+		# 'funcs' {{{
+		'funcs'		=> [ qw( 
+						eoo 
+						getopt 
+						gettime
+						printpod 
+						readarr 
+						readhash 
+						sbvars 
+						setfiles 
+						setsdata 
+						setcmdopts 
+						) ],
+		# }}}
+		# 'vars' 		{{{
+		'vars' 		=>  [ qw( 
+					$shd 
+					$this_script 
+					$ts 
+					$pref_eoo 
+					%files
+					%dirs
+					@cmdopts
+					$ncmdopts
+					@opthaspar
+					$cmdline
+					%opt
+					@optstr
+					@longopts
+					
+				) ] 
+		# }}}
+	);
 
-our @EXPORT = qw(
-	
-);
+
+our @EXPORT_OK = ( 
+		@{ $EXPORT_TAGS{'funcs'} },
+		@{ $EXPORT_TAGS{'vars'} }
+	);
+
+our @EXPORT = qw( );
 
 our $VERSION = '0.01';
 
-
 # Preloaded methods go here.
-
+# }}}
 # vars{{{
 
-my($this_script,$ts,$shd,$pref_eoo,@allowedpodoptions);
-my(%files,%sdata,@cmdopts,$ncmdopts,@opthaspar);
-my(%opt,@optstr,@longopts);
-my($cmdline);
-my(%shortlongopts);
+our($this_script,$ts,$shd,$pref_eoo,@allowedpodoptions);
+our(%files,%dirs,%sdata,@cmdopts,$ncmdopts,@opthaspar);
+our(%opt,@optstr,@longopts);
+our($cmdline);
+our(%shortlongopts);
 
 # }}}
 # subroutine declarations {{{
@@ -49,8 +84,9 @@ my(%shortlongopts);
 sub eoo;
 sub getopt;
 sub gettime;
-sub main;
 sub printpod;
+sub readarr;
+sub readhash;
 sub sbvars;
 sub setfiles;
 sub setsdata;
@@ -78,13 +114,13 @@ sub setsdata() {
 sub setcmdopts(){
   my($o,$otype);
   
-  @cmdopts=( 
-	{ name	=>	"h,help", 		desc	=>	"Print the help message"	}
-	,{ name	=>	"man", 			desc	=>	"Print the man page"		}
-	,{ name	=>	"examples", 	desc	=>	"Show examples of usage"	}
-	,{ name	=>	"i", 			desc	=>	"Short option"	}
-	#,{ cmd	=>	"<++>", 		desc	=>	"<++>", type	=>	"s"	}
-  );
+#  @cmdopts=( 
+	#{ name	=>	"h,help", 		desc	=>	"Print the help message"	}
+	#,{ name	=>	"man", 			desc	=>	"Print the man page"		}
+	#,{ name	=>	"examples", 	desc	=>	"Show examples of usage"	}
+	#,{ name	=>	"i", 			desc	=>	"Short option"	}
+	##,{ cmd	=>	"<++>", 		desc	=>	"<++>", type	=>	"s"	}
+  #);
   @opthaspar=qw( );
   $ncmdopts=scalar @cmdopts;
   for (my $iopt = 0; $iopt < $ncmdopts; $iopt++) {
@@ -103,6 +139,48 @@ sub setcmdopts(){
 }
 
 # }}}
+# eoo() {{{
+sub eoo(){ print "$pref_eoo $_[0]"; }
+# }}}
+# getopt() {{{
+
+sub getopt(){
+	
+	Getopt::Long::Configure(qw(bundling no_getopt_compat no_auto_abbrev no_ignore_case_always));
+	
+	if ( !@ARGV ){ 
+	  	pod2usage("Try '$this_script --help' for more information");
+		exit 0;
+	}else{
+		$cmdline=join(' ',@ARGV);
+		GetOptions(\%opt,@optstr);
+	}
+	foreach my $podo (@allowedpodoptions) {
+		&printpod("$podo");
+	}
+	foreach (@longopts) {
+		#if exists $shortlongopts{$_}
+		#$opt{$_}=
+	}
+	pod2usage(-input=> $files{pod}{help}, -verbose => 1) if $opt{help};
+	pod2usage(-input=> $files{pod}{help}, -verbose => 2) if $opt{man};
+	pod2usage(-input=> $files{pod}{examples}, -verbose => 2) if $opt{examples};
+	system("gvim -n -p $0") if $opt{vm};
+}
+
+#}}}
+# gettime () {{{
+
+sub gettime(){
+my @months = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
+my @weekDays = qw(Sun Mon Tue Wed Thu Fri Sat Sun);
+my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime();
+my $year = 1900 + $yearOffset;
+my $time = "$hour:$minute:$second, $weekDays[$dayOfWeek] $months[$month] $dayOfMonth, $year";
+return $time;
+}
+
+#}}}
 # printpod(){{{
 sub printpod(){
 	my $topic=shift;
@@ -154,47 +232,44 @@ sub printpod(){
 	close(POD);
 }
 # }}}
-# eoo() {{{
-sub eoo(){ print "$pref_eoo $_[0]"; }
+# readarr(){{{
+sub readarr(){
+ my $if=shift;
+ open(FILE,"<$if") || die $!;
+ my @vars;
+ while(<FILE>){
+ 	chomp;
+ 	s/^\s*//g;
+ 	s/\s*$//g;
+ 	next if (/^\s*#/ || /^\s*$/ );
+ 	my $line=$_;
+ 	my @F=split(' ',$line);
+ 	push(@vars,@F);
+ }
+ close(FILE);
+ return \@vars;
+}
 # }}}
-# getopt() {{{
-
-sub getopt(){
-	
-	Getopt::Long::Configure(qw(bundling no_getopt_compat no_auto_abbrev no_ignore_case_always));
-	
-	if ( !@ARGV ){ 
-	  	pod2usage("Try '$this_script --help' for more information");
-		exit 0;
-	}else{
-		$cmdline=join(' ',@ARGV);
-		GetOptions(\%opt,@optstr);
-	}
-	foreach my $podo (@allowedpodoptions) {
-		&printpod("$podo");
-	}
-	foreach (@longopts) {
-		#if exists $shortlongopts{$_}
-		#$opt{$_}=
-	}
-	pod2usage(-input=> $files{pod}{help}, -verbose => 1) if $opt{help};
-	pod2usage(-input=> $files{pod}{help}, -verbose => 2) if $opt{man};
-	pod2usage(-input=> $files{pod}{examples}, -verbose => 2) if $opt{examples};
+# readhash(){{{
+sub readhash(){
+ my $if=shift;
+ open(FILE,"<$if") || die $!;
+ my %hash;
+ while(<FILE>){
+ 	chomp;
+ 	s/^\s*//g;
+ 	s/\s*$//g;
+ 	next if (/^\s*#/ || /^\s*$/ );
+ 	my $line=$_;
+ 	my @F=split(' ',$line);
+	my $var=shift @F;
+	if (@F){ $hash{$var}=shift @F; }
+ }
+ close(FILE);
+ return \%hash;
 }
+# }}}
 
-#}}}
-# gettime () {{{
-
-sub gettime(){
-my @months = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
-my @weekDays = qw(Sun Mon Tue Wed Thu Fri Sat Sun);
-my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime();
-my $year = 1900 + $yearOffset;
-my $time = "$hour:$minute:$second, $weekDays[$dayOfWeek] $months[$month] $dayOfMonth, $year";
-return $time;
-}
-
-#}}}
 # setfiles() {{{
 sub setfiles() {
 	foreach my $podo (@allowedpodoptions) {
@@ -209,21 +284,28 @@ sub sbvars(){
  $shd=&dirname($0);
  $pref_eoo="$this_script>";
  @allowedpodoptions=qw( help examples );
+ %dirs=( 
+	 pod	 => "pod"
+ );
+ foreach my $k (keys %dirs) {
+ 	mkdir $dirs{$k};
+ }
 }
 # }}}
 # main() {{{
-sub main(){
-  &sbvars();
-  &setsdata();
-  &setfiles();
-  &setcmdopts();
-  &getopt();
-}
+#sub main(){
+  #&sbvars();
+  #&setsdata();
+  #&setfiles();
+  #&setcmdopts();
+  #&getopt();
+#}
 # }}}
 
 # }}}
 
 1;
+# POD documentation {{{
 __END__
 # Below is stub documentation for your module. You'd better edit it!
 
@@ -275,3 +357,4 @@ at your option, any later version of Perl 5 you may have available.
 
 
 =cut
+# }}}
