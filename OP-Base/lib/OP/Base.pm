@@ -1,4 +1,5 @@
 # package OP::Base; {{{
+
 package OP::Base;
 
 use 5.010001;
@@ -22,20 +23,40 @@ our @ISA = qw(Exporter);
 # This allows declaration	use OP::Base ':all';
 # If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
 # will save memory.
+# }}}
+# Export ... {{{
 
 our %EXPORT_TAGS = ( 
 		# 'funcs' {{{
 		'funcs'		=> [ qw( 
+						cmd_opt_add
+						is_const
+						is_log
 						eoo 
+						eoo_arr
+						eoolog
+					   	edelim	
+						evali
 						getopt 
 						gettime
+						open_files
 						printpod 
 						readarr 
 						readhash 
+						read_kw_file
+						read_all_vars
+						read_init_vars
+						read_const
+						read_TF
+						read_line_vars
+						skip_lines
+						read_line_char_array
 						sbvars 
 						setfiles 
 						setsdata 
 						setcmdopts 
+						uniq
+						toLower
 						) ],
 		# }}}
 		# 'vars' 		{{{
@@ -45,19 +66,23 @@ our %EXPORT_TAGS = (
 					$ts 
 					$pref_eoo 
 					%files
+					%eval_sw
 					%dirs
+					%arrays
 					@cmdopts
 					$ncmdopts
 					@opthaspar
 					$cmdline
 					%opt
+					%opts
+					%vars
+					%sdata
 					@optstr
 					@longopts
 					
 				) ] 
 		# }}}
 	);
-
 
 our @EXPORT_OK = ( 
 		@{ $EXPORT_TAGS{'funcs'} },
@@ -67,6 +92,7 @@ our @EXPORT_OK = (
 our @EXPORT = qw( );
 
 our $VERSION = '0.01';
+# }}}
 
 # Preloaded methods go here.
 # }}}
@@ -74,27 +100,381 @@ our $VERSION = '0.01';
 
 our($this_script,$ts,$shd,$pref_eoo,@allowedpodoptions);
 our(%files,%dirs,%sdata,@cmdopts,$ncmdopts,@opthaspar);
-our(%opt,@optstr,@longopts);
+our(%opt,%opts,@optstr,@longopts);
 our($cmdline);
+our(%cmd_opts);
+our(@constvars);
 our(%shortlongopts);
+our(%vars,%lgvars);
+our(%eval_sw);
+our(%arrays);
+
+# Types of log files
+our @logtypes=qw( log logtex ); 
+# Hash of filehandles
+our %fh;
+# Variable types, i.e. integer, logical etc.
+our %ftype;
 
 # }}}
 # subroutine declarations {{{
 
+sub cmd_opt_add;
 sub eoo;
+sub eoo_arr;
+sub eoolog;
+sub evali;
+sub edelim;
 sub getopt;
 sub gettime;
+sub open_files;
 sub printpod;
 sub readarr;
 sub readhash;
+sub read_kw_file;
+sub read_all_vars;
+sub read_init_vars;
+sub read_const;
+# 
+sub read_line_vars;
+sub skip_lines;
+sub read_line_char_array;
+# 
+sub read_TF;
 sub sbvars;
 sub setfiles;
 sub setsdata;
 sub setcmdopts;
+sub uniq;
+sub toLower;
 
 # }}}
 # subs {{{
 
+# evali() {{{
+sub evali() {
+	use DB;
+	my %O;
+	%O=(
+		pref	=>	"std.",
+		suff	=>	".i.pl",
+		dir		=>	"$shd"
+	);
+	while(@_){
+		my $key=shift;
+		if (@_){ $O{$key}=shift; }
+	}
+	my @evalfiles=@{$O{files}};
+	foreach(@evalfiles){ 
+			s/^/$O{pref}/g if $O{pref}; 
+			s/^/$O{dir}\//g if $O{dir}; 
+			s/$/$O{suff}/g if $O{suff}; 
+		}
+	foreach(@evalfiles){
+		open(RV,"<$_") || die $!; my $rv=do { local $/; <RV> }; close(RV);
+		eval "$rv";
+		die $@ if $@;
+	}
+	return 1;
+}
+	# }}}
+# eoo_arr(){{{
+sub eoo_arr(){
+	my $msg=shift;
+	my $arr=shift;
+	&eoo("$msg\n");
+	&eoo(" ");
+	foreach(@{$arr}) { print "$_ "; } print "\n";
+}
+# }}}
+# read_line_vars(){{{
+sub read_line_vars(){
+	local *A=shift;
+	my $listvars=shift;
+	my @F=split(<A>);
+	foreach(@$listvars){ $vars{$_}=shift @F; }
+}
+# }}}
+# skip_lines(){{{
+sub skip_lines(){
+	local *A=shift;
+	my $count=shift;
+	for(my $i=0;$i<$count;$i++){ my $line=<A>; }
+}
+# }}}
+# read_line_char_array(){{{
+sub read_line_char_array(){
+	local *A=shift;
+	my $name=shift;
+	my $line=<A>;
+	@{$arrays{$name}}=split('',$line);
+}
+# }}}
+# read_const(){{{
+sub read_const(){
+
+my @ifsconst=@{$files{constvars}};
+foreach (@ifsconst){ 
+	my $if=$_;
+	if (-e $if){
+		&eoolog("Reading in constant variables file:\n");
+		&eoolog("	$if\n");
+		open(F,"<$if") || die $!;
+		while(<F>){
+			chomp; next if ( /^\s*#/ || /^\s*$/ );
+			my @F=split(' ',uc($_));
+			push(@constvars,@F);
+		}
+		close(F);
+	}
+}
+
+&eoolog("Number of constant variables:\n");
+&eoolog(" " . scalar(@constvars) . "\n"); 
+}
+# }}}
+# read_TF(){{{
+sub read_TF(){
+
+# read in true/false values
+foreach my $switch (qw( false true )){
+	if (-e "$switch.rif.dat" ){
+		push(@{$files{$switch}},"$switch.rif.dat");
+	}
+	foreach (@{$files{$switch}}){
+		my $if=$_;
+		if (-e $if){
+			open(F,"<$if") || die "$!";
+				&eoos("Reading in $switch values from input file:\n");
+				&eoos("	$if\n");
+				while(<F>){
+					chomp; next if /^\s*#/ || /^\s*$/; 
+					foreach my $lvar_s (split(',',$_)){
+						my @F=split(' ',$lvar_s);
+						my $lvar=uc($F[0]); $lvar =~ s/\s*//g;
+						$vars{$lvar}=$eval_sw{$switch};
+						#print "$lvar\n" if $vars{$lvar};
+					}
+				}
+			close(F);
+		}
+	}
+}
+
+}
+# }}}
+# read_init_vars(){{{
+sub read_init_vars(){
+
+	my $var;
+	# read in initialized variable values 
+	if ($opts{rinit}){
+		open(IV,"<$files{initvars}") || die "$!";
+		&eoos("Reading in pre-initialized variable values...\n");
+		while(<IV>){
+			chomp;
+			next if /^\s*[!#](.*)$/;
+			my @F=split('=',$_);
+			$var=uc $F[0];
+			if ( &is_log($var) || &is_const($var) ){
+				$vars{$var}=&FU::eval_fortran($F[1]);
+			}
+		}
+		close(IV);
+	}
+}
+#}}}
+# read_all_vars() {{{
+sub read_all_vars(){
+
+if (-e $files{vars}){
+	&eoolog("Reading in the list of variables from $files{vars}\n");
+	open(V,"<$files{vars}") || die "$!";
+	while(<V>){
+		chomp; next if /^\s*!(.*)$/ || /^\s*$/;
+		s/^\s*//g; s/\s*$//g;
+		my @F=split('::',$_);
+		next if (scalar @F==1);
+	
+		my @Ft=split(',',$F[0]);
+		my @Fv=split(',',$F[1]);
+		my($var,$ft);
+		( $var=$Fv[0]) =~ s/[^\w]//g;
+		$var =~ s/=(.*)$//g; 
+		my $val=0;
+		$val=$1 if (defined($1));
+		$var =~ s/\s*//g;
+		$var=uc($var);
+		#$ftype{$var}=&get_ftype($Ft[0]);
+		( $ft=$Ft[0] ) =~ s/[^\w\s]//g; 
+		$ftype{$var}=$ft;
+		if ($ft =~ /^double precision/i ){
+			#$vars{$var}=0.0e0;	
+		}
+		elsif ($ft =~ /^logical/i ){
+			$vars{$var}=&FU::eval_fortran($val);
+			$lgvars{$var}=$vars{$var};	
+		}elsif ($ft =~ /^integer/i ){
+			#$vars{$var}=0;	
+		}elsif ($ft =~ /^character/i ){
+			#$vars{$var}=' ';	
+		}
+	}
+	close(V);
+}
+
+}
+# }}}
+# open_files(){{{
+sub open_files(){
+
+%files=( 
+	%files,
+	"log"			=> "$this_script.log",
+	"logtex"		=> "log.$this_script.tex"	
+);
+if ($opts{"logname"}){
+	$files{"log"}="$opts{logname}.log";
+	$files{"logtex"}="log.$opts{logname}.tex";
+}
+# File handle for the testing-log file 
+if ($opts{log}){
+	foreach(@logtypes){
+		if ($opts{appendlog}){
+			open($fh{$_},">>$files{$_}") || die $!;
+			&eoolog("Opening $_-file for appending:\n",echo=>1);
+			&eoolog("	$files{$_}\n",echo=>1);
+		}else{
+			open($fh{$_},">$files{$_}") || die $!;
+			&eoolog("Opening $_-file for write:\n",echo=>1);
+			&eoolog("	$files{$_}\n",echo=>1);
+		}
+	}
+}
+
+}
+# }}}
+# cmd_opt_add(){{{
+sub cmd_opt_add(){
+	my @mycmdopts=@{$_[0]};
+	my $type;
+	push(@cmdopts,@mycmdopts);
+	foreach my $opt(@mycmdopts){
+		$type=${$opt}{type} or $type='bool';
+		push(@{$cmd_opts{$type}},${$opt}{name});
+	}
+}
+# read_kw_file(){{{
+sub read_kw_file(){
+
+foreach my $type( qw(i s bool) ){
+	foreach(@{$cmd_opts{$type}}){ 
+		$opts{$_}=0; 
+	}
+}
+
+my $atype;
+if (-e $files{tkw}){
+	&eoos("Reading in options for the script from the input keyword file:\n",out=>1);
+	&eoos("	$files{tkw}\n",out=>1);
+	open(TKW,"<$files{tkw}") || die $!;
+	while(<TKW>){
+		chomp;
+		my @F;
+		if (/^\s*#\s*>>>\s*(\w+)opts/){
+			$atype=$1;
+		}else{
+			next if (/^\s*#/ || /^\s*$/);
+			@F=split(' ',$_);
+		}
+		if (@F){
+			if ($atype eq "bool"){
+				$opts{$F[0]}=1;
+			}else{
+				$opts{$F[0]}=$F[1];
+			}
+		}
+	}
+	close(TKW);
+}
+
+}
+# }}}
+# edelim(){{{
+
+sub edelim(){
+	my $sfin;
+	my $s="$_[0]";
+	my $num=$_[1];
+	$sfin=$s x $num . "\n";
+	&eoos($sfin);
+}
+# }}}
+# eoo() {{{
+sub eoo(){ print "$pref_eoo $_[0]"; }
+# }}}
+# eoolog() {{{
+sub eoolog(){
+	my $text=shift;
+	my $nopts=scalar @_;
+	my %o=@_;
+	my $printed=0;
+	my %sects=(
+		tex	=>	{		
+			head1	=> "chapter",
+			head2	=> "section",
+			head3	=> "subsection",
+			head4	=> "subsubsection"
+		}	
+	);
+
+	if ($o{echo}){
+    		print "#$pref_eoo> $text";
+		}
+	elsif (
+			defined($opts{log}) 
+			&& ($opts{log}) 
+			&& (defined $fh{log})
+			&& (defined $fh{logtex})
+		){
+		if (!$nopts){
+		}else{
+			if ((defined($o{out})) && $o{out}){
+	        	print "#$pref_eoo> $text";
+			}
+			if ((defined($o{sec})) && $o{sec}){
+	        	print {  $fh{logtex} } "\\$sects{tex}{$o{sec}}\{$pref_eoo: $text\}\n";
+				$printed=1;
+			}
+			if ((defined($o{begin_verbatim})) && $o{begin_verbatim}){
+	        	print {  $fh{logtex} } "\\begin\{verbatim\}\n";
+				$printed=1;
+			}
+			if ((defined($o{end_verbatim})) && $o{end_verbatim}){
+	        	print {  $fh{logtex} } "\\end\{verbatim\}\n";
+				$printed=1;
+			}
+			print {  $fh{logtex} } "\n" x $o{vspaces} if defined($o{vspaces});
+		}
+			if (!$printed){
+	        	print {  $fh{log} } "$pref_eoo> $text";
+	        	print {  $fh{logtex} } "$pref_eoo> $text";
+			}
+	}else{
+		if ((!$nopts) || ($o{out})){
+    		print "#$pref_eoo> $text";
+		}
+	}
+}
+	# }}}
+# uniq() {{{
+sub uniq() {
+   my(@words,%h);
+   %h  = map { $_ => 1 } @_;
+   @words=keys %h;
+   return @words;
+}
+#}}}
 # setsdata() {{{
 
 sub setsdata() {
@@ -139,13 +519,10 @@ sub setcmdopts(){
 }
 
 # }}}
-# eoo() {{{
-sub eoo(){ print "$pref_eoo $_[0]"; }
-# }}}
 # getopt() {{{
 
 sub getopt(){
-	
+
 	Getopt::Long::Configure(qw(bundling no_getopt_compat no_auto_abbrev no_ignore_case_always));
 	
 	if ( !@ARGV ){ 
@@ -166,9 +543,28 @@ sub getopt(){
 	pod2usage(-input=> $files{pod}{help}, -verbose => 2) if $opt{man};
 	pod2usage(-input=> $files{pod}{examples}, -verbose => 2) if $opt{examples};
 	system("gvim -n -p $0") if $opt{vm};
+	foreach my $k (keys %opt) {
+		$opts{$k}=$opt{$k};
+	}
 }
 
 #}}}
+# is_log() is_const (){{{
+
+sub is_log(){
+	my $var=shift;
+	if (defined($ftype{$var})){
+		return 1 if ($ftype{$var} =~ /^logical/i) ;
+	}
+	return 0;
+}
+
+sub is_const(){
+	my $var=shift;
+	return 1 if (grep { uc($var) eq $_ } @constvars );
+	return 0;
+}
+# }}}
 # gettime () {{{
 
 sub gettime(){
@@ -201,12 +597,12 @@ sub printpod(){
 			  	$o=$cmdopts[$iopt]{name};
 				my %argopt;
 				$argopt{type}="short" if ($o =~ m/^\w$/);
-				if ($o =~ m/^\s*(\w)\s*,\s*(\w+)\s*$/){
+				if ($o =~ m/^\s*([^\s,])\s*,\s*([^\s,])\s*$/){
 					$argopt{type}="mixed";
 					$argopt{short}=$1;
 					$argopt{long}=$2;
 				}
-				$argopt{type}="long" if ($o =~ m/^\s*(\w{2,})\s*$/);
+				$argopt{type}="long" if ($o =~ m/^\s*(\S{2,})\s*$/);
 				my $odesc=$cmdopts[$iopt]{desc};
 				if (grep { $o eq $_ } @opthaspar){
 				  $o.=" " . uc $o;
@@ -269,12 +665,12 @@ sub readhash(){
  return \%hash;
 }
 # }}}
-
 # setfiles() {{{
 sub setfiles() {
 	foreach my $podo (@allowedpodoptions) {
 		$files{pod}{$podo}="$sdata{sname}.$podo.pod";
 	}
+	$files{tkw}="$ts.kw.i.dat";
 }
 # }}}
 # sbvars(){{{
@@ -292,6 +688,14 @@ sub sbvars(){
  }
 }
 # }}}
+
+# &toLower(string); --- convert string into lower case
+sub toLower {
+   my($string) = $_[0];
+   $string =~ tr/A-Z/a-z/;
+   $string;
+}
+
 # main() {{{
 #sub main(){
   #&sbvars();
@@ -304,19 +708,26 @@ sub sbvars(){
 
 # }}}
 
+# Module initialization
+BEGIN { 
+	&sbvars();
+	&setsdata();
+	&setfiles();
+}
+
 1;
 # POD documentation {{{
+
 __END__
 # Below is stub documentation for your module. You'd better edit it!
 
 =head1 NAME
 
-OP::Base - Perl extension for blah blah blah
+OP::Base - Basic Perl functions and variables
 
 =head1 SYNOPSIS
 
   use OP::Base;
-  blah blah blah
 
 =head1 DESCRIPTION
 
@@ -329,8 +740,6 @@ Blah blah blah.
 =head2 EXPORT
 
 None by default.
-
-
 
 =head1 SEE ALSO
 
@@ -345,11 +754,11 @@ If you have a web site set up for your module, mention it here.
 
 =head1 AUTHOR
 
-op, E<lt>op@E<gt>
+Oleksandr Poplavskyy, E<lt>op@cantab.net<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2012 by op
+Copyright (C) 2012 by Oleksandr Poplavskyy
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.10.1 or,
