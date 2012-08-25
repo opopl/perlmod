@@ -10,6 +10,7 @@ use warnings;
 use File::Basename;
 use Getopt::Long;
 use Pod::Usage;
+use Data::Dumper;
 use FindBin;
 
 require Exporter;
@@ -37,6 +38,7 @@ our %EXPORT_TAGS = (
 						eoolog
 					   	edelim	
 						evali
+						eval_fortran
 						getopt 
 						gettime
 						open_files
@@ -48,6 +50,7 @@ our %EXPORT_TAGS = (
 						read_init_vars
 						read_const
 						read_TF
+						read_TF_cmd
 						read_line_vars
 						skip_lines
 						read_line_char_array
@@ -61,24 +64,27 @@ our %EXPORT_TAGS = (
 		# }}}
 		# 'vars' 		{{{
 		'vars' 		=>  [ qw( 
+					$cmdline
+					$ncmdopts
+					$pref_eoo 
 					$shd 
 					$this_script 
 					$ts 
-					$pref_eoo 
-					%files
-					%eval_sw
-					%dirs
 					%arrays
-					@cmdopts
-					$ncmdopts
-					@opthaspar
-					$cmdline
+					%cmd_opts
+					%dirs
+					%eval_sw
+					%files
+					%fh
 					%opt
 					%opts
-					%vars
 					%sdata
-					@optstr
+					%vars
+					@cmdopts
 					@longopts
+					@logtypes
+					@opthaspar
+					@optstr
 					
 				) ] 
 		# }}}
@@ -106,7 +112,11 @@ our(%cmd_opts);
 our(@constvars);
 our(%shortlongopts);
 our(%vars,%lgvars);
-our(%eval_sw);
+
+our %eval_sw=(
+	true	=>	1,
+	false	=>	0
+);
 our(%arrays);
 
 # Types of log files
@@ -124,6 +134,7 @@ sub eoo;
 sub eoo_arr;
 sub eoolog;
 sub evali;
+sub eval_fortran;
 sub edelim;
 sub getopt;
 sub gettime;
@@ -141,6 +152,7 @@ sub skip_lines;
 sub read_line_char_array;
 # 
 sub read_TF;
+sub read_TF_cmd;
 sub sbvars;
 sub setfiles;
 sub setsdata;
@@ -150,6 +162,20 @@ sub toLower;
 
 # }}}
 # subs {{{
+
+# read_TF_cmd() - read in true/false from command line {{{
+sub read_TF_cmd(){
+	foreach my $switch (qw(false true)){
+		if (defined($opt{$switch})){
+			my @F=split(",",$opt{switch});
+			foreach(@F){
+				$vars{uc($_)}=$eval_sw{$switch};
+			}
+		}
+	}
+}
+#}}}
+
 
 # evali() {{{
 sub evali() {
@@ -210,6 +236,19 @@ sub read_line_char_array(){
 	@{$arrays{$name}}=split('',$line);
 }
 # }}}
+
+# eval_fortran(){{{
+sub eval_fortran(){
+
+my $x=$_[0];
+$x =~ s/\s*//g;
+
+return 1 if ($x =~ /^\.TRUE\.$/i);
+return 0 if ($x =~ /^\.FALSE\.$/i);
+return $x;
+}
+# }}}
+
 # read_const(){{{
 sub read_const(){
 
@@ -245,8 +284,8 @@ foreach my $switch (qw( false true )){
 		my $if=$_;
 		if (-e $if){
 			open(F,"<$if") || die "$!";
-				&eoos("Reading in $switch values from input file:\n");
-				&eoos("	$if\n");
+				&eoolog("Reading in $switch values from input file:\n");
+				&eoolog("	$if\n");
 				while(<F>){
 					chomp; next if /^\s*#/ || /^\s*$/; 
 					foreach my $lvar_s (split(',',$_)){
@@ -270,14 +309,14 @@ sub read_init_vars(){
 	# read in initialized variable values 
 	if ($opts{rinit}){
 		open(IV,"<$files{initvars}") || die "$!";
-		&eoos("Reading in pre-initialized variable values...\n");
+		&eoolog("Reading in pre-initialized variable values...\n");
 		while(<IV>){
 			chomp;
 			next if /^\s*[!#](.*)$/;
 			my @F=split('=',$_);
 			$var=uc $F[0];
 			if ( &is_log($var) || &is_const($var) ){
-				$vars{$var}=&FU::eval_fortran($F[1]);
+				$vars{$var}=&eval_fortran($F[1]);
 			}
 		}
 		close(IV);
@@ -312,7 +351,7 @@ if (-e $files{vars}){
 			#$vars{$var}=0.0e0;	
 		}
 		elsif ($ft =~ /^logical/i ){
-			$vars{$var}=&FU::eval_fortran($val);
+			$vars{$var}=&eval_fortran($val);
 			$lgvars{$var}=$vars{$var};	
 		}elsif ($ft =~ /^integer/i ){
 			#$vars{$var}=0;	
@@ -357,26 +396,29 @@ if ($opts{log}){
 # cmd_opt_add(){{{
 sub cmd_opt_add(){
 	my @mycmdopts=@{$_[0]};
-	my $type;
+	my($type,$name);
 	push(@cmdopts,@mycmdopts);
 	foreach my $opt(@mycmdopts){
 		$type=${$opt}{type} or $type='bool';
-		push(@{$cmd_opts{$type}},${$opt}{name});
+		$name=${$opt}{name};
+		push(@{$cmd_opts{$type}},$name);
 	}
 }
 # read_kw_file(){{{
 sub read_kw_file(){
 
 foreach my $type( qw(i s bool) ){
+	next unless defined $cmd_opts{$type};
 	foreach(@{$cmd_opts{$type}}){ 
-		$opts{$_}=0; 
+		#print	;
+		#$opts{$_}=0; 
 	}
 }
 
 my $atype;
 if (-e $files{tkw}){
-	&eoos("Reading in options for the script from the input keyword file:\n",out=>1);
-	&eoos("	$files{tkw}\n",out=>1);
+	&eoolog("Reading in options for the script from the input keyword file:\n",out=>1);
+	&eoolog("	$files{tkw}\n",out=>1);
 	open(TKW,"<$files{tkw}") || die $!;
 	while(<TKW>){
 		chomp;
@@ -407,7 +449,7 @@ sub edelim(){
 	my $s="$_[0]";
 	my $num=$_[1];
 	$sfin=$s x $num . "\n";
-	&eoos($sfin);
+	&eoolog($sfin);
 }
 # }}}
 # eoo() {{{
@@ -596,13 +638,14 @@ sub printpod(){
 			for (my $iopt = 0; $iopt < $ncmdopts; $iopt++) {
 			  	$o=$cmdopts[$iopt]{name};
 				my %argopt;
+				$argopt{type}="long";
 				$argopt{type}="short" if ($o =~ m/^\w$/);
-				if ($o =~ m/^\s*([^\s,])\s*,\s*([^\s,])\s*$/){
+				if ($o =~ m/^\s*([^\s,])\s*,\s*([^\s,]{2,})\s*$/){
 					$argopt{type}="mixed";
 					$argopt{short}=$1;
 					$argopt{long}=$2;
 				}
-				$argopt{type}="long" if ($o =~ m/^\s*(\S{2,})\s*$/);
+				$argopt{type}="long" if ($o =~ m/^\s*([^\s,]{2,})\s*$/);
 				my $odesc=$cmdopts[$iopt]{desc};
 				if (grep { $o eq $_ } @opthaspar){
 				  $o.=" " . uc $o;
@@ -690,21 +733,12 @@ sub sbvars(){
 # }}}
 
 # &toLower(string); --- convert string into lower case
+
 sub toLower {
    my($string) = $_[0];
    $string =~ tr/A-Z/a-z/;
    $string;
 }
-
-# main() {{{
-#sub main(){
-  #&sbvars();
-  #&setsdata();
-  #&setfiles();
-  #&setcmdopts();
-  #&getopt();
-#}
-# }}}
 
 # }}}
 
