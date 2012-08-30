@@ -9,14 +9,15 @@ use File::Basename;
 use FindBin;
 use Getopt::Long;
 use Pod::Usage;
-
-#use lib("$FindBin::Bin/OP-Base/lib");
+use Module::Build;
+use lib("$FindBin::Bin/OP-Base/lib");
 use OP::Base qw/:vars :funcs/;
 # }}}
 
 my(%modules);
 
 sub set_these_cmdopts;
+sub main;
 
 # set_these_cmdopts(){{{ 
 sub set_these_cmdopts(){ 
@@ -44,9 +45,21 @@ sub main(){
   %modules=%{&readhash($files{mods})};
   foreach my $mod (keys %modules) {
 	 my $dirmod="$shd/" . $modules{$mod};
+	 print "$dirmod\n";
 	 chdir $dirmod;
-	 system("perl Makefile.PL PREFIX=$ENV{HOME}");
-	 system("make && make install");
+	 #&write_install_pl(I);
+
+	my $module=join("::",split('-',$mod));
+
+   	my $build=Module::Build->new(
+		module_name => "$module"
+		,license => 'perl'
+	);
+
+	$build->dispatch('build');
+	$build->dispatch('test', verbose => 1);
+	$build->dispatch('install', install_base => "$ENV{HOME}" );
+	#$build->dispatch('install', prefix => "$ENV{HOME}" );
   }
 }
 # }}}

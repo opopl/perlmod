@@ -35,6 +35,7 @@ our %EXPORT_TAGS = (
 						is_log
 						eoo 
 						eoo_arr
+						eoo_vars
 						eoolog
 					   	edelim	
 						evali
@@ -47,6 +48,7 @@ our %EXPORT_TAGS = (
 						readhash 
 						read_kw_file
 						read_all_vars
+						read_in_flist
 						read_init_vars
 						read_const
 						read_TF
@@ -85,6 +87,8 @@ our %EXPORT_TAGS = (
 					@logtypes
 					@opthaspar
 					@optstr
+					@true
+					@false
 					
 				) ] 
 		# }}}
@@ -99,9 +103,6 @@ our @EXPORT = qw( );
 
 our $VERSION = '0.01';
 # }}}
-
-# Preloaded methods go here.
-# }}}
 # vars{{{
 
 our($this_script,$ts,$shd,$pref_eoo,@allowedpodoptions);
@@ -112,6 +113,7 @@ our(%cmd_opts);
 our(@constvars);
 our(%shortlongopts);
 our(%vars,%lgvars);
+our(@true,@false);
 
 our %eval_sw=(
 	true	=>	1,
@@ -132,15 +134,18 @@ our %ftype;
 sub cmd_opt_add;
 sub eoo;
 sub eoo_arr;
+sub eoo_vars;
 sub eoolog;
 sub evali;
 sub eval_fortran;
 sub edelim;
 sub getopt;
+sub getopt_init;
 sub gettime;
 sub open_files;
 sub printpod;
 sub readarr;
+sub read_in_flist;
 sub readhash;
 sub read_kw_file;
 sub read_all_vars;
@@ -163,11 +168,36 @@ sub toLower;
 # }}}
 # subs {{{
 
+# read_in_flist() - read in flist {{{
+sub read_in_flist(){
+	my @ifs=qw();
+	if ($opts{flist}){
+		&eoolog("--flist: fortran files are specified in a special flist-file.\n");
+		&eoolog("		To see the list of files in this flist-file, invoke:\n");
+		&eoolog("			get_flist.pl --out --file\n");
+		if(! -e $files{flist}){
+			&eoolog("Error: flist file does not exist.\n");
+			die "\n";
+		}else{
+			&eoolog("Reading in the flist input file:\n");
+			&eoolog("	$files{flist}\n");
+			open(F,"<$files{flist}") || die $!;
+			@ifs=map { chomp($_); $_; } 
+					grep { (! ( /^\s*#/ || /^\s*$/  )) } <F>;
+			@ifs=sort(&uniq(@ifs));
+			close(F);
+			&eoolog("Number of flist-fortran files:\n");
+			&eoolog(" ". scalar(@ifs) . "\n"	);
+		}
+	}
+	return \@ifs;
+}
+# }}}
 # read_TF_cmd() - read in true/false from command line {{{
 sub read_TF_cmd(){
 	foreach my $switch (qw(false true)){
 		if (defined($opt{$switch})){
-			my @F=split(",",$opt{switch});
+			my @F=split(",",$opt{$switch});
 			foreach(@F){
 				$vars{uc($_)}=$eval_sw{$switch};
 			}
@@ -175,8 +205,6 @@ sub read_TF_cmd(){
 	}
 }
 #}}}
-
-
 # evali() {{{
 sub evali() {
 	use DB;
@@ -209,16 +237,31 @@ sub eoo_arr(){
 	my $msg=shift;
 	my $arr=shift;
 	&eoo("$msg\n");
-	&eoo(" ");
-	foreach(@{$arr}) { print "$_ "; } print "\n";
+	&eoo(" 		");
+	foreach(@{$arr}) { 
+			print "$_ "; } print "\n";
 }
 # }}}
+# eoo_vars(){{{
+sub eoo_vars(){
+	my $msg=shift;
+	my $arr=shift;
+	&eoo("$msg\n");
+	&eoo(" ");
+	foreach(@{$arr}) { 
+			print "$vars{$_} " if defined $vars{$_}; } print "\n";
+}
+# }}}
+
 # read_line_vars(){{{
 sub read_line_vars(){
 	local *A=shift;
 	my $listvars=shift;
-	my @F=split(<A>);
-	foreach(@$listvars){ $vars{$_}=shift @F; }
+	my $line=<A>;
+	my @F=split(' ',$line);
+	foreach(@$listvars){ 
+		$vars{$_}=shift @F; 
+	}
 }
 # }}}
 # skip_lines(){{{
@@ -310,6 +353,7 @@ sub read_init_vars(){
 	if ($opts{rinit}){
 		open(IV,"<$files{initvars}") || die "$!";
 		&eoolog("Reading in pre-initialized variable values...\n");
+		&eoolog("	Input file: $files{initvars}\n");
 		while(<IV>){
 			chomp;
 			next if /^\s*[!#](.*)$/;
@@ -366,6 +410,9 @@ if (-e $files{vars}){
 # }}}
 # open_files(){{{
 sub open_files(){
+	my %argopts=@_;
+	my $echo=0;
+	$echo=$argopts{echo} if defined $argopts{echo};
 
 %files=( 
 	%files,
@@ -381,12 +428,12 @@ if ($opts{log}){
 	foreach(@logtypes){
 		if ($opts{appendlog}){
 			open($fh{$_},">>$files{$_}") || die $!;
-			&eoolog("Opening $_-file for appending:\n",echo=>1);
-			&eoolog("	$files{$_}\n",echo=>1);
+			&eoolog("Opening $_-file for appending:\n",echo=>$echo);
+			&eoolog("	$files{$_}\n",echo=>$echo);
 		}else{
 			open($fh{$_},">$files{$_}") || die $!;
-			&eoolog("Opening $_-file for write:\n",echo=>1);
-			&eoolog("	$files{$_}\n",echo=>1);
+			&eoolog("Opening $_-file for write:\n",echo=>$echo);
+			&eoolog("	$files{$_}\n",echo=>$echo);
 		}
 	}
 }
@@ -406,40 +453,42 @@ sub cmd_opt_add(){
 }
 # read_kw_file(){{{
 sub read_kw_file(){
+	my %argopts=@_;
+	my $echo=0;
+	$echo=$argopts{echo} if defined $argopts{echo};
 
-foreach my $type( qw(i s bool) ){
-	next unless defined $cmd_opts{$type};
-	foreach(@{$cmd_opts{$type}}){ 
-		#print	;
-		#$opts{$_}=0; 
-	}
-}
-
-my $atype;
-if (-e $files{tkw}){
-	&eoolog("Reading in options for the script from the input keyword file:\n",out=>1);
-	&eoolog("	$files{tkw}\n",out=>1);
-	open(TKW,"<$files{tkw}") || die $!;
-	while(<TKW>){
-		chomp;
-		my @F;
-		if (/^\s*#\s*>>>\s*(\w+)opts/){
-			$atype=$1;
-		}else{
-			next if (/^\s*#/ || /^\s*$/);
-			@F=split(' ',$_);
+	foreach my $type( qw(i s bool) ){
+		next unless defined $cmd_opts{$type};
+		foreach(@{$cmd_opts{$type}}){ 
+			#print	;
+			#$opts{$_}=0; 
 		}
-		if (@F){
-			if ($atype eq "bool"){
-				$opts{$F[0]}=1;
+	}
+	
+	my $atype;
+	if (-e $files{tkw}){
+		&eoolog("Reading in options for the script from the input keyword file:\n",out=>$echo);
+		&eoolog("	$files{tkw}\n",out=>$echo);
+		open(TKW,"<$files{tkw}") || die $!;
+		while(<TKW>){
+			chomp;
+			my @F;
+			if (/^\s*#\s*>>>\s*(\w+)opts/){
+				$atype=$1;
 			}else{
-				$opts{$F[0]}=$F[1];
+				next if (/^\s*#/ || /^\s*$/);
+				@F=split(' ',$_);
+			}
+			if (@F){
+				if ($atype eq "bool"){
+					$opts{$F[0]}=1;
+				}else{
+					$opts{$F[0]}=$F[1];
+				}
 			}
 		}
+		close(TKW);
 	}
-	close(TKW);
-}
-
 }
 # }}}
 # edelim(){{{
@@ -563,10 +612,13 @@ sub setcmdopts(){
 # }}}
 # getopt() {{{
 
-sub getopt(){
-
+sub getopt_init(){
 	Getopt::Long::Configure(qw(bundling no_getopt_compat no_auto_abbrev no_ignore_case_always));
-	
+}
+
+sub getopt(){
+	&getopt_init();
+
 	if ( !@ARGV ){ 
 	  	pod2usage("Try '$this_script --help' for more information");
 		exit 0;
@@ -714,13 +766,14 @@ sub setfiles() {
 		$files{pod}{$podo}="$sdata{sname}.$podo.pod";
 	}
 	$files{tkw}="$ts.kw.i.dat";
+	$files{ifs}="$ts.ifs.i.dat";
 }
 # }}}
 # sbvars(){{{
 sub sbvars(){
   $this_script=&basename($0);
 ( $ts=$this_script) =~ s/\.(\w+)$//g;
- $shd=&dirname($0);
+ $shd=$FindBin::Bin;
  $pref_eoo="$this_script>";
  @allowedpodoptions=qw( help examples );
  %dirs=( 
