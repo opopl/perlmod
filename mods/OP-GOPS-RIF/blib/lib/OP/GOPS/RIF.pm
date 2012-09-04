@@ -19,16 +19,7 @@ use Data::Dumper;
 use OP::Base qw/:vars :funcs/;
 use OP::GOPS qw/:vars :funcs/;
 
-
-BEGIN {
-    use Exporter ();
-    use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-    $VERSION     = '0.01';
-    @ISA         = qw(Exporter);
-    @EXPORT      = qw();
-    @EXPORT_OK   = qw();
-    %EXPORT_TAGS = ();
-}
+our $VERSION='0.01';
 
 sub new()
 {
@@ -157,7 +148,7 @@ sub init_print(){
 # init_bool_parser(){{{
 sub init_bool_parser(){
 	#print "$opts{log}\n";exit 0;
-	$boolparser = new Parse::BL( 
+	$boolparser = new OP::Parse::BL( 
 			operators 	=> [ qw( .and. .or. .not. )], 
 			debug 		=> $opts{debugBL},
 			fhlog		=> $fh{log},

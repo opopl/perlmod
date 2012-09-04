@@ -177,9 +177,13 @@ sub list_modules(){
 # run_build_install(){{{
 sub run_build_install(){
 	my $self=shift;
+	my @exclude=qw( OP::Module::Build );
 	foreach my $mod (@modules) {
 		my $dirmod="$shd/mods/" . $mod;
 		my $module=$self->def_to_module($mod);
+
+		next if (grep { /^$module$/ } @exclude );
+
 		chdir $dirmod;
 	
 	   	my $build=Module::Build->new(
@@ -190,19 +194,19 @@ sub run_build_install(){
 		&eoo("Building module: $module\n");
 
 #		select $fh{log}; 
-		print $build->dispatch('build'), "\n";
+		$build->dispatch('build');
 
 #		select STDOUT; 
 		#&eoo("Testing module: $module\n");
 
 ##		select $fh{log}; 
-		#$build->dispatch('test', verbose => 1) || next;
+		$build->dispatch('test', quiet => 1);
 
 ##		select STDOUT; 
-		#&eoo("Installing module: $module\n") || next;
+		&eoo("Installing module: $module\n");
 
 ##		select $fh{log};
-		#   $build->dispatch('install', install_base => "$ENV{HOME}" ) || next;
+		$build->dispatch('install', install_base => "$ENV{HOME}" );
 	}
 	exit 0;
 }
