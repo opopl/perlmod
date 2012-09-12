@@ -44,6 +44,8 @@ my(%reif,%re);
 my(@matchkeys,@kreif);
 my(%reend);
 my %match;
+# used in handle_ifs()
+my @flines;
 
 my(%linevars);
 my(%lvarkeys,@lvarkeysall);
@@ -131,7 +133,7 @@ sub set_these_vars;
 sub set_these_regex_vars;
 sub set_this_sdata;
 sub set_arr_trues;
-sub set_rif_files;
+sub _if_set_rif_files;
 sub process_kw_data;
 sub view_rif;
 # read in: rif.ifs.i.dat
@@ -142,11 +144,13 @@ sub read_in_ifs;
 
 # init_print() - Initial printing {{{
 sub init_print(){
+	my $self=shift;
 	&eoolog("","begin_verbatim"=>1);
 }
 # }}}
 # init_bool_parser(){{{
 sub init_bool_parser(){
+	my $self=shift;
 	#print "$opts{log}\n";exit 0;
 	$boolparser = new OP::Parse::BL( 
 			operators 	=> [ qw( .and. .or. .not. )], 
@@ -173,8 +177,9 @@ sub init_bool_parser(){
 # pcom() print_head() print_true() print_plines() pdebug() {{{
 
 sub pcom(){
+	my $self=shift;
 	# {{{
-	local *A=$_[0];
+	local *A=shift;
 	if ($opts{com}){
 		print A "! ($nline) $this_script> $_[1]\n";
 	}
@@ -182,10 +187,12 @@ sub pcom(){
 }
 
 sub print_head {
+	my $self=shift;
 # F90 header with useful conversion info {{{
-	local *A=shift;
+	my $fhandle=shift;
 	my $fname=shift;
-print A << "head";
+
+	my $string =<< "head";
 ! $s{ofhead}
 ! ==========================================
 ! 
@@ -203,42 +210,48 @@ print A << "head";
 ! ==========================================
 $s{cf}
 head
+	print $fhandle,$string;
 
 # }}}
 }
-sub print_true {
+
+sub print_true(){
+	my $self=shift;
 # Print true logical values  {{{
-	local *A=$_[0];
-	print A "! True logical values $s{of}\n";
-	print A "!";
+	my $fhandle=shift;
+
+	print $fhandle, "! True logical values $s{of}\n";
+	print $fhandle, "!";
 	foreach (@true){
-		print A "$_ ";
+		print $fhandle, "$_ ";
 	}
-	print A "\n";
-	print A "! $s{cf}\n";
+	print $fhandle, "\n";
+	print $fhandle, "! $s{cf}\n";
 # }}}
 }
 
+# print_plines() {{{
 sub print_plines(){
-# {{{
-if ($opts{plines}){
-	if ($printo{this}){
-		print PL "$new\n" if $new;
-		print PL "! Old: $old\n" if $old;
-	}else{
-		print PL "! $old\n" if $old;
-	}
-		foreach my $i ((1..$nplines)){
-			print PL "! ";
-			foreach (@{$lvarkeys{$i}}){ 
-				my $val= eval "\$$linevars{$_}" ;
-				print PL "$_ " . $val . "; " if defined($val); 
-			}
-			print PL "\n";
+	my $self=shift;
+
+	if ($opts{plines}){
+		if ($printo{this}){
+			print $fh{PL}, "$new\n" if $new;
+			print $fh{PL}, "! Old: $old\n" if $old;
+		}else{
+			print $fh{PL}, "! $old\n" if $old;
 		}
-	}
-# }}}
+			foreach my $i ((1..$nplines)){
+				print $fh{PL}, "! ";
+				foreach (@{$lvarkeys{$i}}){ 
+					my $val= eval "\$$linevars{$_}" ;
+					print $fh{PL}, "$_ " . $val . "; " if defined($val); 
+				}
+				print $fh{PL}, "\n";
+			}
+		}
 }
+# }}}
 
 # }}}
 	# evalp() callback {{{
@@ -287,6 +300,7 @@ my $callback = sub {
 };
 
 sub evalp(){
+	my $self=shift;
 # {{{
 
 	my(%cond,%conds);
@@ -334,7 +348,10 @@ if ($opts{ikwperl}){ $files{kwperl}=$opts{ikwperl}; }
 # }}}
 # pdebug(){{{
 sub pdebug(){
+	my $self=shift;
+
 	my($type,$text)=@_[0,1];
+
 	if ($opts{debug}){
 		if ($type eq "sub"){
 			# related to subroutine
@@ -351,11 +368,15 @@ sub pdebug(){
 # }}}
 # sub read_in_ifs(){{{
 sub read_in_ifs(){
+	my $self=shift;
+
 	@ifs=@{&readarr("$files{ifs}")} if (-e $files{ifs});
 }
 # }}}
 # set_arr_trues() - specify array @true for true values  {{{
 sub set_arr_trues(){
+	my $self=shift;
+
 	foreach my $lvar ( sort(keys %vars) ){
 		$lvar =~ s/\s*//g;
 		push(@true,"$lvar") if ($vars{$lvar});
@@ -367,6 +388,8 @@ sub set_arr_trues(){
 # set_ops(){{{ - fortranops perlops 
 
 sub set_ops(){
+	my $self=shift;
+
 	%fortranops=(
 		"and"		=>	".and.",
 		"or"		=>	".or.",
@@ -391,6 +414,8 @@ sub set_ops(){
 # }}}
 # set_these_cmdopts(){{{ 
 sub set_these_cmdopts(){ 
+	my $self=shift;
+
 	my %optvals=( 
 		"PREFIX"	=>	"prefix",
 		"FILE"		=>	"ikw ikwperl",
@@ -448,6 +473,8 @@ sub set_these_cmdopts(){
 # set_these_regex_vars(){{{
 
 sub set_these_regex_vars(){
+	my $self=shift;
+
 	%reif=( 
 		"ifthen"		=>	qr/^(\s*)if\s*\((.*)\)\s*then(.*)$/i,
 		"elseifthen"	=>	qr/^(\s*)else\s*if\s*\((.*)\)\s*then(.*)$/i,
@@ -491,6 +518,7 @@ sub set_these_regex_vars(){
 #}}}
 # set_these_vars(){{{ 
 sub set_these_vars(){ 
+	my $self=shift;
 
 	@fileprefs=qw( rif com plines pdumper diff );
 	%suffs=( "pdumper"	=>	"pl");
@@ -498,6 +526,8 @@ sub set_these_vars(){
 # }}}
 # set_this_sdata() {{{
 sub set_this_sdata() {
+	my $self=shift;
+
 	$sdata{desc}{short}="FORTRAN source code cleaning script";
 	$sdata{desc}{long}=""
 			."This script cleans up parts of FORTRAN source code,\n"
@@ -528,6 +558,8 @@ sub set_this_sdata() {
 # }}}
 # process_kw_data() -  process keyword data {{{
 sub process_kw_data(){
+	my $self=shift;
+
 	if (-e $files{kw}){
 		&eoolog("Processing the keyword data file:\n");
 		&eoolog("	$files{kw}\n");
@@ -563,19 +595,22 @@ sub process_kw_data(){
 # }}}
 # sub view_rif(){{{
 sub view_rif(){
+	my $self=shift;
+
 	my @rifnames=split(",",$opt{i});
 	foreach(@rifnames) { s/$/\.f90/g; }
 	foreach my $if (@rifnames){
-		&set_rif_files($if);
+		$self->_if_set_rif_files($if);
 	}
 	print @rifnames,"\n";
 	system("gvim -n -p @riffiles");
 	exit 0;
 }
 #}}}
-# sub set_rif_files(){{{
-sub set_rif_files(){	
-	my $if=shift;
+# sub _if_set_rif_files(){{{
+sub _if_set_rif_files(){	
+	my $self=shift;
+
 	foreach (@fileprefs){
 		my $suff=$suffs{$_};
 		my $pref=$_;
@@ -587,28 +622,12 @@ sub set_rif_files(){
 	foreach (keys %files){ $files{$_} =~ s/^\.\///g; }
 }
 #}}}
-# handle_ifs(){{{
 
-sub handle_ifs(){
+sub _if_print_opts_info(){
+	my $self=shift;
 
-	&view_rif() if ($opt{view});
-
-	foreach (@ifs){
-		$if=$_;
-		# loop start {{{
-	
-	&eoolog("","end_verbatim"=>1,vspaces=>1);
-	&eoolog("$if",sec=>"head2",vspaces=>1);
-	&eoolog("","begin_verbatim"=>1,vspaces=>1);
-	&eoolog("Processing: $if \n");
-	&set_rif_files($if);
-
-	&eoolog("Output file will be: $files{rif}\n");
-	open(O,"<$if") || die $!;
-	open(N,">$files{rif}");
-	$date=`date`; chomp($date);
 	if ($opts{com}){
-		open(NC,">$files{com}");
+		open($fh{NC},">$files{com}");
 		&eoolog("--com: additional comments, together with the code are written into file:\n");
 		&eoolog("			$files{com}\n");
 	}
@@ -616,74 +635,100 @@ sub handle_ifs(){
 		&eoolog("--plines: per-line commenting enabled.\n");
 		&eoolog("		Output file with per-line comments: \n");
 		&eoolog("			$files{plines}\n");
-		open(PL,">$files{plines}");
-		print PL "! Explanations $s{of}\n";
-		print PL "!" . "=" x 50 . "\n";
+		open($fh{PL},">$files{plines}");
+		print $fh{PL}, "! Explanations $s{of}\n";
+		print $fh{PL}, "!" . "=" x 50 . "\n";
 		foreach ( @lvarkeysall ){
-			print PL "! $_ = \$$linevars{$_}\n";
+			print $fh{PL}, "! $_ = \$$linevars{$_}\n";
 		}
-		print PL "! $s{cf}\n";
-		print PL "! ". "=" x 50 . "\n";
+		print $fh{PL}, "! $s{cf}\n";
+		print $fh{PL}, "! ". "=" x 50 . "\n";
 	}
-	if ($opts{maxline}){
-		&eoolog("--maxline: specified the maximal line number:\n");
-		&eoolog("	$opts{maxline}\n");
-	}
-	if ($opts{minline}){
-		&eoolog("--minline: specified the minimal line number:\n");
-		&eoolog("	$opts{minline}\n");
-	}
-	if ($opts{pdumper}){
-		&eoolog("--pdumper: use Data::Dumper for boolean trees printing.\n");
-		&eoolog("		Tree will be printed into:\n");
-		&eoolog("			$files{pdumper}\n");
-		open(D,">$files{pdumper}") || die $!;
-		&print_head(\*D,"$files{pdumper}"); 
-	}
-	if ($opts{debugBL}){
-		&eoolog("--debugBL: print debugging information for the Parse::BL parser.\n");
-	}
-	if ($opts{wBLcheck}){
-		&eoolog("--wBLcheck: Parse::BL checking for line numbers.\n");
-	}
-	if ($opts{lfiles}){
-		push(@lfiles,$if);
-		print L "$if\n";
-		foreach(qw(pdumper com plines rif)){
-			push(@lfiles,$files{$_});
-			print L "$files{$_}\n";
+		if ($opts{maxline}){
+			&eoolog("--maxline: specified the maximal line number:\n");
+			&eoolog("	$opts{maxline}\n");
 		}
-		
-	}
-	foreach(@indk){
-		$ind{$_}=0;
-	}
-	# }}}
-	
-	print_head(\*N,"$files{rif}");
+		if ($opts{minline}){
+			&eoolog("--minline: specified the minimal line number:\n");
+			&eoolog("	$opts{minline}\n");
+		}
+		if ($opts{pdumper}){
+			&eoolog("--pdumper: use Data::Dumper for boolean trees printing.\n");
+			&eoolog("		Tree will be printed into:\n");
+			&eoolog("			$files{pdumper}\n");
+			open($fh{D},">$files{pdumper}") || die $!;
+			$self->print_head($fh{D},"$files{pdumper}"); 
+		}
+		if ($opts{debugBL}){
+			&eoolog("--debugBL: print debugging information for the Parse::BL parser.\n");
+		}
+		if ($opts{wBLcheck}){
+			&eoolog("--wBLcheck: Parse::BL checking for line numbers.\n");
+		}
+		if ($opts{lfiles}){
+			push(@lfiles,$if);
+			print L "$if\n";
+			foreach(qw(pdumper com plines rif)){
+				push(@lfiles,$files{$_});
+				print L "$files{$_}\n";
+			}
+		}
+}
 
-	if ($opts{com}){ print_head(\*NC,"$files{com}"); }
-	if ($opts{plines}){ print_head(\*PL,"$files{plines}"); }
-	if ($opts{plines}){ print_true(\*PL,"$files{plines}"); }
+sub _if_print_verbatim(){
+	my $self=shift;
+
+	&eoolog("","end_verbatim"=>1,vspaces=>1);
+	&eoolog("$if",sec=>"head2",vspaces=>1);
+	&eoolog("","begin_verbatim"=>1,vspaces=>1);
+	&eoolog("Processing: $if \n");
+}
+
+sub _if_open_files(){
+	my $self=shift;
+
+	&eoolog("Output file will be: $files{rif}\n");
+	open($fh{O},"<$if") || die $!;
+	open($fh{N},">$files{rif}");
+}
+
+
+sub _if_print_heads(){
+	my $self=shift;
+
+	$self->print_head($fh{N},"$files{rif}");
+
+	if ($opts{com}){ $self->print_head($fh{NC},"$files{com}"); }
+	if ($opts{plines}){ $self->print_head($fh{PL},"$files{plines}"); }
+	if ($opts{plines}){ $self->print_true($fh{PL},"$files{plines}"); }
+}
+
+sub _if_intro(){
+	my $self=shift;
 	
-	# intro {{{
 	$nline=0;
 	$ind{"if"}=0;
 	$printo{"if"}{0}=1;
 	$printo{"if"}{-1}=1;
 	$printo{"all"}=1;
 	$printo{"this"}=1;
-	# }}}
-	
 	@res0=( 1, 1 );
-	while (<O>) {
+}
+
+sub _if_loop_FILE(){
+	my $self=shift;
+	local *A=shift;
+
+	while (<A>) {
 		#{{{
 	    $new = $_;
 		chomp($new);
 		$nline++;
+
 		if (($opts{maxline}) && ($nline > $opts{maxline}) ){ last; }
 		if (($opts{minline}) && ($nline < $opts{minline}) ){ next; }
-	# Deal with continuations  {{{
+
+		# Deal with continuations  {{{
 		while( $new =~ /\&\s*$/ ){
 			$new =~ s/\&\s*$//g;
 			$nextline=<O>;
@@ -983,60 +1028,105 @@ sub handle_ifs(){
 	#}}}
 	#}}}
 	}
-	# Print the last $old and "comments" {{{
-	
-	print N "$new\n";
-	print N "$comment\n";
+}
+
+sub _if_close_files(){
+	my $self=shift;
+
+	close $fh{N};
+
 	if ($opts{com}){
-		print NC "$new\n";
-		print NC "$comment\n";
-	}
-	close N;
-	if ($opts{com}){
-		close NC;
+		close $fh{NC};
 	}
 	if ($opts{plines}){
-		close PL;
+		close $fh{PL};
 	}
 	close O;
 	if ($opts{del}){
 		&eoolog("Deleting the original Fortran file...\n");
 		unlink($if);
 	}
-	# }}}
-	# reopen the file for additional editing {{{
-	my $fnew="$files{rif}.new";
-	###
-	open(O,"<$files{rif}") || die $!;
-	my $ftext= do { local $/; <O> };
-	close(O);
-	if ($opts{com}){ close(NC); }
-	if ($opts{plines}){ close(PL); }
-	if ($opts{pdumper}){ close(D); }
-	
-	my @flines= split "\n",$ftext;
-	
-	# N {{{
-	open(N,">$fnew") || die $!;
+
+	if ($opts{com}){ close($fh{NC}); }
+	if ($opts{plines}){ close($fh{PL}); }
+	if ($opts{pdumper}){ close($fh{D}); }
+}
+
+sub _if_write_new(){
+	my $self=shift;
+
+	open($fh{N},">$files{fnew}") || die $!;
 	foreach my $line (@flines){
 		$line =~ s/\r//g;
-		print N "$line\n";
+		print($fh{N},"$line\n");
 	}
-	close(N);
+	close($fh{N});
+
+	move("$files{fnew}","$files{rif}");
+}
+
+sub _if_final_output(){
+	my $self=shift;
+
 	&eoolog("Diff the old and the new files...\n");
 	`diff  $files{rif} $if > $files{diff} `;
 	&eoolog("Output diff file is:\n");
 	&eoolog("	$files{diff}\n");
 	&eoolog("","end_verbatim"=>1,vspaces=>1);
-	# }}}
+}
+
+sub _if_print_new_comment(){
+	my $self=shift;
+
+	print($fh{N}, "$new\n");
+	print($fh{N}, "$comment\n");
+	if ($opts{com}){
+		print $fh{NC}, "$new\n";
+		print $fh{NC}, "$comment\n";
+	}
+}
+
+sub _if_reopen_files(){
+	my $self=shift;
+
+	# reopen the file for additional editing
+	$files{fnew}="$files{rif}.new";
 	###
-	move("$fnew","$files{rif}");
-	# }}}
+	open(O,"<$files{rif}") || die $!;
+	my $ftext= do { local $/; <O> };
+	close(O);
+
+	@flines= split "\n",$ftext;
+}
+
+# handle_ifs(){{{
+
+sub handle_ifs(){
+	my $self=shift;
+	foreach (@ifs){
+		$if=$_;
+		$date=`date`; chomp($date);
+		$ind{$_}=0 for(@indk);
+	
+		$self->_if_print_verbatim();
+		$self->_if_set_rif_files();
+		$self->_if_open_files();
+		$self->_if_print_opts_info();
+		$self->_if_print_heads();
+		$self->_if_intro();
+		$self->_if_loop_FILE(\*O);
+		$self->_if_print_new_comment();
+		$self->_if_close_files();
+		$self->_if_reopen_files();
+		$self->_if_write_new();
+		$self->_if_final_output();
 	}
 }
 # }}}
 # main_close_files() - close files {{{
 sub main_close_files(){
+	my $self=shift;
+
 	if ($opts{log}){
 		foreach(@logtypes){
 			close($fh{$_});
@@ -1050,6 +1140,8 @@ sub main_close_files(){
 # }}}
 # handle_lfiles(){{{
 sub handle_lfiles(){
+	my $self=shift;
+
 	if ($opts{lfiles}){
 		&eoolog("--lfiles: print the list of output files to:\n");
 		&eoolog("	$files{lfiles}\n");
@@ -1098,9 +1190,10 @@ sub main(){
 	$self->process_kw_data();
 	
 	$self->handle_lfiles();
+	$self->view_rif() if ($opt{view});
 	$self->handle_ifs();
 	$self->main_close_files();
-
+	exit 0;
 }
 #}}}
 

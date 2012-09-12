@@ -1,20 +1,16 @@
 package OP::Perl::Installer;
 
-# package intro{{{
+# package intro {{{
+
 use strict;
 use warnings;
 
-BEGIN {
-    use Exporter ();
-    use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-    $VERSION     = '0.01';
-    @ISA         = qw(Exporter);
-    #Give a hoot don't pollute, do not export more than needed by default
-    @EXPORT      = qw();
-    @EXPORT_OK   = qw();
-    %EXPORT_TAGS = ();
-}
+use OP::Script;
 
+our $VERSION='0.01';
+
+our @ISA=qw(OP::Script);
+    
 sub new
 {
     my ($class, %parameters) = @_;
@@ -34,6 +30,7 @@ use Module::Build;
 use lib("$FindBin::Bin/OP-Base/lib");
 use OP::Base qw/:vars :funcs/;
 use ExtUtils::ModuleMaker;
+use Term::ShellUI;
 
 # }}}
 # vars {{{
@@ -147,6 +144,7 @@ sub set_these_cmdopts(){
 	,{ name	=>	"e,edit", 		desc	=>	"Edit the chosen modules", type=>"s"	}
 	,{ name	=>	"a,add", 		desc	=>	"Create modules	 with the given names", type=>"s"	}
 	,{ name	=>	"rm", 			desc	=>	"Remove module with the given names", type=>"s"	}
+	,{ name =>  "sh",			desc    =>  "Run an interactive shell " }
 	#,{ cmd	=>	"<++>", 		desc	=>	"<++>", type	=>	"s"	}
   );
 } 
@@ -177,12 +175,17 @@ sub list_modules(){
 # run_build_install(){{{
 sub run_build_install(){
 	my $self=shift;
-	my @exclude=qw( OP::Module::Build );
+	my @exclude=qw( OP::Module::Build OP::GOPS );
+	my @only=qw( OP::GOPS::RIF );
+
 	foreach my $mod (@modules) {
 		my $dirmod="$shd/mods/" . $mod;
 		my $module=$self->def_to_module($mod);
 
 		next if (grep { /^$module$/ } @exclude );
+		if (@only){
+			next unless grep { /^$module$/ } @only;
+		}
 
 		chdir $dirmod;
 	
@@ -211,6 +214,36 @@ sub run_build_install(){
 	exit 0;
 }
 # }}}
+# sub run_shell(){{{
+sub run_shell(){
+  my $self=shift;
+  my $term = new Term::ShellUI(
+      		commands => {
+              "cd" => {
+                  desc => "Change to directory DIR",
+                  maxargs => 1, args => sub { shift->complete_onlydirs(@_); },
+                  proc => sub { chdir($_[0] || $ENV{HOME} || $ENV{LOGDIR}); },
+              },
+              "chdir" => { alias => 'cd' },
+              "pwd" => {
+                  desc => "Print the current working directory",
+                  maxargs => 0, proc => sub { system('pwd'); },
+              },
+              "quit" => {
+                  desc => "Quit this program", maxargs => 0,
+                  method => sub { shift->exit_requested(1); },
+              },
+			  "list" => {
+				  desc => "List available modules", maxargs => 0,
+				  method => sub { $self->list_modules(); }
+			  },
+		  },
+          	history_file => '~/.shellui-synopsis-history',
+      );
+  print 'Using '.$term->{term}->ReadLine."\n";
+  $term->run();
+}
+# }}}
 # }}}
 # main() {{{
 
@@ -232,6 +265,7 @@ sub main(){
   $self->edit_modules() if ($opt{edit} || $opt{e});
   $self->add_modules() if ($opt{add} || $opt{a});
   $self->remove_modules() if ($opt{rm});
+  $self->run_shell() if ($opt{sh});
 }
 # }}}
 
