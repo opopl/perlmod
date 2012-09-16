@@ -5,6 +5,7 @@ package OP::Perl::Installer;
 use strict;
 use warnings;
 
+use lib ("/home/op/wrk/perlmod/mods/OP-Script/lib");
 use OP::Script;
 
 our $VERSION='0.01';
@@ -19,7 +20,6 @@ sub new
 }
 # }}}
 # use ... {{{
-
 
 use File::Basename;
 use File::Path qw(remove_tree);
@@ -123,12 +123,15 @@ sub remove_modules(){
 # edit_modules(){{{
 sub edit_modules(){
 	my $self=shift;
+
 	my(@emods,@files);
-	@emods=split(',',$opt{edit});
+	my $s_modules=$opt{edit} // shift;
+
+	@emods=split(',',$s_modules) if defined $s_modules;
+
 	foreach my $module (@emods){ push(@files,$self->module_to_def($module) . "/lib/" . $self->module_to_path($module)); }
 	foreach(@files){ s/^/$shd\/mods\//g; }
 	system("gvim -n -p --remote-tab-silent @files");
-	exit 0;
 }
 # }}}
 # set_these_cmdopts(){{{ 
@@ -165,11 +168,11 @@ sub set_modules(){
 # list_modules(){{{
 sub list_modules(){
 	my $self=shift;
+
 	foreach my $mod (@modules) {
 		my $module=$self->def_to_module($mod);
 		print "$module\n" ;
 	}
-	exit 0;
 }
 # }}}
 # run_build_install(){{{
@@ -218,51 +221,69 @@ sub run_build_install(){
 sub run_shell(){
   my $self=shift;
   my $term = new Term::ShellUI(
-      		commands => {
-              "cd" => {
+      		commands => $self->{'shell_commands'},
+			history_file => '~/.shellui-synopsis-history',
+      );
+
+  #print 'Using '.$term->{term}->ReadLine."\n";
+
+  $term->run();
+}
+# }}}
+# }}}
+
+# init_vars(){{{
+
+sub init_vars(){
+	my $self=shift;
+
+	$self->{'shell_commands'}=
+		{ 
+			 "cd" => {
                   desc => "Change to directory DIR",
                   maxargs => 1, args => sub { shift->complete_onlydirs(@_); },
                   proc => sub { chdir($_[0] || $ENV{HOME} || $ENV{LOGDIR}); },
               },
-              "chdir" => { alias => 'cd' },
+			 "chdir" => { alias => 'cd' },
+              "q" => { alias => 'quit' },
               "pwd" => {
                   desc => "Print the current working directory",
                   maxargs => 0, proc => sub { system('pwd'); },
               },
               "quit" => {
-                  desc => "Quit this program", maxargs => 0,
+                  desc => "Quit this program", 
+				  maxargs => 0,
                   method => sub { shift->exit_requested(1); },
               },
 			  "list" => {
-				  desc => "List available modules", maxargs => 0,
+				  desc => "List available modules", 
+				  maxargs => 0,
 				  method => sub { $self->list_modules(); }
 			  },
-		  },
-          	history_file => '~/.shellui-synopsis-history',
-      );
-  print 'Using '.$term->{term}->ReadLine."\n";
-  $term->run();
+			  "edit" => {
+				  desc => "Edit module", 
+				  maxargs => 1,
+				  proc => sub { $self->edit_modules(shift); }
+			  },
+
+		  };
+
 }
 # }}}
-# }}}
+
 # main() {{{
 
 sub main(){
   my $self=shift;
 
-  &OP::Base::sbvars();
-  &OP::Base::setsdata();
-  &OP::Base::setfiles();
+  $self->get_opt();
 
-  $self->set_these_cmdopts();
-
-  &OP::Base::setcmdopts();
-  &OP::Base::getopt();
+  $self->init_vars();
 
   $self->set_modules();
   $self->run_build_install() if ($opt{run} || $opt{r});
-  $self->list_modules() if ($opt{list} || $opt{l});
-  $self->edit_modules() if ($opt{edit} || $opt{e});
+  do { $self->list_modules(); exit 0 } if ($opt{list} || $opt{l});
+  do { $self->edit_modules(); exit 0 } if ($opt{edit} || $opt{e});
   $self->add_modules() if ($opt{add} || $opt{a});
   $self->remove_modules() if ($opt{rm});
   $self->run_shell() if ($opt{sh});

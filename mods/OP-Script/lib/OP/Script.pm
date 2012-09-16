@@ -18,6 +18,19 @@ sub new
     return $self;
 }
 
+sub get_opt(){
+	my $self=shift;
+
+	&OP::Base::sbvars();
+  	&OP::Base::setsdata();
+  	&OP::Base::setfiles();
+
+  	$self->set_these_cmdopts();
+
+  	&OP::Base::setcmdopts();
+  	&OP::Base::getopt();
+}
+
 sub set_these_cmdopts(){ 
   my $self=shift;
   @cmdopts=( 
