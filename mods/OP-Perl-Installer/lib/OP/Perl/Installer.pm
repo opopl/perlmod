@@ -31,10 +31,8 @@ use lib("$FindBin::Bin/OP-Base/lib");
 use OP::Base qw/:vars :funcs/;
 use ExtUtils::ModuleMaker;
 use Term::ShellUI;
+use Data::Dumper;
 
-# }}}
-# vars {{{
-my(@modules);
 # }}}
 # subs {{{
 # declarations {{{
@@ -84,8 +82,12 @@ sub def_to_module(){
 # add_modules(){{{
 sub add_modules(){
 	my $self=shift;
+
 	my(@modules,%mods,@files);
-	@modules=split(',',$opt{add});
+
+	my $s_modules_add=$opt{add} // shift;
+
+	@modules=split(',',$s_modules_add);
 
 	foreach my $module (@modules){ 
 		push(@files,$self->module_to_def($module) . "/lib/" . $self->module_to_path($module)); 
@@ -160,7 +162,8 @@ sub set_modules(){
   opendir(D,"$shd/mods/");
   while(my $file=readdir(D)){
 	  next if $file =~ m/^\./;
-	  push(@modules,$file);
+	  push(@{$self->{mod_def_names}},$file);
+	  push(@{$self->{modules}},$self->def_to_module($file));
   }
   closedir(D);
 }
@@ -169,7 +172,7 @@ sub set_modules(){
 sub list_modules(){
 	my $self=shift;
 
-	foreach my $mod (@modules) {
+	foreach my $mod (@{$self->{mod_def_names}}) {
 		my $module=$self->def_to_module($mod);
 		print "$module\n" ;
 	}
@@ -181,7 +184,7 @@ sub run_build_install(){
 	my @exclude=qw( OP::Module::Build OP::GOPS );
 	my @only=qw( OP::GOPS::RIF );
 
-	foreach my $mod (@modules) {
+	foreach my $mod (@{$self->{mod_def_names}}) {
 		my $dirmod="$shd/mods/" . $mod;
 		my $module=$self->def_to_module($mod);
 
@@ -227,11 +230,32 @@ sub run_shell(){
 
   #print 'Using '.$term->{term}->ReadLine."\n";
 
+  $term->prompt("i>");
   $term->run();
 }
 # }}}
 # }}}
+# _complete_modules(){{{
+sub _complete_modules(){
+	my $self=shift;
 
+	my $cmpl=shift;
+	my $ref;
+
+	if (defined $cmpl){
+		foreach my $module (@{$self->{'modules'}}) {
+			if ($module =~ m/^\s*$cmpl->{str}/i){
+				print ref $cmpl->{str},"\n";
+				push(@{$ref},"$module");
+			}
+		}
+	}else{
+		$ref=$self->{'modules'};
+	}
+	#print Dumper($self->{'modules'});
+	return $ref;
+}
+# }}}
 # init_vars(){{{
 
 sub init_vars(){
@@ -239,13 +263,20 @@ sub init_vars(){
 
 	$self->{'shell_commands'}=
 		{ 
+			"help" => {
+				desc => "Print helpful information",
+				args => sub { shift->help_args(undef, @_); },
+				method => sub { shift->help_call(undef, @_); }
+			},
+			 "h" =>  { alias => "help", exclude_from_completion => 1 },
+             "q" => { alias => 'quit', exclude_from_completion => 1 },
 			 "cd" => {
                   desc => "Change to directory DIR",
                   maxargs => 1, args => sub { shift->complete_onlydirs(@_); },
                   proc => sub { chdir($_[0] || $ENV{HOME} || $ENV{LOGDIR}); },
               },
 			 "chdir" => { alias => 'cd' },
-              "q" => { alias => 'quit' },
+              "lm" => { alias => 'list modules' },
               "pwd" => {
                   desc => "Print the current working directory",
                   maxargs => 0, proc => sub { system('pwd'); },
@@ -255,15 +286,44 @@ sub init_vars(){
 				  maxargs => 0,
                   method => sub { shift->exit_requested(1); },
               },
+			  "lm" => { 
+				  desc => "List available modules",
+				  proc => sub { $self->list_modules(); },
+				  maxargs => 0
+			  },
 			  "list" => {
-				  desc => "List available modules", 
-				  maxargs => 0,
-				  method => sub { $self->list_modules(); }
+				  desc => "List different things", 
+				  cmds => {
+				  		modules => {
+							desc => "List available modules",
+				  			proc => sub { $self->list_modules(); },
+				  			maxargs => 0
+						}
+				  	}
+			  },
+			  "add" => {
+				  desc => "Add module",
+				  maxargs => 1,
+				  minargs => 1,
+				  proc => sub { $self->add_modules(shift); },
+				  args => sub { 
+					  my $s=shift;
+					  #$s->{debug_complete}=5;
+					  $s->suppress_completion_append_character();
+					  $self->_complete_modules(@_); 
+				  }
 			  },
 			  "edit" => {
 				  desc => "Edit module", 
 				  maxargs => 1,
-				  proc => sub { $self->edit_modules(shift); }
+				  minargs => 1,
+				  proc => sub { $self->edit_modules(shift); },
+				  args => sub { 
+					  my $s=shift;
+					  #$s->{debug_complete}=5;
+					  $s->suppress_completion_append_character();
+					  $self->_complete_modules(@_); 
+				  }
 			  },
 
 		  };
