@@ -1,28 +1,31 @@
 package OP::Perl::Installer;
 
-# package intro{{{
+
 use strict;
 use warnings;
 
-BEGIN {
-    use Exporter ();
-    use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-    $VERSION     = '0.01';
-    @ISA         = qw(Exporter);
-    #Give a hoot don't pollute, do not export more than needed by default
-    @EXPORT      = qw();
-    @EXPORT_OK   = qw();
-    %EXPORT_TAGS = ();
-}
+use lib ("/home/op/wrk/perlmod/mods/OP-Script/lib");
+use OP::Script;
 
+our $VERSION='0.01';
+
+our @ISA=qw(OP::Script);
+    
 sub new
 {
     my ($class, %parameters) = @_;
     my $self = bless ({}, ref ($class) || $class);
+
+	$self->init();
+
     return $self;
 }
-# }}}
-# use ... {{{
+
+sub init(){
+	my $self=shift;
+
+	$self->{package_name}=__PACKAGE__;
+}
 
 
 use File::Basename;
@@ -34,11 +37,9 @@ use Module::Build;
 use lib("$FindBin::Bin/OP-Base/lib");
 use OP::Base qw/:vars :funcs/;
 use ExtUtils::ModuleMaker;
+use Term::ShellUI;
+use Data::Dumper;
 
-# }}}
-# vars {{{
-my(@modules);
-# }}}
 # subs {{{
 # declarations {{{
 sub add_modules;
@@ -87,8 +88,12 @@ sub def_to_module(){
 # add_modules(){{{
 sub add_modules(){
 	my $self=shift;
+
 	my(@modules,%mods,@files);
-	@modules=split(',',$opt{add});
+
+	my $s_modules_add=$opt{add} // shift;
+
+	@modules=split(',',$s_modules_add);
 
 	foreach my $module (@modules){ 
 		push(@files,$self->module_to_def($module) . "/lib/" . $self->module_to_path($module)); 
@@ -126,12 +131,26 @@ sub remove_modules(){
 # edit_modules(){{{
 sub edit_modules(){
 	my $self=shift;
-	my(@emods,@files);
-	@emods=split(',',$opt{edit});
-	foreach my $module (@emods){ push(@files,$self->module_to_def($module) . "/lib/" . $self->module_to_path($module)); }
+
+	my(@emodules,@files);
+	my $mfile;
+
+	my $s_modules=$opt{edit} // shift;
+
+	@emodules=split(',',$s_modules) if defined $s_modules;
+
+	if($s_modules eq "_all"){
+		@emodules=@{$self->{'modules'}};
+	}elsif($s_modules eq "_sel"){
+		@emodules=@{$self->{'select_modules'}};
+	}
+
+	foreach my $module (@emodules){ 
+		$mfile=$self->module_to_def($module) . "/lib/" . $self->module_to_path($module);
+		push(@files,$mfile);
+   	}
 	foreach(@files){ s/^/$shd\/mods\//g; }
 	system("gvim -n -p --remote-tab-silent @files");
-	exit 0;
 }
 # }}}
 # set_these_cmdopts(){{{ 
@@ -147,6 +166,7 @@ sub set_these_cmdopts(){
 	,{ name	=>	"e,edit", 		desc	=>	"Edit the chosen modules", type=>"s"	}
 	,{ name	=>	"a,add", 		desc	=>	"Create modules	 with the given names", type=>"s"	}
 	,{ name	=>	"rm", 			desc	=>	"Remove module with the given names", type=>"s"	}
+	,{ name =>  "sh",			desc    =>  "Run an interactive shell " }
 	#,{ cmd	=>	"<++>", 		desc	=>	"<++>", type	=>	"s"	}
   );
 } 
@@ -154,37 +174,51 @@ sub set_these_cmdopts(){
 # set_modules(){{{
 sub set_modules(){
 	my $self=shift;
-  #$files{mods}="$shd/inc/modules_to_install.i.dat";
-  #@modules=@{&readarr($files{mods})};
+
   opendir(D,"$shd/mods/");
   while(my $file=readdir(D)){
 	  next if $file =~ m/^\./;
-	  push(@modules,$file);
+	  push(@{$self->{mod_def_names}},$file);
+	  push(@{$self->{modules}},$self->def_to_module($file));
   }
+  
+  $self->{select_modules}=[ qw( 
+  	OP::Perl::Installer 
+  	OP::GOPS::RIF
+  	OP::Script
+  )];
+
   closedir(D);
 }
 #}}}
 # list_modules(){{{
 sub list_modules(){
 	my $self=shift;
-	foreach my $mod (@modules) {
+
+	foreach my $mod (@{$self->{mod_def_names}}) {
 		my $module=$self->def_to_module($mod);
 		print "$module\n" ;
 	}
-	exit 0;
 }
 # }}}
 # run_build_install(){{{
 sub run_build_install(){
 	my $self=shift;
 	my @exclude=qw( OP::Module::Build OP::GOPS );
+	my @only=qw( 
+		OP::GOPS::RIF 
+		OP::Perl::Installer 
+		OP::Script
+		);
 
-	foreach my $mod (@modules) {
+	foreach my $mod (@{$self->{mod_def_names}}) {
 		my $dirmod="$shd/mods/" . $mod;
 		my $module=$self->def_to_module($mod);
-		print "$module\n";
 
 		next if (grep { /^$module$/ } @exclude );
+		if (@only){
+			next unless grep { /^$module$/ } @only;
+		}
 
 		chdir $dirmod;
 	
@@ -193,47 +227,180 @@ sub run_build_install(){
 			,license => 'perl'
 		);
 	
-		&eoo("Building module: $module\n");
+		$self->out( "Building module: $module\n" );
 
 #		select $fh{log}; 
 		$build->dispatch('build');
 
 #		select STDOUT; 
-		#&eoo("Testing module: $module\n");
+		$self->out("Testing module: $module\n");
 
 ##		select $fh{log}; 
 		$build->dispatch('test', quiet => 1);
 
 ##		select STDOUT; 
-		&eoo("Installing module: $module\n");
+		$self->out("Installing module: $module\n");
 
 ##		select $fh{log};
 		$build->dispatch('install', install_base => "$ENV{HOME}" );
 	}
-	exit 0;
+}
+# }}}
+# sub run_shell(){{{
+sub run_shell(){
+  my $self=shift;
+  my $term = new Term::ShellUI(
+      		commands => $self->{'shell_commands'},
+			history_file => '~/.shellui-synopsis-history',
+      );
+
+  #print 'Using '.$term->{term}->ReadLine."\n";
+
+  $term->prompt("i>");
+  $term->run();
 }
 # }}}
 # }}}
+# _complete_modules(){{{
+sub _complete_modules(){
+	my $self=shift;
+
+	my $cmpl=shift;
+	my $ref;
+
+	if (defined $cmpl){
+		foreach my $module (@{$self->{'modules'}}) {
+			if ($module =~ m/^\s*$cmpl->{str}/i){
+				print ref $cmpl->{str},"\n";
+				push(@{$ref},"$module");
+			}
+		}
+	}else{
+		$ref=$self->{'modules'};
+	}
+
+	push(@{$ref},qw(_all _sel));
+	return $ref;
+}
+# }}}
+# init_vars(){{{
+
+sub init_vars(){
+	my $self=shift;
+
+	$self->{'shell_commands'}=
+		{ 
+###cmd_help
+			"help" => {
+				desc => "Print helpful information",
+				args => sub { shift->help_args(undef, @_); },
+				method => sub { shift->help_call(undef, @_); }
+			},
+			 "h" =>  { alias => "help", exclude_from_completion => 1 },
+             "q" => { alias => 'quit', exclude_from_completion => 1 },
+###cmd_cd
+			 "cd" => {
+                  desc => "Change to directory DIR",
+                  maxargs => 1, args => sub { shift->complete_onlydirs(@_); },
+                  proc => sub { chdir($_[0] || $ENV{HOME} || $ENV{LOGDIR}); },
+              },
+###cmd_chdir
+			 "chdir" => { alias => 'cd' },
+              "lm" => { alias => 'list modules' },
+###cmd_pwd
+              "pwd" => {
+                  desc => "Print the current working directory",
+                  maxargs => 0, proc => sub { system('pwd'); },
+              },
+###scmd_rbi
+              "rbi" => {
+                  desc => "Run-build-install",
+                  maxargs => 0, 
+				  proc => sub { $self->run_build_install(); },
+              },
+###scmd_eam
+              "eam" => {
+                  desc => "Edit all Perl modules",
+                  maxargs => 0, 
+				  proc => sub { $self->edit_modules("_all"); },
+              },
+###scmd_esm
+              "esm" => {
+                  desc => "Edit selected Perl modules",
+                  maxargs => 0, 
+				  proc => sub { $self->edit_modules("_sel"); },
+              },
+###cmd_quit
+              "quit" => {
+                  desc => "Quit this program", 
+				  maxargs => 0,
+                  method => sub { shift->exit_requested(1); },
+              },
+###cmd_lm
+			  "lm" => { 
+				  desc => "List available modules",
+				  proc => sub { $self->list_modules(); },
+				  maxargs => 0
+			  },
+###cmd_list
+			  "list" => {
+				  desc => "List different things", 
+				  cmds => {
+				  		modules => {
+							desc => "List available modules",
+				  			proc => sub { $self->list_modules(); },
+				  			maxargs => 0
+						}
+				  	}
+			  },
+###cmd_add
+			  "add" => {
+				  desc => "Add module",
+				  maxargs => 1,
+				  minargs => 1,
+				  proc => sub { $self->add_modules(shift); },
+				  args => sub { 
+					  my $s=shift;
+					  #$s->{debug_complete}=5;
+					  $s->suppress_completion_append_character();
+					  $self->_complete_modules(@_); 
+				  }
+			  },
+###cmd_edit
+			  "edit" => {
+				  desc => "Edit module", 
+				  maxargs => 1,
+				  minargs => 1,
+				  proc => sub { $self->edit_modules(shift); },
+				  args => sub { 
+					  my $s=shift;
+					  #$s->{debug_complete}=5;
+					  $s->suppress_completion_append_character();
+					  $self->_complete_modules(@_); 
+				  }
+			  },
+
+		  };
+
+}
+# }}}
+
 # main() {{{
 
 sub main(){
   my $self=shift;
 
-  &OP::Base::sbvars();
-  &OP::Base::setsdata();
-  &OP::Base::setfiles();
+  $self->get_opt();
 
-  $self->set_these_cmdopts();
-
-  &OP::Base::setcmdopts();
-  &OP::Base::getopt();
+  $self->init_vars();
 
   $self->set_modules();
-  $self->run_build_install() if ($opt{run} || $opt{r});
-  $self->list_modules() if ($opt{list} || $opt{l});
-  $self->edit_modules() if ($opt{edit} || $opt{e});
+  do { $self->run_build_install(); exit 0; } if ($opt{run} || $opt{r});
+  do { $self->list_modules(); exit 0; } if ($opt{list} || $opt{l});
+  do { $self->edit_modules(); exit 0; } if ($opt{edit} || $opt{e});
   $self->add_modules() if ($opt{add} || $opt{a});
   $self->remove_modules() if ($opt{rm});
+  $self->run_shell() if ($opt{sh});
 }
 # }}}
 

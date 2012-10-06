@@ -8,6 +8,7 @@ use FindBin;
 use Getopt::Long;
 use Pod::Usage;
 use OP::Base qw/:vars :funcs/;
+use Term::ANSIColor;
 
 our $VERSION     = '0.01';
 
@@ -16,6 +17,37 @@ sub new
     my ($class, %parameters) = @_;
     my $self = bless ({}, ref ($class) || $class);
     return $self;
+}
+
+
+
+sub out(){
+	my $self=shift;
+
+	my($ref,$text,$prefix,$opts,%o);
+
+	$prefix="$self->{package_name}> ";
+
+	$ref=shift;
+
+	unless(ref $ref){
+		$text="$prefix$ref";
+	}	
+	print "$text";
+
+}
+
+sub get_opt(){
+	my $self=shift;
+
+	&OP::Base::sbvars();
+  	&OP::Base::setsdata();
+  	&OP::Base::setfiles();
+
+  	$self->set_these_cmdopts();
+
+  	&OP::Base::setcmdopts();
+  	&OP::Base::getopt();
 }
 
 sub set_these_cmdopts(){ 

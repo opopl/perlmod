@@ -1,6 +1,5 @@
 package OP::Perl::Installer;
 
-# package intro {{{
 
 use strict;
 use warnings;
@@ -16,10 +15,18 @@ sub new
 {
     my ($class, %parameters) = @_;
     my $self = bless ({}, ref ($class) || $class);
+
+	$self->init();
+
     return $self;
 }
-# }}}
-# use ... {{{
+
+sub init(){
+	my $self=shift;
+
+	$self->{package_name}=__PACKAGE__;
+}
+
 
 use File::Basename;
 use File::Path qw(remove_tree);
@@ -33,7 +40,6 @@ use ExtUtils::ModuleMaker;
 use Term::ShellUI;
 use Data::Dumper;
 
-# }}}
 # subs {{{
 # declarations {{{
 sub add_modules;
@@ -126,12 +132,23 @@ sub remove_modules(){
 sub edit_modules(){
 	my $self=shift;
 
-	my(@emods,@files);
+	my(@emodules,@files);
+	my $mfile;
+
 	my $s_modules=$opt{edit} // shift;
 
-	@emods=split(',',$s_modules) if defined $s_modules;
+	@emodules=split(',',$s_modules) if defined $s_modules;
 
-	foreach my $module (@emods){ push(@files,$self->module_to_def($module) . "/lib/" . $self->module_to_path($module)); }
+	if($s_modules eq "_all"){
+		@emodules=@{$self->{'modules'}};
+	}elsif($s_modules eq "_sel"){
+		@emodules=@{$self->{'select_modules'}};
+	}
+
+	foreach my $module (@emodules){ 
+		$mfile=$self->module_to_def($module) . "/lib/" . $self->module_to_path($module);
+		push(@files,$mfile);
+   	}
 	foreach(@files){ s/^/$shd\/mods\//g; }
 	system("gvim -n -p --remote-tab-silent @files");
 }
@@ -157,14 +174,20 @@ sub set_these_cmdopts(){
 # set_modules(){{{
 sub set_modules(){
 	my $self=shift;
-  #$files{mods}="$shd/inc/modules_to_install.i.dat";
-  #@modules=@{&readarr($files{mods})};
+
   opendir(D,"$shd/mods/");
   while(my $file=readdir(D)){
 	  next if $file =~ m/^\./;
 	  push(@{$self->{mod_def_names}},$file);
 	  push(@{$self->{modules}},$self->def_to_module($file));
   }
+  
+  $self->{select_modules}=[ qw( 
+  	OP::Perl::Installer 
+  	OP::GOPS::RIF
+  	OP::Script
+  )];
+
   closedir(D);
 }
 #}}}
@@ -182,7 +205,11 @@ sub list_modules(){
 sub run_build_install(){
 	my $self=shift;
 	my @exclude=qw( OP::Module::Build OP::GOPS );
-	my @only=qw( OP::GOPS::RIF );
+	my @only=qw( 
+		OP::GOPS::RIF 
+		OP::Perl::Installer 
+		OP::Script
+		);
 
 	foreach my $mod (@{$self->{mod_def_names}}) {
 		my $dirmod="$shd/mods/" . $mod;
@@ -200,24 +227,23 @@ sub run_build_install(){
 			,license => 'perl'
 		);
 	
-		&eoo("Building module: $module\n");
+		$self->out( "Building module: $module\n" );
 
 #		select $fh{log}; 
 		$build->dispatch('build');
 
 #		select STDOUT; 
-		#&eoo("Testing module: $module\n");
+		$self->out("Testing module: $module\n");
 
 ##		select $fh{log}; 
 		$build->dispatch('test', quiet => 1);
 
 ##		select STDOUT; 
-		&eoo("Installing module: $module\n");
+		$self->out("Installing module: $module\n");
 
 ##		select $fh{log};
 		$build->dispatch('install', install_base => "$ENV{HOME}" );
 	}
-	exit 0;
 }
 # }}}
 # sub run_shell(){{{
@@ -252,7 +278,8 @@ sub _complete_modules(){
 	}else{
 		$ref=$self->{'modules'};
 	}
-	#print Dumper($self->{'modules'});
+
+	push(@{$ref},qw(_all _sel));
 	return $ref;
 }
 # }}}
@@ -263,6 +290,7 @@ sub init_vars(){
 
 	$self->{'shell_commands'}=
 		{ 
+###cmd_help
 			"help" => {
 				desc => "Print helpful information",
 				args => sub { shift->help_args(undef, @_); },
@@ -270,27 +298,51 @@ sub init_vars(){
 			},
 			 "h" =>  { alias => "help", exclude_from_completion => 1 },
              "q" => { alias => 'quit', exclude_from_completion => 1 },
+###cmd_cd
 			 "cd" => {
                   desc => "Change to directory DIR",
                   maxargs => 1, args => sub { shift->complete_onlydirs(@_); },
                   proc => sub { chdir($_[0] || $ENV{HOME} || $ENV{LOGDIR}); },
               },
+###cmd_chdir
 			 "chdir" => { alias => 'cd' },
               "lm" => { alias => 'list modules' },
+###cmd_pwd
               "pwd" => {
                   desc => "Print the current working directory",
                   maxargs => 0, proc => sub { system('pwd'); },
               },
+###scmd_rbi
+              "rbi" => {
+                  desc => "Run-build-install",
+                  maxargs => 0, 
+				  proc => sub { $self->run_build_install(); },
+              },
+###scmd_eam
+              "eam" => {
+                  desc => "Edit all Perl modules",
+                  maxargs => 0, 
+				  proc => sub { $self->edit_modules("_all"); },
+              },
+###scmd_esm
+              "esm" => {
+                  desc => "Edit selected Perl modules",
+                  maxargs => 0, 
+				  proc => sub { $self->edit_modules("_sel"); },
+              },
+###cmd_quit
               "quit" => {
                   desc => "Quit this program", 
 				  maxargs => 0,
                   method => sub { shift->exit_requested(1); },
               },
+###cmd_lm
 			  "lm" => { 
 				  desc => "List available modules",
 				  proc => sub { $self->list_modules(); },
 				  maxargs => 0
 			  },
+###cmd_list
 			  "list" => {
 				  desc => "List different things", 
 				  cmds => {
@@ -301,6 +353,7 @@ sub init_vars(){
 						}
 				  	}
 			  },
+###cmd_add
 			  "add" => {
 				  desc => "Add module",
 				  maxargs => 1,
@@ -313,6 +366,7 @@ sub init_vars(){
 					  $self->_complete_modules(@_); 
 				  }
 			  },
+###cmd_edit
 			  "edit" => {
 				  desc => "Edit module", 
 				  maxargs => 1,
@@ -341,9 +395,9 @@ sub main(){
   $self->init_vars();
 
   $self->set_modules();
-  $self->run_build_install() if ($opt{run} || $opt{r});
-  do { $self->list_modules(); exit 0 } if ($opt{list} || $opt{l});
-  do { $self->edit_modules(); exit 0 } if ($opt{edit} || $opt{e});
+  do { $self->run_build_install(); exit 0; } if ($opt{run} || $opt{r});
+  do { $self->list_modules(); exit 0; } if ($opt{list} || $opt{l});
+  do { $self->edit_modules(); exit 0; } if ($opt{edit} || $opt{e});
   $self->add_modules() if ($opt{add} || $opt{a});
   $self->remove_modules() if ($opt{rm});
   $self->run_shell() if ($opt{sh});
