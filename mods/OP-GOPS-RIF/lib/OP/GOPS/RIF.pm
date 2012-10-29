@@ -347,6 +347,11 @@ if ($opts{ikwperl}){ $files{kwperl}=$opts{ikwperl}; }
 
 # }}}
 # pdebug(){{{
+
+=head3 pdebug()
+
+=cut
+
 sub pdebug(){
 	my $self=shift;
 
@@ -366,7 +371,12 @@ sub pdebug(){
 	}
 }
 # }}}
-# sub read_in_ifs(){{{
+# read_in_ifs() {{{
+
+=head3 read_in_ifs()
+
+=cut
+
 sub read_in_ifs(){
 	my $self=shift;
 
@@ -374,6 +384,11 @@ sub read_in_ifs(){
 }
 # }}}
 # set_arr_trues() - specify array @true for true values  {{{
+
+=head3 set_arr_trues() {{{
+
+=cut
+
 sub set_arr_trues(){
 	my $self=shift;
 
@@ -386,6 +401,10 @@ sub set_arr_trues(){
 }
 # }}}
 # set_ops(){{{ - fortranops perlops 
+
+=head3 set_ops()
+
+=cut
 
 sub set_ops(){
 	my $self=shift;
@@ -412,7 +431,12 @@ sub set_ops(){
 }
 
 # }}}
-# set_these_cmdopts(){{{ 
+# set_these_cmdopts() {{{ 
+
+=head3 set_these_cmdopts()
+
+=cut
+
 sub set_these_cmdopts(){ 
 	my $self=shift;
 
@@ -593,7 +617,12 @@ sub process_kw_data(){
 	&eoolog(" " . scalar @ifs . "\n");
 }
 # }}}
-# sub view_rif(){{{
+# view_rif(){{{
+
+=head3 view_rif()
+
+=cut
+
 sub view_rif(){
 	my $self=shift;
 
@@ -607,7 +636,14 @@ sub view_rif(){
 	exit 0;
 }
 #}}}
-# sub _if_set_rif_files(){{{
+# _if_* () {{{
+
+# _if_set_rif_files(){{{
+
+=head3 _if_set_rif_files()
+
+=cut
+
 sub _if_set_rif_files(){	
 	my $self=shift;
 
@@ -622,6 +658,11 @@ sub _if_set_rif_files(){
 	foreach (keys %files){ $files{$_} =~ s/^\.\///g; }
 }
 #}}}
+# _if_print_opts_info() {{{
+
+=head3 _if_print_opts_info()
+
+=cut
 
 sub _if_print_opts_info(){
 	my $self=shift;
@@ -674,6 +715,12 @@ sub _if_print_opts_info(){
 			}
 		}
 }
+# }}}
+# _if_print_verbatim() {{{
+
+=head3 _if_print_verbatim()
+
+=cut
 
 sub _if_print_verbatim(){
 	my $self=shift;
@@ -684,6 +731,13 @@ sub _if_print_verbatim(){
 	&eoolog("Processing: $if \n");
 }
 
+# }}}
+# _if_open_files() {{{
+
+=head3 _if_open_files()
+
+=cut
+
 sub _if_open_files(){
 	my $self=shift;
 
@@ -691,7 +745,12 @@ sub _if_open_files(){
 	open($fh{O},"<$if") || die $!;
 	open($fh{N},">$files{rif}");
 }
+# }}}
+# _if_print_heads() {{{
 
+=head3 _if_print_heads()
+
+=cut
 
 sub _if_print_heads(){
 	my $self=shift;
@@ -702,8 +761,15 @@ sub _if_print_heads(){
 	if ($opts{plines}){ $self->print_head($fh{PL},"$files{plines}"); }
 	if ($opts{plines}){ $self->print_true($fh{PL},"$files{plines}"); }
 }
+# }}}
+# _if_intro() {{{
+
+=head3 _if_intro()
+
+=cut
 
 sub _if_intro(){
+
 	my $self=shift;
 	
 	$nline=0;
@@ -714,6 +780,12 @@ sub _if_intro(){
 	$printo{"this"}=1;
 	@res0=( 1, 1 );
 }
+# }}}
+# _if_loop_FILE() {{{
+
+=head3 _if_loop_FILE()
+
+=cut
 
 sub _if_loop_FILE(){
 	my $self=shift;
@@ -1029,6 +1101,12 @@ sub _if_loop_FILE(){
 	#}}}
 	}
 }
+# }}}
+# _if_close_files() {{{
+
+=head3 _if_close_files()
+
+=cut
 
 sub _if_close_files(){
 	my $self=shift;
@@ -1051,6 +1129,12 @@ sub _if_close_files(){
 	if ($opts{plines}){ close($fh{PL}); }
 	if ($opts{pdumper}){ close($fh{D}); }
 }
+# }}}
+# _if_write_new() {{{
+
+=head3 _if_write_new()
+
+=cut
 
 sub _if_write_new(){
 	my $self=shift;
@@ -1064,6 +1148,12 @@ sub _if_write_new(){
 
 	move("$files{fnew}","$files{rif}");
 }
+# }}}
+# _if_final_output() {{{
+
+=head3 _if_final_output()
+
+=cut
 
 sub _if_final_output(){
 	my $self=shift;
@@ -1074,6 +1164,12 @@ sub _if_final_output(){
 	&eoolog("	$files{diff}\n");
 	&eoolog("","end_verbatim"=>1,vspaces=>1);
 }
+# }}}
+# _if_print_new_comment() {{{
+
+=head3 _if_print_new_comment()
+
+=cut 
 
 sub _if_print_new_comment(){
 	my $self=shift;
@@ -1085,6 +1181,12 @@ sub _if_print_new_comment(){
 		print $fh{NC}, "$comment\n";
 	}
 }
+# }}}
+# _if_reopen_files() {{{
+
+=head3 _if_reopen_files()
+
+=cut
 
 sub _if_reopen_files(){
 	my $self=shift;
@@ -1098,8 +1200,14 @@ sub _if_reopen_files(){
 
 	@flines= split "\n",$ftext;
 }
+# }}}
 
-# handle_ifs(){{{
+# }}}
+# handle_ifs() {{{
+
+=head3 handle_ifs()
+
+=cut
 
 sub handle_ifs(){
 	my $self=shift;
@@ -1124,6 +1232,11 @@ sub handle_ifs(){
 }
 # }}}
 # main_close_files() - close files {{{
+
+=head3 main_close_files()
+
+=cut
+
 sub main_close_files(){
 	my $self=shift;
 
@@ -1138,7 +1251,12 @@ sub main_close_files(){
 	}
 }
 # }}}
-# handle_lfiles(){{{
+# handle_lfiles() {{{
+
+=head3 handle_lfiles()
+
+=cut
+
 sub handle_lfiles(){
 	my $self=shift;
 
@@ -1153,10 +1271,15 @@ sub handle_lfiles(){
 		}
 	}
 }
+
 # }}}
 
 # }}}
 # main() {{{
+
+=head3 main()
+
+=cut
 
 sub main(){
 	my $self=shift;
@@ -1196,6 +1319,7 @@ sub main(){
 	exit 0;
 }
 #}}}
+# }}}
 
 1;
 

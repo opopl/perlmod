@@ -1,17 +1,39 @@
 package OP::Perl::Installer;
-
+# use ... {{{
 
 use strict;
 use warnings;
 
 use lib ("/home/op/wrk/perlmod/mods/OP-Script/lib");
-use OP::Script;
 
 our $VERSION='0.01';
-
 our @ISA=qw(OP::Script);
     
-sub new
+use OP::Script;
+use File::Basename;
+use File::Path qw(remove_tree);
+use FindBin;
+use Getopt::Long;
+use Pod::Usage;
+use Module::Build;
+use lib("$FindBin::Bin/OP-Base/lib");
+use OP::Base qw/:vars :funcs/;
+use ExtUtils::ModuleMaker;
+use Term::ShellUI;
+use Data::Dumper;
+
+# }}}
+# Methods {{{
+
+=head1 Methods
+
+=cut
+
+=head2 Initializations
+
+=cut
+
+sub new()
 {
     my ($class, %parameters) = @_;
     my $self = bless ({}, ref ($class) || $class);
@@ -27,32 +49,6 @@ sub init(){
 	$self->{package_name}=__PACKAGE__;
 }
 
-
-use File::Basename;
-use File::Path qw(remove_tree);
-use FindBin;
-use Getopt::Long;
-use Pod::Usage;
-use Module::Build;
-use lib("$FindBin::Bin/OP-Base/lib");
-use OP::Base qw/:vars :funcs/;
-use ExtUtils::ModuleMaker;
-use Term::ShellUI;
-use Data::Dumper;
-
-# subs {{{
-# declarations {{{
-sub add_modules;
-sub remove_modules;
-sub list_modules;
-sub edit_modules;
-sub set_these_cmdopts;
-sub set_modules;
-sub main;
-sub module_to_path;
-sub module_to_def;
-sub def_to_module;
-# }}}
 # module_to_path(){{{
 sub module_to_path(){
 	my $self=shift;
@@ -260,7 +256,6 @@ sub run_shell(){
   $term->run();
 }
 # }}}
-# }}}
 # _complete_modules(){{{
 sub _complete_modules(){
 	my $self=shift;
@@ -403,6 +398,6 @@ sub main(){
   $self->run_shell() if ($opt{sh});
 }
 # }}}
-
+# }}}
 1;
 
