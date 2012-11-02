@@ -1,4 +1,5 @@
 package OP::Script;
+# use ... {{{
 
 use strict;
 use warnings;
@@ -11,6 +12,8 @@ use OP::Base qw/:vars :funcs/;
 use Term::ANSIColor;
 
 our $VERSION     = '0.01';
+# }}}
+# Methods {{{
 
 sub new
 {
@@ -18,8 +21,6 @@ sub new
     my $self = bless ({}, ref ($class) || $class);
     return $self;
 }
-
-
 
 sub out(){
 	my $self=shift;
@@ -79,6 +80,4 @@ sub main(){
 # }}}
 
 # }}}
-
-
 1;
