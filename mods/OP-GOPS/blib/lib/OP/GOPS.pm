@@ -6,6 +6,7 @@ use OP::Base;
 
 require Exporter;
 
+our $VERSION='0.01';
 our @ISA = qw(Exporter);
 
 our %EXPORT_TAGS = ( 
@@ -21,9 +22,6 @@ our @EXPORT_OK = (
 	);
 
 our @EXPORT = qw( );
-
-our $VERSION = '0.01';
-
 
 our(@coor);
 

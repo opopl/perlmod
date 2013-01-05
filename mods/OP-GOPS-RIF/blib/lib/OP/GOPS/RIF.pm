@@ -1,6 +1,5 @@
 package OP::GOPS::RIF;
-
-# use ...{{{
+# intro {{{
 
 use warnings;
 use strict;
@@ -148,7 +147,12 @@ sub init_print(){
 	&eoolog("","begin_verbatim"=>1);
 }
 # }}}
-# init_bool_parser(){{{
+# init_bool_parser() {{{
+
+=head3 init_bool_parser()
+
+=cut
+
 sub init_bool_parser(){
 	my $self=shift;
 	#print "$opts{log}\n";exit 0;
@@ -385,7 +389,7 @@ sub read_in_ifs(){
 # }}}
 # set_arr_trues() - specify array @true for true values  {{{
 
-=head3 set_arr_trues() {{{
+=head3 set_arr_trues() 
 
 =cut
 

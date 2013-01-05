@@ -1,11 +1,11 @@
 package OP::GOPS::MKDEP;
+# intro {{{
 
 use strict;
 use warnings;
 
 our $VERSION='0.01';
 
-# use... {{{
 # 
 # Changelog:
 #
@@ -148,11 +148,13 @@ print DP "# Program name: $PROGNAME\n";
 # subroutine bodies {{{
 
 # new(){{{
+
 sub new(){
     my ($class, %parameters) = @_;
     my $self = bless ({}, ref ($class) || $class);
     return $self;
 }
+
 # }}}
 # remove_extension(){{{
 sub remove_extension(){
@@ -266,6 +268,11 @@ sub _wanted() {
 
 #}}}
 # PrintWords() {{{
+
+=head3 PrintWords()
+
+=cut
+
 sub PrintWords {
 	my $self=shift;
 	# &PrintWords(current output column, extra tab?, word list); --- print words nicely
@@ -298,6 +305,11 @@ sub PrintWords {
 }
 # }}}
 # resolve_line(){{{
+
+=head3 resolve_line()
+
+=cut
+
 sub resolve_line(){
 	my $self=shift;
 	my($line,$switch)=@_;
@@ -443,7 +455,7 @@ sub make_deps() {
 	  foreach my $mode (qw( nexist nused)){
 	 		print DP "# $mode dependencies:\n"; ;
 	 		foreach my $file (@fortranfiles) {
-				if (defined @{$deps{$file}{$mode}}){
+				if (@{$deps{$file}{$mode}}){
 					print DP "# 	$file =>  ";
 					foreach (@{$deps{$file}{$mode}}) { print DP "$_ "; } 
 					print DP "\n";

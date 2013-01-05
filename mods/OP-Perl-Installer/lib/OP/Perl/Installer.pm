@@ -46,10 +46,11 @@ sub new()
 sub init(){
 	my $self=shift;
 
-	$self->{package_name}=__PACKAGE__;
+	$self->{package_name}=__PACKAGE__ unless defined $self->{package_name};
 }
 
 # module_to_path(){{{
+
 sub module_to_path(){
 	my $self=shift;
 	# input: My::Module::Base
@@ -150,8 +151,10 @@ sub edit_modules(){
 }
 # }}}
 # set_these_cmdopts(){{{ 
+
 sub set_these_cmdopts(){ 
 	my $self=shift;
+
   @cmdopts=( 
 	{ name	=>	"h,help", 		desc	=>	"Print the help message"	}
 	,{ name	=>	"man", 			desc	=>	"Print the man page"		}
@@ -168,6 +171,11 @@ sub set_these_cmdopts(){
 } 
 #}}}
 # set_modules(){{{
+
+=head3 set_modules()
+
+=cut
+
 sub set_modules(){
 	my $self=shift;
 
@@ -179,15 +187,20 @@ sub set_modules(){
   }
   
   $self->{select_modules}=[ qw( 
+  	OP::Script
   	OP::Perl::Installer 
   	OP::GOPS::RIF
-  	OP::Script
   )];
 
   closedir(D);
 }
 #}}}
 # list_modules(){{{
+
+=head3 list_modules()
+
+=cut
+
 sub list_modules(){
 	my $self=shift;
 
@@ -198,13 +211,21 @@ sub list_modules(){
 }
 # }}}
 # run_build_install(){{{
+
+=head3 run_build_install()
+
+=cut
+
 sub run_build_install(){
 	my $self=shift;
-	my @exclude=qw( OP::Module::Build OP::GOPS );
+	my @exclude=qw( OP::Module::Build );
 	my @only=qw( 
-		OP::GOPS::RIF 
-		OP::Perl::Installer 
+		OP::Base
+		OP::GOPS
+		OP::GOPS::RIF
 		OP::Script
+		OP::Parse::BL
+		OP::Perl::Installer 
 		);
 
 	foreach my $mod (@{$self->{mod_def_names}}) {
@@ -379,7 +400,6 @@ sub init_vars(){
 
 }
 # }}}
-
 # main() {{{
 
 sub main(){
@@ -390,12 +410,15 @@ sub main(){
   $self->init_vars();
 
   $self->set_modules();
+
   do { $self->run_build_install(); exit 0; } if ($opt{run} || $opt{r});
   do { $self->list_modules(); exit 0; } if ($opt{list} || $opt{l});
   do { $self->edit_modules(); exit 0; } if ($opt{edit} || $opt{e});
+
   $self->add_modules() if ($opt{add} || $opt{a});
   $self->remove_modules() if ($opt{rm});
   $self->run_shell() if ($opt{sh});
+
 }
 # }}}
 # }}}
