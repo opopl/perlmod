@@ -91,6 +91,31 @@ sub out(){
 
 =cut
 
+# _opt_struct_check() {{{
+
+=head3 _opt_struct_check()
+
+=cut
+
+sub _opt_struct_check(){
+	my $self=shift;
+
+	my $opt_struct=shift;
+
+	my $opt_struct_fields=[ qw( type name desc ) ];
+
+	die "Wrong opt_struct passed to _opt_struct_check() function!\n" 
+		unless ref $opt_struct eq "HASH";
+	
+	foreach my $field (@$opt_struct_fields) {
+		$opt_struct->{$field}="" unless defined $opt_struct->{$field};
+	}
+
+	return $opt_struct;
+
+}
+
+# }}}
 # _opt_true() {{{
 
 =head3 _opt_true()
@@ -152,6 +177,22 @@ sub _opt_get(){
 
 	my $val=$OP::Base::opts{$opt} // undef;
 	return $val;
+}
+
+# }}}
+# _opt_set() {{{
+
+=head3 _opt_set()
+
+=cut
+
+sub _opt_set(){
+	my $self=shift;
+
+	my $opt=shift;
+	my $val=shift;
+
+	$OP::Base::opts{$opt}=$val;
 }
 
 # }}}
@@ -268,7 +309,31 @@ sub _a_sort(){
 }
 
 # }}}
+# _a_get() {{{
 
+sub _a_get(){
+	my $self=shift;
+
+	my $var=shift;
+
+	return $self->{a}->{$var} if defined $self->{a}->{$var};
+	return undef;
+
+}
+
+# }}}
+# _a_set() {{{
+
+sub _a_set(){
+	my $self=shift;
+
+	my($var,$val)=@_;
+
+ 	$self->{a}->{$var}=$val;
+
+}
+
+# }}}
 
 # }}}
 # _h_* -  hash methods {{{
@@ -293,9 +358,13 @@ sub _h_add(){
 	$ref=shift;
 
 	unless(ref $ref){
-		%opts=@_;
-		while(my($k,$v)=each %opts){
-			$self->{h}->{$ref}->{$k}=$v;
+		if (@_){
+			%opts=@_;
+			while(my($k,$v)=each %opts){
+				$self->{h}->{$ref}->{$k}=$v;
+			}
+		}else{
+			$self->{h}->{$ref}={};
 		}
 	}
 
@@ -325,6 +394,208 @@ sub _h_add_ref(){
 }
 
 # }}}
+# _h_get() {{{
+
+=head3 _h_get()
+
+Retrieve the hash ref for the given key
+
+=cut
+
+sub _h_get(){
+	my $self=shift;
+
+	my($ref,$key)=@_;
+
+	unless(ref $ref){
+		my $val= $self->{h}->{$ref};
+		return $val;
+	}
+
+}
+
+# }}}
+# _h_dump() {{{
+
+=head3 _h_dump()
+
+Dump the hash
+
+=cut
+
+sub _h_dump(){
+	my $self=shift;
+
+	my($ref)=@_;
+
+	unless(ref $ref){
+		my $val= $self->{h}->{$ref};
+		print Data::Dumper->Dump([ $val ],[ $ref ]);
+		return $val;
+	}
+
+}
+
+# }}}
+# _h_get_value() {{{
+
+=head3 _h_get_value()
+
+Retrieve the value given the key
+
+=cut
+
+sub _h_get_value(){
+	my $self=shift;
+
+	my($ref,$key)=@_;
+
+	unless(ref $ref){
+		my $val= $self->{h}->{$ref}->{$key} // undef;
+		return $val;
+	}
+
+}
+
+# }}}
+# _h_get_key_by_value() {{{
+
+=head3 _h_get_key_by_value()
+
+Retrieve the key given its key
+
+=cut
+
+sub _h_get_key_by_value(){
+	my $self=shift;
+
+	my($ref,$value)=@_;
+
+	unless(ref $ref){
+		my $keys=$self->_h_keys($ref);
+		my $hash=$self->_h_get($ref);
+		foreach my $k (@$keys) {
+			return $k if ($hash->{$k} eq $value);
+		}
+
+		return undef;
+	}
+
+}
+
+# }}}
+# _h_set_value() {{{
+
+=head3 _h_set_value()
+
+Set the value given the key
+
+=cut
+
+sub _h_set_value(){
+	my $self=shift;
+
+	my($ref,$key,$val)=@_;
+
+	unless(ref $ref){
+		$val= $self->{h}->{$ref}->{$key}=$val;
+	}
+
+}
+
+# }}}
+# _h_keys() {{{
+
+=head3 _h_keys()
+
+Return the reference to the list of hash's keys
+
+=cut
+
+sub _h_keys(){
+	my $self=shift;
+
+	my($ref)=@_;
+
+	unless(ref $ref){
+		if($self->_h_defined("$ref")){
+			my @keys=keys %{$self->{h}->{$ref}}; 
+			return \@keys;
+		}else{
+			return undef;
+		}
+	}
+
+}
+
+# }}}
+# _h_values() {{{
+
+=head3 _h_values()
+
+Return the reference to the list of hash's values
+
+=cut
+
+sub _h_values(){
+	my $self=shift;
+
+	my($ref)=@_;
+
+	unless(ref $ref){
+		if($self->_h_defined("$ref")){
+			my @values=sort values %{$self->{h}->{$ref}}; 
+			return \@values;
+		}else{
+			return undef;
+		}
+	}
+
+}
+
+# }}}
+# _h_defined() {{{
+
+=head3 _h_defined()
+
+Check whether hash is defined
+
+=cut
+
+sub _h_defined(){
+	my $self=shift;
+
+	my($ref)=@_;
+
+	unless(ref $ref){
+		return 1 if defined $self->{h}->{$ref};
+	}
+	return 0;
+
+}
+
+# }}}
+# _h_def_value() {{{
+
+=head3 _h_def_value()
+
+Check whether hash value is defined for the given key
+
+=cut
+
+sub _h_def_value(){
+	my $self=shift;
+
+	my($ref,$opt)=@_;
+
+	unless(ref $ref){
+		return 1 if defined $self->{h}->{$ref}->{$opt};
+	}
+	return 0;
+
+}
+
+# }}}
 
 # }}}
 # _v_* -  variable methods {{{
@@ -332,6 +603,8 @@ sub _h_add_ref(){
 =head2 Variable methods
 
 =cut
+
+# _v_set(){{{
 
 sub _v_set(){
 	my $self=shift;
@@ -341,6 +614,9 @@ sub _v_set(){
 	$self->{v}->{$var}=$val;
 
 }
+
+# }}}
+# _v_get() {{{
 
 sub _v_get(){
 	my $self=shift;
@@ -352,7 +628,31 @@ sub _v_get(){
 
 }
 
+# }}}
+# _v_def() {{{
 
+sub _v_def(){
+	my $self=shift;
+
+	my($var)=@_;
+
+	return 1 if defined $self->{v}->{$var};
+	return 0;
+
+}
+
+# }}}
+# _v_eq() {{{
+
+sub _v_eq(){
+	my $self=shift;
+
+	my($var,$val)=@_;
+
+	return 1 if ("$val" eq $self->_v_get($var));
+	return 0;
+}
+# }}}
 # }}}
 # _r_* -  ref methods {{{
 
@@ -464,14 +764,25 @@ sub _view(){
 
 	return 1 unless defined $opts{files}; 
 
-	my $files=$opts{files};
+	my($files,$viewer,$view_opts,$view_cmd);
 
-	my $viewer=$self->_v_get("viewer") // "gvim";
-	my $view_opts=$self->_v_get("view_opts") // "-n -p --remote-tab-silent";
+	$files=$opts{files};
+	$viewer=$opts{viewer} // '';
+	$view_opts="";
 
-	my $cmd="$viewer $view_opts " . join(" ",@$files);
+	$viewer=$self->_v_get("viewer") // "gvim" unless $viewer;
 
-	system($cmd);
+	foreach($viewer){
+		/^(gvim|vim|vi)$/ && do {
+			$view_opts=$self->_v_get("$viewer" ."_view_opts")
+		   		// "-n -p --remote-tab-silent";
+			next;
+		};	
+	}
+
+	$view_cmd="$viewer $view_opts " . join(" ",@$files);
+
+	system($view_cmd);
 
 }
 # }}}
@@ -484,6 +795,8 @@ sub _view(){
 sub get_opt(){
 	my $self=shift;
 
+	my @argv=@_;
+
 	&OP::Base::sbvars();
   	&OP::Base::setsdata();
   	&OP::Base::setfiles();
@@ -491,9 +804,47 @@ sub get_opt(){
   	$self->set_these_cmdopts();
 
   	&OP::Base::setcmdopts();
-  	&OP::Base::getopt();
+  	&OP::Base::getopt(@argv);
 
 	$self->{v}->{cmdline}=$OP::Base::cmdline;
+
+  	$self->get_opt_after();
+}
+
+sub print_help(){
+	my $self=shift;
+
+  	&OP::Base::printhelp();
+}
+
+sub print_man(){
+	my $self=shift;
+
+  	&OP::Base::printman();
+}
+
+sub print_examples(){
+	my $self=shift;
+
+  	&OP::Base::printexamples();
+}
+
+sub print_pod_options(){
+	my $self=shift;
+
+  	&OP::Base::printpodoptions();
+}
+
+sub get_opt_after(){
+	my $self=shift;
+
+    #&OP::Base::getopt_after();
+
+	$self->print_pod_options();
+	$self->print_help() if $self->_opt_true("help");
+	$self->print_man() if $self->_opt_true("man");
+	$self->print_examples() if $self->_opt_true("examples");
+
 }
 # }}}
 # add_cmd_cmdsopts() {{{
@@ -511,9 +862,14 @@ sub add_cmd_opts(){
 		return 1;
 	}else{
 		if (ref $ref eq "ARRAY") {
-			push(@OP::Base::cmdopts,@$ref);
+			foreach my $opt_struct (@$ref) {
+				$self->_opt_struct_check($opt_struct);
+				push(@OP::Base::cmdopts,$opt_struct);
+			}
 		}elsif(ref $ref eq "HASH"){
-			push(@OP::Base::cmdopts,$ref);
+			my $opt_struct=$ref;
+			$self->_opt_struct_check($opt_struct);
+			push(@OP::Base::cmdopts,$opt_struct);
 		}
 	}
 }

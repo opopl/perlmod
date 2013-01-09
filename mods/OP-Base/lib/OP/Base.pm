@@ -1,6 +1,18 @@
-# package OP::Base; {{{
 
 package OP::Base;
+# Intro {{{
+
+=head1 NAME
+
+OP::Base - Basic Perl functions and variables
+
+=head1 SYNOPSIS
+
+  use OP::Base qw/:vars :funcs/;
+
+=head1 DESCRIPTION
+
+=cut
 
 use 5.010001;
 
@@ -17,19 +29,13 @@ require Exporter;
 
 our @ISA = qw(Exporter);
 
-# Items to export into callers namespace by default. Note: do not export
-# names by default without a very good reason. Use EXPORT_OK instead.
-# Do not simply export all your public functions/methods/constants.
-
-# This allows declaration	use OP::Base ':all';
-# If you do not need this, moving things directly into @EXPORT or @EXPORT_OK
-# will save memory.
 # }}}
 # Export ... {{{
 
 our %EXPORT_TAGS = ( 
 		# 'funcs' {{{
 		'funcs'		=> [ qw( 
+						_join
 						cmd_opt_add
 						is_const
 						is_log
@@ -41,9 +47,13 @@ our %EXPORT_TAGS = (
 						evali
 						eval_fortran
 						getopt 
+						getopt_after
 						gettime
 						open_files
 						printpod 
+						printhelp
+						printman
+						printexamples
 						readarr 
 						readhash 
 						read_kw_file
@@ -105,7 +115,7 @@ our $VERSION = '0.01';
 # }}}
 # vars{{{
 
-our($this_script,$ts,$shd,$pref_eoo,@allowedpodoptions);
+our($this_script,$ts,$shd,$pref_eoo,@allowed_pod_options);
 our(%files,%dirs,%sdata,@cmdopts,$ncmdopts,@opthaspar);
 our(%opt,%opts,@optstr,@longopts);
 our($cmdline);
@@ -131,6 +141,8 @@ our %ftype;
 # }}}
 # subroutine declarations {{{
 
+sub _join($$);
+
 sub cmd_opt_add;
 sub eoo;
 sub eoo_arr;
@@ -141,9 +153,13 @@ sub eval_fortran;
 sub edelim;
 sub getopt;
 sub getopt_init;
+sub getopt_after;
 sub gettime;
 sub open_files;
 sub printpod;
+sub printhelp;
+sub printexamples;
+sub printman;
 sub readarr;
 sub read_in_flist;
 sub readhash;
@@ -168,7 +184,27 @@ sub toLower;
 # }}}
 # subs {{{
 
-# cmd_opt_add(){{{
+# _join() {{{
+
+=head3 _join()
+
+=cut
+
+sub _join($$){
+	# separator
+	my $sep=shift;
+
+	# reference to an array structure to be joined
+	my $ref=shift;
+
+	if (ref $ref eq "ARRAY"){
+		return join($sep,@$ref);
+	}
+
+}
+
+# }}}
+# cmd_opt_add() {{{
 
 =head3 cmd_opt_add()
 
@@ -389,6 +425,9 @@ sub getopt_init(){
 
 sub getopt(){
 
+	my @argv=@_;
+	@ARGV=@argv if (@argv);
+
 	&getopt_init();
 
 	unless (@ARGV){ 
@@ -398,28 +437,44 @@ sub getopt(){
 		$cmdline=join(' ',@ARGV);
 		GetOptions(\%opt,@optstr);
 	}
-	foreach my $podo (@allowedpodoptions) {
-		&printpod("$podo");
-	}
-
-	foreach (@longopts) {
-		#if exists $shortlongopts{$_}
-		#$opt{$_}=
-	}
-
-	pod2usage(-input=> $files{pod}{help}, -verbose => 1) if $opt{help};
-	pod2usage(-input=> $files{pod}{help}, -verbose => 2) if $opt{man};
-	pod2usage(-input=> $files{pod}{examples}, -verbose => 2) if $opt{examples};
-
-	# view the script itself
-	system("gvim -n -p $0") if $opt{vm};
 
 	foreach my $k (keys %opt) {
 		$opts{$k}=$opt{$k};
 	}
+
+	# view the script itself
+	system("gvim -n -p $0"),exit 0 if $opt{vm};
+
 }
 
 #}}}
+# getopt_after() {{{
+
+sub getopt_after(){
+
+	&printpodoptions();
+	&printhelp() if $opt{help};
+	&printman() if $opt{man};
+	&printexamples() if $opt{examples};
+
+}
+sub printpodoptions() {
+	foreach my $pod_option (@allowed_pod_options) {
+		&printpod("$pod_option");
+	}
+}
+
+sub printhelp(){
+	pod2usage(-input=> $files{pod}{help}, -verbose => 1) if $opt{help};
+}
+sub printman(){
+	pod2usage(-input=> $files{pod}{help}, -verbose => 2) if $opt{man};
+}
+sub printexamples(){
+	pod2usage(-input=> $files{pod}{examples}, -verbose => 2) if $opt{examples};
+}
+
+# }}}
 # gettime () {{{
 
 sub gettime(){
@@ -459,7 +514,7 @@ sub printpod(){
 	my $o;
 	open(POD,">$files{pod}{$topic}") || die $!;
 		
-	if (grep { $topic eq $_ } @allowedpodoptions ){
+	if (grep { $topic eq $_ } @allowed_pod_options ){
 		if ($topic eq "help"){
 			print POD "=head1 NAME\n\n";
 			print POD "$sdata{name} - $sdata{desc}{short} \n\n";
@@ -815,16 +870,18 @@ sub setcmdopts(){
 
   $ncmdopts=scalar @cmdopts;
 
-  foreach my $opt (@cmdopts) {
+  foreach my $opt_struct (@cmdopts) {
 
-	  if (defined $opt->{name}){
-			@optnames=split(',',$opt->{name});
+	  if ( $opt_struct->{name} ){
+			@optnames=split(',',$opt_struct->{name});
 			push(@longopts, map { /^\w{2,}$/ } @optnames);
 	  }
 	
-	  if ( defined ($opt->{type}) ){
-			$otype=$opt->{type};
+	  if( $opt_struct->{type}){
+	  	unless( $opt_struct->{type} =~ /^(|bool)$/){
+			$otype=$opt_struct->{type};
 			s/$/=$otype/g for(@optnames);
+		}
 	  }	  
 	  push(@optstr,@optnames);
   }
@@ -850,7 +907,7 @@ sub sbvars(){
 ( $ts=$this_script) =~ s/\.(\w+)$//g;
  $shd=$FindBin::Bin;
  $pref_eoo="$this_script>";
- @allowedpodoptions=qw( help examples );
+ @allowed_pod_options=qw( help examples );
  %dirs=( 
 	 pod	 => "pod"
  );
@@ -862,7 +919,7 @@ sub sbvars(){
 # }}}
 # setfiles() {{{
 sub setfiles() {
-	foreach my $podo (@allowedpodoptions) {
+	foreach my $podo (@allowed_pod_options) {
 		$files{pod}{$podo}="$sdata{sname}.$podo.pod";
 	}
 	$files{tkw}="$ts.kw.i.dat";
@@ -900,30 +957,10 @@ BEGIN {
 }
 
 1;
+
 # POD documentation {{{
 
 __END__
-# Below is stub documentation for your module. You'd better edit it!
-
-=head1 NAME
-
-OP::Base - Basic Perl functions and variables
-
-=head1 SYNOPSIS
-
-  use OP::Base;
-
-=head1 DESCRIPTION
-
-Stub documentation for OP::Base, created by h2xs. It looks like the
-author of the extension was negligent enough to leave the stub
-unedited.
-
-Blah blah blah.
-
-=head2 EXPORT
-
-None by default.
 
 =head1 SEE ALSO
 
