@@ -819,7 +819,9 @@ sub readarr(){
 sub readhash(){
  my $if=shift;
  open(FILE,"<$if") || die $!;
- my %hash;
+
+ my %hash=();
+
  while(<FILE>){
  	chomp;
  	s/^\s*//g;
@@ -831,7 +833,9 @@ sub readhash(){
 	if (@F){ 
 		$hash{$var}=join(" ",@F); 
 	}
+
  }
+
  close(FILE);
  return \%hash;
 }
