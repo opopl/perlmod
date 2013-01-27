@@ -19,6 +19,7 @@ use Pod::Usage;
 use OP::Base qw/:vars :funcs/;
 use Term::ANSIColor;
 use Data::Dumper;
+use IPC::Cmd qw(can_run run);
 
 our $VERSION     = '0.01';
 
@@ -82,6 +83,51 @@ sub out(){
 		$text="$prefix$ref";
 	}	
 	print "$text";
+
+}
+# }}}
+# exec() {{{
+
+=head3 exec()
+
+=cut
+
+sub exec(){
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	# Command to be executed
+	my($cmd);
+
+	# Logfile to which the command's 
+	#	standard & error output may be written
+	#	(if required)
+	my($log);
+
+	return 1 unless $ref;
+
+	if (ref $ref eq "HASH"){
+		$cmd=$ref->{cmd} // '';
+		$log=$ref->{log} // '';
+
+		unless($cmd){
+			$self->out("No command provided for OP::Script::exec()!\n");
+			exit 1;
+		}
+
+		$self->out("Running command: $cmd\n");
+
+		my($ok, $err, $fullbuf, $stdout, $stderr) = 
+			IPC::Cmd::run( command => $cmd, verbose => 1);
+
+		print Dumper($fullbuf);
+		exit 0;
+
+		unless ($ok){
+			die "Failure\n";
+		}
+	}
 
 }
 # }}}
@@ -411,6 +457,18 @@ sub _h_get(){
 		my $val= $self->{h}->{$ref};
 		return $val;
 	}
+
+}
+
+# }}}
+# _h_set(){{{
+
+sub _h_set(){
+	my $self=shift;
+
+	my($var,$val)=@_;
+
+	$self->{h}->{$var}=$val;
 
 }
 

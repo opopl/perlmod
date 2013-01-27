@@ -218,15 +218,23 @@ sub list_modules(){
 
 sub run_build_install(){
 	my $self=shift;
-	my @exclude=qw( OP::Module::Build );
-	my @only=qw( 
-		OP::Base
-		OP::GOPS
-		OP::GOPS::RIF
-		OP::Script
-		OP::Parse::BL
-		OP::Perl::Installer 
-		);
+
+	my(@exclude,@only);
+
+	@exclude=qw( OP::Module::Build );
+	#@only=qw(OP::Script OP::TEX::Text OP::Perl::Installer);
+	@only=qw(OP::Script OP::TEX::Text OP::Perl::Installer OP::TEX::LATEX2HTML);
+
+	#my @only=qw( 
+		#OP::Base
+		#OP::GOPS
+		#OP::GOPS::RIF
+		#OP::Script
+		#OP::Parse::BL
+		#OP::Perl::Installer 
+		#OP::BIBTEX
+		#OP::TEX::Text
+		#);
 
 	foreach my $mod (@{$self->{mod_def_names}}) {
 		my $dirmod="$shd/mods/" . $mod;
