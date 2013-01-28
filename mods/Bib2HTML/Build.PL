@@ -7,7 +7,9 @@ my $builder = Module::Build->new(
     module_name         => 'Bib2HTML::Main',
     license             => 'perl',
     release_status      => 'stable',
-    script_files         => [ 'bin/bib2ml.pl' ],
+    script_files         => [ qw( bin/bib2ml.pl 
+								bin/bib2sql.pl 
+								bin/bib2xml.pl ) ],
     configure_requires => {
         'Module::Build' => 0,
     },

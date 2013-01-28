@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl 
 
 # bib2html script to generate an HTML document for BibTeX database
 # Copyright (C) 1998-09  Stephane Galland <galland@arakhne.org>
@@ -18,9 +18,11 @@
 # the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-use strict ;
-use File::Basename ;
-use File::Spec ;
+use strict;
+use warnings;
+
+use File::Basename;
+use File::Spec;
 
 #------------------------------------------------------
 #
@@ -55,3 +57,6 @@ use Bib2HTML::Main;
 launchBib2HTML("$PERLSCRIPTDIR","$PERLSCRIPTNAME");
 
 __END__
+
+
+

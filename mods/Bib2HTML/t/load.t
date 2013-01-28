@@ -1,10 +1,11 @@
+##!/usr/bin/env perl -T
 
 use 5.006;
 use strict;
 use warnings FATAL => 'all';
 use Test::More;
 
-use lib '../';
+#use lib '../';
 
 plan tests => 35;
 

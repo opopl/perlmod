@@ -1,0 +1,15 @@
+
+task :default => [ :ptags, :install ]
+
+desc "Generate Perl tags for this distribution"
+task :ptags do 
+  sh 'ptags.pl --idir . --out ./ptags'
+end
+
+desc "Install this Perl module distribution"
+task :install do 
+  sh 'perl Build.PL '
+  sh 'perl Build '
+  sh 'perl Build test'
+  sh 'perl Build install'
+end

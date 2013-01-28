@@ -103,7 +103,9 @@ do{ my $x = [
          'quiet' => undef,
          'extra_compiler_flags' => [],
          'script_files' => [
-                             'bin/bib2ml.pl'
+                             'bin/bib2ml.pl',
+                             'bin/bib2sql.pl',
+                             'bin/bib2xml.pl'
                            ],
          'build_script' => 'Build',
          'original_prefix' => {},
