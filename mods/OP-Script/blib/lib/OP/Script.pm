@@ -14,6 +14,7 @@ use FindBin;
 use lib("$ENV{hm}/wrk/perlmod/mods/OP-Base/lib");
 
 use File::Basename;
+use File::Util;
 use Getopt::Long;
 use Pod::Usage;
 use OP::Base qw/:vars :funcs/;
@@ -105,11 +106,15 @@ sub exec(){
 	#	(if required)
 	my($log);
 
+	# Verbosity level for the command's output
+	my($verbose);
+
 	return 1 unless $ref;
 
 	if (ref $ref eq "HASH"){
 		$cmd=$ref->{cmd} // '';
 		$log=$ref->{log} // '';
+		$verbose=$ref->{verbose} // 0;
 
 		unless($cmd){
 			$self->out("No command provided for OP::Script::exec()!\n");
@@ -119,10 +124,21 @@ sub exec(){
 		$self->out("Running command: $cmd\n");
 
 		my($ok, $err, $fullbuf, $stdout, $stderr) = 
-			IPC::Cmd::run( command => $cmd, verbose => 1);
+			IPC::Cmd::run( command => $cmd, verbose => $verbose);
 
-		print Dumper($fullbuf);
-		exit 0;
+		my $s_fullbuf=join "",@$fullbuf;
+
+		my $fu=File::Util->new();
+		
+		if($log){ 
+			$fu->write_file(
+				file => $log, 
+				content => $s_fullbuf,
+			   	mode => "write");
+		}
+
+		#print Dumper($fullbuf);
+		#exit 0;
 
 		unless ($ok){
 			die "Failure\n";
@@ -557,6 +573,30 @@ sub _h_set_value(){
 
 	unless(ref $ref){
 		$val= $self->{h}->{$ref}->{$key}=$val;
+	}
+
+}
+
+# }}}
+# _h_change_values() {{{
+
+=head3 _h_change_values()
+
+=cut
+
+sub _h_change_values(){
+	my $self=shift;
+
+	my $ref=shift // '';
+	my $opts=shift // '';
+
+	return 1 unless $ref;
+	return 1 unless $opts;
+
+	return 1 unless (ref $opts eq "HASH");
+
+	while(my($k,$v)=each %{$opts}){
+		$self->_h_set_value($ref,$k,$v);
 	}
 
 }

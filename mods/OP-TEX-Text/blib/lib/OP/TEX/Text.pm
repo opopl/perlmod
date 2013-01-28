@@ -1,12 +1,14 @@
 
 package OP::TEX::Text;
-# {{{
+# Intro {{{
 
 use strict;
 use warnings;
 
 use OP::Base qw/:vars :funcs/;
 use parent qw(OP::Script);
+
+# }}}
 
 sub _flush(){
 	my $self=shift;

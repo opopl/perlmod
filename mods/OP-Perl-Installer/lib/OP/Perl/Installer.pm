@@ -112,8 +112,13 @@ sub add_modules(){
 	exit 0;
 }
 # }}}
-# remove_modules(){{{
-sub remove_modules(){
+# remove_modules() {{{
+
+=head3 remove_modules()
+
+=cut
+
+sub remove_modules(){	
 	my $self=shift;
 	my(@modules,%mods,@files);
 	@modules=split(',',$opt{rm});
@@ -125,7 +130,12 @@ sub remove_modules(){
 	exit 0;
 }
 # }}}
-# edit_modules(){{{
+# edit_modules() {{{
+
+=head3 edit_modules()
+
+=cut
+
 sub edit_modules(){
 	my $self=shift;
 
@@ -151,6 +161,10 @@ sub edit_modules(){
 }
 # }}}
 # set_these_cmdopts(){{{ 
+
+=head3 set_these_cmdopts()
+
+=cut
 
 sub set_these_cmdopts(){ 
 	my $self=shift;
@@ -223,7 +237,8 @@ sub run_build_install(){
 
 	@exclude=qw( OP::Module::Build );
 	#@only=qw(OP::Script OP::TEX::Text OP::Perl::Installer);
-	@only=qw(OP::Script OP::TEX::Text OP::Perl::Installer OP::TEX::LATEX2HTML);
+	#@only=qw(OP::Script OP::TEX::Text OP::Perl::Installer OP::TEX::LATEX2HTML);
+	@only=qw(OP::Script OP::GOPS::MKDEP );
 
 	#my @only=qw( 
 		#OP::Base
