@@ -1,141 +1,678 @@
-package Bib2HTML::Generator::Theme::Simple;
+# Copyright (C) 1998-09  Stephane Galland <galland@arakhne.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; see the file COPYING.  If not, write to
+# the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+# Boston, MA 02111-1307, USA.
 
-use 5.006;
-use strict;
-use warnings FATAL => 'all';
+=pod
 
 =head1 NAME
 
-Bib2HTML::Generator::Theme::Simple - The great new Bib2HTML::Generator::Theme::Simple!
+Bib2HTML::Generator::Theme::Simple - A theme for the HTML generator
 
-=head1 VERSION
+=head1 SYNOPSYS
 
-Version 0.01
+use Bib2HTML::Generator::Theme::Simple ;
 
-=cut
+my $gen = Bib2HTML::Generator::Theme::Simple->new( generator,
+                                           bib2html,
+                                           target,
+                                           title,
+                                           lang ) ;
 
-our $VERSION = '0.01';
+=head1 DESCRIPTION
 
+Bib2HTML::Generator::Theme::Simple is a Perl module, which proposes
+a documentation theme for the HTML generator of bib2html.
 
-=head1 SYNOPSIS
+=head1 GETTING STARTED
 
-Quick summary of what the module does.
+=head2 Initialization
 
-Perhaps a little code snippet.
+To start a generator script, say something like this:
 
     use Bib2HTML::Generator::Theme::Simple;
 
-    my $foo = Bib2HTML::Generator::Theme::Simple->new();
-    ...
+    my $gen = Bib2HTML::Generator::Theme::Simple->new( $generator,
+					       { 'VERSION' => '0.11' },
+						'./bib_output',
+						'Title',
+					        $lang ) ;
 
-=head1 EXPORT
+...or something similar. Acceptable parameters to the constructor are:
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+=over
 
-=head1 SUBROUTINES/METHODS
+=item * parent (object ref)
 
-=head2 function1
+is a reference to the current HTML generator.
 
-=cut
+=item * bib2html (hash)
 
-sub function1 {
-}
+contains some data about bib2html.
 
-=head2 function2
+=item * target (string)
 
-=cut
+The directory in which the documentation must be put.
 
-sub function2 {
-}
+=item * title (string)
 
-=head1 AUTHOR
+is the title of the documentation.
 
-op, C<< <op> >>
+=item * lang (object ref)
 
-=head1 BUGS
-
-Please report any bugs or feature requests to C<bug-bib2html at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Bib2HTML>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Bib2HTML::Generator::Theme::Simple
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker (report bugs here)
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Bib2HTML>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Bib2HTML>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Bib2HTML>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Bib2HTML/>
+is a reference to the language object.
 
 =back
 
+=head1 METHOD DESCRIPTIONS
 
-=head1 ACKNOWLEDGEMENTS
+This section contains only the methods in Simple.pm itself.
 
-
-=head1 LICENSE AND COPYRIGHT
-
-Copyright 2013 op.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of the the Artistic License (2.0). You may obtain a
-copy of the full license at:
-
-L<http://www.perlfoundation.org/artistic_license_2_0>
-
-Any use, modification, and distribution of the Standard or Modified
-Versions is governed by this Artistic License. By using, modifying or
-distributing the Package, you accept this license. Do not use, modify,
-or distribute the Package, if you do not accept this license.
-
-If your Modified Version has been derived from a Modified Version made
-by someone other than you, you are nevertheless required to ensure that
-your Modified Version complies with the requirements of this license.
-
-This license does not grant you the right to use any trademark, service
-mark, tradename, or logo of the Copyright Holder.
-
-This license includes the non-exclusive, worldwide, free-of-charge
-patent license to make, have made, use, offer to sell, sell, import and
-otherwise transfer the Package with respect to any patent claims
-licensable by the Copyright Holder that are necessarily infringed by the
-Package. If you institute patent litigation (including a cross-claim or
-counterclaim) against any party alleging that the Package constitutes
-direct or contributory patent infringement, then this Artistic License
-to you shall terminate on the date that such litigation is filed.
-
-Disclaimer of Warranty: THE PACKAGE IS PROVIDED BY THE COPYRIGHT HOLDER
-AND CONTRIBUTORS "AS IS' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
-THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE, OR NON-INFRINGEMENT ARE DISCLAIMED TO THE EXTENT PERMITTED BY
-YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
-CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
-CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+=over
 
 =cut
 
-1; # End of Bib2HTML::Generator::Theme::Simple
+package Bib2HTML::Generator::Theme::Simple;
+
+@ISA = ('Bib2HTML::Generator::Theme');
+@EXPORT = qw();
+@EXPORT_OK = qw();
+
+use strict;
+use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION);
+use Exporter;
+
+use Carp ;
+use File::Spec ;
+
+use Bib2HTML::Generator::Theme ;
+use Bib2HTML::General::Verbose ;
+use Bib2HTML::General::Error ;
+use Bib2HTML::General::Misc ;
+use Bib2HTML::General::HTML ;
+
+#------------------------------------------------------
+#
+# Global vars
+#
+#------------------------------------------------------
+
+# Version number of theme
+my $VERSION = "5.0" ;
+
+#------------------------------------------------------
+#
+# Constructor
+#
+#------------------------------------------------------
+
+sub new($$$$$) : method {
+  my $proto = shift;
+  my $class = ref($proto) || $proto;
+  my $self = $class->SUPER::new( @_ ) ;
+
+  $self->{'BACKGROUND_COLOR'} = '#FFFFFF' ;
+
+  bless( $self, $class );
+  return $self;
+}
+
+#------------------------------------------------------
+#
+# Validation
+#
+#------------------------------------------------------
+
+=pod
+
+=item * getMyValidHTML()
+
+Replies the list of W3C protocols for which this theme
+was validated. You must override this method.
+
+=cut
+sub getMyValidHTML() {
+  my $self = shift ;
+  return ( 'html' ) ;
+}
+
+#------------------------------------------------------
+#
+# Sectioning
+#
+#------------------------------------------------------
+
+=pod
+
+=item * section()
+
+Replies a section
+Takes 3 args:
+
+=over
+
+=item * title (string)
+
+is the title of the new section.
+
+=item * content (string)
+
+is the content of the new section
+
+=item * root (string)
+
+is the root directory for the generated documentation.
+
+=back
+
+=cut
+sub section($$$) : method {
+  my $self = shift ;
+  my $title = $_[0] || confess( 'you must specify the title' ) ;
+  my $content = $_[1] || '' ;
+  my $rootdir = $_[2] || confess( 'you must specify the root directory' ) ;
+  return $self->par( join( '',
+			   "<table BORDER=\"0\" WIDTH=\"100%\" ",
+			   "CELLPADDING=\"1\" CELLSPACING=\"0\">\n",
+			   "<tr>\n",
+			   "<td BGCOLOR=\"#EEEEFF\">\n",
+			   $title,
+			   "</td>",
+			   "</tr>\n",
+			   "</table><br>\n",
+			   $content ) ) ;
+}
+
+#------------------------------------------------------
+#
+# Right Frames
+#
+#------------------------------------------------------
+
+
+=pod
+
+=item * frame_subpart()
+
+Replies a subpart of a frame
+Takes 3 args:
+
+=over
+
+=item * title (string)
+
+is the title of the part.
+
+=item * text (array)
+
+is the content of the frame.
+
+=item * rootdir (string)
+
+is the path to the root directory.
+
+=back
+
+=cut
+sub frame_subpart($$$) : method {
+  my $self = shift ;
+  my $title = $_[0] || '' ;
+  my $content = "<P>" ;
+  if ( $title ) {
+    $content .= "<FONT size=\"+1\">$title</FONT><BR>\n" ;
+  }
+  if ( isarray( $_[1] ) ) {
+    foreach my $line (@{$_[1]}) {
+      $content .= $line."<BR>\n" ;
+    }
+  }
+  return $content."</P>\n" ;
+}
+
+=pod
+
+=item * frame_window()
+
+Replies a frame
+Takes 3 args:
+
+=over
+
+=item * title (string)
+
+is the title of the frame (could be empty).
+
+=item * text (string)
+
+is the content of the frame.
+
+=item * prefix (optional string)
+
+is a string which is put before the title
+
+=back
+
+=cut
+sub frame_window($$) : method {
+  my $self = shift ;
+  my $title = $_[0] || '' ;
+  my $text = $_[1] || '' ;
+  return join( '',
+	       ( $_[2] ? $self->par($_[2]) : '' ),
+	       ($title ? "<FONT size=\"+1\"><B>$title</B></FONT>":''),
+	       "<TABLE BORDER=\"0\" WIDTH=\"100%\">\n<TR>\n",
+	       "<TD NOWRAP>",
+               $text,
+               "</TD></TR></TABLE><BR>\n" ) ;
+}
+
+#------------------------------------------------------
+#
+# Navigation
+#
+#------------------------------------------------------
+
+=pod
+
+=item * get_navigation_bar()
+
+Replies the navigation bar.
+Takes 3 args:
+
+=over
+
+=item * url (string)
+
+is the url of the generated page.
+
+=item * params (hash ref)
+
+is a set of parameters used to generate the bar.
+
+=item * root (string)
+
+is the root directory for the generated documentation.
+
+=back
+
+=cut
+sub get_navigation_bar($$$) : method {
+  my $self = shift ;
+  my $thispage = $_[0] || confess( 'the url must be provided' ) ;
+  my $rootdir = $_[2] || confess( "the rootdir must be supplied" ) ;
+  confess( 'params is not an associative aray' ) unless (ishash($_[1])) ;
+
+  my $overview = "<b>".$self->{'LANG'}->get('I18N_LANG_OVERVIEW')."</b>" ;
+  my $tree = "<b>".$self->{'LANG'}->get('I18N_LANG_TREE')."</b>" ;
+  my $index = "" ;
+  my $newbuttons = '';
+
+  my $prev = html_uc( $self->{'LANG'}->get('I18N_LANG_PREV') ) ;
+  my $next = html_uc( $self->{'LANG'}->get('I18N_LANG_NEXT') ) ;
+
+  if ( ! $_[1]{'overview'} ) {
+    $overview = $self->ext_wt_href('overview-summary',$overview,$rootdir) ;
+  }
+  if ( ! $_[1]{'tree'} ) {
+    $tree = $self->ext_wt_href('overview-tree',$tree,$rootdir) ;
+  }
+  if ( $_[1]{'index'} ) {
+    $index = $self->href( htmlcatfile( $rootdir,
+				       $self->filename('index',0) ),
+			  "<b>".$self->{'LANG'}->get('I18N_LANG_INDEX')."</b>",
+			  $self->browserframe('index') ) ;
+    if ($index) {
+      $index = "<td BGCOLOR=\"#EEEEFF\">&nbsp;$index&nbsp;</td>\n";
+    }
+  }
+  if ( $_[1]{'previous'} ) {
+    $prev = $self->href($_[1]{'previous'},$prev) ;
+  }
+  if ( $_[1]{'next'} ) {
+    $next = $self->href($_[1]{'next'},$next) ;
+  }
+
+  if ( $_[1]{'notree'} ) {
+    $tree = "" ;
+  }
+  else {
+    $tree = "<td BGCOLOR=\"#EEEEFF\">&nbsp;$tree&nbsp;</td>\n" ;
+  }
+
+  # new buttons
+  if ( ( $_[1]{'userdef'} ) &&
+       ( ! isemptyarray($_[1]->{'userdef'}) ) ) {
+    foreach my $button (@{$_[1]->{'userdef'}}) {
+      if ( ($button->{'url'}) && ($button->{'label'}) ) {
+	my $str = $self->href($button->{'url'},
+			      $self->{'LANG'}->get($button->{'label'})) ;
+	$newbuttons .= "<td BGCOLOR=\"#EEEEFF\">&nbsp;<B>$str</B>&nbsp;</td>\n" ;
+      }
+    }
+  }
+
+  my $content = join( '',
+		      "<table BORDER=\"0\" WIDTH=\"100%\" ",
+		      "CELLPADDING=\"1\" CELLSPACING=\"0\">\n",
+		      "<tr>\n",
+		      "<td COLSPAN=2 BGCOLOR=\"#EEEEFF\">\n",
+		      # First row
+		      "<table BORDER=\"0\" CELLPADDING=\"0\" ",
+		      "CELLSPACING=\"3\">\n",
+		      "<tr ALIGN=\"center\" VALIGN=\"top\">\n",
+		      "<td BGCOLOR=\"#EEEEFF\">&nbsp;$overview&nbsp;</td>\n",
+		      $tree,
+		      $newbuttons,
+		      $index,
+		      "</tr>\n</table>\n",
+		      "</td>\n",
+		      # Name of the doc
+		      "<td ALIGN=\"right\" VALIGN=\"top\" ROWSPAN=3><em><b>",
+		      $self->{'TITLE'},
+		      "</b></em></td>\n</tr>\n",
+		      # Second row
+		      "<tr>\n",
+		      "<td BGCOLOR=\"white\"><font SIZE=\"-2\">",
+		      "$prev&nbsp;&nbsp;$next",
+		      "</font></td>\n",
+		      "<td BGCOLOR=\"white\"><font SIZE=\"-2\">",
+		      $self->ext_href('main_index',"<b>".
+				      html_uc( $self->{'LANG'}->get('I18N_LANG_FRAMES') ).
+				      "</b>",$rootdir),
+		      "&nbsp;&nbsp;",
+		      $self->href($thispage,"<b>".
+				  html_uc( $self->{'LANG'}->get('I18N_LANG_NO_FRAME') ).
+				  "</b>",
+				  $self->browserframe('main_index')),
+		      "&nbsp;</font></td>\n",
+		      "</tr>\n",
+		      "</table>\n"
+		    ) ;
+}
+
+#------------------------------------------------------
+#
+# Tabulars
+#
+#------------------------------------------------------
+
+=pod
+
+=item * build_onecolumn_array()
+
+Replies an one-column array.
+Takes 2 args:
+
+=over
+
+=item * title (string)
+
+is the title of the array
+
+=item * cells (array ref)
+
+is the content of the returned cells.
+
+=back
+
+=cut
+sub build_onecolumn_array($$) : method {
+  my $self = shift ;
+  my $content = join( '',
+               	      "<DIV><TABLE BORDER=\"1\" ",
+		      "CELLPADDING=\"3\" CELLSPACING=\"0\" ",
+		      "WIDTH=\"100%\">\n",
+               	      "<TR BGCOLOR=\"#CCCCFF\">\n",
+               	      "<TD COLSPAN=2><FONT SIZE=\"+2\"><B>",
+		      $_[0] || '',
+		      "</B></FONT></TD>\n",
+               	      "</TR>\n" ) ;
+  confess( 'cells is not an array' ) unless (isarray($_[1])) ;
+  foreach my $case (@{$_[1]}) {
+    $content .= join( '',
+                      "<TR BGCOLOR=\"white\">",
+                      "<TD WIDTH=\"20%\" ALIGN=\"left\" VALIGN=\"top\">",
+		      $case,
+		      "</TD>",
+                      "</TR>\n" ) ;
+  }
+  $content .= "</TABLE><BR></DIV>\n" ;
+  return $content ;
+}
+
+=pod
+
+=item * build_small_array()
+
+Replies an small one-column array.
+Takes 2 args:
+
+=over
+
+=item * title (string)
+
+is the title of the array
+
+=item * cells (array ref)
+
+is the content of the returned cells.
+
+=back
+
+=cut
+sub build_small_array($$) : method {
+  my $self = shift ;
+  my $content = join( '',
+               	      "<P><TABLE BORDER=\"1\" CELLPADDING=\"3\" ",
+		      "CELLSPACING=\"0\" WIDTH=\"100%\">\n",
+               	      "<TR BGCOLOR=\"#EEEEFF\">\n",
+               	      "<TD><B>",
+		      $_[0] || '',
+		      "</B></TD>\n",
+               	      "</TR>\n" ) ;
+  confess( 'cells is not an array' ) unless (isarray($_[1])) ;
+  foreach my $case (@{$_[1]}) {
+    $content .= join( '',
+                      "<TR BGCOLOR=\"white\">",
+                      "<TD ALIGN=\"left\" VALIGN=\"top\">",
+		      $case,
+                      "</TD></TR>\n" ) ;
+  }
+  $content .= "</TABLE></P>\n" ;
+  return $content ;
+}
+
+=pod
+
+=item * build_tiny_array()
+
+Replies an small one-column array.
+Takes 2 args:
+
+=over
+
+=item * title (string)
+
+is the title of the array
+
+=item * cells (array ref)
+
+is the content of the returned cells.
+
+=back
+
+=cut
+sub build_tiny_array($$) : method {
+  my $self = shift ;
+  my $content = join( '',
+               	      "<P><TABLE BORDER=\"1\" CELLPADDING=\"3\" ",
+		      "CELLSPACING=\"0\" WIDTH=\"100%\">\n",
+               	      "<TR BGCOLOR=\"#EEEEEFF\">\n",
+               	      "<TD><FONT SIZE=\"-1\"><B>",
+		      $_[0] || '',
+		      "</B></FONT></TD>\n",
+               	      "</TR>\n" ) ;
+  confess( 'cells is not an array' ) unless (isarray($_[1])) ;
+  foreach my $case (@{$_[1]}) {
+    $content .= join( '',
+                      "<TR BGCOLOR=\"white\">",
+                      "<TD ALIGN=\"left\" VALIGN=\"top\">",
+		      "<FONT SIZE=\"-1\">",
+		      $case,
+		      "</FONT>",
+                      "</TD></TR>\n" ) ;
+  }
+  $content .= "</TABLE></P>\n" ;
+  return $content ;
+}
+
+=pod
+
+=item * build_twocolumn_array()
+
+Replies an two-column array.
+Takes 2 args:
+
+=over
+
+=item * title (string)
+
+is the title of the array
+
+=item * cells (array ref)
+
+is the content of the returned cells.
+
+=back
+
+=cut
+sub build_twocolumn_array($$) : method {
+  my $self = shift ;
+  my $content = join( '',
+               "<P></P><TABLE BORDER=\"1\" ",
+	       "CELLPADDING=\"3\" CELLSPACING=\"0\" ",
+	       "WIDTH=\"100%\">\n",
+               "<TR BGCOLOR=\"#CCCCFF\">\n",
+               "<TD COLSPAN=2><FONT SIZE=\"+2\"><B>",
+	       $_[0] || '',
+	       "</B></FONT></TD>\n",
+               "</TR>\n" ) ;
+  confess( 'cells is not an array' ) unless (isarray($_[1])) ;
+  foreach my $cellule (@{$_[1]}) {
+    my $name = $cellule->{name} ;
+    my $explanation = $cellule->{explanation} || '' ;
+    if ( $name ) {
+      if ( ! $explanation ) {
+        $explanation = "&nbsp;" ;
+      }
+      $content = join( '', 
+                       $content,
+                       "<TR BGCOLOR=\"white\">",
+                       "<TD WIDTH=\"20%\" ALIGN=\"left\" VALIGN=\"top\">",
+                       $name,
+                       "</TD><TD>",
+                       $explanation,
+                       "</TD></TR>\n" ) ;
+    }
+  }
+  $content .= "</TABLE>\n" ;
+  return $content ;
+}
+
+=pod
+
+=item * build_threecolumn_array()
+
+Replies an two-column array.
+Takes 3 args:
+
+=over
+
+=item * title (string)
+
+is the title of the array
+
+=item * cells (array ref)
+
+is the content of the returned cells.
+
+=item * anchor (string)
+
+is the name of the anchor.
+
+=back
+
+=cut
+sub build_threecolumn_array($$$) : method {
+  my $self = shift ;
+  my $content = join( '',
+		      "<P>",
+		      ( $_[2] ? "<A NAME=\"$_[2]\"></A>" : '' ),
+		      "<TABLE BORDER=\"1\" ",
+		      "CELLPADDING=\"3\" CELLSPACING=\"0\" ",
+		      "WIDTH=\"100%\">\n",
+		      "<TR BGCOLOR=\"#CCCCFF\">\n",
+		      "<TD COLSPAN=2><FONT SIZE=\"+2\"><B>",
+		      $_[0] || '' ,
+		      "</B></FONT></TD>\n",
+		      "</TR>\n" ) ;
+  confess( 'cells is not an array' ) unless (isarray($_[1])) ;
+  foreach my $cellule (@{$_[1]}) {
+    my $name = ${%{$cellule}}{name} ;
+    my $explanation = ${%{$cellule}}{explanation} || '' ;
+    my $type = ${%{$cellule}}{type} ;
+    if ( $name ) {
+      if ( ! $explanation ) {
+        $explanation = "&nbsp;" ;
+      }
+      $content = join( '', 
+                       $content,
+                       "<TR BGCOLOR=\"white\"><TD WIDTH=\"1%\" ",
+		       "VALIGN=\"top\"><FONT SIZE=\"-1\"><CODE>",
+                       $type,
+                       "</CODE></FONT></TD>",
+                       "<TD ALIGN=\"left\" VALIGN=\"top\"><CODE>",
+                       $name,
+                       "</CODE><BR>\n",
+                       $explanation,
+                       "</TD></TR>\n" ) ;
+    }
+  }
+  $content .= "</TABLE></P>\n" ;
+  return $content ;
+}
+
+1;
+__END__
+
+=back
+
+=head1 COPYRIGHT
+
+(c) Copyright 1998-09 Stéphane Galland <galland@arakhne.org>, under GPL.
+
+=head1 AUTHORS
+
+=over
+
+=item *
+
+Conceived and initially developed by Stéphane Galland E<lt>galland@arakhne.orgE<gt>.
+
+=back
+
+=head1 SEE ALSO
+
+bib2html.pl

@@ -1,141 +1,490 @@
-package Bib2HTML::Parser::Scanner;
+# Copyright (C) 1998-09  Stephane Galland <galland@arakhne.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; see the file COPYING.  If not, write to
+# the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+# Boston, MA 02111-1307, USA.
 
-use 5.006;
-use strict;
-use warnings FATAL => 'all';
+=pod
 
 =head1 NAME
 
-Bib2HTML::Parser::Scanner - The great new Bib2HTML::Parser::Scanner!
+Bib2HTML::Parser::Scanner - An abstract scanner for extracted bibtex entries
 
-=head1 VERSION
+=head1 SYNOPSYS
 
-Version 0.01
+use Bib2HTML::Parser::Scanner ;
 
-=cut
+my $scan = Bib2HTML::Parser::StateMachine->new(
+                       transitions,
+                       initial_state,
+                       final_states
+                       ) ;
 
-our $VERSION = '0.01';
+=head1 DESCRIPTION
 
+Bib2HTML::Parser::Scanner is a Perl module, which is a
+state machine which reads a input stream. This is an
+abstract scanner, i.e. it is not specific to a language
+such as PHP, HTML...
 
-=head1 SYNOPSIS
+=head1 GETTING STARTED
 
-Quick summary of what the module does.
+=head2 Initialization
 
-Perhaps a little code snippet.
+To start a scanner, say something like this:
 
     use Bib2HTML::Parser::Scanner;
 
-    my $foo = Bib2HTML::Parser::Scanner->new();
-    ...
+    my $sm = Bib2HTML::Parser::Scanner->new(
+                       { '0' => [ { callback => 'myfunc',
+		                    pattern => 'a+',
+				    state => '1',
+		                  },
+				  { state => '0' },
+				],
+			 '1' => { state => '0',
+			        },
+		       },
+		       '0',
+		       [ '1' ]
+                       ) ;
 
-=head1 EXPORT
+...or something similar. Acceptable parameters to the constructor are:
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+=over
 
-=head1 SUBROUTINES/METHODS
+=item * transitions (hash ref)
 
-=head2 function1
+describes the states of this machine. It must be an
+associative array in which the keys are the name of
+each states, and the associated values describe the
+states with an array of transitions or with only
+one transition. A transition is defined as an
+associative array in which the following keys are
+recognized:
 
-=cut
+=over
 
-sub function1 {
-}
+=item * state (string)
 
-=head2 function2
+is the name of the state on which the machine must be
+after this transition. B<This value is required.>
 
-=cut
+=item * pattern (string)
 
-sub function2 {
-}
+is a regular expression that describe the selection
+condition needed to do this translation. B<This
+value is optional>. But, only once transition
+is able to not defined the pattern. This special
+transition is the default (if no other transition
+could be selected).
 
-=head1 AUTHOR
+=item * callback (string)
 
-op, C<< <op> >>
+is the name (not the reference) to a function that
+must be called each time this transition was selected.
+B<This value is optional>.
 
-=head1 BUGS
+=item * merge (boolean)
 
-Please report any bugs or feature requests to C<bug-bib2html at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Bib2HTML>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Bib2HTML::Parser::Scanner
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker (report bugs here)
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Bib2HTML>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Bib2HTML>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Bib2HTML>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Bib2HTML/>
+if true and the state does not changed, the recognized
+token will be merged to the previous token.
+B<This value is optional>.
 
 =back
 
+=head1 METHOD DESCRIPTIONS
 
-=head1 ACKNOWLEDGEMENTS
+This section contains only the methods in Scanner.pm itself.
 
-
-=head1 LICENSE AND COPYRIGHT
-
-Copyright 2013 op.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of the the Artistic License (2.0). You may obtain a
-copy of the full license at:
-
-L<http://www.perlfoundation.org/artistic_license_2_0>
-
-Any use, modification, and distribution of the Standard or Modified
-Versions is governed by this Artistic License. By using, modifying or
-distributing the Package, you accept this license. Do not use, modify,
-or distribute the Package, if you do not accept this license.
-
-If your Modified Version has been derived from a Modified Version made
-by someone other than you, you are nevertheless required to ensure that
-your Modified Version complies with the requirements of this license.
-
-This license does not grant you the right to use any trademark, service
-mark, tradename, or logo of the Copyright Holder.
-
-This license includes the non-exclusive, worldwide, free-of-charge
-patent license to make, have made, use, offer to sell, sell, import and
-otherwise transfer the Package with respect to any patent claims
-licensable by the Copyright Holder that are necessarily infringed by the
-Package. If you institute patent litigation (including a cross-claim or
-counterclaim) against any party alleging that the Package constitutes
-direct or contributory patent infringement, then this Artistic License
-to you shall terminate on the date that such litigation is filed.
-
-Disclaimer of Warranty: THE PACKAGE IS PROVIDED BY THE COPYRIGHT HOLDER
-AND CONTRIBUTORS "AS IS' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
-THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE, OR NON-INFRINGEMENT ARE DISCLAIMED TO THE EXTENT PERMITTED BY
-YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
-CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
-CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+=over
 
 =cut
 
-1; # End of Bib2HTML::Parser::Scanner
+package Bib2HTML::Parser::Scanner;
+
+@ISA = ('Bib2HTML::Parser::StateMachine');
+@EXPORT = qw();
+@EXPORT_OK = qw();
+
+use strict;
+use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION);
+use Exporter;
+use Carp ;
+use File::Basename ;
+
+use Bib2HTML::Parser::StateMachine ;
+use Bib2HTML::General::Misc ;
+
+#------------------------------------------------------
+#
+# Global vars
+#
+#------------------------------------------------------
+
+# Version number of the scanner
+my $VERSION = "1.0" ;
+
+#------------------------------------------------------
+#
+# Constructor
+#
+#------------------------------------------------------
+
+sub new($$$) : method {
+  my $proto = shift;
+  my $class = ref($proto) || $proto;
+  my $parent = ref($proto) && $proto ;
+
+  my $self ;
+  if ( $parent ) {
+    %{$self} = %{$parent} ;
+  }
+  else {
+    $self = $class->SUPER::new( $_[0], $_[1], $_[2] ) ;
+    $self->{'LINENO'} = 0 ;
+    $self->{'STATE_STACK'} = [] ;
+  }
+  bless( $self, $class );
+  return $self;
+}
+
+#------------------------------------------------------
+#
+# Scanning functions
+#
+#------------------------------------------------------
+
+=pod
+
+=item * scan()
+
+Reads a input stream. Replies if the state machine is
+in a final state.
+Takes 1 arg:
+
+=over
+
+=item * filename (string)
+
+is the name of the file from which the tokens must
+be extracted.
+
+=back
+
+=cut
+sub scan($) : method {
+  my $self = shift ;
+  my $filename = $_[0] || confess( 'you must supply the filename' ) ;
+  local *SOURCEFILE ;
+  open( SOURCEFILE, "< $filename" )
+    or Bib2HTML::General::Error::syserr( "unable to open $filename: $!" ) ;
+
+  # Initialize the state machine
+  $self->{'LINENO'} = 0 ;
+  $self->{'FILENAME'} = $filename ;
+
+  $self->resetstatemachine() ;
+
+  while ( my $line = <SOURCEFILE> ) {
+    # Read a line
+    $self->{'LINENO'} ++ ;
+    # Translate the red line
+    # This translation is dependent of
+    # the scanner which inherited from this Scanner.
+    $line = $self->translate_current_line( $line ) ;
+    if ( $line !~ /^(\n|\r|\s)$/ ) {
+      while ( $line ) {
+	# Clear the buffer which store the unget
+	# tokens
+	$self->{'UNGET_BUFFER'} = '' ;
+	# Try to recognize the next token
+	# according to the translation table
+        $line = $self->changestatefrom( $line ) ;
+	# In case some call to ungetpattern
+	# was made, merges the unget string
+	# to the start of the current red
+	# line
+	if ( $self->{'UNGET_BUFFER'} ) {
+	  $line = $self->{'UNGET_BUFFER'} . $line ;
+	}
+      }
+    }
+  }
+  $self->changestateforEOF() ;
+
+  Bib2HTML::General::Verbose::three( join( '',
+  			   	 "\t",
+				 $self->{'LINENO'},
+				 " line",
+				 ($self->{'LINENO'}>1)?"s":"",
+				 "\n" ) ) ;
+
+  close( SOURCEFILE )
+    or Bib2HTML::General::Error::syserr( "unable to close $filename: $!" ) ;
+
+  return $self->isfinalstate() ;
+}
+
+=pod
+
+=item * ungetpattern()
+
+Pushes the specified string into the current red string.
+Takes 1 arg:
+
+=over
+
+=item * text (string)
+
+is the text that must be put inside the current stream.
+
+=back
+
+=cut
+sub ungetpattern($) : method {
+  my $self = shift ;
+  my $text = $_[0] || '' ;
+  $self->{'UNGET_BUFFER'} = $text . $self->{'UNGET_BUFFER'} ;
+  Bib2HTML::General::Verbose::verb( join( '',
+					  "\t\tUNGET = '",
+					  tohumanreadable($text),
+					  "'" ),
+				    4 ) ;
+}
+
+=pod
+
+=item * translate_current_line()
+
+Replies the translation of the current line which was readed from
+the current input file.
+Takes 1 arg:
+
+=over
+
+=item * line (string)
+
+is the line to translate.
+
+=back
+
+=cut
+sub translate_current_line($) : method {
+  my $self = shift ;
+  return ($_[0] || '') ;
+}
+
+=pod
+
+=item * push_switch_state()
+
+Pushes the current state on the state stack and switch to the specified state.
+Takes 1 arg:
+
+=over
+
+=item * state (string)
+
+is the name of the new state to reach.
+
+=back
+
+=cut
+sub push_switch_state($) : method {
+  my $self = shift ;
+  my $state = $_[0] || confess( 'you must supply a state' ) ;
+  if ( exists $self->{'SM_STATES'}{$state} ) {
+    if ( Bib2HTML::General::Verbose::currentlevel() >= 4 ) {
+      my $verbstr = join( '',
+     		     	  "\t\ttoken = '",
+			  tohumanreadable($self->{'SM_PREVIOUS_TOKEN'}),
+			  "'" ) ;
+      $verbstr .= ", PUSH('".$self->{'SM_CURRENT_STATE'}."') -> '".$state."'" ;
+      Bib2HTML::General::Verbose::verb( "$verbstr.", 4 ) ;
+    }
+    push @{$self->{'STATE_STACK'}}, $self->{'SM_CURRENT_STATE'} ;
+    $self->{'SM_CURRENT_STATE'} = $state ;
+  }
+  else {
+    Bib2HTML::General::Error::syserr( "Unable to switch to the unexisting state '$state'" ) ;
+  }
+}
+
+=pod
+
+=item * push_state()
+
+Pushes the current state on the state stack. Does not switch to another state.
+Takes 1 arg:
+
+=over
+
+=item * state (string)
+
+is the name of the state to push.
+
+=back
+
+=cut
+sub push_state($) : method {
+  my $self = shift ;
+  my $state = $_[0] || confess( 'you must supply the state' ) ;
+  if ( exists $self->{'SM_STATES'}{$state} ) {
+    if ( Bib2HTML::General::Verbose::currentlevel() >= 4 ) {
+      my $verbstr = join( '',
+     		     	  "\t\ttoken = '",
+			  tohumanreadable($self->{'SM_PREVIOUS_TOKEN'}),
+			  "'" ) ;
+      $verbstr .= ", PUSH('".$self->{'SM_CURRENT_STATE'}."')" ;
+      Bib2HTML::General::Verbose::verb( "$verbstr.", 4 ) ;
+    }
+    push @{$self->{'STATE_STACK'}}, $state ;
+  }
+  else {
+    confess( "Unable to push the unexisting state '$state'" ) ;
+  }
+}
+
+=pod
+
+=item * pop_state()
+
+Pops a state from the state stack and set as the new current state.
+
+=cut
+sub pop_state() : method {
+  my $self = shift ;
+  if ( isemptyarray( $self->{'STATE_STACK'} ) ) {
+    confess( "Unable to pop a state from an empty state stack" ) ;
+  }
+  else {
+    my $state = pop @{$self->{'STATE_STACK'}} ;
+    if ( Bib2HTML::General::Verbose::currentlevel() >= 4 ) {
+      my $verbstr = join( '',
+     		     	  "\t\ttoken = '",
+			  tohumanreadable($self->{'SM_PREVIOUS_TOKEN'}),
+			  "'" ) ;
+      $verbstr .= ", POP('".$self->{'SM_CURRENT_STATE'}."') -> '$state'" ;
+      Bib2HTML::General::Verbose::verb( "$verbstr.", 4 ) ;
+    }
+    $self->{'SM_CURRENT_STATE'} = $state ;
+  }
+}
+
+=pod
+
+=item * set_state()
+
+Sets the current state, and replies the old state.
+Takes 1 arg:
+
+=over
+
+=item * state (string)
+
+is the name of the new state.
+
+=back
+
+=cut
+sub set_state($) : method {
+  my $self = shift ;
+  my $state = $_[0] || confess( 'you must supply the state' ) ;
+  my $old = $self->{'SM_CURRENT_STATE'} ;
+  $self->{'SM_CURRENT_STATE'} = $state ;
+  return $old ;
+}
+
+=pod
+
+=item * get_state()
+
+Replies the current state machine.
+
+=cut
+sub get_state() : method {
+  my $self = shift ;
+  return $self->{'SM_CURRENT_STATE'} ;
+}
+
+=pod
+
+=item * get_stackstate()
+
+Replies the current state machine on the top of the stack.
+
+=cut
+sub get_stackstate() : method {
+  my $self = shift ;
+  return $self->{'STATE_STACK'}->[$#{$self->{'STATE_STACK'}}] ;
+}
+
+=pod
+
+=item * get_statestack()
+
+Replies the whole state stack.
+
+=cut
+sub get_statestack() : method {
+  my $self = shift ;
+  return @{$self->{'STATE_STACK'}} ;
+}
+
+=pod
+
+=item * backend_error_function()
+
+Called each time no rule match the current buffer.
+
+=over
+
+=item * msg (string)
+
+is the error message.
+
+=back
+
+=cut
+sub backend_error_function($) : method {
+  my $self = shift ;
+  confess( 'you must supply the error message' ) unless $_[0] ;
+  Bib2HTML::General::Error::err( $_[0],
+				 $self->{'FILENAME'},
+				 $self->{'LINENO'} ) ;
+}
+
+1;
+__END__
+
+=back
+
+=head1 COPYRIGHT
+
+(c) Copyright 1998-09 Stéphane Galland <galland@arakhne.org>, under GPL.
+
+=head1 AUTHORS
+
+=over
+
+=item *
+
+Conceived and initially developed by Stéphane Galland E<lt>galland@arakhne.orgE<gt>.
+
+=back
+
+=head1 SEE ALSO
+
+bib2html.pl

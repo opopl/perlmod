@@ -1,141 +1,436 @@
+# Copyright (C) 2002-09  Stephane Galland <galland@arakhne.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; see the file COPYING.  If not, write to
+# the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+# Boston, MA 02111-1307, USA.
+
 package Bib2HTML::Main;
 
-use 5.006;
+@ISA = ('Exporter');
+@EXPORT = qw( &launchBib2HTML ) ;
+@EXPORT_OK = qw();
 use strict;
-use warnings FATAL => 'all';
+use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION);
 
-=head1 NAME
+use Getopt::Long ;
+use Pod::Usage ;
+use File::Basename ;
+use File::Spec ;
+use File::Path ;
+use FindBin;
 
-Bib2HTML::Main - The great new Bib2HTML::Main!
+use lib("$FindBin::Bin/../");
 
-=head1 VERSION
+use Bib2HTML::Release ;
+use Bib2HTML::General::Verbose ;
+use Bib2HTML::General::Error ;
+use Bib2HTML::General::Misc ;
+use Bib2HTML::Parser::Parser ;
 
-Version 0.01
+#------------------------------------------------------
+#
+# Global vars
+#
+#------------------------------------------------------
 
-=cut
+# Version number of bib2html
+my $VERSION = Bib2HTML::Release::getVersionNumber() ;
+# Date of this release of bib2html
+my $VERSION_DATE = Bib2HTML::Release::getVersionDate() ;
+# URL from which the users can submit a bug
+my $SUBMIT_BUG_URL = Bib2HTML::Release::getBugReportURL() ;
+# Email of the author of bib2html
+my $AUTHOR = Bib2HTML::Release::getAuthorName() ;
+# Email of the author of bib2html
+my $AUTHOR_EMAIL = Bib2HTML::Release::getAuthorEmail() ;
+# Page of bib2html
+my $URL = Bib2HTML::Release::getMainURL() ;
+# Contributors to Bib2HTML
+my %CONTRIBUTORS = Bib2HTML::Release::getContributors() ;
 
-our $VERSION = '0.01';
+# Default Generator
+my $DEFAULT_GENERATOR = 'HTML' ;
+# Default Language
+my $DEFAULT_LANGUAGE = 'English' ;
+# Default Theme
+my $DEFAULT_THEME = 'Simple' ;
 
+#------------------------------------------------------
+#
+# Functions
+#
+#------------------------------------------------------
 
-=head1 SYNOPSIS
-
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
-
-    use Bib2HTML::Main;
-
-    my $foo = Bib2HTML::Main->new();
-    ...
-
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
-
-=head1 SUBROUTINES/METHODS
-
-=head2 function1
-
-=cut
-
-sub function1 {
+sub check_output($$) {
+  my $output = shift ;
+  my $force = shift ;
+  if ( ! $output ) {
+    $output = File::Spec->catdir( ".", "bib2html" ) ;
+  }
+  if ( ( -e "$output" ) && ( ! $force ) ) {
+    Bib2HTML::General::Error::syserr( "The output '$output".
+				      "' already exists. Use the -f option to force the overwrite\n" ) ;
+  }
+  return "$output" ;
 }
 
-=head2 function2
+sub show_usage($$$) {
+  my $exitval = shift;
+  my $PERLSCRIPTDIR = shift;
+  my $PERLSCRIPTNAME = shift;
 
-=cut
+  my $basename = "$PERLSCRIPTNAME";
+  $basename =~ s/\.[^.]*$//;
 
-sub function2 {
+  my $sharedir = "$ENV{hm}/share/";
+
+  my @searchdirs = (
+	File::Spec->catdir("$PERLSCRIPTDIR",'pod'),
+	File::Spec->catdir("$PERLSCRIPTDIR",'man'),
+	File::Spec->catdir("$PERLSCRIPTDIR",File::Spec->updir(),'pod'),
+	File::Spec->catdir("$PERLSCRIPTDIR",File::Spec->updir(),'man'),
+	File::Spec->catdir("$sharedir",'doc',"$basename"),
+	File::Spec->catdir("$sharedir",'doc',"$basename"),
+	File::Spec->catdir("$sharedir",'doc',"$basename",'pod'),
+	File::Spec->catdir("$sharedir",'doc',"$basename",'man'),
+	);
+
+  my @langs = ();
+
+  if (($ENV{'LANG'})&&($ENV{'LANG'} =~ /^([^_.\-]+)/)) {
+    push @langs, "$1";
+  }
+
+  push @langs, 'en';
+
+  foreach my $lang (@langs) {
+    foreach my $dir (@searchdirs) {
+      my $pod = File::Spec->catdir("$dir","${basename}_${lang}.pod");
+	  print "$pod\n";
+      if ( -r "$pod" ) {
+        pod2usage(-exitval => $exitval, -input => "$pod");
+        exit $exitval;
+      }
+    }
+  }
+
+  die("unable to find the documentation file for $basename\n");
 }
 
-=head1 AUTHOR
+sub show_manual($$$) {
+  my $exitval = shift;
+  my $PERLSCRIPTDIR = shift;
+  my $PERLSCRIPTNAME = shift;
 
-op, C<< <op> >>
+  my $basename = "$PERLSCRIPTNAME";
+  $basename =~ s/\.[^.]*$//;
 
-=head1 BUGS
+  my $sharedir = "/usr/share";
 
-Please report any bugs or feature requests to C<bug-bib2html at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Bib2HTML>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
+  my @searchdirs = (
+	File::Spec->catdir("$PERLSCRIPTDIR",'pod'),
+	File::Spec->catdir("$PERLSCRIPTDIR",'man'),
+	File::Spec->catdir("$PERLSCRIPTDIR",File::Spec->updir(),'pod'),
+	File::Spec->catdir("$PERLSCRIPTDIR",File::Spec->updir(),'man'),
+	File::Spec->catdir("$sharedir",'doc',"$basename"),
+	File::Spec->catdir("$sharedir",'doc',"$basename"),
+	File::Spec->catdir("$sharedir",'doc',"$basename",'pod'),
+	File::Spec->catdir("$sharedir",'doc',"$basename",'man'),
+	);
 
+  my @langs = ();
 
+  if (($ENV{'LANG'})&&($ENV{'LANG'} =~ /^([^_.\-]+)/)) {
+    push @langs, "$1";
+  }
 
+  push @langs, 'en';
 
-=head1 SUPPORT
+  foreach my $lang (@langs) {
+    foreach my $dir (@searchdirs) {
+      my $pod = File::Spec->catdir("$dir","${basename}_${lang}.pod");
+      if ( -r "$pod" ) {
+        print "$pod\n";
+        use Pod::Perldoc;
+        @ARGV = ( "$pod" );
+        Pod::Perldoc->run();
+        exit $exitval;
+      }
+    }
+  }
 
-You can find documentation for this module with the perldoc command.
+  die("unable to find the documentation file for $basename\n");
+}
 
-    perldoc Bib2HTML::Main
+#------------------------------------------------------
+#
+# Main Program
+#
+#------------------------------------------------------
 
+sub launchBib2HTML($$) {
 
-You can also look for information at:
+  my $PERLSCRIPTDIR = shift;
+  my $PERLSCRIPTNAME = shift;
 
-=over 4
+  # Command line options
+  my %options = () ;
 
-=item * RT: CPAN's request tracker (report bugs here)
+  # Read the command line
+  $options{warnings} = 1 ;
+  $options{genphpdoc} = 1 ;
+  $options{generator} = "$DEFAULT_GENERATOR" ;
+  $options{lang} = "$DEFAULT_LANGUAGE" ;
+  $options{theme} = "$DEFAULT_THEME" ;
+  $options{genparams} = {} ;
+  $options{'show-bibtex'} = 1 ;
+  Getopt::Long::Configure("bundling") ;
+  if ( ! GetOptions( "b|bibtex!" => \$options{'show-bibtex'},
+		     "checknames" => \$options{'check-names'},
+		     "cvs" => sub {
+		       @{$options{'protected_files'}} = ()
+		         unless ( exists $options{'protected_files'} ) ;
+		       push @{$options{'protected_files'}}, ".cvs", "CVSROOT", "CVS" ;
+		     },
+		     "doctitle=s" => \$options{'title'},
+		     "f|force" => \$options{'force'},
+		     "generator|g=s" => \$options{'generator'},
+		     'generatorparam|d:s%' => sub {
+		       my $name = lc($_[1]) ;
+		       @{$options{'genparams'}{"$name"}} = ()
+		         unless ( exists $options{'genparams'}{"$name"} ) ;
+		       push @{$options{'genparams'}{"$name"}}, $_[2] ;
+		     },
+		     "generatorparams!" => \$options{'genparamlist'},
+		     "genlist" => \$options{'genlist'},
+		     "h|?" => \$options{'help'},
+		     "help|man|manual" => \$options{'manual'},
+		     "jabref!" => \$options{'jabref'},
+		     "lang=s" => \$options{'lang'},
+		     "langlist" => \$options{'langlist'},
+		     "o|output=s" => sub {
+		       $options{'output'} = $_[1];
+		       delete $options{'stdout'};
+		     },
+		     "p|preamble=s" => \$options{'tex-preamble'},
+		     "protect=s" => sub {
+		       my $regex = lc($_[1]) ;
+		       @{$options{'protected_files'}} = ()
+		         unless ( exists $options{'protected_files'} ) ;
+		       push @{$options{'protected_files'}}, $regex ;
+		     },
+		     "q" => \$options{'quiet'},
+		     "sortw!" => \$options{'sort-warnings'},
+		     "stdout" => sub {
+		       delete $options{'output'};
+		       $options{'stdout'} = 1;
+		     },
+		     "svn" => sub {
+		       @{$options{'protected_files'}} = ()
+		         unless ( exists $options{'protected_files'} ) ;
+		       push @{$options{'protected_files'}}, ".svn", "svn" ;
+		     },
+		     "texcmd" => \$options{'tex-commands'},
+		     "theme=s" => \$options{'theme'},
+		     "themelist" => \$options{'themelist'},
+		     "v+" => \$options{'verbose'},
+		     "version" => \$options{'version'},
+		     "warning!" => \$options{'warnings'},
+		     "windowtitle=s" => \$options{'wintitle'},
+		   ) ) {
+    show_usage(2,"$PERLSCRIPTDIR","$PERLSCRIPTNAME") ;
+  }
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Bib2HTML>
+  # Generator class
+  if ( $options{'generator'} !~ /::/ ) {
+    $options{'generator'} = "Bib2HTML::Generator::".$options{'generator'}."Gen" ;
+  }
+  eval "require ".$options{'generator'}.";" ;
+  if ( $@ ) {
+    Bib2HTML::General::Error::syserr( "Unable to find the generator class: ".$options{'generator'}."\n$@\n" ) ;
+  }
 
-=item * AnnoCPAN: Annotated CPAN documentation
+  # Show the version number
+  if ( $options{version} ) {
 
-L<http://annocpan.org/dist/Bib2HTML>
+    my $final_copyright = 1998;
+    if ($VERSION_DATE =~ /^([0-9]+)\/[0-9]+\/[0-9]+$/) {
+      if ($1<=98) {
+        $final_copyright = 2000 + $1;
+      }
+      elsif ($1==99) {
+        $final_copyright = 1999;
+      }
+      else {
+        $final_copyright = $1;
+      }
+    }
 
-=item * CPAN Ratings
+    if ($final_copyright!=1998) {
+      $final_copyright = "1998-$final_copyright";
+    }
 
-L<http://cpanratings.perl.org/d/Bib2HTML>
+    print "bib2html $VERSION, $VERSION_DATE\n" ;
+    print "Copyright (c) $final_copyright, $AUTHOR <$AUTHOR_EMAIL>, under GPL\n" ;
+    print "Contributors:\n" ;
+    while ( my ($email,$name) = each(%CONTRIBUTORS) ) {
+      print "  $name <$email>\n" ;
+    }
+    exit 1 ;
+  }
 
-=item * Search CPAN
+  # Show the list of generators
+  if ( $options{genlist} ) {
+    use Bib2HTML::Generator::AbstractGenerator ;
+    Bib2HTML::Generator::AbstractGenerator::display_supported_generators($PERLSCRIPTDIR,
+								         "$DEFAULT_GENERATOR") ;
+    exit 1 ;
+  }
 
-L<http://search.cpan.org/dist/Bib2HTML/>
+  # Show the list of languages
+  if ( $options{langlist} ) {
+    use Bib2HTML::Generator::AbstractGenerator ;
+    Bib2HTML::Generator::AbstractGenerator::display_supported_languages($PERLSCRIPTDIR,
+								      "$DEFAULT_LANGUAGE") ;
+    exit 1 ;
+  }
 
-=back
+  # Show the list of themes
+  if ( $options{themelist} ) {
+    use Bib2HTML::Generator::AbstractGenerator ;
+    Bib2HTML::Generator::AbstractGenerator::display_supported_themes($PERLSCRIPTDIR,
+								   "$DEFAULT_THEME") ;
+    exit 1 ;
+  }
 
+  # Show the list of themes
+  if ( $options{'tex-commands'} ) {
+    use Bib2HTML::Translator::TeX ;
+    Bib2HTML::Translator::TeX::display_supported_commands($PERLSCRIPTDIR) ;
+    exit 1 ;
+  }
 
-=head1 ACKNOWLEDGEMENTS
+  # Show the list of generator params
+  if ( $options{'genparamlist'} ) {
+    ($options{'generator'})->display_supported_generator_params() ;
+    exit 1 ;
+  }
 
+  # Show the help screens
+  if ( $options{manual} ) {
+    show_manual(1,"$PERLSCRIPTDIR","$PERLSCRIPTNAME") ;
+  }
+  if ( $options{help} || ( $#ARGV < 0 ) ) {
+    show_usage(1,"$PERLSCRIPTDIR","$PERLSCRIPTNAME") ;
+  }
 
-=head1 LICENSE AND COPYRIGHT
+  # Force the output to stdout
+  if ( $options{'stdout'} ) {
+     my $name = "stdout" ;
+     $options{'genparams'}{"stdout"} = [1];
+  }
 
-Copyright 2013 op.
+  #
+  # Sets the default values of options
+  #
+  # Titles:
 
-This program is free software; you can redistribute it and/or modify it
-under the terms of the the Artistic License (2.0). You may obtain a
-copy of the full license at:
+  # Verbosing:
+  if ( $options{quiet} ) {
+    $options{verbose} = -1 ;
+  }
+  Bib2HTML::General::Verbose::setlevel( $options{verbose} ) ;
 
-L<http://www.perlfoundation.org/artistic_license_2_0>
+  # Error messages:
+  if ( $options{'warnings'} ) {
+    Bib2HTML::General::Error::unsetwarningaserror() ;
+  }
+  else {
+    Bib2HTML::General::Error::setwarningaserror() ;
+  }
+  if ( $options{'sort-warnings'} ) {
+    Bib2HTML::General::Error::setsortwarnings() ;
+  }
+  else {
+    Bib2HTML::General::Error::unsetsortwarnings() ;
+  }
 
-Any use, modification, and distribution of the Standard or Modified
-Versions is governed by this Artistic License. By using, modifying or
-distributing the Package, you accept this license. Do not use, modify,
-or distribute the Package, if you do not accept this license.
+  #
+  # Create the output directory
+  #
+  unless ($options{'stdout'}) {
+    $options{'output'} = check_output($options{'output'},$options{'force'});
+  }
 
-If your Modified Version has been derived from a Modified Version made
-by someone other than you, you are nevertheless required to ensure that
-your Modified Version complies with the requirements of this license.
+  # Read the BibTeX files
+  my $parser = new Bib2HTML::Parser::Parser($options{'show-bibtex'}) ;
+  if ( $options{'tex-preamble'} ) {
+    $parser->read_preambles( $options{'tex-preamble'} ) ;
+  }
+  $parser->parse( \@ARGV ) ;
 
-This license does not grant you the right to use any trademark, service
-mark, tradename, or logo of the Copyright Holder.
+  # Check if the names of the authors are similars
+  if ( $options{'check-names'} ) {
+    eval "require Bib2HTML::Checker::Names;" ;
+    if ( $@ ) {
+      Bib2HTML::General::Error::syserr( "Unable to find the generator class: Bib2HTML::Checker::Names\n$@\n" ) ;
+    }
+    my $check = new Bib2HTML::Checker::Names() ;
+    $check->check($parser->content()) ;
+  }
 
-This license includes the non-exclusive, worldwide, free-of-charge
-patent license to make, have made, use, offer to sell, sell, import and
-otherwise transfer the Package with respect to any patent claims
-licensable by the Copyright Holder that are necessarily infringed by the
-Package. If you institute patent litigation (including a cross-claim or
-counterclaim) against any party alleging that the Package constitutes
-direct or contributory patent infringement, then this Artistic License
-to you shall terminate on the date that such litigation is filed.
+  # Translate the entries according to the JabRef tool
+  if ($options{'jabref'}) {
+    use Bib2HTML::JabRef::JabRef;
 
-Disclaimer of Warranty: THE PACKAGE IS PROVIDED BY THE COPYRIGHT HOLDER
-AND CONTRIBUTORS "AS IS' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
-THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE, OR NON-INFRINGEMENT ARE DISCLAIMED TO THE EXTENT PERMITTED BY
-YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
-CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
-CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    my $jabref = new Bib2HTML::JabRef::JabRef();
 
+    $jabref->parse($parser->content());
+  }
 
-=cut
+  # Create the generator
+  #
+  Bib2HTML::Generator::LangManager::set_default_lang("$DEFAULT_LANGUAGE");
+  my $generator = ($options{'generator'})->new( $parser->content(),
+					        $options{'output'},
+					        { 'VERSION' => $VERSION,
+					  	  'BUG_URL' => $SUBMIT_BUG_URL,
+						  'URL' => $URL,
+						  'AUTHOR_EMAIL' => $AUTHOR_EMAIL,
+						  'AUTHOR' => $AUTHOR,
+						  'PERLSCRIPTDIR' => $PERLSCRIPTDIR,
+					        },
+					        { 'SHORT' => $options{'wintitle'},
+						  'LONG' => $options{'title'},
+					        },
+					        $options{'lang'},
+					        $options{'theme'},
+					        $options{'show-bibtex'},
+					        $options{'genparams'} ) ;
+  if ($options{'protected_files'}) {
+    $generator->set_unremovable_files(@{$options{'protected_files'}});
+  }
 
-1; # End of Bib2HTML::Main
+  # Generates the HMTL pages
+  #
+  $generator->generate() ;
+
+  # Display the quantity of warnings
+  Bib2HTML::General::Error::printwarningcount() ;
+
+  exit 0 ;
+}
+
+1;
+__END__

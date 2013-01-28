@@ -1,141 +1,214 @@
-package Bib2HTML::Generator::SqlEngine::MySql;
+# Copyright (C) 2011  Stephane Galland <galland@arakhne.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; see the file COPYING.  If not, write to
+# the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+# Boston, MA 02111-1307, USA.
 
-use 5.006;
-use strict;
-use warnings FATAL => 'all';
+=pod
 
 =head1 NAME
 
-Bib2HTML::Generator::SqlEngine::MySql - The great new Bib2HTML::Generator::SqlEngine::MySql!
+Bib2HTML::Generator::SqlEngine::MySql - SQL Generator utilities for MySQL
 
-=head1 VERSION
-
-Version 0.01
+=over
 
 =cut
 
-our $VERSION = '0.01';
+package Bib2HTML::Generator::SqlEngine::MySql;
 
+@ISA = ('');
+@EXPORT_OK = qw();
 
-=head1 SYNOPSIS
+use strict;
+use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION);
+use Carp ;
 
-Quick summary of what the module does.
+use Bib2HTML::General::Error;
 
-Perhaps a little code snippet.
+#------------------------------------------------------
+#
+# Global vars
+#
+#------------------------------------------------------
 
-    use Bib2HTML::Generator::SqlEngine::MySql;
+# Version number of this file
+my $VERSION = "1.0" ;
 
-    my $foo = Bib2HTML::Generator::SqlEngine::MySql->new();
-    ...
+#------------------------------------------------------
+#
+# Constructor
+#
+#------------------------------------------------------
 
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
-
-=head1 SUBROUTINES/METHODS
-
-=head2 function1
-
-=cut
-
-sub function1 {
+sub new() : method {
+  my $proto = shift;
+  my $class = ref($proto) || $proto;
+  my $self = {};
+  bless( $self, $class );
+  return $self;
 }
 
-=head2 function2
-
-=cut
-
-sub function2 {
+sub quotesql($) : method {
+  my $self = shift;
+  my $s = $_[0];
+  $s =~ s/\'/\\\'/g;
+  return $s;
 }
 
-=head1 AUTHOR
 
-op, C<< <op> >>
+sub createSchema() : method {
+  my $self = shift;
+  my $schema = '';
+  $schema .= join("\n",
+	"DROP TABLE IF EXISTS bibtex_entrytype;",
+	"CREATE TABLE bibtex_entrytype (",
+	"  type varchar(50) NOT NULL,",
+	"  PRIMARY KEY(type)",
+	");\n");
 
-=head1 BUGS
+  $schema .= join("\n",
+	"DROP TABLE IF EXISTS bibtex_domain;",
+	"CREATE TABLE bibtex_domain (",
+	"  identifier int(10) NOT NULL,",
+	"  name varchar(100) NOT NULL,",
+	"  PRIMARY KEY(identifier)",
+	");\n");
 
-Please report any bugs or feature requests to C<bug-bib2html at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Bib2HTML>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
+  $schema .= join("\n",
+	"DROP TABLE IF EXISTS bibtex_entry;",
+	"CREATE TABLE bibtex_entry (",
+	"  entry_key varchar(50) NOT NULL,",
+	"  year int(5) NOT NULL default 1900,",
+	"  title text NOT NULL,",
+	"  type varchar(50) NOT NULL,",
+	"  crossref varchar(50),",
+	"  PRIMARY KEY(entry_key),",
+	"  FOREIGN KEY(type) REFERENCES bibtex_entrytype(type) ON DELETE CASCADE,",
+	"  FOREIGN KEY(crossref) REFERENCES bibtex_entry(entry_key) ON DELETE SET NULL",
+	");\n");
 
+  $schema .= join("\n",
+	"DROP TABLE IF EXISTS bibtex_field;",
+	"CREATE TABLE bibtex_field (",
+	"  identifier int(10) NOT NULL,",
+	"  name varchar(100) NOT NULL,",
+	"  value text,",
+	"  entry_key varchar(50) NOT NULL,",
+	"  PRIMARY KEY(identifier),",
+	"  FOREIGN KEY(entry_key) REFERENCES bibtex_entry(entry_key) ON DELETE CASCADE",
+	");\n");
 
+  $schema .= join("\n",
+	"DROP TABLE IF EXISTS bibtex_identity;",
+	"CREATE TABLE bibtex_identity (",
+	"  identifier int(10) NOT NULL,",
+	"  name varchar(100) NOT NULL,",
+	"  firstname varchar(100) NOT NULL,",
+	"  von varchar(20),",
+	"  junior varchar(20),",
+	"  PRIMARY KEY(identifier)",
+	");\n");
 
+  $schema .= join("\n",
+	"DROP TABLE IF EXISTS bibtex_authors;",
+	"CREATE TABLE bibtex_authors (",
+	"  entry_key varchar(50) NOT NULL,",
+	"  author_id int(10) NOT NULL,",
+	"  order_id int(5) NOT NULL DEFAULT 1,",
+	"  etal boolean NOT NULL DEFAULT false,",
+	"  PRIMARY KEY(entry_key,author_id),",
+	"  FOREIGN KEY(entry_key) REFERENCES bibtex_entry(entry_key) ON DELETE CASCADE,",
+	"  FOREIGN KEY(author_id) REFERENCES bibtex_identity(identifier) ON DELETE CASCADE",
+	");\n");
 
-=head1 SUPPORT
+  $schema .= join("\n",
+	"DROP TABLE IF EXISTS bibtex_editors;",
+	"CREATE TABLE bibtex_editors (",
+	"  entry_key varchar(50) NOT NULL,",
+	"  editor_id int(10) NOT NULL,",
+	"  order_id int(5) NOT NULL DEFAULT 1,",
+	"  etal boolean NOT NULL DEFAULT false,",
+	"  PRIMARY KEY(entry_key,editor_id),",
+	"  FOREIGN KEY(entry_key) REFERENCES bibtex_entry(entry_key) ON DELETE CASCADE,",
+	"  FOREIGN KEY(editor_id) REFERENCES bibtex_identity(identifier) ON DELETE CASCADE",
+	");\n");
 
-You can find documentation for this module with the perldoc command.
+  $schema .= join("\n",
+	"DROP TABLE IF EXISTS bibtex_entrydomain;",
+	"CREATE TABLE bibtex_entrydomain (",
+	"  entry_key varchar(50) NOT NULL,",
+	"  domain_id int(10) NOT NULL,",
+	"  PRIMARY KEY(entry_key,domain_id),",
+	"  FOREIGN KEY(entry_key) REFERENCES bibtex_entry(entry_key) ON DELETE CASCADE,",
+	"  FOREIGN KEY(domain_id) REFERENCES bibtex_domain(identifier) ON DELETE CASCADE",
+	");\n");
 
-    perldoc Bib2HTML::Generator::SqlEngine::MySql
+  return $schema;
+}
 
+sub insertInto($) : method {
+	my $self = shift;
+	my $table = shift || Bib2HTML::General::Error::syserr('table name parameter is mandatory');
+	my $values = shift;
+	my $query = '';
 
-You can also look for information at:
+	my $sqlFields = '';
+	my $sqlValues = '';
+	foreach my $field (keys %{$values}) {
+		if ($sqlFields) {
+			$sqlFields .= ',';
+		}
+		$sqlFields .= $field;
+		if ($sqlValues) {
+			$sqlValues .= ',';
+		}
+		$sqlValues .= "'";
+		$sqlValues .= $self->quotesql($values->{$field});
+		$sqlValues .= "'";
+	}
 
-=over 4
+	$query .= "INSERT INTO ";
+	$query .= $table;
+	$query .= ' (';
+	$query .= $sqlFields;
+	$query .= ') VALUES (';
+	$query .= $sqlValues;
+	$query .= ");\n";
 
-=item * RT: CPAN's request tracker (report bugs here)
+	return $query;
+}
 
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Bib2HTML>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Bib2HTML>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Bib2HTML>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Bib2HTML/>
+1;
+__END__
 
 =back
 
+=head1 COPYRIGHT
 
-=head1 ACKNOWLEDGEMENTS
+(c) Copyright 2004-07 Stéphane Galland E<lt>galland@arakhne.orgE<gt>, under GPL.
+(c) Copyright 2011 Stéphane Galland E<lt>galland@arakhne.orgE<gt>, under GPL.
 
+=head1 AUTHORS
 
-=head1 LICENSE AND COPYRIGHT
+=over
 
-Copyright 2013 op.
+=item *
 
-This program is free software; you can redistribute it and/or modify it
-under the terms of the the Artistic License (2.0). You may obtain a
-copy of the full license at:
+Conceived and initially developed by Stéphane Galland E<lt>galland@arakhne.orgE<gt>.
 
-L<http://www.perlfoundation.org/artistic_license_2_0>
+=back
 
-Any use, modification, and distribution of the Standard or Modified
-Versions is governed by this Artistic License. By using, modifying or
-distributing the Package, you accept this license. Do not use, modify,
-or distribute the Package, if you do not accept this license.
+=head1 SEE ALSO
 
-If your Modified Version has been derived from a Modified Version made
-by someone other than you, you are nevertheless required to ensure that
-your Modified Version complies with the requirements of this license.
-
-This license does not grant you the right to use any trademark, service
-mark, tradename, or logo of the Copyright Holder.
-
-This license includes the non-exclusive, worldwide, free-of-charge
-patent license to make, have made, use, offer to sell, sell, import and
-otherwise transfer the Package with respect to any patent claims
-licensable by the Copyright Holder that are necessarily infringed by the
-Package. If you institute patent litigation (including a cross-claim or
-counterclaim) against any party alleging that the Package constitutes
-direct or contributory patent infringement, then this Artistic License
-to you shall terminate on the date that such litigation is filed.
-
-Disclaimer of Warranty: THE PACKAGE IS PROVIDED BY THE COPYRIGHT HOLDER
-AND CONTRIBUTORS "AS IS' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
-THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE, OR NON-INFRINGEMENT ARE DISCLAIMED TO THE EXTENT PERMITTED BY
-YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
-CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
-CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-=cut
-
-1; # End of Bib2HTML::Generator::SqlEngine::MySql
+bib2html.pl

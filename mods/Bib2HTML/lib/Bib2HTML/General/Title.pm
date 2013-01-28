@@ -1,141 +1,145 @@
-package Bib2HTML::General::Title;
+# Copyright (C) 1998-09  Stephane Galland <galland@arakhne.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; see the file COPYING.  If not, write to
+# the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+# Boston, MA 02111-1307, USA.
 
-use 5.006;
-use strict;
-use warnings FATAL => 'all';
+=pod
 
 =head1 NAME
 
-Bib2HTML::General::Title - The great new Bib2HTML::General::Title!
+Bib2HTML::General::Title - Utility functions for titles
 
-=head1 VERSION
+=head1 SYNOPSYS
 
-Version 0.01
+use Bib2HTML::General::Title ;
 
-=cut
+=head1 DESCRIPTION
 
-our $VERSION = '0.01';
+Bib2HTML::General::Title is a Perl module, which proposes
+functions to support the titles
 
+=head1 GETTING STARTED
 
-=head1 SYNOPSIS
+=head2 Initialization
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
+To use this package, say something like this:
 
     use Bib2HTML::General::Title;
 
-    my $foo = Bib2HTML::General::Title->new();
-    ...
-
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
-
-=head1 SUBROUTINES/METHODS
-
-=head2 function1
+...or something similar.
 
 =cut
 
-sub function1 {
-}
+package Bib2HTML::General::Title;
 
-=head2 function2
+@ISA = ('Exporter');
+@EXPORT = qw( &get_title_keywords );
+@EXPORT_OK = qw();
 
-=cut
+use strict;
+use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION);
+use Exporter;
+use Carp ;
 
-sub function2 {
-}
+use Bib2HTML::General::Misc ;
 
-=head1 AUTHOR
+#------------------------------------------------------
+#
+# Global vars
+#
+#------------------------------------------------------
 
-op, C<< <op> >>
+# Version number of the parser
+my $VERSION = "1.0" ;
 
-=head1 BUGS
+# The keywords that could be ignored
+my @IGNORABLE_WORDS = ( # English
+		       'the', 'a', 'an', 'in', 'on', 'inside', 'to',
+		       'and', 'by', 'for', 'based', 'of', 'his', 'her',
+		        # French
+		       'la', 'le', 'les', 'dans', 'de', 'd', 'un', 'une',
+		       'vers', 'sur', 'et', 'pour', 'par', 'en',
+		      ) ;
 
-Please report any bugs or feature requests to C<bug-bib2html at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Bib2HTML>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
+# The forms of words that could be ignored
+my @IGNORABLE_WORD_FORMS = ( # English
+			    '.*ing',
+			    # French
+			   ) ;
 
+#------------------------------------------------------
+#
+# Keyword API
+#
+#------------------------------------------------------
 
+=pod
 
+=item * get_title_keywords()
 
-=head1 SUPPORT
+Replies the keywords of the specified title
+Takes 1 arg:
 
-You can find documentation for this module with the perldoc command.
+=over
 
-    perldoc Bib2HTML::General::Title
+=item * text (string)
 
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker (report bugs here)
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Bib2HTML>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Bib2HTML>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Bib2HTML>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Bib2HTML/>
+is the text to parse.
 
 =back
 
-
-=head1 ACKNOWLEDGEMENTS
-
-
-=head1 LICENSE AND COPYRIGHT
-
-Copyright 2013 op.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of the the Artistic License (2.0). You may obtain a
-copy of the full license at:
-
-L<http://www.perlfoundation.org/artistic_license_2_0>
-
-Any use, modification, and distribution of the Standard or Modified
-Versions is governed by this Artistic License. By using, modifying or
-distributing the Package, you accept this license. Do not use, modify,
-or distribute the Package, if you do not accept this license.
-
-If your Modified Version has been derived from a Modified Version made
-by someone other than you, you are nevertheless required to ensure that
-your Modified Version complies with the requirements of this license.
-
-This license does not grant you the right to use any trademark, service
-mark, tradename, or logo of the Copyright Holder.
-
-This license includes the non-exclusive, worldwide, free-of-charge
-patent license to make, have made, use, offer to sell, sell, import and
-otherwise transfer the Package with respect to any patent claims
-licensable by the Copyright Holder that are necessarily infringed by the
-Package. If you institute patent litigation (including a cross-claim or
-counterclaim) against any party alleging that the Package constitutes
-direct or contributory patent infringement, then this Artistic License
-to you shall terminate on the date that such litigation is filed.
-
-Disclaimer of Warranty: THE PACKAGE IS PROVIDED BY THE COPYRIGHT HOLDER
-AND CONTRIBUTORS "AS IS' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
-THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE, OR NON-INFRINGEMENT ARE DISCLAIMED TO THE EXTENT PERMITTED BY
-YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
-CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
-CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 =cut
+sub get_title_keywords($) : method {
+  my $text = $_[0] || '' ;
+  my @keywords = () ;
+  foreach my $word (split /[^a-zA-Z0-9\-\&\;]+/, $text) {
+    if ( ( ! strinarray( lc($word), \@keywords ) ) &&
+	 ( ! strinarray( lc($word), \@IGNORABLE_WORDS ) ) ) {
+      my $i = $#IGNORABLE_WORD_FORMS ;
+      while ($i>=0) {
+	my $form = $IGNORABLE_WORD_FORMS[$i] ;
+	if ( lc($word) !~ /^$form$/ ) {
+	  push @keywords, $word ;
+	  $i = -1 ;
+	}
+	$i -- ;
+      }
+    }
+  }
+  return @keywords ;
+}
 
-1; # End of Bib2HTML::General::Title
+1;
+__END__
+
+=back
+
+=head1 COPYRIGHT
+
+(c) Copyright 1998-09 Stéphane Galland E<lt>galland@arakhne.orgE<gt>, under GPL.
+
+=head1 AUTHORS
+
+=over
+
+=item *
+
+Conceived and initially developed by Stéphane Galland E<lt>galland@arakhne.orgE<gt>.
+
+=back
+
+=head1 SEE ALSO
+
+bib2html.pl

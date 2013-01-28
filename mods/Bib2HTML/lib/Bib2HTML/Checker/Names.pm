@@ -1,141 +1,251 @@
-package Bib2HTML::Checker::Names;
+# Copyright (C) 2004-07  Stephane Galland <galland@arakhne.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; see the file COPYING.  If not, write to
+# the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+# Boston, MA 02111-1307, USA.
 
-use 5.006;
-use strict;
-use warnings FATAL => 'all';
+=pod
 
 =head1 NAME
 
-Bib2HTML::Checker::Names - The great new Bib2HTML::Checker::Names!
+Bib2HTML::Checker::Names - A checker for BibTeX names.
 
-=head1 VERSION
+=head1 SYNOPSYS
 
-Version 0.01
+use Bib2HTML::Checker::Names ;
 
-=cut
+my $gen = Bib2HTML::Checker::Names->new() ;
 
-our $VERSION = '0.01';
+=head1 DESCRIPTION
 
+Bib2HTML::Checker::Names is a Perl module, which checks
+if author's names are similar or not.
 
-=head1 SYNOPSIS
+=head1 GETTING STARTED
 
-Quick summary of what the module does.
+=head2 Initialization
 
-Perhaps a little code snippet.
+To create a parser, say something like this:
 
     use Bib2HTML::Checker::Names;
 
-    my $foo = Bib2HTML::Checker::Names->new();
-    ...
+    my $parser = Bib2HTML::Checker::Names->new() ;
 
-=head1 EXPORT
+...or something similar.
 
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
+=head1 METHOD DESCRIPTIONS
 
-=head1 SUBROUTINES/METHODS
+This section contains only the methods in Names.pm itself.
 
-=head2 function1
+=over
 
 =cut
 
-sub function1 {
+package Bib2HTML::Checker::Names;
+
+@ISA = ('Exporter');
+@EXPORT = qw();
+@EXPORT_OK = qw();
+
+use strict;
+use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION);
+use Exporter;
+use Carp ;
+
+use Bib2HTML::Translator::BibTeXName ;
+use Bib2HTML::General::Error ;
+use Bib2HTML::General::Misc ;
+
+#------------------------------------------------------
+#
+# Global vars
+#
+#------------------------------------------------------
+
+# Version number of the checker
+my $VERSION = "0.1" ;
+
+#------------------------------------------------------
+#
+# Constructor
+#
+#------------------------------------------------------
+
+sub new() : method {
+  my $proto = shift;
+  my $class = ref($proto) || $proto;
+  my $parent = ref($proto) && $proto ;
+
+  my $self ;
+  if ( $parent ) {
+    %{$self} = %{$parent} ;
+  }
+  else {
+    $self = {} ;
+  }
+  bless( $self, $class );
+  return $self;
 }
 
-=head2 function2
+#------------------------------------------------------
+#
+# Checking
+#
+#------------------------------------------------------
 
-=cut
+=pod
 
-sub function2 {
-}
+=item * check()
 
-=head1 AUTHOR
+Check the names.
+Takes 1 arg:
 
-op, C<< <op> >>
+=over
 
-=head1 BUGS
+=item * database (hash ref)
 
-Please report any bugs or feature requests to C<bug-bib2html at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Bib2HTML>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
-
-
-
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Bib2HTML::Checker::Names
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker (report bugs here)
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Bib2HTML>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Bib2HTML>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Bib2HTML>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Bib2HTML/>
+is the entire data structure toi check.
 
 =back
 
+=cut
+sub check(\%) : method {
+  my $self = shift ;
+  if ($_[0]) {
+    my %authors = $self->get_all_authors($_[0]->{'entries'}) ;
+    my @ids = sortbyletters(keys %authors) ;
 
-=head1 ACKNOWLEDGEMENTS
+    for(my $i=0; $i<$#ids; $i++) {
+      my $name1 = lc($authors{$ids[$i]}{'last'}) ;
+      for(my $j=$i+1; $j<=$#ids; $j++) {
+	my $name2 = lc($authors{$ids[$j]}{'last'}) ;
 
+	my $error_msg = join('',
+			     "  name1=".$authors{$ids[$i]}{'last'},
+			     ",",
+			     $authors{$ids[$i]}{'first'},
+			     " (",
+			     $authors{$ids[$i]}{'location'},
+			     ")\n  name2=",
+			     $authors{$ids[$j]}{'last'},
+			     ",",
+			     $authors{$ids[$j]}{'first'},
+			     " (",
+			     $authors{$ids[$j]}{'location'},
+			     ")") ;
 
-=head1 LICENSE AND COPYRIGHT
+	# Check for the same name defined many times
+	if ($name1 eq $name2) {
+	  Bib2HTML::General::Error::syswarm("multiple author's name syntax for '$name1':\n".
+					    $error_msg) ;
+ 	}
 
-Copyright 2013 op.
+	# Check for the same name defined many times but with keyboard's mistaskes
+	elsif ($self->is_similar($name1, $name2)) {
+	  Bib2HTML::General::Error::syswarm("possible author's name mistake?\n".
+					    $error_msg) ;
+ 	}
 
-This program is free software; you can redistribute it and/or modify it
-under the terms of the the Artistic License (2.0). You may obtain a
-copy of the full license at:
+      }
+    }
+  }
+}
 
-L<http://www.perlfoundation.org/artistic_license_2_0>
+=item * is_similar()
 
-Any use, modification, and distribution of the Standard or Modified
-Versions is governed by this Artistic License. By using, modifying or
-distributing the Package, you accept this license. Do not use, modify,
-or distribute the Package, if you do not accept this license.
+Replies if the 2 names have similar syntax
+Takes 2 args:
 
-If your Modified Version has been derived from a Modified Version made
-by someone other than you, you are nevertheless required to ensure that
-your Modified Version complies with the requirements of this license.
+=over
 
-This license does not grant you the right to use any trademark, service
-mark, tradename, or logo of the Copyright Holder.
+=item * name1 (string)
 
-This license includes the non-exclusive, worldwide, free-of-charge
-patent license to make, have made, use, offer to sell, sell, import and
-otherwise transfer the Package with respect to any patent claims
-licensable by the Copyright Holder that are necessarily infringed by the
-Package. If you institute patent litigation (including a cross-claim or
-counterclaim) against any party alleging that the Package constitutes
-direct or contributory patent infringement, then this Artistic License
-to you shall terminate on the date that such litigation is filed.
+=item * name2 (string)
 
-Disclaimer of Warranty: THE PACKAGE IS PROVIDED BY THE COPYRIGHT HOLDER
-AND CONTRIBUTORS "AS IS' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
-THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE, OR NON-INFRINGEMENT ARE DISCLAIMED TO THE EXTENT PERMITTED BY
-YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
-CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
-CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+=back
 
 =cut
+sub is_similar($$) : method {
+  my $self = shift ;
+  my $percent = levenshtein($_[0],$_[1]) ;
+  return ($percent>=90) ;
+}
 
-1; # End of Bib2HTML::Checker::Names
+=item * get_all_authors()
+
+Replies an array of entry authors.
+Takes 1 arg:
+
+=over
+
+=item * data (hash ref)
+
+=back
+
+=cut
+sub get_all_authors($) : method {
+  my $self = shift ;
+  my %authors = () ;
+  my $parser = Bib2HTML::Translator::BibTeXName->new() ;
+  foreach my $entry (sortbyletters(keys %{$_[0]})) {
+    if ( $_[0]->{$entry}{'fields'}{'author'} ) {
+      my @auts = $parser->splitnames($_[0]->{$entry}{'fields'}{'author'}) ;
+      foreach my $aut (@auts) {	
+	if ( ! $aut->{'et al'} ) {
+	  $aut->{'location'} = $_[0]->{$entry}{'location'} ;
+	  my $key = lc($parser->formatname( $aut, 'l f.' )) ;
+	  $key =~ s/[^a-zA-Z0-1]+//g ;
+	  my $count = 0 ;
+	  my $thekey = $key ;
+	  while ( ( $count >= 0 ) && ( exists $authors{$thekey} ) ) {
+	    if ( $parser->samenames($aut,$authors{$thekey}) ) {
+	      $count = -1 ;
+	    }
+	    else {
+	      $count ++ ;
+	      $thekey  = "${key}_${count}" ;
+	    }
+	  }
+	  if ( $count >= 0 ) {
+	    $authors{$thekey} = $aut ;
+	  }
+	}
+      }
+    }
+  }
+  return %authors ;
+}
+
+1;
+__END__
+
+=back
+
+=head1 COPYRIGHT
+
+(c) Copyright 2004-07 Stéphane Galland E<lt>galland@arakhne.orgE<gt>, under GPL.
+
+=head1 AUTHORS
+
+=over
+
+=item *
+
+Conceived and initially developed by Stéphane Galland E<lt>galland@arakhne.orgE<gt>.
+
+=back
+
+=head1 SEE ALSO
+
+bib2html.pl

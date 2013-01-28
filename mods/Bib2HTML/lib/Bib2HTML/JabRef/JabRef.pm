@@ -1,141 +1,209 @@
-package Bib2HTML::JabRef::JabRef;
+# Copyright (C) 2007  Stephane Galland <galland@arakhne.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; see the file COPYING.  If not, write to
+# the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+# Boston, MA 02111-1307, USA.
 
-use 5.006;
-use strict;
-use warnings FATAL => 'all';
+=pod
 
 =head1 NAME
 
-Bib2HTML::JabRef::JabRef - The great new Bib2HTML::JabRef::JabRef!
+Bib2HTML::JabRef::JabRef - A translator to support JabRef format.
 
-=head1 VERSION
+=head1 DESCRIPTION
 
-Version 0.01
+Bib2HTML::JabRef::JabRef is a Perl module, which permits to
+translate bibTeX data according to the JabRef format.
 
-=cut
+=head1 SYNOPSYS
 
-our $VERSION = '0.01';
-
-
-=head1 SYNOPSIS
-
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
-
-    use Bib2HTML::JabRef::JabRef;
-
-    my $foo = Bib2HTML::JabRef::JabRef->new();
-    ...
-
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
-
-=head1 SUBROUTINES/METHODS
-
-=head2 function1
+my $j = Bib2HTML::JabRef::JabRef->new() ;
+$j->parser(content);
 
 =cut
 
-sub function1 {
+package Bib2HTML::JabRef::JabRef;
+
+@ISA = ('Exporter');
+@EXPORT = qw();
+@EXPORT_OK = qw();
+
+use strict;
+use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION);
+use Exporter;
+use Carp ;
+
+#------------------------------------------------------
+#
+# Global vars
+#
+#------------------------------------------------------
+
+# Version number of JabRef Translator
+my $VERSION = "1.0" ;
+
+#------------------------------------------------------
+#
+# Constructor
+#
+#------------------------------------------------------
+
+sub new() : method {
+  my $proto = shift;
+  my $class = ref($proto) || $proto;
+  my $self = {} ;
+  bless($self,$class);
+  return $self;
 }
 
-=head2 function2
+#------------------------------------------------------
+#
+# Translation API
+#
+#------------------------------------------------------
+
+=pod
+
+=item * parse($)
+
+Translate the specified content which must be a reference
+to an hashtable given by a parser.
 
 =cut
+sub parse($) : method {
+  my $self = shift ;
 
-sub function2 {
+  $self->parseComments(@{$_[0]->{'comments'}});
+
+  if (($self->{'variables'}{'groupsversion'} !~ /^\s*([0-9]+)\s*;\s*$/)||
+      (int($1) < 3))  {
+    Bib2HTML::General::Error::syserr( "the JabRef translator does not support groups' version below 3.0" ) ;
+  }
+
+  # Treat the groups
+  if ($self->{'variables'}{'groupstree'}) {
+    my %categoryAssignation = $self->assignCategories($self->{'variables'}{'groupstree'});
+    $self->createCategories(\%categoryAssignation,$_[0]->{'entries'});
+  }
 }
 
-=head1 AUTHOR
+#------------------------------------------------------
+#
+# Tool API
+#
+#------------------------------------------------------
 
-op, C<< <op> >>
+=pod
 
-=head1 BUGS
+=item * createCategories(\%$)
 
-Please report any bugs or feature requests to C<bug-bib2html at rt.cpan.org>, or through
-the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Bib2HTML>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
+Add the categories to each bibtex entries.
+
+=cut
+sub createCategories(\%$) {
+  my $self = shift;
+  foreach my $key (keys(%{$_[0]})) {
+    if (exists $_[1]->{"$key"}) {
+      my $newcategories = join(':',@{$_[0]->{"$key"}});
+      if ($_[1]->{"$key"}{'fields'}{'domains'}) {
+	$newcategories .= ":".$_[1]->{"$key"}{'fields'}{'domains'};
+      }
+      $_[1]->{"$key"}{'fields'}{'domains'} = "$newcategories";
+    }
+  }
+}
+
+=pod
+
+=item * assignCategories($)
+
+Parse the JabRef group list and replies the assignations
+for each bibtex entry.
+
+=cut
+sub assignCategories($) {
+  my $self = shift;
+  my $jabrefgroups = "$_[0]";
+  my %assignments = ();
+  my @categories = ();
+
+  while (($jabrefgroups)&&
+         ($jabrefgroups =~ /^\s*([0-9]+)\s+([^:]*):(.*?)(?<!\\);\s*(.*)$/s)) {
+    my $order = "$1";
+    my $content = "$3";
+    $jabrefgroups = "$4";
+
+    if (lc("$2") eq "explicitgroup") {
+      $content =~ s/[\n\r]+//g; # remove carriage returns because they are not significant
+
+      my @elements = split(/\\;/, "$content");
+      my $name = shift @elements;
+      shift @elements; # eat the number
+
+      splice(@categories,($order-1));
+      $categories[$order-1] = "$name";
+
+      foreach my $key (@elements) {
+        if (!$assignments{"$key"}) {
+	  $assignments{"$key"} = [];
+	}
+        push @{$assignments{"$key"}}, join('/',@categories);
+      }
+    }
+  }
+
+  return %assignments;
+}
+
+=pod
+
+=item * parseComments(@)
+
+Parse the given comments to detect JabRef tokens.
+
+=cut
+sub parseComments(@) : method {
+  my $self = shift ;
+
+  foreach my $comment (@_) {
+	if ($comment =~ /^\s*jabref\-meta:\s*(.+?)\s*\:\s*(.*?)\s*$/is) {
+		$self->{'variables'}{lc("$1")} = "$2";
+	}
+  }
+
+}
 
 
-
-
-=head1 SUPPORT
-
-You can find documentation for this module with the perldoc command.
-
-    perldoc Bib2HTML::JabRef::JabRef
-
-
-You can also look for information at:
-
-=over 4
-
-=item * RT: CPAN's request tracker (report bugs here)
-
-L<http://rt.cpan.org/NoAuth/Bugs.html?Dist=Bib2HTML>
-
-=item * AnnoCPAN: Annotated CPAN documentation
-
-L<http://annocpan.org/dist/Bib2HTML>
-
-=item * CPAN Ratings
-
-L<http://cpanratings.perl.org/d/Bib2HTML>
-
-=item * Search CPAN
-
-L<http://search.cpan.org/dist/Bib2HTML/>
+1;
+__END__
 
 =back
 
+=head1 COPYRIGHT
 
-=head1 ACKNOWLEDGEMENTS
+(c) Copyright 2007 Stéphane Galland E<lt>galland@arakhne.orgE<gt>, under GPL.
 
+=head1 AUTHORS
 
-=head1 LICENSE AND COPYRIGHT
+=over
 
-Copyright 2013 op.
+=item *
 
-This program is free software; you can redistribute it and/or modify it
-under the terms of the the Artistic License (2.0). You may obtain a
-copy of the full license at:
+Conceived and initially developed by Stéphane Galland E<lt>galland@arakhne.orgE<gt>.
 
-L<http://www.perlfoundation.org/artistic_license_2_0>
+=back
 
-Any use, modification, and distribution of the Standard or Modified
-Versions is governed by this Artistic License. By using, modifying or
-distributing the Package, you accept this license. Do not use, modify,
-or distribute the Package, if you do not accept this license.
+=head1 SEE ALSO
 
-If your Modified Version has been derived from a Modified Version made
-by someone other than you, you are nevertheless required to ensure that
-your Modified Version complies with the requirements of this license.
-
-This license does not grant you the right to use any trademark, service
-mark, tradename, or logo of the Copyright Holder.
-
-This license includes the non-exclusive, worldwide, free-of-charge
-patent license to make, have made, use, offer to sell, sell, import and
-otherwise transfer the Package with respect to any patent claims
-licensable by the Copyright Holder that are necessarily infringed by the
-Package. If you institute patent litigation (including a cross-claim or
-counterclaim) against any party alleging that the Package constitutes
-direct or contributory patent infringement, then this Artistic License
-to you shall terminate on the date that such litigation is filed.
-
-Disclaimer of Warranty: THE PACKAGE IS PROVIDED BY THE COPYRIGHT HOLDER
-AND CONTRIBUTORS "AS IS' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
-THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE, OR NON-INFRINGEMENT ARE DISCLAIMED TO THE EXTENT PERMITTED BY
-YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
-CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
-CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
-=cut
-
-1; # End of Bib2HTML::JabRef::JabRef
+bib2html.pl
