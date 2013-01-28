@@ -5,10 +5,9 @@ use Module::Build;
 
 my $builder = Module::Build->new(
     module_name         => 'Bib2HTML::Main',
-    license             => 'Artistic_2_0',
-    dist_author         => q{op <op>},
-    dist_version_from   => 'lib/Bib2HTML/Main.pm',
+    license             => 'perl',
     release_status      => 'stable',
+    script_files         => [ 'bin/bib2ml.pl' ],
     configure_requires => {
         'Module::Build' => 0,
     },
@@ -19,8 +18,11 @@ my $builder = Module::Build->new(
         #'ABC'              => 1.6,
         #'Foo::Bar::Module' => 5.0401,
     },
-    add_to_cleanup     => [ 'Bib2HTML-*' ],
-    create_makefile_pl => 'traditional',
+    add_to_cleanup     		=> [ 'Bib2HTML-*' ],
+    create_makefile_pl 		=> 'traditional',
+    dist_author          	=> ' ',
+    dist_abstract          	=> ' ',
+    dist_version_from   => 'lib/Bib2HTML/Main.pm'
 );
 
 $builder->create_build_script();

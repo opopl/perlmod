@@ -45,7 +45,8 @@ use Bib2HTML::Parser::Parser ;
 #------------------------------------------------------
 
 # Version number of bib2html
-my $VERSION = Bib2HTML::Release::getVersionNumber() ;
+#our $VERSION = Bib2HTML::Release::getVersionNumber() ;
+our $VERSION='op-1';
 # Date of this release of bib2html
 my $VERSION_DATE = Bib2HTML::Release::getVersionDate() ;
 # URL from which the users can submit a bug
