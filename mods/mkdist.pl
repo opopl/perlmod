@@ -21,6 +21,7 @@ sub main(){
 	
 	my $mods={ 
 		Bib2HTML => [ qw(
+			Bib2HTML::Main
 			Bib2HTML::Checker::Names
 			Bib2HTML::General::Encode
 			Bib2HTML::General::Error 
