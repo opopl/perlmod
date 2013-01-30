@@ -22,6 +22,36 @@ sub _text(){
 	$self->_v_get("text") // '';
 }
 
+sub _cmd(){
+	my $self=shift;
+
+	my $ref=shift // '';
+	my %opts=@_;
+
+	return 1 unless $ref;
+
+	my($text,$vars,$cmd);
+
+	unless(ref $ref){
+
+	}elsif(ref $ref eq "HASH"){
+
+		$cmd=$ref->{cmd} // '';
+	
+		$self->_die("_cmd(): Did not specify command name!")	
+			unless $cmd;	
+	
+		$text="\\$cmd";
+		$vars=$ref->{vars} // '';
+	
+		$self->_die("_cmd(): Did not specify the list of variables!")
+			unless $cmd;	
+		
+		$self->_add_line("$text");
+	}
+
+}
+
 sub _add_line(){
 	my $self=shift;
 
@@ -62,6 +92,26 @@ sub input(){
 	my $file=shift // '';
 
 	$self->_add_line("\\input{$file}");
+}
+
+sub end(){
+	my $self=shift;
+
+	my $x=shift // '';
+	return 1 unless $x;
+
+	$self->_cmd("end", $x );
+
+}
+
+sub begin(){
+	my $self=shift;
+
+	my $x=shift // '';
+	return 1 unless $x;
+
+	$self->_cmd("begin",$x);
+
 }
 
 sub usepackage(){

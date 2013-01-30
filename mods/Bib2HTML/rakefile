@@ -3,7 +3,7 @@ task :default => [ :ptags, :install ]
 
 desc "Generate Perl tags for this distribution"
 task :ptags do 
-  sh 'ptags.pl --idir . --out ./ptags'
+  sh 'ptags.pl --dirs . --out ./ptags'
 end
 
 desc "Install this Perl module distribution"
