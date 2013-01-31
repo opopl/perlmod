@@ -7,6 +7,10 @@ use warnings;
 
 use OP::Base qw/:vars :funcs/;
 use parent qw(OP::Script Class::Accessor::Complex);
+use Data::Dumper;
+
+__PACKAGE__
+	->mk_scalar_accessors(qw(texroot));
 
 # }}}
 # Methods {{{
@@ -129,8 +133,24 @@ sub input(){
 	my $self=shift;
 
 	my $file=shift // '';
+	my $ref=shift // '';
 
-	$self->_add_line("\\input{$file}");
+	my @options=qw(check_exists);
+
+	unless($ref){
+		$self->_add_line("\\input{$file}");
+	}elsif(ref $ref eq "HASH"){
+		while(my($k,$v)=each %{$ref}){
+			foreach($k) {
+				/^check_exists$/ && do 
+					{ 
+					$self->_add_line("\\input{$file}")
+						if (-e $file);
+						next; 
+					};
+			}
+		}
+	}
 }
 
 sub end(){
@@ -140,6 +160,16 @@ sub end(){
 	return 1 unless $x;
 
 	$self->_cmd("end", $x );
+
+}
+
+sub date(){
+	my $self=shift;
+
+	my $x=shift // '';
+	return 1 unless $x;
+
+	$self->_cmd("date", $x );
 
 }
 
@@ -224,6 +254,134 @@ sub paragraph(){
 	$self->_add_line("\\paragraph{$title}");
 }
 
+# lof() {{{
+
+sub lof() {
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	my $opts={
+		title 			=> "List of Figures",
+		hypertarget  	=> "lof",
+		sec		 		=> "chapter"
+	};
+
+	unless (ref $ref) {
+		# body...
+	}elsif(ref $ref eq "HASH"){
+		while(my($k,$v)=each %{$ref}){
+			$opts->{$k}=$ref->{$k};
+		}
+	}elsif(ref $ref eq "ARRAY"){
+		# body...
+	}	
+	
+	$self->_c_delim;
+	$self->_c("List of Figures");
+	$self->_c_delim;
+
+	my $s="\\clearpage"
+	. "\n" . "\\phantomsection"
+	. "\n" . "\\hypertarget{$opts->{hypertarget}}{}"
+	. "\n" . "\\listoffigures"
+	. "\n" . "\\nc{\\pagenumlof}{\\thepage}"
+	. "\n" . "\\addcontentsline{lof}{$opts->{sec}}{$opts->{title}}";
+
+###LOF_TEXT
+
+	$self->_add_line("$s");
+	$self->_c_delim;
+
+}
+
+# }}}
+# lot() {{{
+
+sub lot() {
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	my $opts={
+		title 			=> "List of Tables",
+		hypertarget  	=> "lot",
+		sec		 		=> "chapter"
+	};
+
+	unless (ref $ref) {
+		# body...
+	}elsif(ref $ref eq "HASH"){
+		while(my($k,$v)=each %{$ref}){
+			$opts->{$k}=$ref->{$k};
+		}
+	}elsif(ref $ref eq "ARRAY"){
+		# body...
+	}	
+	
+	$self->_c_delim;
+	$self->_c("List of Tables");
+	$self->_c_delim;
+
+	my $s="\\clearpage"
+	. "\n" . "\\phantomsection"
+	. "\n" . "\\hypertarget{$opts->{hypertarget}}{}"
+	. "\n" . "\\listoftables"
+	. "\n" . "\\nc{\\pagenumlot}{\\thepage}"
+	. "\n" . "\\addcontentsline{lot}{$opts->{sec}}{$opts->{title}}";
+
+###LOT_TEXT
+
+	$self->_add_line("$s");
+	$self->_c_delim;
+
+}
+
+# }}}
+
+sub toc() {
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	my $opts={
+		title 			=> "Table of Contents",
+		hypertarget  	=> "toc",
+		sec		 		=> "chapter"
+	};
+
+	unless (ref $ref) {
+		# body...
+	}elsif(ref $ref eq "HASH"){
+		while(my($k,$v)=each %{$ref}){
+			$opts->{$k}=$ref->{$k};
+		}
+	}elsif(ref $ref eq "ARRAY"){
+		# body...
+	}	
+
+	$self->_c_delim;
+	$self->_c("Table of Contents");
+	$self->_c_delim;
+
+	my $s="\\clearpage"
+	. "\n" . "\\phantomsection"
+	. "\n" . "\\hypertarget{$opts->{hypertarget}}{}"
+	. "\n" . "\\tableofcontents"
+	. "\n" . "\\nc{\\pagenumtoc}{\\thepage}"
+	. "\n" . "\\addcontentsline{toc}{$opts->{sec}}{$opts->{title}}";
+
+###TOC_TEXT
+
+	$self->_add_line("$s");
+	$self->_c_delim;
+
+}
+
+=head3 preamble()
+
+=cut
+
 sub preamble() {
 	my $self=shift;
 
@@ -248,7 +406,7 @@ sub preamble() {
 
 		# Title of the document
 		my $doctitle='';
-
+###Preamble_Define_Input_Opts
 		# Process the contents of the subroutine's
 		#	input hash
 		my @input_opts=qw( 
@@ -256,12 +414,18 @@ sub preamble() {
 			doctitle
 			packopts
 			usedpacks
+			makeindex
+			put_today_date
+			ncfiles
 		);
 
 ###Preamble_Process_Input_Opts
 		foreach my $k (@input_opts) {
 
-			next unless defined $ref->{$k};
+			unless (defined $ref->{$k}){
+				$ref->{$k}=''; 
+				next; 
+			}
 
 			my $v=$ref->{$k};
 
@@ -309,14 +473,74 @@ sub preamble() {
 			}
 			$self->_c_delim;
 		}
-
+###Preamble_NC
+		# New-commands files
+		if ($ref->{ncfiles}){
+			$self->_c_delim;
+			$self->_c("New commands");
+			$self->_c_delim;
+			foreach my $x (@{$ref->{ncfiles}}) {
+				$self->input("$x");
+			}
+			$self->_c_delim;
+		}
 ###Preamble_Doc_Title
 		# Document's title
 		if ($doctitle){
 			$self->_add_line("\\maketitle{$doctitle}");
 		}
-		# Other stuff
+###Preamble_Doc_Today_Date
+		if ($ref->{put_today_date}){
+			$self->date("\\today");
+		}
+###Preamble_Make_Index
+		# Makeindex
+		if ($ref->{makeindex}){
+			$self->_add_line("\\makeindex");
+		}
+###Preamble_Hyper_Setup
+		if ($ref->{hypsetup}){
+			$self->hypsetup($ref->{hypsetup});
+		}
+
 	}
+}
+
+sub hypsetup() {
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	$self->_die("Author name was not specified in hypsetup()")
+		unless defined $ref->{author};
+	$self->_die("Title was not specified in hypsetup()")
+		unless defined $ref->{title};
+
+	my $text;
+
+	$text="\\ifpdf"
+	. "\n" ."\\pdfinfo{"
+	. "\n" ."   /Author ($ref->{author})"
+	. "\n" ."   /Title  ($ref->{title})"
+	. "\n" ."}"
+	. "\n" ."\\else"
+	. "\n" ."\\hypersetup{"
+	. "\n" ."	pdftitle={$ref->{title}},"
+	. "\n" ."	pdfauthor={$ref->{author}},"
+	. "\n" ."	pdfsubject={},"
+	. "\n" ."	pdfkeywords={},"
+	. "\n" ."	bookmarksnumbered,"
+	. "\n" ."	hyperfigures=true,"
+	. "\n" ."	bookmarksdepth=subparagraph"
+	. "\n" ."}"
+	. "\n" ."\\fi";
+
+	$self->_c_delim;
+	$self->_c("Hypersetup (for hyperlinked PDFs)");
+	$self->_c_delim;
+	$self->_add_line("$text");
+	$self->_c_delim;
+
 }
 
 sub new(){
@@ -364,7 +588,7 @@ sub _print(){
 		return 1;
 	}
 
-	$opts{fmode}=$self->_defaults("print_file_mode") unless defined $opts{fmode};
+	$opts->{fmode}=$self->_defaults("print_file_mode") unless defined $opts->{fmode};
 
 	if (ref $opts eq "HASH"){
 		if (defined $opts->{file}){
@@ -373,7 +597,9 @@ sub _print(){
 
 			foreach ($opts->{fmode}){
 				/^w$/ && do { open(F, ">$file") || die $!; next; };
-				/^a$/ && do { open(F, ">>$file") || die $!; next; };
+				/^a$/ && do { 
+					open(F, ">>$file") || die $!; next; 
+				};
 			}
 
 			print F $self->_text;

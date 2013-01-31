@@ -87,6 +87,22 @@ sub out(){
 
 }
 # }}}
+# _die() {{{
+
+=head3 _die()
+
+=cut
+
+sub _die(){
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	$self->out("Error: $ref"),exit 1;
+
+}
+# }}}
+
 # exec() {{{
 
 =head3 exec()
