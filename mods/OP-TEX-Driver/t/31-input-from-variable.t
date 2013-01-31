@@ -9,15 +9,15 @@ use lib ("$Bin/../lib", "$Bin/lib");
 use Data::Dumper;
 
 use Test::More tests => 13;
-use Test::LaTeX::Driver;
-use LaTeX::Driver;
+use Test::OP::TEX::Driver;
+use OP::TEX::Driver;
 use File::Slurp;
 
 tidy_directory($basedir, $docname, $debug);
 
 my $source = read_file($docpath) or die "cannot read the source data";
 my $output;
-my $drv = LaTeX::Driver->new( source      => \$source,
+my $drv = OP::TEX::Driver->new( source      => \$source,
 			      format      => 'ps',
 			      output      => \$output,
 			      @DEBUGOPTS );
@@ -25,10 +25,10 @@ my $drv = LaTeX::Driver->new( source      => \$source,
 my $systmpdir = $ENV{TMPDIR} || '/tmp';
 
 diag("Checking the formatting of a simple LaTeX document read from a variable");
-isa_ok($drv, 'LaTeX::Driver');
-like($drv->basedir, qr{^$systmpdir/$LaTeX::Driver::DEFAULT_TMPDIR\w+$}, "checking basedir");
-is($drv->basename, $LaTeX::Driver::DEFAULT_DOCNAME, "checking basename");
-is($drv->basepath, File::Spec->catpath('', $drv->basedir, $LaTeX::Driver::DEFAULT_DOCNAME), "checking basepath");
+isa_ok($drv, 'OP::TEX::Driver');
+like($drv->basedir, qr{^$systmpdir/$OP::TEX::Driver::DEFAULT_TMPDIR\w+$}, "checking basedir");
+is($drv->basename, $OP::TEX::Driver::DEFAULT_DOCNAME, "checking basename");
+is($drv->basepath, File::Spec->catpath('', $drv->basedir, $OP::TEX::Driver::DEFAULT_DOCNAME), "checking basepath");
 is($drv->formatter, 'latex', "formatter");
 
 ok($drv->run, "formatting $docname");

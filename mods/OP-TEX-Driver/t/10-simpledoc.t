@@ -9,17 +9,17 @@ use lib ("$Bin/../lib", "$Bin/lib");
 use Data::Dumper;
 
 use Test::More tests => 26;
-use Test::LaTeX::Driver;
-use LaTeX::Driver;
+use Test::OP::TEX::Driver;
+use OP::TEX::Driver;
 
 tidy_directory($basedir, $docname, $debug);
 
-my $drv = LaTeX::Driver->new( source => $docpath,
+my $drv = OP::TEX::Driver->new( source => $docpath,
 			      format => 'dvi',
 			      @DEBUGOPTS );
 
 diag("Checking the formatting of a simple LaTeX document");
-isa_ok($drv, 'LaTeX::Driver');
+isa_ok($drv, 'OP::TEX::Driver');
 is($drv->basedir, $basedir, "checking basedir");
 is($drv->basename, $docname, "checking basename");
 is($drv->basepath, File::Spec->catpath('', $basedir, $docname), "checking basepath");
@@ -41,7 +41,7 @@ test_dvifile($drv, [ "Simple Test Document $testno",	# title
 tidy_directory($basedir, $docname, $debug);
 
 diag("Checking the generation of PDF");
-$drv = LaTeX::Driver->new( source => $docpath,
+$drv = OP::TEX::Driver->new( source => $docpath,
 			   format => 'pdf',
 			   @DEBUGOPTS );
 
@@ -54,7 +54,7 @@ ok(! -f ($drv->basepath . '.ps'),  "but PS  file doesn't");
 tidy_directory($basedir, $docname, $debug);
 
 diag("Checking the generation of PostScript");
-$drv = LaTeX::Driver->new( source => $docpath,
+$drv = OP::TEX::Driver->new( source => $docpath,
 			   format => 'ps',
 			   @DEBUGOPTS );
 
@@ -67,7 +67,7 @@ ok(! -f ($drv->basepath . '.pdf'),  "but PS file doesn't");
 tidy_directory($basedir, $docname, $debug);
 
 diag("Checking the generation of PDF, via PostScript");
-$drv = LaTeX::Driver->new( source => $docpath,
+$drv = OP::TEX::Driver->new( source => $docpath,
 			   format => 'pdf(ps)',
 			   @DEBUGOPTS );
 
@@ -79,7 +79,7 @@ ok(-f ($drv->basepath . '.dvi'),  "DVI file exists");
 tidy_directory($basedir, $docname, $debug);
 
 diag("Checking the generation of PostScript, via PDF");
-$drv = LaTeX::Driver->new( source => $docpath,
+$drv = OP::TEX::Driver->new( source => $docpath,
 			   format => 'ps(pdf)',
 			   @DEBUGOPTS );
 

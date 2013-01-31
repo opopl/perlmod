@@ -15,26 +15,26 @@ BEGIN {
     plan skip_all => "Test::Exception needed" if $@;
 }
 
-use Test::LaTeX::Driver;
-use LaTeX::Driver;
+use Test::OP::TEX::Driver;
+use OP::TEX::Driver;
 
 plan tests => 10;
 
 tidy_directory($basedir, $docname, $debug);
 
-my $drv = LaTeX::Driver->new( source      => $docpath,
+my $drv = OP::TEX::Driver->new( source      => $docpath,
 			      format      => 'dvi',
 			      DEBUG       => $debug,
 			      DEBUGPREFIX => '# [latex]: ' );
 
 diag("Checking the formatting of a simple LaTeX document");
-isa_ok($drv, 'LaTeX::Driver');
+isa_ok($drv, 'OP::TEX::Driver');
 is($drv->basedir, $basedir, "checking basedir");
 is($drv->basename, $docname, "checking basename");
 is($drv->basepath, File::Spec->catpath('', $basedir, $docname), "checking basepath");
 is($drv->formatter, 'latex', "formatter");
 
-throws_ok( sub { $drv->run }, 'LaTeX::Driver::Exception', "formatting broken document $docname");
+throws_ok( sub { $drv->run }, 'OP::TEX::Driver::Exception', "formatting broken document $docname");
 
 is($drv->stats->{runs}{latex},         1, "should have run latex once");
 is($drv->stats->{runs}{bibtex},    undef, "should not have run bibtex");
