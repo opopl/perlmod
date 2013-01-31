@@ -22,7 +22,7 @@
 
 * improve Kwalitee and general adherance to Perl best practice [MOSTLY DONE]
 
-* add a script to invoke LaTeX::Driver on a specified file - need to
+* add a script to invoke OP::TEX::Driver on a specified file - need to
   think of a good name and a sensible set of options
 
 * add checks for timestamps (a la "make" and "latexmk")

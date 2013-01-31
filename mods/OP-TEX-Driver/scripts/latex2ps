@@ -26,9 +26,9 @@ use strict;
 use warnings;
 
 
-use LaTeX::Driver::FilterProgram;
+use OP::TEX::Driver::FilterProgram;
 
-LaTeX::Driver::FilterProgram->execute(format => 'dvi');
+OP::TEX::Driver::FilterProgram->execute(format => 'dvi');
 
 exit(0);
 
@@ -45,7 +45,7 @@ latex2ps - script to convert LaTeX file to PostScript
 
 =head1 DESCRIPTION
 
-C<latex2ps> is a simple script to invoke the C<LaTeX::Driver> module
+C<latex2ps> is a simple script to invoke the C<OP::TEX::Driver> module
 to convert a LaTeX file to PostScript.
 
 TO BE EXPANDED

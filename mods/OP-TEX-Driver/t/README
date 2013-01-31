@@ -1,4 +1,4 @@
-This directory contains unit test scripts for the LaTeX::Driver module.
+This directory contains unit test scripts for the OP::TEX::Driver module.
 
 The test scripts invoke the module to format documents in
 subdirectories of the testdata directory.  Each subdirectory

@@ -3,7 +3,7 @@
 # Changes 
 #
 # DESCRIPTION
-#   Revision history for the LaTeX::Driver module
+#   Revision history for the OP::TEX::Driver module
 #
 # AUTHOR
 #   Andrew Ford   <A.Ford@ford-mason.co.uk>
@@ -66,9 +66,9 @@
 #------------------------------------------------------------------------
 
 * Updated documentation - specifically the diagnostics section for
-  LaTeX::Driver and just expanded LaTeX::Driver::FilterProgram
+  OP::TEX::Driver and just expanded OP::TEX::Driver::FilterProgram
 
-* fixed Makefile.PL, which was using LaTeX::Driver to get the module
+* fixed Makefile.PL, which was using OP::TEX::Driver to get the module
   version, but this broke horribly if the prerequisite modules were
   not installed.
 
@@ -89,7 +89,7 @@
   the creation of Unix filter type scripts.
 
 * added the Unix-style filter programs latex2dvi, latex2pdf and
-  latex2ps (these use the common module LaTeX::Driver::FilterProgram)
+  latex2ps (these use the common module OP::TEX::Driver::FilterProgram)
 
 
 #------------------------------------------------------------------------

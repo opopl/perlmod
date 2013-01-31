@@ -1,5 +1,5 @@
 
-                             LaTeX::Driver
+                             OP::TEX::Driver
 
                              Version 0.07
 
@@ -16,7 +16,7 @@
 QUICK INSTALL
 -------------
 
-The latest version of the LaTeX::Driver module can be retrieved from:
+The latest version of the OP::TEX::Driver module can be retrieved from:
 
     http://www.cpan.org/modules/by-module/LaTeX-Driver/
 
@@ -43,7 +43,7 @@ AND TESTING, and INSTALLATION.
 PREREQUISITES
 -------------
 
-The LaTeX::Driver module is written entirely in Perl and should run on
+The OP::TEX::Driver module is written entirely in Perl and should run on
 any platform on which Perl is available (currently only Linux has been
 tested).  It requires Perl 5.006 or later.
 

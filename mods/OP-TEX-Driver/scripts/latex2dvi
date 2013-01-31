@@ -25,9 +25,9 @@
 use strict;
 use warnings;
 
-use LaTeX::Driver::FilterProgram;
+use OP::TEX::Driver::FilterProgram;
 
-LaTeX::Driver::FilterProgram->execute(format => 'dvi');
+OP::TEX::Driver::FilterProgram->execute(format => 'dvi');
 
 exit 0;
 
@@ -43,7 +43,7 @@ latex2dvi - script to convert LaTeX file to DVI
 
 =head1 DESCRIPTION
 
-C<latex2dvi> is a simple script to invoke the C<LaTeX::Driver> module
+C<latex2dvi> is a simple script to invoke the C<OP::TEX::Driver> module
 to convert a LaTeX file to DVI (TeX's device independent output format).
 
 TO BE EXPANDED
@@ -68,7 +68,7 @@ extension replaced with C<.dvi>.
 
 specifies that the source document should be taken to be a Template
 Toolkit template and processed through that before being fed to the
-C<LaTeX::Driver> module for latex formatting.
+C<OP::TEX::Driver> module for latex formatting.
 
 
 =item C<-define=I<NAME>=I<VALUE>>

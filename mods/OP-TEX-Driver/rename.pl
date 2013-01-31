@@ -1,4 +1,4 @@
-#!/usr/bin/perl 
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
@@ -8,7 +8,7 @@ use FindBin;
 use Directory::Iterator;
 use Data::Dumper;
 
-my $old="LaTeX::Driver";
+my $old="OP::TEX::Driver";
 my $new="OP::TEX::Driver";
 
 my $d=$FindBin::Bin;
@@ -18,7 +18,7 @@ my $it=Directory::Iterator->new(".");
 $it->show_dotfiles(1);
 
 while (my $file=<$it>) {
-	next unless $file =~ m/(\.t|\.pm)$/;
+	#next unless $file =~ m/(\.t|\.pm)$/;
 	print "Processing: $file\n";
 	edit_file {
 		s/$old/$new/g;
