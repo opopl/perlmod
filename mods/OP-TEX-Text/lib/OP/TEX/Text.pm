@@ -6,9 +6,10 @@ use strict;
 use warnings;
 
 use OP::Base qw/:vars :funcs/;
-use parent qw(OP::Script);
+use parent qw(OP::Script Class::Accessor::Complex);
 
 # }}}
+# Methods {{{
 
 sub _flush(){
 	my $self=shift;
@@ -26,14 +27,22 @@ sub _cmd(){
 	my $self=shift;
 
 	my $ref=shift // '';
-	my %opts=@_;
+	my @opts=@_;
 
 	return 1 unless $ref;
 
 	my($text,$vars,$cmd);
 
 	unless(ref $ref){
+		$text="\\" . $ref;
 
+		unless(@opts){
+			$self->_die("_cmd(): Did not specify the list of variables!")
+				unless $cmd;	
+		}elsif (scalar @opts == 1){
+			# Single variable
+			$text.= "{$opts[0]}";
+		}
 	}elsif(ref $ref eq "HASH"){
 
 		$cmd=$ref->{cmd} // '';
@@ -46,10 +55,40 @@ sub _cmd(){
 	
 		$self->_die("_cmd(): Did not specify the list of variables!")
 			unless $cmd;	
+
+		$text.= "{$vars}";
 		
-		$self->_add_line("$text");
 	}
 
+	$self->_add_line("$text");
+
+}
+
+sub _c_delim() {
+	my $self=shift;
+
+	my $text="%" x 50;
+	$self->_c("$text");
+}
+
+sub _c() {
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	my $text=$ref;
+
+	$self->_add_line("%$text");
+}
+
+sub _empty_lines() {
+	my $self=shift;
+
+	my $num=shift // 1;
+
+	for(1..$num){
+		$self->_add_line(" ");
+	}
 }
 
 sub _add_line(){
@@ -185,6 +224,101 @@ sub paragraph(){
 	$self->_add_line("\\paragraph{$title}");
 }
 
+sub preamble() {
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	die "No arguments to preamble()"
+		unless $ref;
+
+	# Print some comments in preamble
+	my $date=localtime;
+
+	$self->_c_delim;
+	$self->_c("Generated on: $date");
+	$self->_c_delim;
+	
+	unless(ref $ref){
+	}elsif(ref $ref eq "HASH"){
+
+		# Used packages related
+		my $usedpacks=[];
+		my $packopts={};
+
+		# Title of the document
+		my $doctitle='';
+
+		# Process the contents of the subroutine's
+		#	input hash
+		my @input_opts=qw( 
+			dclass 
+			doctitle
+			packopts
+			usedpacks
+		);
+
+###Preamble_Process_Input_Opts
+		foreach my $k (@input_opts) {
+
+			next unless defined $ref->{$k};
+
+			my $v=$ref->{$k};
+
+			foreach($k) {
+				/^dclass$/ && do {
+					my $class_name=shift @$v;
+					my $class_opts=join(',',@$v);
+					my $text="\\documentclass[$class_opts]{$class_name}";
+					$self->_empty_lines;
+					$self->_add_line("$text");
+					$self->_empty_lines;
+					next;
+				}; 
+				/^usedpacks$/ && do {
+					$usedpacks=$v;
+					next;
+				};
+				/^packopts$/ && do {
+					$packopts=$v;
+					next;
+				};
+				/^doctitle$/ && do {
+					$doctitle=$v;
+					next;
+				};
+			}
+		}
+		# Once the input ref is processed, performs
+		#	necessary actions
+
+###Preamble_Used_Packs
+		#	Generate LaTeX code for the list of used packages
+		if ($usedpacks){
+
+			$self->_c_delim;
+			$self->_c("List of used packages");
+			$self->_c_delim;
+
+			foreach my $pack (@$usedpacks) {
+				my $opts=$packopts->{$pack} // '';
+				my $s_opts='';
+				$s_opts="[$opts]" if $opts;
+				my $text="\\usepackage" . $s_opts . "{$pack}";
+				$self->_add_line("$text");
+			}
+			$self->_c_delim;
+		}
+
+###Preamble_Doc_Title
+		# Document's title
+		if ($doctitle){
+			$self->_add_line("\\maketitle{$doctitle}");
+		}
+		# Other stuff
+	}
+}
+
 sub new(){
 	my ($class, %parameters) = @_;
     my $self = bless ({}, ref ($class) || $class);
@@ -252,6 +386,5 @@ sub _print(){
 }
 
 # }}}
-
 1;
 

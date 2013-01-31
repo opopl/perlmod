@@ -4,6 +4,7 @@ package OP::Perl::Installer;
 use strict;
 use warnings;
 
+use lib ("/home/op/wrk/perlmod/mods/OP-Perl-Installer/lib");
 use lib ("/home/op/wrk/perlmod/mods/OP-Script/lib");
 
 our $VERSION='0.01';
@@ -251,7 +252,7 @@ sub run_build_install(){
 	@exclude=qw( OP::Module::Build );
 	#@only=qw(OP::Script OP::TEX::Text OP::Perl::Installer);
 	#@only=qw(OP::Script OP::TEX::Text OP::Perl::Installer OP::TEX::LATEX2HTML);
-	@only=qw(OP::Script OP::GOPS::MKDEP );
+	@only=qw(OP::Script OP::GOPS::MKDEP OP::TEX::Text OP::Perl::Installer );
 
 	#my @only=qw( 
 		#OP::Base

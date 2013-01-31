@@ -4,6 +4,7 @@ package OP::Perl::Installer;
 use strict;
 use warnings;
 
+use lib ("/home/op/wrk/perlmod/mods/OP-Perl-Installer/lib");
 use lib ("/home/op/wrk/perlmod/mods/OP-Script/lib");
 
 our $VERSION='0.01';
@@ -33,6 +34,10 @@ use Data::Dumper;
 
 =cut
 
+=head3 new()
+
+=cut
+
 sub new()
 {
     my ($class, %parameters) = @_;
@@ -49,7 +54,11 @@ sub init(){
 	$self->{package_name}=__PACKAGE__ unless defined $self->{package_name};
 }
 
-# module_to_path(){{{
+# module_to_path() {{{
+
+=head3 module_to_path()
+
+=cut
 
 sub module_to_path(){
 	my $self=shift;
@@ -63,6 +72,11 @@ sub module_to_path(){
 }
 #}}}
 # module_to_def(){{{
+
+=head3 module_to_def()
+
+=cut
+
 sub module_to_def(){
 	my $self=shift;
 	# input: My::Module::Base
@@ -238,7 +252,7 @@ sub run_build_install(){
 	@exclude=qw( OP::Module::Build );
 	#@only=qw(OP::Script OP::TEX::Text OP::Perl::Installer);
 	#@only=qw(OP::Script OP::TEX::Text OP::Perl::Installer OP::TEX::LATEX2HTML);
-	@only=qw(OP::Script OP::GOPS::MKDEP );
+	@only=qw(OP::Script OP::GOPS::MKDEP OP::TEX::Text OP::Perl::Installer );
 
 	#my @only=qw( 
 		#OP::Base
@@ -287,6 +301,11 @@ sub run_build_install(){
 }
 # }}}
 # sub run_shell(){{{
+
+=head3 run_shell()
+
+=cut
+
 sub run_shell(){
   my $self=shift;
   my $term = new Term::ShellUI(
