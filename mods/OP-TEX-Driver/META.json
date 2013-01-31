@@ -12,7 +12,7 @@
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
       "version" : "2"
    },
-   "name" : "LaTeX-Driver",
+   "name" : "OP-TEX-Driver",
    "no_index" : {
       "directory" : [
          "t",

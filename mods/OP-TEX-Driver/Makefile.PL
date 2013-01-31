@@ -65,7 +65,7 @@ fix_path_assignment(catfile(qw( lib OP TEX Driver Paths.pm )), 'pdf2ps',    $PDF
 #------------------------------------------------------------------------
 
 my %opts = (
-    'NAME'         => 'OP-TEX-Driver',
+    'NAME'         => 'OP::TEX::Driver',
     'VERSION'      => $MODVERSION,
     'EXE_FILES'    => [ 'scripts/latex2dvi', 'scripts/latex2pdf', 'scripts/latex2ps' ],
     'PMLIBDIRS'    => [ 'lib' ], 
