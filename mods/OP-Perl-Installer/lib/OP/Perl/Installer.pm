@@ -256,7 +256,9 @@ sub run_build_install(){
 		OP::Script 
 		OP::GOPS::MKDEP 
 		OP::TEX::Text 
-		OP::Perl::Installer );
+		OP::TEX::PERLTEX
+		OP::Perl::Installer 
+		);
 
 	#my @only=qw( 
 		#OP::Base

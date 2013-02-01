@@ -378,6 +378,96 @@ sub toc() {
 
 }
 
+sub bibliography() {
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	die "No arguments to bibliography()"
+		unless $ref;
+
+	my @input_opts=qw(
+			hypertarget title bibstyle inputs bibfiles sec
+	);
+
+	my $opts={
+		title 			=> "Bibliography",
+		hypertarget  	=> "lot",
+		sec		 		=> "chapter"
+	};
+
+	unless (ref $ref) {
+		# body...
+	}elsif(ref $ref eq "HASH"){
+		foreach my $k (@input_opts) {
+			$opts->{$k}=$ref->{$k} // '' ;
+		}
+	}elsif(ref $ref eq "ARRAY"){
+		# body...
+	}	
+
+###Bibliography
+	my $text="\\cleardoublepage"
+	. "\n" ."\\phantomsection"
+	. "\n" ."\\hypertarget{$opts->{hypertarget}}{}"
+	. "\n" .""
+	. "\n" ."\\addcontentsline{toc}{$opts->{sec}}{Bibliography}"
+	. "\n" .""
+	. "\n" ."\\bibliographystyle{$opts->{bibstyle}}";
+
+	$self->_c_delim;
+	$self->_c("Bibliography section");
+	$self->_c_delim;
+	$self->_add_line("$text");
+
+	# Additional input files, if specified
+	if($opts->{inputs}){
+		unless(ref $opts->{inputs}){
+			$self->input($opts->{inputs});
+		}elsif(ref $opts->{inputs} eq "ARRAY"){
+			foreach my $if (@{$opts->{inputs}}) {
+				$self->input($if);
+			}
+		}
+	}
+
+	$self->_add_line("\\nc{\\pagenumbib}{\\thepage}");
+
+	# Bibliography files (*.bib)
+	if($opts->{bibfiles}){
+		unless(ref $opts->{bibfiles}){
+			my $if=$opts->{bibfiles};
+			$self->_add_line("\\bibliography{$if}");
+		}elsif(ref $opts->{bibfiles} eq "ARRAY"){
+			foreach my $if (@{$opts->{bibfiles}}) {
+				$self->_add_line("\\bibliography{$if}");
+			}
+		}
+	}
+	$self->_c_delim;
+
+}
+
+sub printindex(){
+	my $self=shift;
+
+	my $s='
+	\clearpage
+	\phantomsection
+	\nc{\pagenumindex}{\thepage}
+	\hypertarget{index}{}
+	
+	\addcontentsline{toc}{chapter}{Index}
+	\printindex';
+
+	$self->_c_delim;
+	$self->_c("Index");
+	$self->_c_delim;
+	$self->_add_line($s);
+	$self->_c_delim;
+
+}
+
 =head3 preamble()
 
 =cut
@@ -487,7 +577,7 @@ sub preamble() {
 ###Preamble_Doc_Title
 		# Document's title
 		if ($doctitle){
-			$self->_add_line("\\maketitle{$doctitle}");
+			$self->_add_line("\\title{$doctitle}");
 		}
 ###Preamble_Doc_Today_Date
 		if ($ref->{put_today_date}){

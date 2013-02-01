@@ -40,6 +40,7 @@ EOF
 #------------------------------------------------------------------------
 
 our $LATEX     = ttprompt('latex path',     find_program($ENV{PATH}, "latex"));
+our $PERLTEX   = ttprompt('perltex path',   find_program($ENV{PATH}, "perltex"));
 our $PDFLATEX  = ttprompt('pdflatex path',  find_program($ENV{PATH}, "pdflatex"));
 our $BIBTEX    = ttprompt('bibtex path',    find_program($ENV{PATH}, "bibtex"));
 our $MAKEINDEX = ttprompt('makeindex path', find_program($ENV{PATH}, "makeindex"));
@@ -54,6 +55,7 @@ if (!$LATEX and !$PDFLATEX) {
 }
 
 fix_path_assignment(catfile(qw( lib OP TEX Driver Paths.pm )), 'latex',     $LATEX);
+fix_path_assignment(catfile(qw( lib OP TEX Driver Paths.pm )), 'perltex',   $PERLTEX);
 fix_path_assignment(catfile(qw( lib OP TEX Driver Paths.pm )), 'pdflatex',  $PDFLATEX);
 fix_path_assignment(catfile(qw( lib OP TEX Driver Paths.pm )), 'bibtex',    $BIBTEX);
 fix_path_assignment(catfile(qw( lib OP TEX Driver Paths.pm )), 'makeindex', $MAKEINDEX);

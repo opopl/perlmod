@@ -60,7 +60,7 @@ our $DEBUGPREFIX;
 
 eval { require OP::TEX::Driver::Paths };
 
-our @PROGRAM_NAMES = qw(latex pdflatex bibtex makeindex dvips dvipdfm ps2pdf pdf2ps);
+our @PROGRAM_NAMES = qw(latex pdflatex perltex bibtex makeindex dvips dvipdfm ps2pdf pdf2ps);
 our %program_path;
 
 $program_path{$_} = $OP::TEX::Driver::Paths::program_path{$_} || "/usr/bin/$_"
@@ -219,6 +219,8 @@ sub new {
     my $texinputs_path = $options->{TEXINPUTS} || $options->{texinputs} || [];
     $texinputs_path = [ split(/:/, $texinputs_path) ] unless ref $texinputs_path;
 
+    # Set the new formatter, if specified in $options
+    $formatter=$options->{formatter} if defined $options->{formatter};
 
     # construct and return the object
 
@@ -244,7 +246,7 @@ sub new {
 #------------------------------------------------------------------------
 # run()
 #
-# Runs the formatter and other programs to generate the ouptut.
+# Runs the formatter and other programs to generate the output.
 #------------------------------------------------------------------------
 
 sub run {

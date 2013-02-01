@@ -256,7 +256,6 @@ sub run_build_install(){
 		OP::Script 
 		OP::GOPS::MKDEP 
 		OP::TEX::Text 
-		OP::TEX::Driver
 		OP::Perl::Installer );
 
 	#my @only=qw( 

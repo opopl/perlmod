@@ -31,6 +31,7 @@ use warnings;
 our %program_path;
 
 $program_path{latex}     = '/usr/bin/latex';
+$program_path{perltex}     = '/usr/bin/perltex';
 $program_path{xelatex}   = '/usr/bin/xelatex';
 $program_path{pdflatex}  = '/usr/bin/pdflatex';
 $program_path{bibtex}    = '/usr/bin/bibtex';
