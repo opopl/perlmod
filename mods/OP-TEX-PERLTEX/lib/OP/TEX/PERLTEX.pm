@@ -232,10 +232,11 @@ sub run(){
 		    '\plmac@pipe', $self->pipe,
 		    $self->latexcmdline_index($firstcmd));
 	print Dumper($ss);
+	print Dumper($self->latexcmdline);
 
 	print "$firstcmd\n";
 	#$self->set_latexcmdline( $firstcmd, $ss );
-	$self->set_latexcmdline( );
+	$self->latexcmdline_set();
 	
 	$self->toperl( File::Spec->rel2abs($self->toperl));
 	$self->fromperl( File::Spec->rel2abs($self->fromperl));
