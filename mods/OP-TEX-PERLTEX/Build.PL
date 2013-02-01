@@ -4,4 +4,10 @@ use Module::Build;
 Module::Build->new
     ( module_name     => 'OP::TEX::PERLTEX',
       license         => 'perl',
+	  requires 		 	=> {
+	  	'OP::Script'	 			=> 0,
+	  	'Safe'			 			=> 0,
+	  	'Class::Accessor::Complex'	=> 0,
+	  },
+	  script_files     => [qw( scripts/perllatex )]
     )->create_build_script;
