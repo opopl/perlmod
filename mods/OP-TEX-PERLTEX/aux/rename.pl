@@ -34,12 +34,10 @@ my $scalar_accessor_renames=[qw(
 my $renames;
 
 foreach my $id (@$scalar_accessor_renames) {
-	$renames->{"\$$id"}="\$self->$id";
+	$renames->{"\\\$$id"}="\$self->$id";
 }
-print Dumper($renames);
-exit 0;
 
-my $it=Directory::Iterator->new("$Bin");
+my $it=Directory::Iterator->new("$Bin/../");
 $it->show_dotfiles(1);
 
 while (my $file=<$it>) {
