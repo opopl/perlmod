@@ -45,10 +45,12 @@ use File::Spec;
 use IO::Handle;
 use Data::Dumper;
 
-use parent qw(Class::Accessor::Complex OP::Script);
+#use parent qw(Class::Accessor::Complex OP::Script);
+use parent qw(Class::Accessor::Complex);
 use Sub::Documentation 'add_documentation';
 
 __PACKAGE__
+	->mk_new
 	->mk_scalar_accessors(qw(
 			doneflag
 			fromflag
@@ -72,16 +74,15 @@ __PACKAGE__
 		fh
 		));
 
+our $sandbox = new Safe;
+our $sandbox_eval;
+our $latexpid;
+
 sub top_level_eval ($)
 {
 
     return eval $_[0];
 }
-
-
-our $sandbox = new Safe;
-our $sandbox_eval;
-our $latexpid;
 
 sub _begin(){
 	my $self=shift;
@@ -90,15 +91,15 @@ sub _begin(){
 
 }
 
-sub new()
-{
-    my ($class, %ipars) = @_;
-    my $self = bless ({}, ref ($class) || $class);
+#sub new
+#{
+	#my ($class, %ipars) = @_;
+	#my $self = bless ({}, ref ($class) || $class);
 
-	$self->_begin();
+	#$self->_begin();
 
-    return $self;
-}
+	#return $self;
+#}
 
 
 
@@ -221,7 +222,6 @@ sub run(){
 	$self->logfile($self->jobname . ".lgpl");
 	$self->pipe($self->jobname . ".pipe");
 
-	
 	my $ss=sprintf('\makeatletter' . '\def%s{%s}' x 7 . '\makeatother%s',
 		    '\plmac@tag', $separator,
 		    '\plmac@tofile', $self->toperl,
@@ -231,13 +231,9 @@ sub run(){
 		    '\plmac@doneflag', $self->doneflag,
 		    '\plmac@pipe', $self->pipe,
 		    $self->latexcmdline_index($firstcmd));
-	print Dumper($ss);
-	print Dumper($self->latexcmdline);
 
-	print "$firstcmd\n";
-	#$self->set_latexcmdline( $firstcmd, $ss );
-	$self->latexcmdline_set();
-	
+	$self->set_latexcmdline( $firstcmd, $ss );
+
 	$self->toperl( File::Spec->rel2abs($self->toperl));
 	$self->fromperl( File::Spec->rel2abs($self->fromperl));
 	$self->toflag( File::Spec->rel2abs($self->toflag));
