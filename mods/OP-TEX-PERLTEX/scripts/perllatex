@@ -14,4 +14,4 @@ my %opts=(
 
 my $t=OP::TEX::PERLTEX->new(%opts);
 
-$t->main;
+$t->main(@ARGV);

@@ -113,7 +113,8 @@ sub add_modules(){
 	@modules=split(',',$s_modules_add);
 
 	foreach my $module (@modules){ 
-		push(@files,$self->module_to_def($module) . "/lib/" . $self->module_to_path($module)); 
+		my $def_module=$self->module_to_def($module);
+		push(@files, $def_module . "/lib/" . $self->module_to_path($module)); 
 		mkdir "$shd/mods/";
 		mkdir "$shd/mods/" . $self->module_to_def($module);
 		mkdir "$shd/mods/" . $self->module_to_def($module) . "/lib/";
@@ -125,6 +126,18 @@ sub add_modules(){
 			COMPACT			=> 1
     	);
 		$mods{$module}->complete_build();
+
+		# Write the install.sh script
+		open(F,">",File::Spec->catfile($def_module,"install.sh"));
+
+		print F "#!/bin/bash\n"; 
+		print F "" . "\n";
+		print F "perl Build.PL" . "\n";
+		print F "./Build" . "\n";
+		print F "./Build test" . "\n";
+		print F "./Build install" . "\n";
+
+		close(F);
 	}
 	foreach(@files){ s/^/$shd\/mods\//g; }
 	print "@files\n";

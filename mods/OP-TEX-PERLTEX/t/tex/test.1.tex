@@ -1,0 +1,27 @@
+\documentclass[12pt,a4paper,dvips]{report}
+
+\usepackage{perltex}
+\usepackage{makeidx}
+\usepackage{my}
+
+\sloppy
+\def\baselinestretch{1}
+\setcounter{page}{1}
+
+\title{Test Document for OP::TEX::PERLTEX package}
+\date{\today}
+\author{O. Poplavskyy}
+
+\makeindex
+
+\nc{\hello}{\textbf{HELLO}}
+
+\begin{document}
+
+\chapter{sf}
+\chapter{asdasdasd}
+\hello
+
+\printindex
+	
+\end{document}

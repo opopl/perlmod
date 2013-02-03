@@ -104,6 +104,8 @@ sub _begin(){
 sub init_debug() {
 	my $self=shift;
 
+	# Specify the working directory where the debug log file
+	#	will be written
 	$self->workdir(File::Spec->curdir()) unless $self->workdir;
 	
 	# Debug::Simple debug options
@@ -310,8 +312,14 @@ sub init_vars() {
 
 }
 
+=head3 main()
+
+=cut
+
 sub main() {
 	my $self=shift;
+
+	@ARGV=@_ if (@_);
 
 	$self->init_debug;
 
@@ -934,3 +942,6 @@ latex(1), pdflatex(1), perl(1), Safe(3pm), Opcode(3pm)
 =head1 AUTHOR
 
 Scott Pakin, I<scott+pt@pakin.org>
+=end
+
+#vim: set makeprg=install.sh :
