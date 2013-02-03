@@ -326,6 +326,10 @@ sub main() {
 
 ###DONE_GETOPT
 
+=head3 get_opt()
+
+=cut
+
 sub get_opt(){
 	my $self=shift;
 
@@ -503,8 +507,12 @@ sub run(){
 
 	$self->_debug_dump_latexcmdline;
 
+###_IF_LATEXPID_ZERO
 	if (!$latexpid) {
-	    exec {$self->latexcmdline_index(0)} $self->latexcmdline;
+
+		my $exe=$self->latexcmdline_index(0);
+		$self->_debug("latexpid=0, so will execute: " . $exe);
+	    exec {$exe} $self->latexcmdline;
 	    die "exec('\$self->latexcmdline'): $!\n";
 	}
 

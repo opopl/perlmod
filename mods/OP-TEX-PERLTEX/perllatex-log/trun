@@ -7,5 +7,10 @@ rbi(){
   $CMD_RBI 
 }
 
+# Install Perl modules from perlmod/
 rbi
-../scripts/perllatex | tee -a $log
+
+# Test perllatex 
+test="test"
+../scripts/perllatex $test | tee -a $log
+

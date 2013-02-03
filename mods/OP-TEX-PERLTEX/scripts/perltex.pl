@@ -155,6 +155,8 @@ if (!$usepipe || !eval {mkfifo($pipe, 0600)}) {
 }
 defined ($latexpid = fork) || die "fork: $!\n";
 unshift @latexcmdline, $latexprog;
+
+###_IF_LATEXPID_ZERO
 if (!$latexpid) {
     exec {$latexcmdline[0]} @latexcmdline;
     die "exec('@latexcmdline'): $!\n";
