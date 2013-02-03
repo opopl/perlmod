@@ -1,35 +1,8 @@
 #!/usr/bin/env perl
 
-###########################################################
-# Prepare a LaTeX run for two-way communication with Perl #
-# By Scott Pakin <scott+pt@pakin.org>                     #
-###########################################################
-
-#-------------------------------------------------------------------
-# This is file `perltex.pl',
-# generated with the docstrip utility.
-#
-# The original source files were:
-#
-# perltex.dtx  (with options: `perltex')
-#
-# This is a generated file.
-#
-# Copyright (C) 2010 Scott Pakin <scott+pt@pakin.org>
-#
-# This file may be distributed and/or modified under the conditions
-# of the LaTeX Project Public License, either version 1.3c of this
-# license or (at your option) any later version.  The latest
-# version of this license is in:
-#
-#    http://www.latex-project.org/lppl.txt
-#
-# and version 1.3c or later is part of all distributions of LaTeX
-# version 2006/05/20 or later.
-#-------------------------------------------------------------------
-
 package OP::TEX::PERLTEX;
 
+###_USE_
 use strict;
 use warnings;
 
@@ -42,16 +15,25 @@ use File::Basename;
 use Fcntl;
 use POSIX;
 use File::Spec;
-use IO::Handle;
+use File::Slurp;
+require IO::Handle;
+use IO::File;
+use Try::Tiny;
 use Data::Dumper;
 
-#use parent qw(Class::Accessor::Complex OP::Script);
+require Debug::Simple;
+
 use parent qw(Class::Accessor::Complex);
 use Sub::Documentation 'add_documentation';
 
+###_ACCESSORS_
+
 __PACKAGE__
 	->mk_new
+###_ACCESSORS_SCALAR
 	->mk_scalar_accessors(qw(
+			debug_msg
+			debug_outfile
 			doneflag
 			fromflag
 			fromperl
@@ -60,19 +42,31 @@ __PACKAGE__
 			logfile
 			pipe
 			pipestring
+			package_name
 			progname
 			runsafely
+			subname
+			scriptname
 			styfile
 			toflag
 			toperl
 			usepipe
+			workdir
+		))
+	->mk_integer_accessors(qw(
+			debug_indent
 		))
 	->mk_array_accessors(qw(
 		latexcmdline
 		permittedops
 		macroexpansions
+		))
+###_ACCESSORS_HASH
+	->mk_hash_accessors(qw(
 		fh
-		));
+		debug_opts
+		debug_opts_op
+	));
 
 our $sandbox = new Safe;
 our $sandbox_eval;
@@ -101,16 +95,200 @@ sub _begin(){
 	#return $self;
 #}
 
+###DONE_INIT_VARS
+
+=head3 init_debug() 
+
+=cut
+
+sub init_debug() {
+	my $self=shift;
+
+	$self->workdir(File::Spec->curdir()) unless $self->workdir;
+	
+	# Debug::Simple debug options
+
+	my $debug_opts={
+		quiet  => 0,
+		debug  => 1,
+		verbose  => 1,
+		test  => 0
+	};
+
+	$self->debug_opts(%$debug_opts);
+	Debug::Simple::debuglevels(\%{$self->debug_opts});
+
+	### Debug options specific to this module
+
+	# Indentation level used in _debug() printing subroutine
+	$self->debug_indent(0);
+
+	# Set the filename for the debug output log file
+	$self->debug_outfile(
+		File::Spec->catfile($self->workdir,$self->scriptname)
+		.  "_log.tex"
+	);
+	$self->debug_outfile(File::Spec->rel2abs($self->debug_outfile));
+
+	# Try to open the debug output log file
+
+	my $fh=IO::File->new($self->debug_outfile, O_WRONLY | O_TRUNC | O_CREAT);
+	$self->fh("debug_outfile"  => $fh );
+
+	$self->_debug_begin("verbatim");
+
+	$self->_debug("Opened debug log file for writing: " 
+		. $self->debug_outfile);
+
+}
+
+=head3 _debug()
+
+Debugging subroutine which is implemented as a simple
+wrapper around Debug::Simple functions
+
+=cut
+
+sub _debug() {
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	return 1 unless $ref;
+
+	unless(ref $ref){
+		my $msg=$ref;
+		$msg=$self->_debug_set_msg($msg);
+		Debug::Simple::debug(1,$msg);
+		$self->debug_msg($msg);
+		$self->_debug_file_write($self->debug_msg);
+	}elsif(ref $ref eq "HASH"){
+	}
+}
+
+=head3 _debug_write_file()
+
+=cut
+
+sub _debug_file_write() {
+	my $self=shift;
+
+	my $msg=shift;
+
+	$self->fh("debug_outfile")->print($msg);
+}
+
+sub _debug_begin(){
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	foreach($ref) {
+		/^verbatim$/ && do {
+			$self->_debug_file_write("\\begin{verbatim}\n");
+			next;
+		};
+	}
+
+}
+
+sub _debug_dump_latexcmdline(){
+	my $self=shift;
+
+	$self->_debug('latexcmdline array is now: ' . "\n" . 
+		Data::Dumper->Dump([ \@{$self->latexcmdline} ],[ qw($self->latexcmdline) ] )
+	);
+}
+
+sub _debug_end(){
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	foreach($ref) {
+		/^verbatim$/ && do {
+			$self->_debug_file_write("\\end{verbatim}\n");
+			next;
+		};
+	}
+
+}
 
 
+sub _debug_sub_start() {
+	my $self=shift;
 
-###DONE_INIT_VARS,
+	$self->subname((caller(1))[3]);
+
+	my $msg="Subroutine start: " . $self->subname;
+
+	$self->_debug($msg);
+
+	# Increase by 1 the debug printing indentation level
+	$self->debug_indent_inc;
+
+}
+
+sub _debug_sub_end() {
+	my $self=shift;
+
+	# Decrease by 1 the debug printing indentation level
+	$self->debug_indent_dec;
+
+	$self->_debug("Subroutine end: " . $self->subname);
+
+
+}
+
+=head3 _warning()
+
+=cut
+
+sub _warning() {
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	return 1 unless $ref;
+
+	unless(ref $ref){
+		my $msg=$ref;
+		$msg=$self->_debug_set_msg($msg);
+		Debug::Simple::warning($msg);
+	}elsif(ref $ref eq "HASH"){
+	}
+}
+
+=head3 _debug_set_msg()
+
+=cut
+
+sub _debug_set_msg(){
+	my $self=shift;
+
+	my $msg=shift // '';
+
+	$msg=" " x $self->debug_indent . $msg;
+	$msg="(" . $self->package_name . ")" . ": " .  $msg . "\n";
+
+	return $msg;
+}
+
+=head3 init_vars()
+
+=cut
 
 sub init_vars() {
 	my $self=shift;
 
+	$self->package_name(__PACKAGE__);
+
+	$self->_debug_sub_start;
+
 	my $x=$ENV{"PERLTEX"} // "latex";
 	$self->latexprog($x);
+
+	$self->_debug("Set latexprog to: " . $self->latexprog );
 
 	my $prgname = basename $0;
 
@@ -125,19 +303,24 @@ sub init_vars() {
 	while(my($k,$v)=each %{$default_options}){
 		eval '$self->' . $k . '(' . $v . ');' ;
 		die $@ if $@;
+		$self->_debug("Set $k to: " . $v );
 	}
+
+	$self->_debug_sub_end;
 
 }
 
 sub main() {
 	my $self=shift;
 
+	$self->init_debug;
+
 	$self->init_vars;
+
 	$self->get_opt;
 	$self->run;
 
-	$self->atend();
-	exit 0;
+	$self->_debug_end("verbatim");
 
 }
 
@@ -145,6 +328,8 @@ sub main() {
 
 sub get_opt(){
 	my $self=shift;
+
+	$self->_debug_sub_start;
 
 	Getopt::Long::Configure(qw(require_order pass_through));
 
@@ -166,6 +351,13 @@ sub get_opt(){
            "permit=s"   => \@permittedops) || pod2usage(2);
 
 	$self->latexcmdline(@ARGV);
+
+	$self->_debug('Read latexcmdline from @ARGV: ' 
+			. join(' ',$self->latexcmdline))
+			if $self->latexcmdline_count;
+
+	$self->_warning('$self->latexcmdline has zero elements')
+		unless $self->latexcmdline_count;
 	
 	for my $v(qw(
 				latexprog 
@@ -174,16 +366,27 @@ sub get_opt(){
 				usepipe
 				styfile
 			)){
+		my $val;
+		eval '$val=$' . $v; die $@ if $@;
+
 		eval '$self->' . $v . '($' . $v . ') if defined $' . $v . ';' ;
 		die $@ if $@;
+
+		if (defined $val){
+			$self->_debug("Set $v to: " . $val );
+		}
 	}
 
 	$self->permittedops(@permittedops);
+
+	$self->_debug_sub_end;
 
 }
 
 sub run(){
 	my $self=shift;
+
+	$self->_debug_sub_start;
 
 ###LOOP_LATEXCMDLINE
 
@@ -195,6 +398,8 @@ sub run(){
 	#	once the input filename is
 	#	found, it is stored in variable $self->jobname
 	my $firstcmd=0;
+
+	$self->_debug('Looping over $self->latexcmdline...');
 
 	foreach my $option ($self->latexcmdline) {
 
@@ -222,6 +427,12 @@ sub run(){
 	$self->logfile($self->jobname . ".lgpl");
 	$self->pipe($self->jobname . ".pipe");
 
+	foreach my $id (qw( 
+		toperl fromperl toflag fromflag doneflag logfile pipe)) {
+		my $val; eval '$val=$self->' . $id; die $@ if $@;
+		$self->_debug('Have set: $self->' . $id . " to: " . $val);
+	}
+
 	my $ss=sprintf('\makeatletter' . '\def%s{%s}' x 7 . '\makeatother%s',
 		    '\plmac@tag', $separator,
 		    '\plmac@tofile', $self->toperl,
@@ -233,6 +444,8 @@ sub run(){
 		    $self->latexcmdline_index($firstcmd));
 
 	$self->set_latexcmdline( $firstcmd, $ss );
+
+	$self->_debug_dump_latexcmdline;
 
 	$self->toperl( File::Spec->rel2abs($self->toperl));
 	$self->fromperl( File::Spec->rel2abs($self->fromperl));
@@ -246,24 +459,50 @@ sub run(){
 	    undef $latexpid;
 	    exit 0;
 	};
+###DONE_IN_RUN
 
 	$SIG{"PIPE"} = "IGNORE";
 
-	$self->delete_files($self->toperl, $self->fromperl, $self->toflag, $self->fromflag, $self->doneflag, $self->pipe);
-	open (LOGFILE, ">$self->logfile") || die "open(\"$self->logfile\"): $!\n";
+	$self->delete_files(
+		$self->toperl, 
+		$self->fromperl, 
+		$self->toflag, 
+		$self->fromflag, 
+		$self->doneflag, 
+		$self->pipe);
+###_FILE_OPEN_LOGFILE
+	try{
+		open (LOGFILE, ">", $self->logfile);
+	}catch {
+   	    die "open(" . $self->logfile . "): $!\n";
+	};
+	$self->_debug("Opened LOGFILE for writing for: " . $self->logfile);
+
 	autoflush LOGFILE 1;
+
 	if (defined $self->styfile) {
-	    open (STYFILE, ">$self->styfile") || die "open(\"$self->styfile\"): $!\n";
+		try{
+	    	open (STYFILE, ">", $self->styfile) 
+		}catch{
+   	    	die "open(" . $self->styfile . "): $!\n";
+		};
 	}
-	if (!$self->usepipe || !eval {mkfifo($self->pipe, 0600)}) {
+
+	unless ($self->usepipe && eval {mkfifo($self->pipe, 0600)}) {
 	    sysopen PIPE, $self->pipe, O_WRONLY|O_CREAT, 0755;
 	    autoflush PIPE 1;
 	    print PIPE $self->pipestring;
 	    close PIPE;
 	    $self->usepipe = 0;
 	}
+
 	defined ($latexpid = fork) || die "fork: $!\n";
+	$self->_debug("Made a fork: latexpid=" . $latexpid);
+
 	$self->latexcmdline_unshift($self->latexprog);
+
+	$self->_debug_dump_latexcmdline;
+
 	if (!$latexpid) {
 	    exec {$self->latexcmdline_index(0)} $self->latexcmdline;
 	    die "exec('\$self->latexcmdline'): $!\n";
@@ -277,16 +516,23 @@ sub run(){
 	else {
 	    $sandbox_eval = \&top_level_eval;
 	}
+
+###LOOP_WHILE_1
+
+	$self->_debug("Starting the while(1){ ... } loop...\n");
+
 	while (1) {
+		$self->debug_indent_inc;
+
 	    $self->awaitexists($self->toflag);
-	    my $entirefile;
-	    {
-	        local $/ = undef;
-	        open (TOPERL, "<$self->toperl") || die "open($self->toperl): $!\n";
-	        $entirefile = <TOPERL>;
-	        close TOPERL;
-	    }
+
+		$self->_debug("Using File::Slurp::read_file to" 
+		   	. "\n" . " read in the contents of the input file: "
+			. "\n" . $self->toperl);
+
+	    my $entirefile=File::Slurp::read_file($self->toperl);
 	    $entirefile =~ s/\r//g;
+
 	    my ($optag, $macroname, @otherstuff) =
 	        map {chomp; $_} split "$separator\n", $entirefile;
 	    $macroname =~ s/^[^A-Za-z]+//;
@@ -365,13 +611,15 @@ sub run(){
 	    print LOGFILE "%" x 30, " LATEX RESULT ", "%" x 30, "\n";
 	    print LOGFILE $result, "\n\n";
 	    $result .= '\endinput';
-	    open (FROMPERL, ">$self->fromperl") || die "open($self->fromperl): $!\n";
+
+	    open (FROMPERL, ">",$self->fromperl) || die "open($self->fromperl): $!\n";
 	    syswrite FROMPERL, $result;
 	    close FROMPERL;
+
 	    $self->delete_files($self->toflag, $self->toperl, $self->doneflag);
-	    open (FROMFLAG, ">$self->fromflag") || die "open($self->fromflag): $!\n";
+	    open (FROMFLAG, ">", $self->fromflag) || die "open($self->fromflag): $!\n";
 	    close FROMFLAG;
-	    if (open (PIPE, ">$self->pipe")) {
+	    if (open (PIPE, ">", $self->pipe)) {
 	        autoflush PIPE 1;
 	        print PIPE $self->pipestring;
 	        close PIPE;
@@ -390,6 +638,11 @@ sub run(){
 	    }
 	    alarm 0;
 	}
+	$self->debug_indent_dec;
+
+	$self->atend(\*LOGFILE);
+
+	exit 0;
 		
 }
 
@@ -431,7 +684,16 @@ sub awaitexists ($)
 sub atend() {
 	my $self=shift;
 
+	$self->_debug_sub_start;
+
+	local *LOGFILE=shift;
+
+###_FILE_CLOSE_LOGFILE
     close LOGFILE;
+
+	$self->fh("debug_outfile")->close;
+
+	$self->_debug("Closed LOGFILE");
 
     if (defined $latexpid) {
         kill (9, $latexpid);
@@ -479,6 +741,8 @@ STYFILEHEADER2
         print STYFILE "\\endinput\n";
         close STYFILE;
     }
+
+	$self->_debug_sub_end;
 }
 
 

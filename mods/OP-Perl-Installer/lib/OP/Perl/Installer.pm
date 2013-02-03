@@ -97,6 +97,12 @@ sub def_to_module(){
 }
 #}}}
 # add_modules(){{{
+
+
+=head3 add_modules()
+
+=cut
+
 sub add_modules(){
 	my $self=shift;
 
@@ -123,7 +129,7 @@ sub add_modules(){
 	foreach(@files){ s/^/$shd\/mods\//g; }
 	print "@files\n";
 	system("gvim -n -p --remote-tab-silent @files");
-	exit 0;
+	#exit 0;
 }
 # }}}
 # remove_modules() {{{
@@ -194,6 +200,7 @@ sub set_these_cmdopts(){
 	,{ name	=>	"a,add", 		desc	=>	"Create modules	 with the given names", type=>"s"	}
 	,{ name	=>	"rm", 			desc	=>	"Remove module with the given names", type=>"s"	}
 	,{ name =>  "sh",			desc    =>  "Run an interactive shell " }
+	,{ name =>  "shcmds",		type => "s", desc    =>  "Run shell commands " }
 	#,{ cmd	=>	"<++>", 		desc	=>	"<++>", type	=>	"s"	}
   );
 } 
@@ -314,28 +321,47 @@ sub run_build_install(){
 
 sub run_shell(){
   my $self=shift;
+
+  my($cmd_string,@cmds);
+
+  $cmd_string=shift // '';
+  @cmds=split(";",$cmd_string);
+
   my $term = new Term::ShellUI(
       		commands => $self->{'shell_commands'},
-			history_file => '~/.shellui-synopsis-history',
+			history_file => 'ish.history'
       );
+
+  $term->exit_requested(0);
 
   #print 'Using '.$term->{term}->ReadLine."\n";
 
   $term->prompt("i>");
-  $term->run();
+  if (@cmds){
+	  foreach my $cmd (@cmds) {
+	  	$term->run("$cmd");
+	  }
+  }else{
+	  	$term->run();
+  }
 }
 # }}}
-# _complete_modules(){{{
+# _complete_modules() {{{
+
+=head3 _complete_modules()
+
+=cut
+
 sub _complete_modules(){
 	my $self=shift;
 
-	my $cmpl=shift;
+	my $cmpl=shift // '';
 	my $ref;
 
-	if (defined $cmpl){
+	if ($cmpl){
 		foreach my $module (@{$self->{'modules'}}) {
 			if ($module =~ m/^\s*$cmpl->{str}/i){
-				print ref $cmpl->{str},"\n";
+				#print ref $cmpl->{str},"\n";
 				push(@{$ref},"$module");
 			}
 		}
@@ -465,7 +491,14 @@ sub main(){
 
   $self->add_modules() if ($opt{add} || $opt{a});
   $self->remove_modules() if ($opt{rm});
+
+  # Running shell
   $self->run_shell() if ($opt{sh});
+
+  if ($opt{shcmds}){
+		$self->run_shell($opt{shcmds});
+		exit 0;
+  }
 
 }
 # }}}

@@ -4,5 +4,14 @@ use warnings;
 use strict;
 
 use OP::TEX::PERLTEX;
+use FindBin;
+use File::Spec;
 
-OP::TEX::PERLTEX->new->main;
+my %opts=(
+	scriptname  => "$FindBin::Script",
+	workdir  	=> File::Spec->curdir()
+);
+
+my $t=OP::TEX::PERLTEX->new(%opts);
+
+$t->main;

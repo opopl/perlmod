@@ -1,0 +1,11 @@
+#!/bin/bash
+
+log=perllatex.log
+echo "" >& $log
+
+rbi(){
+  $CMD_RBI 
+}
+
+rbi
+../scripts/perllatex | tee -a $log
