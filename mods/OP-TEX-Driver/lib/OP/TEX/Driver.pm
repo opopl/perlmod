@@ -55,7 +55,6 @@ __PACKAGE__->mk_accessors( qw( basename basedir basepath options
 our $DEBUG; $DEBUG = 0 unless defined $DEBUG;
 our $DEBUGPREFIX;
 
-
 # LaTeX executable paths set at installation time by the Makefile.PL
 
 eval { require OP::TEX::Driver::Paths };
@@ -63,8 +62,9 @@ eval { require OP::TEX::Driver::Paths };
 our @PROGRAM_NAMES = qw(latex pdflatex perltex bibtex makeindex dvips dvipdfm ps2pdf pdf2ps);
 our %program_path;
 
-$program_path{$_} = $OP::TEX::Driver::Paths::program_path{$_} || "/usr/bin/$_"
-    for @PROGRAM_NAMES;
+for (@PROGRAM_NAMES){
+    $program_path{$_} = $OP::TEX::Driver::Paths::program_path{$_} || "/usr/bin/$_";
+}
 
 our @LOGFILE_EXTS = qw( log blg ilg );
 our @TMPFILE_EXTS = qw( aux log lot toc bbl ind idx cit cbk ibk );
