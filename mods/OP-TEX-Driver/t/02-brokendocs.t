@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # $Id: 02-brokendocs.t 62 2007-10-03 14:20:44Z andrew $
 
 use strict;
@@ -25,18 +25,18 @@ tidy_directory($basedir, $docname, $debug);
 my $drv = OP::TEX::Driver->new( source      => $docpath,
 			      format      => 'dvi',
 			      DEBUG       => $debug,
-			      DEBUGPREFIX => '# [latex]: ' );
+			      DEBUGPREFIX => '# [perllatex]: ' );
 
 diag("Checking the formatting of a simple LaTeX document");
 isa_ok($drv, 'OP::TEX::Driver');
 is($drv->basedir, $basedir, "checking basedir");
 is($drv->basename, $docname, "checking basename");
 is($drv->basepath, File::Spec->catpath('', $basedir, $docname), "checking basepath");
-is($drv->formatter, 'latex', "formatter");
+is($drv->formatter, 'perllatex', "formatter");
 
 throws_ok( sub { $drv->run }, 'OP::TEX::Driver::Exception', "formatting broken document $docname");
 
-is($drv->stats->{runs}{latex},         1, "should have run latex once");
+is($drv->stats->{runs}{perllatex},         1, "should have run perllatex once");
 is($drv->stats->{runs}{bibtex},    undef, "should not have run bibtex");
 is($drv->stats->{runs}{makeindex}, undef, "should not have run makeindex");
 

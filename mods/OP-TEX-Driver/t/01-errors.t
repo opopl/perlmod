@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # Script to test OP::TEX::Driver's error handling
 # $Id: 01-errors.t 50 2007-09-28 10:51:47Z andrew $
 

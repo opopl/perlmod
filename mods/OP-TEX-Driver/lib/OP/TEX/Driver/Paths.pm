@@ -30,7 +30,8 @@ use warnings;
 
 our %program_path;
 
-$program_path{latex}     = '/usr/bin/latex';
+#$program_path{latex}     = '/home/op/perl5/perlbrew/perls/perl-5.16.2/bin/perllatex';
+$program_path{perllatex}     = '/usr/bin/latex';
 $program_path{perltex}     = '/usr/bin/perltex';
 $program_path{xelatex}   = '/usr/bin/xelatex';
 $program_path{pdflatex}  = '/usr/bin/pdflatex';

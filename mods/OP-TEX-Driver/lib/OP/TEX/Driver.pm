@@ -25,6 +25,7 @@
 #========================================================================
 
 package OP::TEX::Driver;
+###_USE
 
 use strict;
 use warnings;
@@ -45,12 +46,28 @@ Readonly our $DEFAULT_MAXRUNS => 10;
 
 our $VERSION = 0.12;
 
-__PACKAGE__->mk_accessors( qw( basename basedir basepath options
-                               source output tmpdir format
-                               formatter preprocessors postprocessors _program_path
-                               maxruns extraruns stats texinputs_path
-                               undefined_citations undefined_references
-                               labels_changed rerun_required ) );
+###_DEFINE_ACCESSORS
+__PACKAGE__->mk_accessors( qw( 
+	_program_path
+	basedir 
+	basename
+	basepath 
+	format
+	formatter 
+	labels_changed 
+	maxruns extraruns 
+	options
+	output 
+	postprocessors 
+	preprocessors 
+	rerun_required 
+	source 
+	stats 
+	texinputs_path
+	tmpdir 
+	undefined_citations 
+	undefined_references
+) );
 
 our $DEBUG; $DEBUG = 0 unless defined $DEBUG;
 our $DEBUGPREFIX;
@@ -58,12 +75,14 @@ our $DEBUGPREFIX;
 # LaTeX executable paths set at installation time by the Makefile.PL
 
 eval { require OP::TEX::Driver::Paths };
+#require OP::TEX::Driver::Paths;
 
 our @PROGRAM_NAMES = qw(latex pdflatex perltex bibtex makeindex dvips dvipdfm ps2pdf pdf2ps);
 our %program_path;
 
 for (@PROGRAM_NAMES){
-    $program_path{$_} = $OP::TEX::Driver::Paths::program_path{$_} || "/usr/bin/$_";
+   eval '$program_path{$_} = $OP::TEX::Driver::Paths::program_path{$_} || "/usr/bin/$_"';
+   die $@ if $@;
 }
 
 our @LOGFILE_EXTS = qw( log blg ilg );
@@ -77,15 +96,21 @@ our $DEFAULT_DOCNAME = 'latexdoc';
 
 our $DEFAULT_FORMAT = 'pdf';
 
+###_DEFINE_FORMATTERS
+#
+#   21:14:39 (Mon, 04-Feb-2013):
+#       Replaced latex => perllatex
+#
 our %FORMATTERS  = (
-    dvi        => [ 'latex' ],
-    ps         => [ 'latex', 'dvips' ],
-    postscript => [ 'latex', 'dvips' ],
-    pdf        => [ 'pdflatex' ],
-    'pdf(dvi)' => [ 'latex', 'dvipdfm' ],
-    'pdf(ps)'  => [ 'latex', 'dvips', 'ps2pdf' ],
+    dvi        => [ 'perllatex' ],
+    ps         => [ 'perllatex', 'dvips' ],
+    postscript => [ 'perllatex', 'dvips' ],
+    pdf        => [ 'pdfperllatex' ],
+    'pdf(dvi)' => [ 'perllatex', 'dvipdfm' ],
+    'pdf(ps)'  => [ 'perllatex', 'dvips', 'ps2pdf' ],
     'ps(pdf)'  => [ 'pdflatex', 'pdf2ps' ],
 );
+
 
 
 
@@ -98,7 +123,12 @@ our %FORMATTERS  = (
 
 sub new {
     my $class = shift;
+
+    # two forms of new(...) invocation:
+    #   new(\%opts) or new(%opts), in both
+    #   cases $options are set to \%opts
     my $options = ref $_[0] ? shift : { @_ };
+
     my ($volume, $basedir, $basename, $basepath, $orig_ext, $cleanup);
     my ($formatter, @postprocessors);
 
@@ -807,7 +837,7 @@ sub throw {
 
 sub debug {
     my (@args) = @_;
-    print STDERR $DEBUGPREFIX || "[latex] ", @args;
+    print STDERR $DEBUGPREFIX || "[perllatex] ", @args;
     print STDERR "\n" unless @args and ($args[-1] =~ / \n $ /mx);
     return;
 }

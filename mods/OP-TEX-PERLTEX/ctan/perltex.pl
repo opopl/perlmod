@@ -140,7 +140,6 @@ sub awaitexists ($)
     }
 }
 delete_files($toperl, $fromperl, $toflag, $fromflag, $doneflag, $pipe);
-###_FILE_OPEN_LOGFILE
 open (LOGFILE, ">$logfile") || die "open(\"$logfile\"): $!\n";
 autoflush LOGFILE 1;
 if (defined $styfile) {
@@ -155,8 +154,6 @@ if (!$usepipe || !eval {mkfifo($pipe, 0600)}) {
 }
 defined ($latexpid = fork) || die "fork: $!\n";
 unshift @latexcmdline, $latexprog;
-
-###_IF_LATEXPID_ZERO
 if (!$latexpid) {
     exec {$latexcmdline[0]} @latexcmdline;
     die "exec('@latexcmdline'): $!\n";
@@ -169,7 +166,6 @@ if ($runsafely) {
 else {
     $sandbox_eval = \&top_level_eval;
 }
-###LOOP_WHILE_1
 while (1) {
     awaitexists($toflag);
     my $entirefile;
@@ -279,7 +275,7 @@ while (1) {
     alarm 0;
 }
 END {
-	close LOGFILE;
+    close LOGFILE;
     if (defined $latexpid) {
         kill (9, $latexpid);
         exit 1;

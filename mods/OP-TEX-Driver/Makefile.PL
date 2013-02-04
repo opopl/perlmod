@@ -39,8 +39,8 @@ EOF
 
 #------------------------------------------------------------------------
 
-our $LATEX     = ttprompt('latex path',     find_program($ENV{PATH}, "latex"));
-our $PERLTEX   = ttprompt('perltex path',   find_program($ENV{PATH}, "perltex"));
+#our $PERLLATEX     = ttprompt('latex path',     find_program($ENV{PATH}, "perllatex"));
+our $PERLLATEX   = ttprompt('perllatex path',   find_program($ENV{PATH}, "latex"));
 our $PDFLATEX  = ttprompt('pdflatex path',  find_program($ENV{PATH}, "pdflatex"));
 our $BIBTEX    = ttprompt('bibtex path',    find_program($ENV{PATH}, "bibtex"));
 our $MAKEINDEX = ttprompt('makeindex path', find_program($ENV{PATH}, "makeindex"));
@@ -49,13 +49,12 @@ our $DVIPDFM   = ttprompt('dvipdfm path',   find_program($ENV{PATH}, "dvipdfm"))
 our $PS2PDF    = ttprompt('ps2pdf path',    find_program($ENV{PATH}, "ps2pdf"));
 our $PDF2PS    = ttprompt('pdf2ps path',    find_program($ENV{PATH}, "pdf2ps"));
 
-if (!$LATEX and !$PDFLATEX) {
+if (!$PERLLATEX and !$PDFLATEX) {
     my $continue = ttprompt('You don\'t seem to have LaTeX installed.  Continue anyway?', 'N');
     warn("Aborting as LaTeX is not installed\n"), exit(0) unless uc($continue) =~ /^Y/;
 }
 
-fix_path_assignment(catfile(qw( lib OP TEX Driver Paths.pm )), 'latex',     $LATEX);
-fix_path_assignment(catfile(qw( lib OP TEX Driver Paths.pm )), 'perltex',   $PERLTEX);
+fix_path_assignment(catfile(qw( lib OP TEX Driver Paths.pm )), 'perllatex',   $PERLLATEX);
 fix_path_assignment(catfile(qw( lib OP TEX Driver Paths.pm )), 'pdflatex',  $PDFLATEX);
 fix_path_assignment(catfile(qw( lib OP TEX Driver Paths.pm )), 'bibtex',    $BIBTEX);
 fix_path_assignment(catfile(qw( lib OP TEX Driver Paths.pm )), 'makeindex', $MAKEINDEX);
@@ -98,7 +97,7 @@ WriteMakefile((MM->can('signature_target') ? (SIGN => 1) : ()), %opts);
 # fix_assignment($file, $find, $fix)
 #
 # Fixes a variable definition in a file.  e.g. 
-# fix_path_assignment('lib/LaTeX/Driver/Paths.pm', '$LATEX', '/path/to/latex')
+# fix_path_assignment('lib/LaTeX/Driver/Paths.pm', '$PERLLATEX', '/path/to/latex')
 #------------------------------------------------------------------------
 
 sub fix_path_assignment {

@@ -9,5 +9,5 @@ Module::Build->new
 	  	'Safe'			 			=> 0,
 	  	'Class::Accessor::Complex'	=> 0,
 	  },
-	  script_files     => [qw( scripts/perllatex )]
+	  script_files     => [qw( scripts/perllatex scripts/perltex.pl )]
     )->create_build_script;

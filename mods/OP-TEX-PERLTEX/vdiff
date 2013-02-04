@@ -1,0 +1,3 @@
+#/bin/bash
+
+gvimdiff scripts/perltex.pl lib/OP/TEX/PERLTEX.pm

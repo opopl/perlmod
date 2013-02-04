@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # $Id: 14-makeindex.t 62 2007-10-03 14:20:44Z andrew $
 #
 # Test out invocation of makeindex:
@@ -33,11 +33,11 @@ isa_ok($drv, 'OP::TEX::Driver');
 is($drv->basedir, $basedir, "checking basedir");
 is($drv->basename, $docname, "checking basename");
 is($drv->basepath, File::Spec->catpath('', $basedir, $docname), "checking basepath");
-is($drv->formatter, 'latex', "formatter");
+is($drv->formatter, 'perllatex', "formatter");
 
 ok($drv->run, "formatting $docname");
 
-is($drv->stats->{runs}{latex},         2, "should have run latex twice");
+is($drv->stats->{runs}{perllatex},         2, "should have run perllatex twice");
 is($drv->stats->{runs}{bibtex},    undef, "should not have run bibtex");
 is($drv->stats->{runs}{makeindex},     1, "should have run makeindex once");
 

@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # $Id: 10-simpledoc.t 85 2012-08-31 19:08:22Z andrew $
 
 use strict;
@@ -23,11 +23,11 @@ isa_ok($drv, 'OP::TEX::Driver');
 is($drv->basedir, $basedir, "checking basedir");
 is($drv->basename, $docname, "checking basename");
 is($drv->basepath, File::Spec->catpath('', $basedir, $docname), "checking basepath");
-is($drv->formatter, 'latex', "formatter");
+is($drv->formatter, 'perllatex', "formatter");
 
 ok($drv->run, "formatting $docname");
 
-is($drv->stats->{runs}{latex},        1, "should have run latex once");
+is($drv->stats->{runs}{perllatex},        1, "should have run perllatex once");
 is($drv->stats->{runs}{bibtex},    undef, "should not have run bibtex");
 is($drv->stats->{runs}{makeindex}, undef, "should not have run makeindex");
 

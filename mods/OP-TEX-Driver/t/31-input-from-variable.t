@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # $Id: 31-input-from-variable.t 81 2011-09-18 09:19:03Z andrew $
 
 use strict;
@@ -29,11 +29,11 @@ isa_ok($drv, 'OP::TEX::Driver');
 like($drv->basedir, qr{^$systmpdir/$OP::TEX::Driver::DEFAULT_TMPDIR\w+$}, "checking basedir");
 is($drv->basename, $OP::TEX::Driver::DEFAULT_DOCNAME, "checking basename");
 is($drv->basepath, File::Spec->catpath('', $drv->basedir, $OP::TEX::Driver::DEFAULT_DOCNAME), "checking basepath");
-is($drv->formatter, 'latex', "formatter");
+is($drv->formatter, 'perllatex', "formatter");
 
 ok($drv->run, "formatting $docname");
 
-is($drv->stats->{runs}{latex},         1, "should have run latex once");
+is($drv->stats->{runs}{perllatex},         1, "should have run perllatex once");
 is($drv->stats->{runs}{bibtex},    undef, "should not have run bibtex");
 is($drv->stats->{runs}{makeindex}, undef, "should not have run makeindex");
 is($drv->stats->{runs}{dvips},         1, "should have run dvips once");

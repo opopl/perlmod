@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # $Id: 20-complexdoc.t 79 2009-01-19 13:42:09Z andrew $
 
 use strict;
@@ -26,13 +26,13 @@ isa_ok($drv, 'OP::TEX::Driver');
 is($drv->basedir, $basedir, "checking basedir");
 is($drv->basename, $docname, "checking basename");
 is($drv->basepath, File::Spec->catpath('', $basedir, $docname), "checking basepath");
-is($drv->formatter, 'latex', "formatter");
+is($drv->formatter, 'perllatex', "formatter");
 
 ok($drv->run, "formatting $docname");
 
 is($drv->stats->{pages}, 12, "should have 12 pages of output");
-cmp_ok($drv->stats->{runs}{latex}, '>=',  5, "should have run latex at least five times");
-cmp_ok($drv->stats->{runs}{latex}, '<=',  8, "should have run latex not more than eight times");
+cmp_ok($drv->stats->{runs}{perllatex}, '>=',  5, "should have run perllatex at least five times");
+cmp_ok($drv->stats->{runs}{perllatex}, '<=',  8, "should have run perllatex not more than eight times");
 is($drv->stats->{runs}{bibtex},    1, "should have run bibtex once");
 is($drv->stats->{runs}{makeindex}, 2, "should have run makeindex twice");
 

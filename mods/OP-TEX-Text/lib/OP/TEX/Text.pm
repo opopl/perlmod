@@ -95,6 +95,15 @@ sub _empty_lines() {
 	}
 }
 
+sub def() {
+	my $self=shift;
+
+	my $def=shift;
+	my $src=shift;
+
+	$self->_add_line("\\def{$def}{$src}");
+}
+
 sub _add_line(){
 	my $self=shift;
 

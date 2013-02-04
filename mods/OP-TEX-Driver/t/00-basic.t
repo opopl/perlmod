@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # $Id: 00-basic.t 4 2007-09-21 14:51:24Z andrew $
 
 use strict;
