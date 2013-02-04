@@ -51,7 +51,7 @@ our $WIN32  = ($^O eq 'MSWin32');
 our $level  = 0;
 our $debug  = 0;
 our $no_cleanup = 0;
-our $debug_prefix  = '# [perllatex]: ';
+our $debug_prefix  = '# [latex]: ';
 
 my $dvitype = find_program($ENV{PATH}, "dvitype");
 

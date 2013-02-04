@@ -99,15 +99,15 @@ our $DEFAULT_FORMAT = 'pdf';
 ###_DEFINE_FORMATTERS
 #
 #   21:14:39 (Mon, 04-Feb-2013):
-#       Replaced latex => perllatex
+#       Replaced latex => latex
 #
 our %FORMATTERS  = (
-    dvi        => [ 'perllatex' ],
-    ps         => [ 'perllatex', 'dvips' ],
-    postscript => [ 'perllatex', 'dvips' ],
-    pdf        => [ 'pdfperllatex' ],
-    'pdf(dvi)' => [ 'perllatex', 'dvipdfm' ],
-    'pdf(ps)'  => [ 'perllatex', 'dvips', 'ps2pdf' ],
+    dvi        => [ 'latex' ],
+    ps         => [ 'latex', 'dvips' ],
+    postscript => [ 'latex', 'dvips' ],
+    pdf        => [ 'pdflatex' ],
+    'pdf(dvi)' => [ 'latex', 'dvipdfm' ],
+    'pdf(ps)'  => [ 'latex', 'dvips', 'ps2pdf' ],
     'ps(pdf)'  => [ 'pdflatex', 'pdf2ps' ],
 );
 
@@ -837,7 +837,7 @@ sub throw {
 
 sub debug {
     my (@args) = @_;
-    print STDERR $DEBUGPREFIX || "[perllatex] ", @args;
+    print STDERR $DEBUGPREFIX || "[latex] ", @args;
     print STDERR "\n" unless @args and ($args[-1] =~ / \n $ /mx);
     return;
 }
