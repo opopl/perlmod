@@ -21,11 +21,12 @@ $it->show_dotfiles(1);
 while (my $file=<$it>) {
 	
 	foreach($file){
-		/(\.t)$/ && do {
+		/\.(t|pm|pl)$/ && do {
 			print "Processing file: $file\n";
 			edit_file {
 				#s/$old/$new/g;
-				s/\/usr\/bin\/perl/\/usr\/bin\/env perl/g;
+				#s/\/usr\/bin\/perl/\/usr\/bin\/env perl/g;
+				s/perllatex/latex/g;
 			} $file;
 			next;
 		};
