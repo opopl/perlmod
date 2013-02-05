@@ -1,0 +1,48 @@
+---
+distribution: !!perl/hash:CPAN::Distribution
+  CALLED_FOR: Local::Test::Fails
+  CHECKSUM_STATUS: OK
+  ID: B/BU/BUSTER/Local-Test-Fails.tgz
+  RO:
+    CPAN_COMMENT: ~
+    CPAN_USERID: BUSTER
+  archived: tar
+  badtestcnt: 1
+  build_dir: /home/op/wrk/perlmod/mods/OP-App-Cpan/cpan-home/build/Local-Test-Fails-xWzTnG
+  incommandcolor: 1
+  localfile: /home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/authors/id/B/BU/BUSTER/Local-Test-Fails.tgz
+  make: !!perl/hash:CPAN::Distrostatus
+    COMMANDID: 0
+    FAILED: ''
+    TEXT: YES
+    TIME: 1360018975
+  make_test: !!perl/hash:CPAN::Distrostatus
+    COMMANDID: 0
+    FAILED: 1
+    TEXT: NO
+    TIME: 1360018975
+  negative_prefs_cache: 0
+  prefs: {}
+  prereq_pm:
+    build_requires:
+      ExtUtils::MakeMaker: 0
+    requires:
+      Test::More: 0
+  reqtype: c
+  sponsored_mods: {}
+  unwrapped: !!perl/hash:CPAN::Distrostatus
+    COMMANDID: 0
+    FAILED: ''
+    TEXT: YES
+    TIME: 1360018975
+  writemakefile: !!perl/hash:CPAN::Distrostatus
+    COMMANDID: 0
+    FAILED: ''
+    TEXT: YES
+    TIME: 1360018975
+perl:
+  $^X: /home/op/perl5/perlbrew/perls/perl-5.16.2/bin/perl
+  mtime_$^X: 1352922531
+  mtime_dll: 0
+  sitearchexp: /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/site_perl/5.16.2/i686-linux
+time: 1360018975

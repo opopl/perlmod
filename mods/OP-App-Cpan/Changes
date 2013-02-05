@@ -1,0 +1,101 @@
+1.5902  - Thu Apr 26 21:41:38 EDT 2012
+	* Remove another "require v5.10.1" (from Makefile.PL)
+
+1.5901  - Thu Apr 26 10:19:09
+	* Hide some internal packages from PAUSE indexing
+
+1.59    - Thu Apr 26 10:00:29 2012
+	* Lower Perl prereq back to v5.6 at the request of Andreas König
+
+	* Try to fix https://rt.cpan.org/Public/Bug/Display.html?id=76004
+	the be_silent option is disappearing, but I still want to
+	suppress the config loading messages. I'll try a local
+	variable instead.
+
+1.58_01 - Fri Mar 16 22:32:13 2012
+	* Require Perl 5.10. There are a few features I want to use.
+
+1.58 - Wed Mar 14 22:28:23 2012
+	Bump to a release version
+
+
+	* -I option for loading local::lib
+	* -V show extended details and check setup
+	
+	Some things only half way there:
+	
+	* -T disable testing (how am I going to do that?)
+	* -p ping the configured mirrors
+	* -P find the best mirrors
+	* -w turn on cpan warnings (permissions checks, etc)
+
+	* -o option to set CPAN config options on the command line
+
+1.57 - 
+	* Release for Perl 5.12
+
+1.56_15 - Thu Nov 12 17:39:18 2009
+	* Fixed the -l switch to list any installed module once
+	per path (total newbie bug there)
+	* Fixed -r to use the right function name
+	* Added -u switch to upgrade all modules. Be careful there!
+
+1.56_04 - Wed Mar  4 04:25:52 2009
+	* force() disappeared, and now it's back
+
+1.56_01 - Wed Feb  4 13:49:07 2009
+	* The cpan(1) client now exits with a non-zero value if it thinks
+	there were errors in the operation. I haven't tracked down every
+	spot where there can be errors from CPAN.pm though, so there might
+	be some cases where it still exits with 0 even though things 
+	failed.
+	* There is initial support for Log4perl, although you can't 
+	configure it yet. If you have Log4perl, cpan(1) uses it to print
+	to the screen. If you don't have Log4perl, it uses a minimal 
+	internal logger to do the same thing.
+
+1.54 - Sun Apr  6 15:53:26 2008
+	* Don't give a warning if the user is a Linux weenie who likes
+	to type "install". Just ignore it an move on. It's still not
+	an approved or documented calling sequence, but it does get
+	me a free beer from Adam Kennedy.
+
+1.53 - Wed Nov  1 15:58:17 2006
+	* Added trap to catch people using "install" as the first argument.
+	The script just dies telling them not to do that.
+
+1.52 - Thu Jan 26 02:13:05 2006
+	* Took out an exit() that caused Windows users some problems.
+	* If you aren't experiencing oddities, you don't need to 
+	upgrade
+	* I changed the distro name to cpan-script to distinguish this
+	from the CPAN module
+
+1.51 - Wed Jan 11 00:25:52 2006
+	* bumped the version number which I forgot to do last time. This
+	version should get onto CPAN and it fixes the things I noted in
+	the previous release
+
+1.6 - Wed Jan  4 14:12:03 2006
+	* The -i default behavior disappeared (by mistake) with the
+	re-write in the last version. This version fixes RT 16915
+	that reports that bug.
+	* All users of cpan-1.05 (the script, not the CPAN.pm distro version)
+	should upgrade. You can check your cpan(1) version with `cpan -v`
+
+1.5 - Fri Dec 23 16:59:18 2005
+
+	* No need to upgrade unless you want the new features
+	* Read the Change files with -C
+	* List the authors with -A
+	* List extended module details with -D
+	* List all modules for authors with -L
+
+1.4 - Tue Jul  6 00:36:51 2004
+	* added -f option to permit a "force install"
+	* removed File::Find::Rule and Test::File prereqs
+
+1.3 - Thu Dec 12 00:37:31 2002
+	* the first distribution with MakeMaker support
+	* no changes to the code that comes with CPAN.pm
+

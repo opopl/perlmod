@@ -477,8 +477,6 @@ sub run(){
 		$ss.='\def\plmac@' . $f . '{' . $val . '}';
 	}
 	$ss.='\makeatother' . $self->latexcmdline_index($firstcmd);
-	#$ss=~ s/\\/\\\\/g;
-	#my @sse=map {  s/$/%/g ? $_ : ()   } split("\n",$ss);	
 
 	$self->set_latexcmdline( $firstcmd, $ss );
 

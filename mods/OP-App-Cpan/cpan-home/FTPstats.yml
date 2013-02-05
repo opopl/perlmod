@@ -1,0 +1,552 @@
+---
+history:
+  - attempts:
+      - method: dleasy
+        start: 1360018807.78808
+        url: &1 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018807.79451
+    file: authors/01mailrc.txt.gz
+    filesize: 79
+    start: 1360018807.78801
+    thesiteurl: *1
+  - attempts:
+      - method: dleasy
+        start: 1360018807.85383
+        url: &2 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018807.8541
+    file: modules/02packages.details.txt.gz
+    filesize: 694
+    start: 1360018807.85379
+    thesiteurl: *2
+  - attempts:
+      - method: dleasy
+        start: 1360018807.86823
+        url: &3 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018807.86835
+    file: modules/03modlist.data.gz
+    filesize: 559
+    start: 1360018807.86819
+    thesiteurl: *3
+  - attempts:
+      - method: dleasy
+        start: 1360018807.88418
+        url: &4 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018807.88454
+    file: authors/id/B/BU/BUSTER/Local-Prereq-Fails.tgz
+    filesize: 315
+    start: 1360018807.88411
+    thesiteurl: *4
+  - attempts:
+      - method: dleasy
+        start: 1360018807.90137
+        url: &5 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018807.90153
+    file: authors/id/B/BU/BUSTER/CHECKSUMS
+    filesize: 1639
+    start: 1360018807.89561
+    thesiteurl: *5
+  - attempts:
+      - method: dleasy
+        start: 1360018808.16486
+        url: &6 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018808.17204
+    file: authors/01mailrc.txt.gz
+    filesize: 79
+    start: 1360018808.16478
+    thesiteurl: *6
+  - attempts:
+      - method: dleasy
+        start: 1360018808.25403
+        url: &7 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018808.25432
+    file: modules/02packages.details.txt.gz
+    filesize: 694
+    start: 1360018808.25399
+    thesiteurl: *7
+  - attempts:
+      - method: dleasy
+        start: 1360018808.27609
+        url: &8 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018808.27623
+    file: modules/03modlist.data.gz
+    filesize: 559
+    start: 1360018808.27606
+    thesiteurl: *8
+  - attempts:
+      - method: dleasy
+        start: 1360018808.30463
+        url: &9 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018808.305
+    file: authors/id/B/BU/BUSTER/Local-Make-Fails.tgz
+    filesize: 383
+    start: 1360018808.30455
+    thesiteurl: *9
+  - attempts:
+      - method: dleasy
+        start: 1360018808.33912
+        url: &10 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018808.33929
+    file: authors/id/B/BU/BUSTER/CHECKSUMS
+    filesize: 1639
+    start: 1360018808.32683
+    thesiteurl: *10
+  - attempts:
+      - method: dleasy
+        start: 1360018808.65682
+        url: &11 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018808.66321
+    file: authors/01mailrc.txt.gz
+    filesize: 79
+    start: 1360018808.65675
+    thesiteurl: *11
+  - attempts:
+      - method: dleasy
+        start: 1360018808.74582
+        url: &12 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018808.74608
+    file: modules/02packages.details.txt.gz
+    filesize: 694
+    start: 1360018808.74578
+    thesiteurl: *12
+  - attempts:
+      - method: dleasy
+        start: 1360018808.77506
+        url: &13 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018808.77519
+    file: modules/03modlist.data.gz
+    filesize: 559
+    start: 1360018808.77503
+    thesiteurl: *13
+  - attempts:
+      - method: dleasy
+        start: 1360018808.81012
+        url: &14 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018808.81049
+    file: authors/id/B/BU/BUSTER/Local-Test-Fails.tgz
+    filesize: 846
+    start: 1360018808.81005
+    thesiteurl: *14
+  - attempts:
+      - method: dleasy
+        start: 1360018808.86213
+        url: &15 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018808.86229
+    file: authors/id/B/BU/BUSTER/CHECKSUMS
+    filesize: 1639
+    start: 1360018808.84328
+    thesiteurl: *15
+  - attempts:
+      - method: dleasy
+        start: 1360018809.60881
+        url: &16 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018809.61525
+    file: authors/01mailrc.txt.gz
+    filesize: 79
+    start: 1360018809.60874
+    thesiteurl: *16
+  - attempts:
+      - method: dleasy
+        start: 1360018809.70697
+        url: &17 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018809.70723
+    file: modules/02packages.details.txt.gz
+    filesize: 694
+    start: 1360018809.70693
+    thesiteurl: *17
+  - attempts:
+      - method: dleasy
+        start: 1360018809.74531
+        url: &18 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018809.74544
+    file: modules/03modlist.data.gz
+    filesize: 559
+    start: 1360018809.74528
+    thesiteurl: *18
+  - attempts:
+      - method: dleasy
+        start: 1360018809.78952
+        url: &19 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018809.78986
+    file: authors/id/B/BU/BUSTER/Local-Unsupported-OS.tgz
+    filesize: 303
+    start: 1360018809.78945
+    thesiteurl: *19
+  - attempts:
+      - method: dleasy
+        start: 1360018809.85021
+        url: &20 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018809.85036
+    file: authors/id/B/BU/BUSTER/CHECKSUMS
+    filesize: 1639
+    start: 1360018809.82799
+    thesiteurl: *20
+  - attempts:
+      - method: dleasy
+        start: 1360018810.12259
+        url: &21 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018810.12979
+    file: authors/01mailrc.txt.gz
+    filesize: 79
+    start: 1360018810.12252
+    thesiteurl: *21
+  - attempts:
+      - method: dleasy
+        start: 1360018810.24372
+        url: &22 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018810.24401
+    file: modules/02packages.details.txt.gz
+    filesize: 694
+    start: 1360018810.24367
+    thesiteurl: *22
+  - attempts:
+      - method: dleasy
+        start: 1360018810.2977
+        url: &23 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018810.29784
+    file: modules/03modlist.data.gz
+    filesize: 559
+    start: 1360018810.29766
+    thesiteurl: *23
+  - attempts:
+      - method: dleasy
+        start: 1360018810.35806
+        url: &24 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018810.3584
+    file: authors/id/B/BU/BUSTER/Local-Works-Fine.tgz
+    filesize: 1211
+    start: 1360018810.358
+    thesiteurl: *24
+  - attempts:
+      - method: dleasy
+        start: 1360018810.43409
+        url: &25 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/.cpan/build/App-Cpan-1.5902-mpGZti/test-mirror/
+    end: 1360018810.43424
+    file: authors/id/B/BU/BUSTER/CHECKSUMS
+    filesize: 1639
+    start: 1360018810.40609
+    thesiteurl: *25
+  - attempts:
+      - method: dleasy
+        start: 1360018973.12375
+        url: &26 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018973.13086
+    file: authors/01mailrc.txt.gz
+    filesize: 79
+    start: 1360018973.12368
+    thesiteurl: *26
+  - attempts:
+      - method: dleasy
+        start: 1360018973.25554
+        url: &27 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018973.25583
+    file: modules/02packages.details.txt.gz
+    filesize: 694
+    start: 1360018973.25549
+    thesiteurl: *27
+  - attempts:
+      - method: dleasy
+        start: 1360018973.32076
+        url: &28 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018973.3209
+    file: modules/03modlist.data.gz
+    filesize: 559
+    start: 1360018973.32072
+    thesiteurl: *28
+  - attempts:
+      - method: dleasy
+        start: 1360018973.39184
+        url: &29 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018973.39218
+    file: authors/id/B/BU/BUSTER/Local-Prereq-Fails.tgz
+    filesize: 315
+    start: 1360018973.39177
+    thesiteurl: *29
+  - attempts:
+      - method: dleasy
+        start: 1360018973.48402
+        url: &30 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018973.48418
+    file: authors/id/B/BU/BUSTER/CHECKSUMS
+    filesize: 1639
+    start: 1360018973.4499
+    thesiteurl: *30
+  - attempts:
+      - method: dleasy
+        start: 1360018973.77837
+        url: &31 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018973.78549
+    file: authors/01mailrc.txt.gz
+    filesize: 79
+    start: 1360018973.7783
+    thesiteurl: *31
+  - attempts:
+      - method: dleasy
+        start: 1360018973.92003
+        url: &32 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018973.92032
+    file: modules/02packages.details.txt.gz
+    filesize: 694
+    start: 1360018973.91999
+    thesiteurl: *32
+  - attempts:
+      - method: dleasy
+        start: 1360018973.99553
+        url: &33 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018973.99568
+    file: modules/03modlist.data.gz
+    filesize: 559
+    start: 1360018973.99549
+    thesiteurl: *33
+  - attempts:
+      - method: dleasy
+        start: 1360018974.07728
+        url: &34 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018974.07764
+    file: authors/id/B/BU/BUSTER/Local-Make-Fails.tgz
+    filesize: 383
+    start: 1360018974.0772
+    thesiteurl: *34
+  - attempts:
+      - method: dleasy
+        start: 1360018974.18486
+        url: &35 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018974.18502
+    file: authors/id/B/BU/BUSTER/CHECKSUMS
+    filesize: 1639
+    start: 1360018974.14522
+    thesiteurl: *35
+  - attempts:
+      - method: dleasy
+        start: 1360018974.54759
+        url: &36 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018974.55393
+    file: authors/01mailrc.txt.gz
+    filesize: 79
+    start: 1360018974.54752
+    thesiteurl: *36
+  - attempts:
+      - method: dleasy
+        start: 1360018974.68352
+        url: &37 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018974.68378
+    file: modules/02packages.details.txt.gz
+    filesize: 694
+    start: 1360018974.68348
+    thesiteurl: *37
+  - attempts:
+      - method: dleasy
+        start: 1360018974.75993
+        url: &38 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018974.76006
+    file: modules/03modlist.data.gz
+    filesize: 559
+    start: 1360018974.7599
+    thesiteurl: *38
+  - attempts:
+      - method: dleasy
+        start: 1360018974.84169
+        url: &39 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018974.84203
+    file: authors/id/B/BU/BUSTER/Local-Test-Fails.tgz
+    filesize: 846
+    start: 1360018974.84162
+    thesiteurl: *39
+  - attempts:
+      - method: dleasy
+        start: 1360018974.96356
+        url: &40 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018974.96372
+    file: authors/id/B/BU/BUSTER/CHECKSUMS
+    filesize: 1639
+    start: 1360018974.9183
+    thesiteurl: *40
+  - attempts:
+      - method: dleasy
+        start: 1360018975.71016
+        url: &41 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018975.71654
+    file: authors/01mailrc.txt.gz
+    filesize: 79
+    start: 1360018975.7101
+    thesiteurl: *41
+  - attempts:
+      - method: dleasy
+        start: 1360018975.85498
+        url: &42 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018975.85525
+    file: modules/02packages.details.txt.gz
+    filesize: 694
+    start: 1360018975.85494
+    thesiteurl: *42
+  - attempts:
+      - method: dleasy
+        start: 1360018975.94077
+        url: &43 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018975.94091
+    file: modules/03modlist.data.gz
+    filesize: 559
+    start: 1360018975.94074
+    thesiteurl: *43
+  - attempts:
+      - method: dleasy
+        start: 1360018976.03176
+        url: &44 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018976.03211
+    file: authors/id/B/BU/BUSTER/Local-Unsupported-OS.tgz
+    filesize: 303
+    start: 1360018976.03169
+    thesiteurl: *44
+  - attempts:
+      - method: dleasy
+        start: 1360018976.16859
+        url: &45 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018976.16875
+    file: authors/id/B/BU/BUSTER/CHECKSUMS
+    filesize: 1639
+    start: 1360018976.1177
+    thesiteurl: *45
+  - attempts:
+      - method: dleasy
+        start: 1360018976.48415
+        url: &46 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018976.49049
+    file: authors/01mailrc.txt.gz
+    filesize: 79
+    start: 1360018976.48408
+    thesiteurl: *46
+  - attempts:
+      - method: dleasy
+        start: 1360018976.64414
+        url: &47 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018976.64443
+    file: modules/02packages.details.txt.gz
+    filesize: 694
+    start: 1360018976.6441
+    thesiteurl: *47
+  - attempts:
+      - method: dleasy
+        start: 1360018976.75184
+        url: &48 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018976.75199
+    file: modules/03modlist.data.gz
+    filesize: 559
+    start: 1360018976.75181
+    thesiteurl: *48
+  - attempts:
+      - method: dleasy
+        start: 1360018976.86565
+        url: &49 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018976.866
+    file: authors/id/B/BU/BUSTER/Local-Works-Fine.tgz
+    filesize: 1211
+    start: 1360018976.86559
+    thesiteurl: *49
+  - attempts:
+      - method: dleasy
+        start: 1360018977.01809
+        url: &50 !!perl/hash:CPAN::URL
+          FROM: USER
+          TEXT: file:///home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/
+    end: 1360018977.01825
+    file: authors/id/B/BU/BUSTER/CHECKSUMS
+    filesize: 1639
+    start: 1360018976.96133
+    thesiteurl: *50

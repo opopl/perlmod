@@ -225,9 +225,9 @@ sub nc(){
 	my($name,$cmd,$npars)=@_;
 
 	unless (defined $npars){
-		$self->_add_line("\\nc{$name}{$cmd}");
+		$self->_add_line("\\nc{\\$name}{$cmd}");
 	}else{
-		$self->_add_line("\\nc{$name}[$npars]{$cmd}");
+		$self->_add_line("\\nc{\\$name}[$npars]{$cmd}");
 	}
 }
 

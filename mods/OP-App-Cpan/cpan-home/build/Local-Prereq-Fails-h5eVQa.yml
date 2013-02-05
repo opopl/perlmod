@@ -1,0 +1,31 @@
+---
+distribution: !!perl/hash:CPAN::Distribution
+  CALLED_FOR: Local::Prereq::Fails
+  CHECKSUM_STATUS: OK
+  ID: B/BU/BUSTER/Local-Prereq-Fails.tgz
+  RO:
+    CPAN_COMMENT: ~
+    CPAN_USERID: BUSTER
+  archived: tar
+  build_dir: /home/op/wrk/perlmod/mods/OP-App-Cpan/cpan-home/build/Local-Prereq-Fails-h5eVQa
+  incommandcolor: 1
+  localfile: /home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/authors/id/B/BU/BUSTER/Local-Prereq-Fails.tgz
+  negative_prefs_cache: 0
+  prefs: {}
+  reqtype: c
+  unwrapped: !!perl/hash:CPAN::Distrostatus
+    COMMANDID: 0
+    FAILED: ''
+    TEXT: YES
+    TIME: 1360018973
+  writemakefile: !!perl/hash:CPAN::Distrostatus
+    COMMANDID: 0
+    FAILED: 1
+    TEXT: NO '/home/op/perl5/perlbrew/perls/perl-5.16.2/bin/perl Makefile.PL INSTALL_BASE=/home/op/wrk/perlmod/mods/OP-App-Cpan/cpan-home' returned status 512
+    TIME: 1360018973
+perl:
+  $^X: /home/op/perl5/perlbrew/perls/perl-5.16.2/bin/perl
+  mtime_$^X: 1352922531
+  mtime_dll: 0
+  sitearchexp: /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/site_perl/5.16.2/i686-linux
+time: 1360018973

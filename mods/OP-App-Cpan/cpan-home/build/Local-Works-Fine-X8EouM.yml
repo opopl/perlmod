@@ -1,0 +1,53 @@
+---
+distribution: !!perl/hash:CPAN::Distribution
+  CALLED_FOR: Local::Works::Fine
+  CHECKSUM_STATUS: OK
+  ID: B/BU/BUSTER/Local-Works-Fine.tgz
+  RO:
+    CPAN_COMMENT: ~
+    CPAN_USERID: BUSTER
+  archived: tar
+  build_dir: /home/op/wrk/perlmod/mods/OP-App-Cpan/cpan-home/build/Local-Works-Fine-X8EouM
+  incommandcolor: 1
+  install: !!perl/hash:CPAN::Distrostatus
+    COMMANDID: 0
+    FAILED: ''
+    TEXT: YES
+    TIME: 1360018977
+  localfile: /home/op/wrk/perlmod/mods/OP-App-Cpan/test-mirror/authors/id/B/BU/BUSTER/Local-Works-Fine.tgz
+  make: !!perl/hash:CPAN::Distrostatus
+    COMMANDID: 0
+    FAILED: ''
+    TEXT: YES
+    TIME: 1360018977
+  make_test: !!perl/hash:CPAN::Distrostatus
+    COMMANDID: 0
+    FAILED: ''
+    TEXT: YES
+    TIME: 1360018977
+  negative_prefs_cache: 0
+  prefs:
+    install: {}
+  prereq_pm:
+    build_requires:
+      ExtUtils::MakeMaker: 0
+    requires:
+      Test::More: 0
+  reqtype: c
+  sponsored_mods: {}
+  unwrapped: !!perl/hash:CPAN::Distrostatus
+    COMMANDID: 0
+    FAILED: ''
+    TEXT: YES
+    TIME: 1360018977
+  writemakefile: !!perl/hash:CPAN::Distrostatus
+    COMMANDID: 0
+    FAILED: ''
+    TEXT: YES
+    TIME: 1360018977
+perl:
+  $^X: /home/op/perl5/perlbrew/perls/perl-5.16.2/bin/perl
+  mtime_$^X: 1352922531
+  mtime_dll: 0
+  sitearchexp: /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/site_perl/5.16.2/i686-linux
+time: 1360018977

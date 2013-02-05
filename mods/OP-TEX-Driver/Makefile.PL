@@ -39,8 +39,7 @@ EOF
 
 #------------------------------------------------------------------------
 
-#our $LATEX     = ttprompt('latex path',     find_program($ENV{PATH}, "latex"));
-our $LATEX   = ttprompt('latex path',   find_program($ENV{PATH}, "latex"));
+our $LATEX   = ttprompt('latex path',   find_program($ENV{PATH}, "perllatex"));
 our $PDFLATEX  = ttprompt('pdflatex path',  find_program($ENV{PATH}, "pdflatex"));
 our $BIBTEX    = ttprompt('bibtex path',    find_program($ENV{PATH}, "bibtex"));
 our $MAKEINDEX = ttprompt('makeindex path', find_program($ENV{PATH}, "makeindex"));
