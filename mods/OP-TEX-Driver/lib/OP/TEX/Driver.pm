@@ -289,7 +289,6 @@ sub run {
     $self->throw(sprintf('file %s.tex does not exist', $self->basepath))
         unless -f $self->basepath . '.tex';
 
-
     # Run any preprocessors (none specified yet).
 
     map { $self->$_ } @{$self->preprocessors};
@@ -451,6 +450,7 @@ sub run_latex {
         $self->throw($self->formatter . " exited with errors:\n$errors");
     }
 
+###__RUNS_FORMATTER_CHECK_BIBTEX
     $self->stats->{runs}{formatter}++;
 
     return;
@@ -529,6 +529,11 @@ sub run_bibtex {
 
 sub need_to_run_bibtex {
     my $self = shift;
+
+###__RUNS_FORMATTER_CHECK_BIBTEX
+    #my $runs_formatter=$self->stats->{runs}{formatter} // 0;
+    #return 1 if 
+        #( $runs_formatter == 1 );
 
     if ($self->undefined_citations) {
         my $auxfile = $self->basepath . '.aux';

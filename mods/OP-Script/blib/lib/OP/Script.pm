@@ -98,7 +98,8 @@ sub _die(){
 
 	my $ref=shift // '';
 
-	$self->out("Error: $ref"),exit 1;
+	my $msg=$self->{package_name} . "> Error: " . $ref;
+	die "$msg";
 
 }
 # }}}
