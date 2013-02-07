@@ -4,4 +4,5 @@ use Module::Build;
 Module::Build->new
     ( module_name     => 'OP::BIBTEX',
       license         => 'perl',
+	  dist_abstract  => 'OP::BIBTEX package'
     )->create_build_script;
