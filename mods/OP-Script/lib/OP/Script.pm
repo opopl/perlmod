@@ -897,7 +897,7 @@ sub _view(){
 
 	$view_cmd="$viewer $view_opts " . join(" ",@$files);
 
-	system($view_cmd);
+	system("$view_cmd &");
 
 }
 # }}}

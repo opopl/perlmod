@@ -23,38 +23,12 @@ use warnings;
 
 use File::Basename;
 use File::Spec;
+use FindBin qw($Bin $Script);
 
-#------------------------------------------------------
-#
-# Initialization code
-#
-#------------------------------------------------------
-
-my $PERLSCRIPTDIR;
-my $PERLSCRIPTNAME;
-
-BEGIN{
-  # Where is this script?
-  $PERLSCRIPTDIR = "$0";
-  my $scriptdir = dirname( $PERLSCRIPTDIR );
-  while ( -e $PERLSCRIPTDIR && -l $PERLSCRIPTDIR ) {
-    $PERLSCRIPTDIR = readlink($PERLSCRIPTDIR);
-    if ( substr( $PERLSCRIPTDIR, 0, 1 ) eq '.' ) {
-      $PERLSCRIPTDIR = File::Spec->catfile( $scriptdir, "$PERLSCRIPTDIR" ) ;
-    }
-    $scriptdir = dirname( $PERLSCRIPTDIR );
-  }
-  $PERLSCRIPTNAME = basename( $PERLSCRIPTDIR ) ;
-  $PERLSCRIPTDIR = dirname( $PERLSCRIPTDIR ) ;
-  $PERLSCRIPTDIR = File::Spec->rel2abs( "$PERLSCRIPTDIR" );
-  # Push the path where the script is to retreive the arakhne.org packages
-  push(@INC,"$PERLSCRIPTDIR");
-
-}
-
+use lib "$Bin";
 use Bib2HTML::Main;
 
-launchBib2HTML("$PERLSCRIPTDIR","$PERLSCRIPTNAME");
+launchBib2HTML("$Bin","$Script");
 
 __END__
 

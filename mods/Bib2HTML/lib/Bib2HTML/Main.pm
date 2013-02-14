@@ -17,9 +17,10 @@
 
 package Bib2HTML::Main;
 
-@ISA = ('Exporter');
-@EXPORT = qw( &launchBib2HTML ) ;
-@EXPORT_OK = qw();
+our @ISA = qw(Exporter);
+our @EXPORT = qw( &launchBib2HTML ) ;
+our @EXPORT_OK = qw();
+
 use strict;
 use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION);
 
@@ -28,9 +29,9 @@ use Pod::Usage ;
 use File::Basename ;
 use File::Spec ;
 use File::Path ;
-use FindBin;
+use FindBin qw($Bin $Script);
 
-use lib("$FindBin::Bin/../");
+use lib("$Bin");
 
 use Bib2HTML::Release ;
 use Bib2HTML::General::Verbose ;
@@ -196,8 +197,10 @@ sub launchBib2HTML($$) {
   $options{theme} = "$DEFAULT_THEME" ;
   $options{genparams} = {} ;
   $options{'show-bibtex'} = 1 ;
-  Getopt::Long::Configure("bundling") ;
-  if ( ! GetOptions( "b|bibtex!" => \$options{'show-bibtex'},
+
+  Getopt::Long::Configure("bundling");
+
+  unless( GetOptions( "b|bibtex!" => \$options{'show-bibtex'},
 		     "checknames" => \$options{'check-names'},
 		     "cvs" => sub {
 		       @{$options{'protected_files'}} = ()
@@ -249,7 +252,7 @@ sub launchBib2HTML($$) {
 		     "version" => \$options{'version'},
 		     "warning!" => \$options{'warnings'},
 		     "windowtitle=s" => \$options{'wintitle'},
-		   ) ) {
+		   )) {
     show_usage(2,"$PERLSCRIPTDIR","$PERLSCRIPTNAME") ;
   }
 
@@ -292,6 +295,7 @@ sub launchBib2HTML($$) {
   }
 
   # Show the list of generators
+###_OPTIONS_GENLIST
   if ( $options{genlist} ) {
     use Bib2HTML::Generator::AbstractGenerator ;
     Bib2HTML::Generator::AbstractGenerator::display_supported_generators($PERLSCRIPTDIR,
@@ -300,6 +304,7 @@ sub launchBib2HTML($$) {
   }
 
   # Show the list of languages
+###_OPTIONS_LANGLIST
   if ( $options{langlist} ) {
     use Bib2HTML::Generator::AbstractGenerator ;
     Bib2HTML::Generator::AbstractGenerator::display_supported_languages($PERLSCRIPTDIR,
@@ -329,6 +334,7 @@ sub launchBib2HTML($$) {
   }
 
   # Show the help screens
+###_OPTIONS_HELP
   if ( $options{manual} ) {
     show_manual(1,"$PERLSCRIPTDIR","$PERLSCRIPTNAME") ;
   }
@@ -392,6 +398,7 @@ sub launchBib2HTML($$) {
   }
 
   # Translate the entries according to the JabRef tool
+###_OPTIONS_JABREF
   if ($options{'jabref'}) {
     use Bib2HTML::JabRef::JabRef;
 
@@ -402,6 +409,7 @@ sub launchBib2HTML($$) {
 
   # Create the generator
   #
+###_GENERATOR_CREATE
   Bib2HTML::Generator::LangManager::set_default_lang("$DEFAULT_LANGUAGE");
   my $generator = ($options{'generator'})->new( $parser->content(),
 					        $options{'output'},
@@ -425,6 +433,7 @@ sub launchBib2HTML($$) {
 
   # Generates the HMTL pages
   #
+###_GENERATOR_GENERATE
   $generator->generate() ;
 
   # Display the quantity of warnings

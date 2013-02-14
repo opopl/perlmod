@@ -515,6 +515,8 @@ sub preamble() {
 			usedpacks
 			makeindex
 			put_today_date
+			shift_parname
+			dims
 			ncfiles
 		);
 
@@ -600,6 +602,28 @@ sub preamble() {
 ###Preamble_Hyper_Setup
 		if ($ref->{hypsetup}){
 			$self->hypsetup($ref->{hypsetup});
+		}
+###Preamble_Document_Dims - document layout controlling lengths
+		if ($ref->{dims}){
+			my $dims=$ref->{dims};
+			
+			while(my($k,$v)=each %{$dims}){
+				$self->_add_line("\\setlength{\\$k}{$v}"); 
+			}
+		}
+		if ($ref->{shift_parname}){
+			my $s=<<'EOF';
+%%%%%%%%%%%%%%%
+\makeatletter
+\renewcommand\paragraph{%
+   \@startsection{paragraph}{4}{0mm}%
+      {-\baselineskip}%
+      {.5\baselineskip}%
+      {\normalfont\normalsize\bfseries}}
+\makeatother
+%%%%%%%%%%%%%%%
+EOF
+			$self->_add_line($s);
 		}
 
 	}
