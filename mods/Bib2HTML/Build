@@ -11,7 +11,7 @@ sub magic_number_matches {
   open FH, '_build/magicnum' or return 0;
   my $filenum = <FH>;
   close FH;
-  return $filenum == 625819;
+  return $filenum == 767883;
 }
 
 my $progname;
@@ -31,24 +31,24 @@ BEGIN {
   }
   unshift @INC,
     (
-
+     '/home/op/wrk/perlmod/mods/Bib2HTML/_build/lib'
     );
 }
 
 close(*DATA) unless eof(*DATA); # ensure no open handles to this script
 
-use Module::Build;
+use MyModuleBuilder;
 Module::Build->VERSION(q{0});
 
 # Some platforms have problems setting $^X in shebang contexts, fix it up here
 $^X = Module::Build->find_perl_interpreter;
 
-if (-e 'Build.PL' and not Module::Build->up_to_date('Build.PL', $progname)) {
+if (-e 'Build.PL' and not MyModuleBuilder->up_to_date('Build.PL', $progname)) {
    warn "Warning: Build.PL has been altered.  You may need to run 'perl Build.PL' again.\n";
 }
 
 # This should have just enough arguments to be able to bootstrap the rest.
-my $build = Module::Build->resume (
+my $build = MyModuleBuilder->resume (
   properties => {
     config_dir => '_build',
     orig_dir => $orig_dir,

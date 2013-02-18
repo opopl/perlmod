@@ -16,70 +16,159 @@
 # Boston, MA 02111-1307, USA.
 
 package Bib2HTML::Main;
+# intro {{{
 
-our @ISA = qw(Exporter);
+=head1 NAME
+
+Bib2HTML::Main 
+
+=head1 DESCRIPTION
+
+Bib2HTML::Main - Perl class which invokes the Bib2HTML engine
+to do the actual BibTeX-to-HTML conversion.
+
+=head1 SYNOPSIS
+
+	use FindBin qw($Bin $Script);
+
+	use Bib2HTML::Main;
+
+	Bib2HTML::Main->new->launchBib2HTML("$Bin","$Script");
+
+=head1 INHERITANCE
+
+L<Class::Accessor::Complex>
+
+=head1 USES
+
+	use Pod::Usage;
+	use Getopt::Long ;
+	use File::Basename ;
+	use File::Spec::Functions qw(catfile catdir curdir updir);
+	use File::Path ;
+	use FindBin qw($Bin $Script);
+
+	use Bib2HTML::Release ;
+	use Bib2HTML::General::Verbose ;
+	use Bib2HTML::General::Error ;
+	use Bib2HTML::General::Misc ;
+	use Bib2HTML::Parser::Parser ;
+
+=head1 ACCESSORS
+
+=head2 Scalar accessors
+
+=begin html 
+
+<table border='1'>
+	<tr><td>AUTHOR</td></td></tr>
+	<tr><td>AUTHOR_EMAIL</td></tr>
+	<tr><td>DEFAULT_GENERATOR</td></tr>
+	<tr><td>DEFAULT_LANGUAGE</td></tr>
+	<tr><td>DEFAULT_THEME</td></tr>
+	<tr><td>GENERATOR</td></tr>
+	<tr><td>PERLSCRIPT</td></tr>
+	<tr><td>PERLSCRIPTDIR</td></tr>
+	<tr><td>PERLSCRIPTNAME</td></tr>
+	<tr><td>SUBMIT_BUG_URL</td></tr>
+	<tr><td>URL</td></tr>
+	<tr><td>VERSION</td></tr>
+	<tr><td>VERSION_DATE</td></tr>
+</table>
+
+=end html
+
+=head2 Array accessors
+
+=head2 Hash accessors
+
+=over 4 
+
+=item CONTRIBUTORS
+
+=item options - command-list options
+
+=back
+
+=cut
+
 our @EXPORT = qw( &launchBib2HTML ) ;
 our @EXPORT_OK = qw();
 
+###_USE
 use strict;
 use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION);
 
+use Pod::Usage;
 use Getopt::Long ;
-use Pod::Usage ;
 use File::Basename ;
-use File::Spec ;
-use File::Path ;
+use File::Spec::Functions qw(catfile catdir curdir updir);
+use File::Path;
 use FindBin qw($Bin $Script);
 
 use lib("$Bin");
 
-use Bib2HTML::Release ;
-use Bib2HTML::General::Verbose ;
-use Bib2HTML::General::Error ;
-use Bib2HTML::General::Misc ;
-use Bib2HTML::Parser::Parser ;
+use Bib2HTML::Release;
+use Bib2HTML::General::Verbose;
+use Bib2HTML::General::Error;
+use Bib2HTML::General::Misc;
+use Bib2HTML::Parser::Parser;
 
-#------------------------------------------------------
-#
-# Global vars
-#
-#------------------------------------------------------
+use parent qw(Class::Accessor::Complex);
 
-# Version number of bib2html
-#our $VERSION = Bib2HTML::Release::getVersionNumber() ;
 our $VERSION='op-1';
-# Date of this release of bib2html
-my $VERSION_DATE = Bib2HTML::Release::getVersionDate() ;
-# URL from which the users can submit a bug
-my $SUBMIT_BUG_URL = Bib2HTML::Release::getBugReportURL() ;
-# Email of the author of bib2html
-my $AUTHOR = Bib2HTML::Release::getAuthorName() ;
-# Email of the author of bib2html
-my $AUTHOR_EMAIL = Bib2HTML::Release::getAuthorEmail() ;
-# Page of bib2html
-my $URL = Bib2HTML::Release::getMainURL() ;
-# Contributors to Bib2HTML
-my %CONTRIBUTORS = Bib2HTML::Release::getContributors() ;
 
-# Default Generator
-my $DEFAULT_GENERATOR = 'HTML' ;
-# Default Language
-my $DEFAULT_LANGUAGE = 'English' ;
-# Default Theme
-my $DEFAULT_THEME = 'Simple' ;
+###_ACCESSORS_HASH
+our @hash_accessors=qw(
+	CONTRIBUTORS
+	options
+);
 
-#------------------------------------------------------
-#
-# Functions
-#
-#------------------------------------------------------
+###_ACCESSORS_SCALAR
+our @scalar_accessors=qw(
+	AUTHOR
+	AUTHOR_EMAIL
+	DEFAULT_GENERATOR
+	DEFAULT_LANGUAGE
+	DEFAULT_THEME
+	GENERATOR
+	PERLSCRIPT
+	PERLSCRIPTDIR
+	PERLSCRIPTNAME
+	SUBMIT_BUG_URL
+	URL
+	VERSION
+	VERSION_DATE
+);
 
-sub check_output($$) {
-  my $output = shift ;
-  my $force = shift ;
-  if ( ! $output ) {
-    $output = File::Spec->catdir( ".", "bib2html" ) ;
-  }
+our @array_accessors=qw();
+###_ACCESSORS
+
+__PACKAGE__
+	->mk_new
+	->mk_scalar_accessors(@scalar_accessors)
+	->mk_array_accessors(@array_accessors)
+	->mk_hash_accessors(@hash_accessors);
+
+# }}}
+# check_output() {{{
+
+=head3 check_output()
+
+Returns the directory where the output HTMLs are stored.
+By default, it is called bib2html.
+
+=cut
+
+sub check_output(){
+  my $self=shift;
+
+  my $output = $self->options("output");
+  my $force = $self->options("force");
+
+  $output = catdir( ".", "bib2html" )
+   		unless $output;
+
   if ( ( -e "$output" ) && ( ! $force ) ) {
     Bib2HTML::General::Error::syserr( "The output '$output".
 				      "' already exists. Use the -f option to force the overwrite\n" ) ;
@@ -87,118 +176,132 @@ sub check_output($$) {
   return "$output" ;
 }
 
-sub show_usage($$$) {
-  my $exitval = shift;
-  my $PERLSCRIPTDIR = shift;
-  my $PERLSCRIPTNAME = shift;
+# }}}
+# show_usage() {{{
 
-  my $basename = "$PERLSCRIPTNAME";
-  $basename =~ s/\.[^.]*$//;
+=head3 show_usage()
 
-  my $sharedir = "$ENV{hm}/share/";
+=cut
 
-  my @searchdirs = (
-	File::Spec->catdir("$PERLSCRIPTDIR",'pod'),
-	File::Spec->catdir("$PERLSCRIPTDIR",'man'),
-	File::Spec->catdir("$PERLSCRIPTDIR",File::Spec->updir(),'pod'),
-	File::Spec->catdir("$PERLSCRIPTDIR",File::Spec->updir(),'man'),
-	File::Spec->catdir("$sharedir",'doc',"$basename"),
-	File::Spec->catdir("$sharedir",'doc',"$basename"),
-	File::Spec->catdir("$sharedir",'doc',"$basename",'pod'),
-	File::Spec->catdir("$sharedir",'doc',"$basename",'man'),
-	);
+sub show_usage() {
+  my $self=shift;
 
-  my @langs = ();
+  my %opts=@_;
 
-  if (($ENV{'LANG'})&&($ENV{'LANG'} =~ /^([^_.\-]+)/)) {
-    push @langs, "$1";
-  }
+  my $mode=$opts{mode} // '';
+  my $modes={
+	  'help' 	=> 1,
+	  'man' 	=> 2
+  };
+  my $modeval=$modes->{$mode} // '';
 
-  push @langs, 'en';
+  return 1 unless $modeval;
 
-  foreach my $lang (@langs) {
-    foreach my $dir (@searchdirs) {
-      my $pod = File::Spec->catdir("$dir","${basename}_${lang}.pod");
-	  print "$pod\n";
-      if ( -r "$pod" ) {
-        pod2usage(-exitval => $exitval, -input => "$pod");
-        exit $exitval;
-      }
-    }
-  }
+  pod2usage( 
+	  -input  		=> $self->PERLSCRIPT,
+	  -exitval		=> 0,
+	  -verbose	 	=> $modeval
+  );
 
-  die("unable to find the documentation file for $basename\n");
 }
 
-sub show_manual($$$) {
-  my $exitval = shift;
-  my $PERLSCRIPTDIR = shift;
-  my $PERLSCRIPTNAME = shift;
+# }}}
+# init_vars() {{{
 
-  my $basename = "$PERLSCRIPTNAME";
-  $basename =~ s/\.[^.]*$//;
+=head3 init_vars()
 
-  my $sharedir = "/usr/share";
+=cut
 
-  my @searchdirs = (
-	File::Spec->catdir("$PERLSCRIPTDIR",'pod'),
-	File::Spec->catdir("$PERLSCRIPTDIR",'man'),
-	File::Spec->catdir("$PERLSCRIPTDIR",File::Spec->updir(),'pod'),
-	File::Spec->catdir("$PERLSCRIPTDIR",File::Spec->updir(),'man'),
-	File::Spec->catdir("$sharedir",'doc',"$basename"),
-	File::Spec->catdir("$sharedir",'doc',"$basename"),
-	File::Spec->catdir("$sharedir",'doc',"$basename",'pod'),
-	File::Spec->catdir("$sharedir",'doc',"$basename",'man'),
-	);
+sub init_vars() {
+	my $self=shift;
 
-  my @langs = ();
+	# Version number of bib2html
 
-  if (($ENV{'LANG'})&&($ENV{'LANG'} =~ /^([^_.\-]+)/)) {
-    push @langs, "$1";
-  }
+	#our $VERSION = Bib2HTML::Release::getVersionNumber() ;
+	$self->VERSION($VERSION);
 
-  push @langs, 'en';
+	# Date of this release of bib2html
+	$self->VERSION_DATE(Bib2HTML::Release::getVersionDate());
 
-  foreach my $lang (@langs) {
-    foreach my $dir (@searchdirs) {
-      my $pod = File::Spec->catdir("$dir","${basename}_${lang}.pod");
-      if ( -r "$pod" ) {
-        print "$pod\n";
-        use Pod::Perldoc;
-        @ARGV = ( "$pod" );
-        Pod::Perldoc->run();
-        exit $exitval;
-      }
-    }
-  }
+	# URL from which the users can submit a bug
+	$self->SUBMIT_BUG_URL(Bib2HTML::Release::getBugReportURL());
 
-  die("unable to find the documentation file for $basename\n");
+	# Email of the author of bib2html
+	$self->AUTHOR(Bib2HTML::Release::getAuthorName());
+
+	# Email of the author of bib2html
+	$self->AUTHOR_EMAIL(Bib2HTML::Release::getAuthorEmail()) ;
+
+	# Page of bib2html
+	$self->URL(Bib2HTML::Release::getMainURL()) ;
+
+	# Contributors to Bib2HTML
+	my %CONTRIBUTORS = Bib2HTML::Release::getContributors() ;
+	
+	# Default Generator
+	$self->DEFAULT_GENERATOR('HTML');
+	# Default Language
+	$self->DEFAULT_LANGUAGE('English');
+	# Default Theme
+	$self->DEFAULT_THEME('Simple') ;
+
+	# Read the command line
+	my $options={
+		warnings 	=> 1,
+		genphpdoc 	=> 1,
+		generator 	=> $self->DEFAULT_GENERATOR,
+		lang 		=> $self->DEFAULT_LANGUAGE,
+		theme 		=> $self->DEFAULT_THEME,
+		genparams 			=> {} ,
+		'show-bibtex' 		=> 1 ,
+		'verbose' 			=> 0,
+		'quiet' 			=> 0,
+		'genlist'  			=> 0,
+		'tex-preamble'  	=> '',
+		help  				=> 0
+	};
+
+###_OPTIONS_FALSE
+	my @false=qw( 
+		check-names
+		genlist 
+		genparamlist
+		help 
+		force
+		jabref
+		langlist
+		manual
+		quiet 
+		show-bibtex 
+		sort-warnings
+		tex-commands
+		title
+		themelist
+		version
+		wintitle
+		);
+	my @true=qw(verbose);
+
+	foreach (@false) { $options->{$_}=0; };
+	foreach (@true) { $options->{$_}=1; };
+	$self->options($options);
+
+	#body ...
 }
 
-#------------------------------------------------------
-#
-# Main Program
-#
-#------------------------------------------------------
+# }}}
+# get_opt() {{{
 
-sub launchBib2HTML($$) {
+=head3 get_opt()
 
-  my $PERLSCRIPTDIR = shift;
-  my $PERLSCRIPTNAME = shift;
+=cut
 
-  # Command line options
-  my %options = () ;
+sub get_opt(){
+  my $self=shift;
+ 
+  my %options=$self->options;
 
-  # Read the command line
-  $options{warnings} = 1 ;
-  $options{genphpdoc} = 1 ;
-  $options{generator} = "$DEFAULT_GENERATOR" ;
-  $options{lang} = "$DEFAULT_LANGUAGE" ;
-  $options{theme} = "$DEFAULT_THEME" ;
-  $options{genparams} = {} ;
-  $options{'show-bibtex'} = 1 ;
-
-  Getopt::Long::Configure("bundling");
+  Getopt::Long::Configure(qw(bundling));
 
   unless( GetOptions( "b|bibtex!" => \$options{'show-bibtex'},
 		     "checknames" => \$options{'check-names'},
@@ -218,8 +321,8 @@ sub launchBib2HTML($$) {
 		     },
 		     "generatorparams!" => \$options{'genparamlist'},
 		     "genlist" => \$options{'genlist'},
-		     "h|?" => \$options{'help'},
-		     "help|man|manual" => \$options{'manual'},
+		     "h|help|?" => \$options{'help'},
+		     "man|manual" => \$options{'manual'},
 		     "jabref!" => \$options{'jabref'},
 		     "lang=s" => \$options{'lang'},
 		     "langlist" => \$options{'langlist'},
@@ -253,23 +356,55 @@ sub launchBib2HTML($$) {
 		     "warning!" => \$options{'warnings'},
 		     "windowtitle=s" => \$options{'wintitle'},
 		   )) {
-    show_usage(2,"$PERLSCRIPTDIR","$PERLSCRIPTNAME") ;
+    $self->show_usage('help');
   }
 
+  $self->options(%options);
+
+}
+
+# }}}
+# launchBib2HTML() {{{
+
+=head3 launchBib2HTML()
+
+=cut
+
+sub launchBib2HTML() {
+  my $self=shift;
+
+  $self->PERLSCRIPTDIR(shift);
+  $self->PERLSCRIPTNAME(shift);
+
+  $self->PERLSCRIPT(catdir($self->PERLSCRIPTDIR,$self->PERLSCRIPTNAME));
+
+  die "Could not find the location of the script: " 
+  	. $self->SCRIPT unless $self->PERLSCRIPT;
+
+  $self->init_vars();
+
+  $self->get_opt();
+
+  # Command line options
+  my %options = () ;
+
   # Generator class
-  if ( $options{'generator'} !~ /::/ ) {
-    $options{'generator'} = "Bib2HTML::Generator::".$options{'generator'}."Gen" ;
+  if ( $self->options('generator') !~ /::/ ) {
+    $self->options(
+		'generator' => "Bib2HTML::Generator::" .$self->options('generator') ."Gen" );
   }
-  eval "require ".$options{'generator'}.";" ;
+  eval "require ".$self->options('generator').";" ;
   if ( $@ ) {
-    Bib2HTML::General::Error::syserr( "Unable to find the generator class: ".$options{'generator'}."\n$@\n" ) ;
+    Bib2HTML::General::Error::syserr( "Unable to find the generator class: "
+		.$self->options('generator')
+		."\n$@\n" ) ;
   }
 
   # Show the version number
-  if ( $options{version} ) {
+  if ( $self->options("version") ) {
 
     my $final_copyright = 1998;
-    if ($VERSION_DATE =~ /^([0-9]+)\/[0-9]+\/[0-9]+$/) {
+    if ($self->VERSION_DATE =~ /^([0-9]+)\/[0-9]+\/[0-9]+$/) {
       if ($1<=98) {
         $final_copyright = 2000 + $1;
       }
@@ -285,10 +420,15 @@ sub launchBib2HTML($$) {
       $final_copyright = "1998-$final_copyright";
     }
 
-    print "bib2html $VERSION, $VERSION_DATE\n" ;
-    print "Copyright (c) $final_copyright, $AUTHOR <$AUTHOR_EMAIL>, under GPL\n" ;
+    print "bib2html " .  $self->VERSION . ", " . $self->VERSION_DATE . "\n" ;
+    print "Copyright (c) $final_copyright, " 
+		. $self->AUTHOR 
+		. " <" 
+		. $self->AUTHOR_EMAIL
+		. " > ,  under GPL " . "\n" ;
+
     print "Contributors:\n" ;
-    while ( my ($email,$name) = each(%CONTRIBUTORS) ) {
+    while ( my ($email,$name) = each(%{$self->CONTRIBUTORS}) ) {
       print "  $name <$email>\n" ;
     }
     exit 1 ;
@@ -296,56 +436,55 @@ sub launchBib2HTML($$) {
 
   # Show the list of generators
 ###_OPTIONS_GENLIST
-  if ( $options{genlist} ) {
-    use Bib2HTML::Generator::AbstractGenerator ;
-    Bib2HTML::Generator::AbstractGenerator::display_supported_generators($PERLSCRIPTDIR,
-								         "$DEFAULT_GENERATOR") ;
+  if ( $self->options("genlist") ) {
+    use Bib2HTML::Generator::AbstractGenerator;
+    Bib2HTML::Generator::AbstractGenerator::display_supported_generators
+		($self->PERLSCRIPTDIR,$self->DEFAULT_GENERATOR);
     exit 1 ;
   }
 
   # Show the list of languages
 ###_OPTIONS_LANGLIST
-  if ( $options{langlist} ) {
+  if ( $self->options("langlist") ) {
     use Bib2HTML::Generator::AbstractGenerator ;
-    Bib2HTML::Generator::AbstractGenerator::display_supported_languages($PERLSCRIPTDIR,
-								      "$DEFAULT_LANGUAGE") ;
+    Bib2HTML::Generator::AbstractGenerator::display_supported_languages(
+		$self->PERLSCRIPTDIR,$self->DEFAULT_LANGUAGE);
     exit 1 ;
   }
 
   # Show the list of themes
-  if ( $options{themelist} ) {
+  if ( $self->options('themelist') ) {
     use Bib2HTML::Generator::AbstractGenerator ;
-    Bib2HTML::Generator::AbstractGenerator::display_supported_themes($PERLSCRIPTDIR,
-								   "$DEFAULT_THEME") ;
+    Bib2HTML::Generator::AbstractGenerator::display_supported_themes(
+		$self->PERLSCRIPTDIR, $self->DEFAULT_THEME);
     exit 1 ;
   }
 
   # Show the list of themes
-  if ( $options{'tex-commands'} ) {
+  if ( $self->options('tex-commands') ) {
     use Bib2HTML::Translator::TeX ;
-    Bib2HTML::Translator::TeX::display_supported_commands($PERLSCRIPTDIR) ;
+    Bib2HTML::Translator::TeX::display_supported_commands($self->PERLSCRIPTDIR) ;
     exit 1 ;
   }
 
   # Show the list of generator params
-  if ( $options{'genparamlist'} ) {
-    ($options{'generator'})->display_supported_generator_params() ;
+  if ( $self->options('genparamlist') ) {
+    ($self->options('generator'))->display_supported_generator_params() ;
     exit 1 ;
   }
 
   # Show the help screens
 ###_OPTIONS_HELP
-  if ( $options{manual} ) {
-    show_manual(1,"$PERLSCRIPTDIR","$PERLSCRIPTNAME") ;
-  }
-  if ( $options{help} || ( $#ARGV < 0 ) ) {
-    show_usage(1,"$PERLSCRIPTDIR","$PERLSCRIPTNAME") ;
+  $self->show_usage(mode => 'man') if $self->options("manual");
+
+  if ( $self->options("help") || ( $#ARGV < 0 ) ) {
+    $self->show_usage(mode => 'help') ;
   }
 
   # Force the output to stdout
-  if ( $options{'stdout'} ) {
+  if ( $self->options('stdout') ) {
      my $name = "stdout" ;
-     $options{'genparams'}{"stdout"} = [1];
+     $self->options('genparams')->{"stdout"} = [1];
   }
 
   #
@@ -354,19 +493,19 @@ sub launchBib2HTML($$) {
   # Titles:
 
   # Verbosing:
-  if ( $options{quiet} ) {
-    $options{verbose} = -1 ;
+  if ( $self->options("quiet") ) {
+    $self->options(verbose => -1);
   }
-  Bib2HTML::General::Verbose::setlevel( $options{verbose} ) ;
+  Bib2HTML::General::Verbose::setlevel( $self->options("verbose") ) ;
 
   # Error messages:
-  if ( $options{'warnings'} ) {
+  if ( $self->options('warnings') ) {
     Bib2HTML::General::Error::unsetwarningaserror() ;
   }
   else {
     Bib2HTML::General::Error::setwarningaserror() ;
   }
-  if ( $options{'sort-warnings'} ) {
+  if ( $self->options('sort-warnings') ) {
     Bib2HTML::General::Error::setsortwarnings() ;
   }
   else {
@@ -376,19 +515,19 @@ sub launchBib2HTML($$) {
   #
   # Create the output directory
   #
-  unless ($options{'stdout'}) {
-    $options{'output'} = check_output($options{'output'},$options{'force'});
+  unless ($self->options('stdout')) {
+    $self->options('output' => $self->check_output());
   }
 
   # Read the BibTeX files
-  my $parser = new Bib2HTML::Parser::Parser($options{'show-bibtex'}) ;
-  if ( $options{'tex-preamble'} ) {
-    $parser->read_preambles( $options{'tex-preamble'} ) ;
+  my $parser = new Bib2HTML::Parser::Parser($self->options('show-bibtex')) ;
+  if ( $self->options('tex-preamble') ) {
+    $parser->read_preambles( $self->options('tex-preamble') ) ;
   }
   $parser->parse( \@ARGV ) ;
 
   # Check if the names of the authors are similars
-  if ( $options{'check-names'} ) {
+  if ( $self->options('check-names') ) {
     eval "require Bib2HTML::Checker::Names;" ;
     if ( $@ ) {
       Bib2HTML::General::Error::syserr( "Unable to find the generator class: Bib2HTML::Checker::Names\n$@\n" ) ;
@@ -399,7 +538,7 @@ sub launchBib2HTML($$) {
 
   # Translate the entries according to the JabRef tool
 ###_OPTIONS_JABREF
-  if ($options{'jabref'}) {
+  if ($self->options('jabref')) {
     use Bib2HTML::JabRef::JabRef;
 
     my $jabref = new Bib2HTML::JabRef::JabRef();
@@ -410,37 +549,42 @@ sub launchBib2HTML($$) {
   # Create the generator
   #
 ###_GENERATOR_CREATE
-  Bib2HTML::Generator::LangManager::set_default_lang("$DEFAULT_LANGUAGE");
-  my $generator = ($options{'generator'})->new( $parser->content(),
-					        $options{'output'},
+  Bib2HTML::Generator::LangManager::set_default_lang($self->DEFAULT_LANGUAGE);
+
+  my $generator = ($self->options('generator'))->new( $parser->content(),
+					        $self->options('output'),
 					        { 'VERSION' => $VERSION,
-					  	  'BUG_URL' => $SUBMIT_BUG_URL,
-						  'URL' => $URL,
-						  'AUTHOR_EMAIL' => $AUTHOR_EMAIL,
-						  'AUTHOR' => $AUTHOR,
-						  'PERLSCRIPTDIR' => $PERLSCRIPTDIR,
+					  	  'BUG_URL' => $self->SUBMIT_BUG_URL,
+						  'URL' => $self->URL,
+						  'AUTHOR_EMAIL' => $self->AUTHOR_EMAIL,
+						  'AUTHOR' => $self->AUTHOR,
+						  'PERLSCRIPTDIR' => $self->PERLSCRIPTDIR,
 					        },
-					        { 'SHORT' => $options{'wintitle'},
-						  'LONG' => $options{'title'},
+					        { 'SHORT' => $self->options('wintitle'),
+						  'LONG' => $self->options('title'),
 					        },
-					        $options{'lang'},
-					        $options{'theme'},
-					        $options{'show-bibtex'},
-					        $options{'genparams'} ) ;
-  if ($options{'protected_files'}) {
-    $generator->set_unremovable_files(@{$options{'protected_files'}});
+					        $self->options('lang'),
+					        $self->options('theme'),
+					        $self->options('show-bibtex'),
+					        $self->options('genparams') ) ;
+  $self->GENERATOR($generator);
+
+  if ($self->options('protected_files')) {
+    $self->GENERATOR->set_unremovable_files(@{$self->options('protected_files')});
   }
 
   # Generates the HMTL pages
   #
 ###_GENERATOR_GENERATE
-  $generator->generate() ;
+  $self->GENERATOR->generate();
 
   # Display the quantity of warnings
   Bib2HTML::General::Error::printwarningcount() ;
 
   exit 0 ;
 }
+
+# }}}
 
 1;
 __END__

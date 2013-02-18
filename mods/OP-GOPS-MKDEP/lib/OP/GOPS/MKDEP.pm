@@ -6,20 +6,6 @@ use warnings;
 
 our $VERSION='0.01';
 
-# 
-# Changelog:
-#
-# Original makemake utility - Written by Michael Wester <wester@math.unm.edu> December 27, 1995
-# Cotopaxi (Consulting), Albuquerque, New Mexico
-#
-# 14:19:31 (Sat, 26-Mar-2011):
-#
-# mkdep - put under git control by op
-#
-
-eval 'exec /usr/bin/perl -S $0 ${1+"$@"}'
-if 0; #$running_under_some_shell
-
 use File::Find ();
 use Getopt::Long;
 use Pod::Usage;
@@ -28,12 +14,18 @@ use File::Basename;
 use OP::Base qw/:vars :funcs/;
 use File::Grep qw( fgrep fmap fdo );
 
-# Set the variable $File::Find::dont_use_nlink if you're using AFS, since AFS cheats.
-# for the convenience of &wanted calls, including -eval statements:
-use vars qw/*name *dir *prune/;
-*name   = *File::Find::name;
-*dir    = *File::Find::dir;
-*prune  = *File::Find::prune;
+use OP::Base qw/:vars :funcs/;
+use parent qw(OP::Script Class::Accessor::Complex);
+
+our @scalar_accessors=qw();
+our @hash_accessors=qw();
+our @array_accessors=qw();
+
+__PACKAGE__
+	->mk_new
+	->scalar_accessors(@scalar_accessors)
+	->hash_accessors(@hash_accessors)
+	->array_accessors(@array_accessors);
 
 my %regex=( 
 	fortran =>	{
@@ -46,17 +38,6 @@ my %regex=(
 );
 
 # }}}
-# subroutine declarations {{{
-
-sub set_these_cmdopts;
-sub set_this_sdata;
-sub main;
-sub make_deps;
-sub resolve_line;
-sub remove_extension;
-sub set_libs;
-
-# }}}
 # vars {{{
 
 my %excluded=(
@@ -67,7 +48,6 @@ my %excluded=(
 my(%libs,@libdirs,@modules);
 my(%deps);
 my($date);
-
 
 # array for not-used fortran files which are taken from file nu.mk
 my @nused;
@@ -145,7 +125,7 @@ print DP "# Project dir: $dirs{ppath}\n";
 print DP "# Program name: $PROGNAME\n";
 
 #}}}
-# subroutine bodies {{{
+# Methods {{{
 
 # new(){{{
 
@@ -174,6 +154,7 @@ sub set_this_sdata() {
 }
 # }}}
 # set_these_cmdopts(){{{ 
+
 sub set_these_cmdopts(){ 
   my $self=shift;
 
@@ -182,20 +163,10 @@ sub set_these_cmdopts(){
 	,{ name	=>	"man", 			desc	=>	"Print the man page"		}
 	,{ name	=>	"examples", 	desc	=>	"Show examples of usage"	}
 	,{ name	=>	"vm", 			desc	=>	"View myself"	}
-	,{	name	=>	"dpfile", 		
-			desc	=>	"Provide the filename of the dependency file", 
-			type  =>	"s"
-		}
-	,{ 
-			name	=>	"nolibs", 		
-			desc	=>	"" }
-	,{ 
-			name	=>	"print_non_root", 			
-			desc	=>	""	}
-	,{ 
-			name	=>	"flist", 			
-			desc	=>	"Use the flist fortran files"	
-		}
+	,{ name	=>	"dpfile", 		desc	=>	"Provide the filename of the dependency file", type  =>	"s" }
+	,{ name	=>	"nolibs", 		desc	=>	"" }
+   	,{ name	=>	"print_non_root", 			desc	=>	""	}
+   	,{ name	=>	"flist", 			desc	=>	"Use the flist fortran files"	}
 	#,{ cmd	=>	"<++>", 		desc	=>	"<++>", type	=>	"s"	}
   );
 	&cmd_opt_add(\@mycmdopts);
@@ -537,3 +508,15 @@ sub main() {
 #}}}
 			
 1;
+__END__
+
+=head1 CHANGELOG
+
+Original makemake utility - Written by Michael Wester <wester@math.unm.edu> December 27, 1995
+Cotopaxi (Consulting), Albuquerque, New Mexico
+
+14:19:31 (Sat, 26-Mar-2011):
+
+mkdep - put under git control by op
+
+=cut

@@ -22,7 +22,7 @@ do{ my $x = [
          'recurse_into' => [],
          'build_bat' => 0,
          'extra_linker_flags' => [],
-         'build_class' => 'Module::Build',
+         'build_class' => 'MyModuleBuilder',
          'prereq_action_types' => [
                                     'requires',
                                     'build_requires',
@@ -66,7 +66,9 @@ do{ my $x = [
          'meta_merge' => {},
          'get_options' => {},
          'dist_version_from' => 'lib/Bib2HTML/Main.pm',
-         '_added_to_INC' => [],
+         '_added_to_INC' => [
+                              '/home/op/wrk/perlmod/mods/Bib2HTML/_build/lib'
+                            ],
          'auto_configure_requires' => 1,
          'create_license' => undef,
          'debugger' => undef,
@@ -81,7 +83,8 @@ do{ my $x = [
                                'xs',
                                'share_dir',
                                'pod',
-                               'script'
+                               'script',
+                               'lang'
                              ],
          'release_status' => 'stable',
          'needs_compiler' => '',

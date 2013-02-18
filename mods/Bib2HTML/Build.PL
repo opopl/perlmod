@@ -1,9 +1,17 @@
+
 use 5.006;
 use strict;
 use warnings FATAL => 'all';
+
 use Module::Build;
 
-my $builder = Module::Build->new(
+my $class=Module::Build->subclass(code => <<'EOF');
+	sub process_lang_files {
+		my $self=shift;
+	}
+EOF
+
+my $builder = $class->new(
     module_name         => 'Bib2HTML::Main',
     license             => 'perl',
     release_status      => 'stable',
@@ -24,7 +32,9 @@ my $builder = Module::Build->new(
     create_makefile_pl 		=> 'traditional',
     dist_author          	=> ' ',
     dist_abstract          	=> ' ',
-    dist_version_from   => 'lib/Bib2HTML/Main.pm'
+    dist_version_from   	=> 'lib/Bib2HTML/Main.pm'
 );
+
+$builder->add_build_element('lang');
 
 $builder->create_build_script();

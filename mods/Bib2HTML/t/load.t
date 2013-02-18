@@ -3,11 +3,11 @@
 use 5.006;
 use strict;
 use warnings FATAL => 'all';
-use Test::More;
+use Test::More qw(no_plan);
 
 #use lib '../';
 
-plan tests => 35;
+#plan tests => 35;
 
 BEGIN {
     use_ok( 'Bib2HTML::Main' ) || print "Bail out!\n";

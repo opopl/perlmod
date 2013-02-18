@@ -32,11 +32,6 @@ overwrite.
 Bib2HTML::Generator::AbstractGenerator->new( content, output, info, titles,
                                              lang, [params] ) ;
 
-=head1 DESCRIPTION
-
-Bib2HTML::Generator::AbstractGenerator is a Perl module, which permits to
-generate some documents for a BibTeX database.
-
 =head1 GETTING STARTED
 
 =head2 Initialization
