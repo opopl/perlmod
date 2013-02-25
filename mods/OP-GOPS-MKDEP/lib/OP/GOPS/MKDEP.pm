@@ -1,122 +1,141 @@
 package OP::GOPS::MKDEP;
 # intro {{{
 
+=head1 INHERITANCE
+
+L<Class::Accessor::Complex>, L<OP::Script>
+
+=head1 USES
+
+	use File::Find ();
+	use Getopt::Long;
+	use Pod::Usage;
+	use Cwd;
+	use File::Basename;
+	use OP::Base qw/:vars :funcs/;
+	use File::Grep qw( fgrep fmap fdo );
+
+use OP::Base qw/:vars :funcs/;
+
+=head1 ACCESSORS
+
+=head2 Scalar Accessors
+
+	nuexist - does the nu.mk file exist? 0 for no, 1 for yes
+
+=head2 Array Accessors
+
+	nused  -  array for not-used fortran files which are taken from file nu.mk
+	nudirs -
+	aumods -  all modules which were found through the 'use' statement
+	exmods -  those mods which are not in fortranfiles
+
+=head2 Hash Accessors
+
+	rec_lev - recursion level of calling a subroutine
+
+=cut
+
 use strict;
 use warnings;
 
 our $VERSION='0.01';
 
+###_USE
 use File::Find ();
 use Getopt::Long;
 use Pod::Usage;
 use Cwd;
-use File::Basename;
+use File::Basename qw(basename);
 use OP::Base qw/:vars :funcs/;
 use File::Grep qw( fgrep fmap fdo );
 
 use OP::Base qw/:vars :funcs/;
 use parent qw(OP::Script Class::Accessor::Complex);
 
-our @scalar_accessors=qw();
-our @hash_accessors=qw();
-our @array_accessors=qw();
+# for the convenience of &wanted calls, including -eval statements:
+use vars qw/*name *dir *prune/;
+*name   = *File::Find::name;
+*dir    = *File::Find::dir;
+*prune  = *File::Find::prune;
 
+###__ACCESSORS_SCALAR
+our @scalar_accessors=qw(
+	PROGNAME
+	module_name
+	nuexist
+	val
+	var
+);
+
+###__ACCESSORS_HASH
+our @hash_accessors=qw(
+	deps
+	dirs
+	excluded
+	files
+	libs
+	regex
+	rec_lev
+	usedin
+);
+
+###__ACCESSORS_ARRAY
+our @array_accessors=qw(
+	aumods
+	exmods
+	fortranfiles
+	libdirs
+	mkfiles
+	modules
+	nused
+	nudirs
+	source_search_dirs
+	used_source_search_dirs
+
+);
+
+###_ACCESSORS
 __PACKAGE__
 	->mk_new
 	->scalar_accessors(@scalar_accessors)
 	->hash_accessors(@hash_accessors)
 	->array_accessors(@array_accessors);
 
-my %regex=( 
-	fortran =>	{
-		"include_file" 			=> qr/^\s*include\s+["\']([^"\']+)["\']/i,
-		"use_module" 				=> qr/^\s*use\s+([^\s,!]+)\s*,?/i,
-		"declare_module" 		=> qr/\s*module\s+([^\s!]+)/i,
-		"not_used_patterns" =>	qr/.*\.(inc|i|o|old|save|ref)\..*/,
-		"prefix_slash"  		=> qr/^(.*)\//
-	}
-);
+sub init_vars(){
+	my $self=shift;
 
-# }}}
-# vars {{{
-
-my %excluded=(
-	"mpif.h" =>	"",
-	"MPIF.H" =>	""
-);
-
-my(%libs,@libdirs,@modules);
-my(%deps);
-my($date);
-
-# array for not-used fortran files which are taken from file nu.mk
-my @nused;
-# does the nu.mk file exist? 0 for no, 1 for yes
-my $nu_exist;
-my($PROGNAME);
-my $fname;
-my @nu_dirs;
-my @fortranfiles;
-my $fext;
-
-# recursion level of calling a subroutine
-my %lev_rec;
-# makefile-related
-my @mkfiles=qw( inc.mk t.mk def.mk );
-my $VPATH;
-
-# key - module name;
-# value - in which files is used
-my %usedin;
-
-# all modules which were found 
-# through the 'use' statement
-my @aumods;
-# those mods which are not in fortranfiles
-my @exmods;
-## additional fortran files, those
-## which were not included in @fortranfiles and 
-## originating from the list of all modules in
-## @aumods
-#my @addff;
-#my @auff;
-#my $auf;
-#my $ff;
-#my $iff;
-#my %delff;
-my $module_name;
-
-my @source_search_dirs=qw( . );
-# get the list of directories where to 
-# search for used source
-# 
-my @used_source_search_dirs;
-my($val,$var);
-
-foreach my $f ( @mkfiles ){
-		next unless -e $f;
-		open(F,"<$f") || die $!;
-		while(<F>){
-			/^\s*USED_SOURCE_SEARCH_DIRS\s*:?=(.*)/;
-			if (defined($1)){ 
-				$val = $1;
-				$val =~ s/\s*//g;
-				push(@used_source_search_dirs,split(':',$val));
-			}
+	$self->regex( 
+		fortran =>	{
+			"include_file" 				=> qr/^\s*include\s+["\']([^"\']+)["\']/i,
+			"use_module" 				=> qr/^\s*use\s+([^\s,!]+)\s*,?/i,
+			"declare_module" 			=> qr/\s*module\s+([^\s!]+)/i,
+			"not_used_patterns" 		=> qr/.*\.(inc|i|o|old|save|ref)\..*/,
+			"prefix_slash"  			=> qr/^(.*)\//
 		}
-		close(F);
-	}
+	);
 
-# current project full path, e.g., /home/op226/gops/G
- $dirs{ppath}=&cwd();
-# current program name, e.g., G
-$PROGNAME=&basename($dirs{ppath});
-# scripts/all/
+	# makefile-related
+	$self->mkfiles(qw( inc.mk t.mk def.mk ));
+
+	$self->source_search_dirs(qw( . ));
+	
+	# current project full path, e.g., /home/op226/gops/G
+	$self->dirs( "ppath" => &cwd() );
+
+	# current program name, e.g., G
+	$self->PROGNAME( basename($self->dirs("ppath")) );
+
+	$self->_set_ussd();
+}
+
+## scripts/all/
 $dirs{scripts}{all}=&dirname($0);
 # $HOME/gops/
-$dirs{root}="$dirs{scripts}{all}/../../";
-$dirs{inc}="$dirs{root}/inc/";
-$files{notused}="$dirs{inc}/nu_$PROGNAME.mk";
+$dirs{root}=catdir($dirs{scripts}{all},"..","..");
+$dirs{inc}=catdir($dirs{root},"inc");
+
+$$self->files( "notused" => "$dirs{inc}/nu_$PROGNAME.mk");
 
 if (defined $opt{dpfile}){ $files{deps}="$dirs{ppath}/$opt{dpfile}"; }else{
 	$files{deps}="deps.mk";}
@@ -125,9 +144,9 @@ print DP "# Project dir: $dirs{ppath}\n";
 print DP "# Program name: $PROGNAME\n";
 
 #}}}
-# Methods {{{
+# Methods 											{{{
 
-# new(){{{
+# new()												{{{
 
 sub new(){
     my ($class, %parameters) = @_;
@@ -135,25 +154,39 @@ sub new(){
     return $self;
 }
 
-# }}}
-# remove_extension(){{{
+# 													}}}
+# remove_extension()								{{{
+
 sub remove_extension(){
 	my $self=shift;
+
 	my $file=shift;
+
 	$file =~ s/\.\w*$//g;
+
 	return $file;
 }
 # }}}
-# sets_this_sdata() {{{
-sub set_this_sdata() {
+
+sub _set_ussd(){
 	my $self=shift;
 
-	$sdata{desc}{short}="Fortran dependency generator";
-	$sdata{desc}{long}="...";
-	$sdata{usage}="...";
+	foreach my $f ( $self->mkfiles ){
+			next unless -e $f;
+			open(F,"<$f") || die $!;
+			while(<F>){
+				/^\s*USED_SOURCE_SEARCH_DIRS\s*:?=(.*)/;
+				if (defined($1)){ 
+					$val = $1;
+					$val =~ s/\s*//g;
+					$self->push_used_source_search_dirs(split(':',$val));
+				}
+			}
+			close(F);
+	}
 }
-# }}}
-# set_these_cmdopts(){{{ 
+
+# set_these_cmdopts()							{{{ 
 
 sub set_these_cmdopts(){ 
   my $self=shift;
@@ -173,28 +206,29 @@ sub set_these_cmdopts(){
 }
 
 #}}}
-# wanted() get_unused() {{{
+# wanted() _get_unused() 								{{{
 
-sub get_unused() {
+sub _get_unused() {
 	my $self=shift;
-	#{{{
-	$nu_exist=1;
-  open(NUF, $files{notused}) or $nu_exist=0; 
-  if ($nu_exist eq 1){
-	  while(<NUF>){
+
+	$self->nuexist=1;
+  open(NUF, $self->files("notused")) or $self->nuexist(0); 
+
+  if ($self->nuexist eq 1){
+	while(<NUF>){
 		chomp;
 		if( ! /^(#|d:)/ ){
-			push(@nused,$_);
+			$self->nused_push($_);
 		}
 		elsif( /^d:\s*(.*)/g ){
-			push(@nu_dirs,$1);
+			$self->nudirs_push($1);
 			print DP "# Not used dir: $1\n";
 		}
-}
-	foreach(@nused) { s/^\s+//; s/\s+$//; }
-	close(NUF);
 	}
-# }}}
+	foreach($self->nused) { s/^\s+//; s/\s+$//; }
+	close(NUF);
+  }
+
 }
 
 sub _used_source_wanted() {
@@ -205,13 +239,13 @@ sub _used_source_wanted() {
     if ( ( /^.*\.(f90|f|F)\z/s) &&
     ( $nlink || (($dev,$ino,$mode,$nlink,$uid,$gid) = lstat($_)) ) &&
     ( ! /^.*\.(save|o|old|ref)\..*\z/s ) &&
-	( ! grep { $_ eq $dirname } @nu_dirs )
+	( ! grep { $_ eq $dirname } @{$self->nudirs} )
 	) {
 		$name=$_;
 		if ( ! grep { $_ eq $name } @nused ) {
 			if ( fgrep { /^\s*module\s+$module_name\s*$/i } "$name" ){
-					#print "Pushing to \@fortranfiles: $dirname/$name\n";
-					push(@fortranfiles,"$dirname/$name"); 
+					#print "Pushing to \$self->fortranfiles: $dirname/$name\n";
+					push($self->fortranfiles,"$dirname/$name"); 
 				}
 			}
 	}
@@ -227,11 +261,11 @@ sub _wanted() {
     if ( ( /^.*\.(f90|f|F)\z/s) &&
     ( $nlink || (($dev,$ino,$mode,$nlink,$uid,$gid) = lstat($_)) ) &&
     ( ! /^.*\.(save|o|old|ref)\..*\z/s ) &&
-	( ! grep { $_ eq $dirname } @nu_dirs )
+	( ! grep { $_ eq $dirname } @{$self->nudirs} )
 	) {
 		$name =~ s/^\.\///; 
 		if ( ! grep { $_ eq $name } @nused ) {
-				push(@fortranfiles,"$name"); 
+				push($self->fortranfiles,"$name"); 
 			}
 	}
 #}}}
@@ -307,7 +341,7 @@ sub resolve_line(){
 					}else{
 						$usedin{$mod}=$fname.' '.$usedin{$mod};
 					}
-					if ( ! grep { /$mod\.(f|f90)$/ } @fortranfiles ){
+					if ( ! grep { /$mod\.(f|f90)$/ } $self->fortranfiles ){
 						push(@exmods,$mod);
 					}
 				}
@@ -334,25 +368,25 @@ sub make_deps() {
 	print DP "#	File: \n";
 	print DP "#		$files{deps}\n";
 	print DP "#	Program:\n";
-	print DP "#		$PROGNAME\n";
+	print DP "#		" . $self->PROGNAME . "\n";
 	print DP "#	Purpose: \n";
 	print DP "#		Contains Fortran object files dependencies\n";
 	print DP "#	Created: \n";
-	print DP "#		$date\n";
+	print DP "#		" . $self->date . "\n";
 	print DP "#	Creating script:\n";
 	print DP "#		$0\n";
 	print DP "#	-------------------------- \n";
 
 
-	if ( ! defined($lev_rec{$subname})){
-		$lev_rec{$subname}=0;
+	if ( ! defined($rec_lev{$subname})){
+		$rec_lev{$subname}=0;
 	}else{
-		$lev_rec{$subname}++;
+		$rec_lev{$subname}++;
 	}
 
    # Associate each module with the name of the file that contains it {{{
    
-   foreach my $file (@fortranfiles) {
+   foreach my $file ($self->fortranfiles) {
       open(FILE, $file) || warn "Cannot open $file: $!\n";
       # get extension from the $file
       if ( $file =~ /.*\.(f|F|f90)$/ ){
@@ -370,7 +404,7 @@ sub make_deps() {
    # }}}
    # Print the dependencies of each file that has one or more include's or
    # references one or more modules
-   foreach my $file (@fortranfiles) {
+   foreach my $file ($self->fortranfiles) {
       open(FILE, "<$file") || die $!;
 	  $fname=$self->remove_extension($file);
 
@@ -395,11 +429,11 @@ sub make_deps() {
 						if (defined $filename{src}{$module}){
 	    				$mo=$filename{obj}{$module};
 
-		    			foreach my $libdir (@libdirs){
-		        		my $libname=$libs{$libdir};
-								$mo =~ s/^$libdir\/.*/$libname/;
+		    			foreach my $libdir ($self->libdirs){
+		        			my $libname=$libs{$libdir};
+							$mo =~ s/^$libdir\/.*/$libname/;
 		    			}
-			    		if ( ! exists $excluded{$mo} ){
+			    		unless( exists $excluded{$mo} ){
 				  			# check for not-used
 				  			(my $moname=$mo) =~ s/\.o$//g;
 					  			if ( ! grep { /^$filename{src}{$module}$/ } @nused ){
@@ -425,7 +459,7 @@ sub make_deps() {
    }
 	  foreach my $mode (qw( nexist nused)){
 	 		print DP "# $mode dependencies:\n"; ;
-	 		foreach my $file (@fortranfiles) {
+	 		foreach my $file ($self->fortranfiles) {
 				if (@{$deps{$file}{$mode}}){
 					print DP "# 	$file =>  ";
 					foreach (@{$deps{$file}{$mode}}) { print DP "$_ "; } 
@@ -438,42 +472,50 @@ sub make_deps() {
 				&eoo("Source search dirs were not given!\n");
 			}
 	  if (@exmods){
-	  		@fortranfiles=qw();
+	  		$self->fortranfiles=qw();
 			@exmods=sort(&uniq(sort(@exmods)));
 			foreach (@exmods) {
-					print("Ex Module: $_ $lev_rec{$subname}\n");
+					print("Ex Module: $_ $rec_lev{$subname}\n");
 					$module_name=$_;
 					if ( @used_source_search_dirs){
 						File::Find::find({wanted => \&_used_source_wanted}, @used_source_search_dirs)  ;
 					}
 			}
-			if (@fortranfiles) { 
-				my $flist=join(' ',@fortranfiles);
+			if ($self->fortranfiles) { 
+				my $flist=join(' ',$self->fortranfiles);
 				print "$flist\n";
 				#&make_deps(); 
 			}
 		}
 }
 # }}}
-# set_libs(){{{
-sub set_libs(){
+# _set_libs()										{{{
+
+sub _set_libs(){
 	my $self=shift;
-	if (!$opt{nolibs}){
-		%libs=(
+
+	unless ($self->_opt_true("nolibs")){
+		$self->libs(
 			"CONNECT" 	=> "libnc.a",
 			"NEB"		=> "libnn.a",
 			"AMH"		=> "libamh.a",
 			"libbowman.a"	=> "libbowman.a"
 	     );
-		@libdirs=keys %libs;
+		$self->libdirs( keys %libs );
 	}
 }
-# }}}
-# get_fortranfiles(){{{
-sub get_fortranfiles(){
+# 													}}}
+# _get_fortranfiles()								{{{
+
+=head3 _get_fortranfiles()
+
+=cut
+
+sub _get_fortranfiles(){
 	my $self=shift;
-	if ($opt{flist}){
-			@fortranfiles=map { chomp; $_; } `$shd/get_flist.pl --out --file`;
+
+	if ($self->_opt_true("flist")){
+			$self->fortranfiles( map { chomp; $_; } `$shd/get_flist.pl --out --file` );
 	}else{
 			File::Find::find({wanted => \&_wanted}, @source_search_dirs)  ;
 	}
@@ -486,22 +528,16 @@ sub get_fortranfiles(){
 sub main() {
 	my $self=shift;
 
-  	$self->set_this_sdata();
-  	$self->set_these_cmdopts();
+	$self->init_vars();
 
-    &OP::Base::setcmdopts();
-  	&OP::Base::getopt();
+	$self->get_opt();
 
-	$self->set_libs();
-  	$self->get_unused();
-	$self->get_fortranfiles();
-
-	$lev_rec{make_deps}=-1;
+	$self->_set_libs();
+  	$self->_get_unused();
+	$self->_get_fortranfiles();
 
 	$self->make_deps();
 
-	print DP "# Level of recursion, make_deps:\n";
-	print DP "#		 $lev_rec{make_deps}\n";
 	
 	close DP;
 }
