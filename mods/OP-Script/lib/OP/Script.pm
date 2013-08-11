@@ -926,11 +926,19 @@ sub get_opt(){
   	$self->get_opt_after();
 }
 
+=head3 print_help()
+
+=cut
+
 sub print_help(){
 	my $self=shift;
 
   	&OP::Base::printhelp();
 }
+
+=head3 print_man() 
+
+=cut
 
 sub print_man(){
 	my $self=shift;
@@ -938,17 +946,29 @@ sub print_man(){
   	&OP::Base::printman();
 }
 
+=head3 print_examples()
+
+=cut
+
 sub print_examples(){
 	my $self=shift;
 
   	&OP::Base::printexamples();
 }
 
+=head3 print_pod_options
+
+=cut
+
 sub print_pod_options(){
 	my $self=shift;
 
   	&OP::Base::printpodoptions();
 }
+
+=head3 get_opt_after()
+
+=cut
 
 sub get_opt_after(){
 	my $self=shift;
@@ -961,6 +981,7 @@ sub get_opt_after(){
 	$self->print_examples() if $self->_opt_true("examples");
 
 }
+
 # }}}
 # add_cmd_cmdsopts() {{{
 
