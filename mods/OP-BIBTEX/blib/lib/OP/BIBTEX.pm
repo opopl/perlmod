@@ -4,7 +4,32 @@ package OP::BIBTEX;
 
 use LaTeX::BibTeX;
 use File::Spec;
-use parent qw(OP::Script);
+use parent qw( OP::Script Class::Accessor::Complex );
+
+###__ACCESSORS_SCALAR
+our @scalar_accessors=qw(
+	bibfile
+	bibfname
+);
+
+###__ACCESSORS_ARRAY
+our @array_accessors=qw(
+	pkeys
+	mainfields
+	rmfields
+);
+
+###__ACCESSORS_HASH
+our @hash_accessors=qw(
+	entries_pkey
+	rmfields_type
+);
+
+__PACKAGE__
+	->mk_scalar_accessors(@scalar_accessors)
+	->mk_array_accessors(@array_accessors)
+	->mk_hash_accessors(@hash_accessors);
+
 
 # }}}
 # Methods {{{
@@ -19,14 +44,14 @@ sub init_vars(){
 	my $self=shift;
 
 	# 
-	$self->_v_set("bibfname","repdoc.bib");
+	$self->bibfname("repdoc.bib");
 
 	# Initialize LaTeX::BibTeX stuff
-	$self->_r_set("bibfile",LaTeX::BibTeX::File->new());
-	$self->_r_get("bibfile")->open($self->_v_get("bibfname")) || die $!;
+	$self->bibfile(LaTeX::BibTeX::File->new());
+	$self->bibfile->open($self->bibfname) || die $!;
 
 	# rmfields     - remove specific fields in a BibTeX entry, e.g. month={} etc.
-	$self->_a_push("rmfields", 
+	$self->rmfields_push( 
 		qw( month number owner timestamp numpages eprint url
 			file issn language doc-delivery-number affiliation journal-iso pmid
 			subject-category number-of-cited-references 
@@ -36,10 +61,10 @@ sub init_vars(){
 
 	# remove fields specific to the individual entry type, e.g.
 	# some only for article etc...
-	$self->_h_add( "rmfields_type",  "article" => "publisher" );
+	$self->rmfields_type( "article" => "publisher" );
 
-	# mfields - main fields
-	$self->_a_push("mfields",qw( journal title author volume year pages abstract ));
+	# mainfields - main fields
+	$self->mainfields_push(qw( journal title author volume year pages abstract ));
 
 }
 
@@ -57,11 +82,11 @@ sub run(){
     	next unless $entry->parse_ok;
 	
 		my $pkey=$entry->key;
-		$self->_a_push("pkeys",$pkey);
-		$self->_h_add("entries_pkey", $pkey => $entry );
+		$self->pkeys_push($pkey);
+		$self->entries_pkey( $pkey => $entry );
 	}
 
-	$self->_a_sort("pkeys");
+	$self->pkeys(sort $self->pkeys);
 }
 
 # }}}
@@ -127,17 +152,21 @@ sub delete_fields(){
 sub list_keys(){
 	my $self=shift;
 
-	$self->_a_list("pkeys");
+	print "$_\n" for($self->pkeys);
 }
 
 # }}}
 # print_entry() {{{
 
+=head3 print_entry()
+
+=cut
+
 sub print_entry(){
 	my $self=shift;
 
 	my $pkey=shift;
-	my $entry=$self->_h_get_value("entries_pkey",$pkey);
+	my $entry=$self->entries_pkey($pkey);
 
 	my @fields=qw( key author title volume pages year journal );
 

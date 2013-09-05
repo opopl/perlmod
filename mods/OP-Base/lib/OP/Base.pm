@@ -822,37 +822,37 @@ sub readhash(){
  open(FILE,"<$if") || die $!;
 
  my %hash=();
- my(@F,$line);
+ my(@F,$line,$var);
 
  my $mainline=1;
 
  while(<FILE>){
  	chomp;
 
- 	s/^\s*//g;
  	s/\s*$//g;
 
  	next if (/^\s*#/ || /^\s*$/ );
 
-	if ( /,\s*$/ ){
-		$mainline=0;
-		next;
-	}
+	$mainline=1 if ( /^\w/ );
+	$mainline=0 if ( /^\s+/ );
+
+	$line=$_;
 
 	if ($mainline){
 
-	 	$line=$_;
 	 	@F=split(' ',$line);
 	
-		my $var=shift @F;
-	
+		$var=shift @F;
+
 		if (@F){ 
 			$hash{$var}=join(" ",@F); 
 		}
+	
 	}else{
-	 	$line=$_;
-	 	push(@F,split(/[, ]/,$line));
+		$hash{$var}.=$line; 
 	}
+
+	$hash{$var} =~ s/\s+/ /g;
 
  }
 

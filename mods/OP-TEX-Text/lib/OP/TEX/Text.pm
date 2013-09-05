@@ -138,6 +138,14 @@ sub section(){
 	$self->_add_line("\\section{$title}");
 }
 
+sub part(){
+	my $self=shift;
+
+	my $title=shift // '';
+
+	$self->_add_line("\\part{$title}");
+}
+
 sub input(){
 	my $self=shift;
 
@@ -295,7 +303,7 @@ sub lof() {
 	. "\n" . "\\hypertarget{$opts->{hypertarget}}{}"
 	. "\n" . "\\listoffigures"
 	. "\n" . "\\nc{\\pagenumlof}{\\thepage}"
-	. "\n" . "\\addcontentsline{lof}{$opts->{sec}}{$opts->{title}}";
+	. "\n" . "\\addcontentsline{toc}{$opts->{sec}}{$opts->{title}}";
 
 ###LOF_TEXT
 
@@ -337,7 +345,7 @@ sub lot() {
 	. "\n" . "\\hypertarget{$opts->{hypertarget}}{}"
 	. "\n" . "\\listoftables"
 	. "\n" . "\\nc{\\pagenumlot}{\\thepage}"
-	. "\n" . "\\addcontentsline{lot}{$opts->{sec}}{$opts->{title}}";
+	. "\n" . "\\addcontentsline{toc}{$opts->{sec}}{$opts->{title}}";
 
 ###LOT_TEXT
 

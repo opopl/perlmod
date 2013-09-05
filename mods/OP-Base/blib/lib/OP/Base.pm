@@ -818,21 +818,41 @@ sub readarr(){
 
 sub readhash(){
  my $if=shift;
+
  open(FILE,"<$if") || die $!;
 
  my %hash=();
+ my(@F,$line,$var);
+
+ my $mainline=1;
 
  while(<FILE>){
  	chomp;
- 	s/^\s*//g;
+
  	s/\s*$//g;
+
  	next if (/^\s*#/ || /^\s*$/ );
- 	my $line=$_;
- 	my @F=split(' ',$line);
-	my $var=shift @F;
-	if (@F){ 
-		$hash{$var}=join(" ",@F); 
+
+	$mainline=1 if ( /^\w/ );
+	$mainline=0 if ( /^\s+/ );
+
+	$line=$_;
+
+	if ($mainline){
+
+	 	@F=split(' ',$line);
+	
+		$var=shift @F;
+
+		if (@F){ 
+			$hash{$var}=join(" ",@F); 
+		}
+	
+	}else{
+		$hash{$var}.=$line; 
 	}
+
+	$hash{$var} =~ s/\s+/ /g;
 
  }
 

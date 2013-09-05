@@ -99,8 +99,11 @@ our @array_accessors = qw(
 );
 
 ###_ACCESSORS
-__PACKAGE__->mk_new->scalar_accessors(@scalar_accessors)
-  ->hash_accessors(@hash_accessors)->array_accessors(@array_accessors);
+__PACKAGE__
+      ->mk_new
+	  ->scalar_accessors(@scalar_accessors)
+	  ->hash_accessors(@hash_accessors)
+	  ->array_accessors(@array_accessors);
 
 sub init_vars() {
     my $self = shift;
@@ -609,12 +612,16 @@ sub _get_fortranfiles() {
 # }}}
 # main() {{{
 
+=head3 main()
+
+=cut
+
 sub main() {
     my $self = shift;
 
     $self->init_vars();
 
-    $self->get_opt();
+    $self->OP::Script::get_opt();
 
     $self->_set_libs();
     $self->_get_unused();
