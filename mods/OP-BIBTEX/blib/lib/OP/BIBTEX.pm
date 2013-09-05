@@ -10,6 +10,7 @@ use parent qw( OP::Script Class::Accessor::Complex );
 our @scalar_accessors=qw(
 	bibfile
 	bibfname
+	papdir
 );
 
 ###__ACCESSORS_ARRAY
@@ -78,7 +79,7 @@ sub init_vars(){
 sub run(){
 	my $self=shift;
 
-	while (my $entry = new LaTeX::BibTeX::Entry->new($self->_r_get("bibfile"))){
+	while (my $entry = new LaTeX::BibTeX::Entry->new($self->bibfile)){
     	next unless $entry->parse_ok;
 	
 		my $pkey=$entry->key;
@@ -134,9 +135,9 @@ sub delete_fields(){
 		eval	'$' . $id . '=$opts{' . $id . '}'; 
 	}
 
-	$entry->delete(@{$self->{a}->{rmfields}});
+	$entry->delete($self->rmfields_clear);
 
-	foreach (keys %{$self->{h}->{rmfields_type}}){	
+	foreach ($self->rmfields_type_keys){	
 		if ( m/$etype/i ){ $entry->delete($_); }
 	}
 }
@@ -166,6 +167,7 @@ sub print_entry(){
 	my $self=shift;
 
 	my $pkey=shift;
+
 	my $entry=$self->entries_pkey($pkey);
 
 	my @fields=qw( key author title volume pages year journal );
@@ -189,13 +191,18 @@ sub print_entry(){
 }
 
 # }}}
+
 # entry_pdf_file_exists(){{{
+
+=head3 entry_pdf_file_exists()
+
+=cut
 
 sub entry_pdf_file_exists(){
 	my $self=shift;
 
 	my $pkey=shift;
-	my $papdir=$self->_d_get("papdir") // "$ENV{hm}/doc/papers/ChemPhys";
+	my $papdir=$self->papdir // "$ENV{hm}/doc/papers/ChemPhys";
 
 	my $file=File::Spec->catfile($papdir,"$pkey.pdf");
 
