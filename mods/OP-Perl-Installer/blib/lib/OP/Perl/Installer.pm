@@ -374,27 +374,31 @@ sub run_build_install() {
 
         chdir $dirmod;
 
-        my $build = Module::Build->new(
-            module_name => "$module",
-            license     => 'perl'
-        );
-
-        $self->out("Building module: $module\n");
-
-        #		select $fh{log};
-        $build->dispatch('build');
-
-        #		select STDOUT;
-        $self->out("Testing module: $module\n");
-
-##		select $fh{log};
-        $build->dispatch( 'test', quiet => 1 );
-
-##		select STDOUT;
-        $self->out("Installing module: $module\n");
-
-##		select $fh{log};
-        $build->dispatch( 'install', install_base => "$ENV{HOME}" );
+		if (-e "./install.sh"){
+			system('./install.sh');
+		}else{
+	        my $build = Module::Build->new(
+	            module_name => "$module",
+	            license     => 'perl'
+	        );
+	
+	        $self->out("Building module: $module\n");
+	
+	        #		select $fh{log};
+	        $build->dispatch('build');
+	
+	        #		select STDOUT;
+	        $self->out("Testing module: $module\n");
+	
+	##		select $fh{log};
+	        $build->dispatch( 'test', quiet => 1 );
+	
+	##		select STDOUT;
+	        $self->out("Installing module: $module\n");
+	
+	##		select $fh{log};
+	        $build->dispatch( 'install', install_base => "$ENV{HOME}" );
+		}
     }
 }
 
