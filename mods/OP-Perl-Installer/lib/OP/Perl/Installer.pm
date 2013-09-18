@@ -20,6 +20,7 @@ use FindBin;
 use Getopt::Long;
 use Pod::Usage;
 use Module::Build;
+use File::Spec::Functions qw(catfile);
 
 use lib("$FindBin::Bin/OP-Base/lib");
 
@@ -33,7 +34,9 @@ use parent qw( Class::Accessor::Complex OP::Script  );
 __PACKAGE__
     ->mk_new
 ###_ACCESSORS_SCALAR
-	->mk_scalar_accessors(qw())
+	->mk_scalar_accessors(qw(
+		moddir
+	))
 	->mk_integer_accessors(qw())
 ###_ACCESSORS_ARRAY
 	->mk_array_accessors(qw(
@@ -163,7 +166,7 @@ sub add_modules() {
         $mods{$module}->complete_build();
 
         # Write the install.sh script
-        open( F, ">", File::Spec->catfile( $def_module, "install.sh" ) );
+        open( F, ">", catfile( $def_module, "install.sh" ) );
 
         print F "#!/bin/bash\n";
         print F "" . "\n";
@@ -270,6 +273,21 @@ sub set_these_cmdopts() {
 }
 
 #}}}
+# choose_modules() {{{
+
+=head3 choose_modules()
+
+=cut
+
+sub choose_modules() {
+	my $self=shift;
+
+	my @mods=split(',',shift);
+	$self->selected_modules(@mods);
+
+}
+
+# }}}
 # install_modules() {{{
 
 =head3 install_modules()
@@ -279,10 +297,15 @@ sub set_these_cmdopts() {
 sub install_modules() {
     my $self = shift;
 
-    opendir( D, "$shd/mods/" );
+    opendir( D, $self->moddir );
 
     while ( my $file = readdir(D) ) {
+		my $fpath=catfile($self->moddir,$file);
+
         next if $file =~ m/^\./;
+        next if $file =~ m/^pod$/;
+        next unless -d $fpath;
+
         $self->mod_def_names_push( $file );
         $self->modules_push( $self->def_to_module($file) );
     }
@@ -337,23 +360,7 @@ sub run_build_install() {
       #OP::Perl::Installer
     #);
 
-    @only = qw(
-      	OP::Perl::Installer
-		OP::Base
-      	OP::TEX::Text
-      	OP::BIBTEX
-	);
-
-    #my @only=qw(
-    #OP::Base
-    #OP::GOPS
-    #OP::GOPS::RIF
-    #OP::Script
-    #OP::Parse::BL
-    #OP::Perl::Installer
-    #OP::BIBTEX
-    #OP::TEX::Text
-    #);
+    @only = $self->selected_modules; 
 
     foreach my $mod ( $self->mod_def_names ) {
         my $dirmod = "$shd/mods/" . $mod;
@@ -467,6 +474,15 @@ sub _complete_modules() {
 sub init_vars() {
     my $self = shift;
 
+	$self->moddir("$shd/mods/");
+
+	$self->_term_get_commands();
+
+}
+
+sub _term_get_commands() {
+	my $self=shift;
+
     $self->{'shell_commands'} = {
 ###cmd_help
         "help" => {
@@ -491,6 +507,18 @@ sub init_vars() {
             desc    => "Print the current working directory",
             maxargs => 0,
             proc    => sub { system('pwd'); },
+        },
+###cmd_choose
+		"choose" => {
+            desc    => "Choose a module",
+            maxargs => 1,
+            minargs => 1,
+            proc    => sub { $self->choose_modules(shift); },
+            args    => sub { 
+                my $s = shift;
+                $s->suppress_completion_append_character();
+				$self->_complete_modules(@_); 
+			}
         },
 ###scmd_rbi
         "rbi" => {
@@ -555,7 +583,6 @@ sub init_vars() {
             proc    => sub { $self->edit_modules(shift); },
             args    => sub {
                 my $s = shift;
-
                 #$s->{debug_complete}=5;
                 $s->suppress_completion_append_character();
                 $self->_complete_modules(@_);

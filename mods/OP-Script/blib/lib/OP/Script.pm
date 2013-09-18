@@ -86,6 +86,27 @@ sub out(){
 	print "$text";
 
 }
+
+sub debugout_var(){
+	my $self=shift;
+
+	my $var=shift // '';
+	my $val=shift // '';
+
+	my $evs= '$self->debugout("_VAR_ \$" . ' . '"' . $var . '=$val' . '") ' ;
+
+	eval $evs;
+	die $@ if $@;
+}
+
+sub debugout(){
+	my $self=shift;
+
+	my $text=shift // '';
+
+	$self->out("_DEBUG_ " . $text) if $self->_opt_true("debug");
+
+}
 # }}}
 # _die() {{{
 
@@ -98,7 +119,7 @@ sub _die(){
 
 	my $ref=shift // '';
 
-	my $msg=$self->{package_name} . "> Error: " . $ref;
+	my $msg=$self->{package_name} . "> _ERROR_ " . $ref;
 	die "$msg";
 
 }
@@ -926,11 +947,19 @@ sub get_opt(){
   	$self->get_opt_after();
 }
 
+=head3 print_help()
+
+=cut
+
 sub print_help(){
 	my $self=shift;
 
   	&OP::Base::printhelp();
 }
+
+=head3 print_man() 
+
+=cut
 
 sub print_man(){
 	my $self=shift;
@@ -938,17 +967,29 @@ sub print_man(){
   	&OP::Base::printman();
 }
 
+=head3 print_examples()
+
+=cut
+
 sub print_examples(){
 	my $self=shift;
 
   	&OP::Base::printexamples();
 }
 
+=head3 print_pod_options
+
+=cut
+
 sub print_pod_options(){
 	my $self=shift;
 
   	&OP::Base::printpodoptions();
 }
+
+=head3 get_opt_after()
+
+=cut
 
 sub get_opt_after(){
 	my $self=shift;
@@ -960,7 +1001,10 @@ sub get_opt_after(){
 	$self->print_man() if $self->_opt_true("man");
 	$self->print_examples() if $self->_opt_true("examples");
 
+	$self->_opt_set("debug",1) if $self->_opt_true("debug");
+
 }
+
 # }}}
 # add_cmd_cmdsopts() {{{
 

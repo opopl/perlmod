@@ -86,6 +86,27 @@ sub out(){
 	print "$text";
 
 }
+
+sub debugout_var(){
+	my $self=shift;
+
+	my $var=shift // '';
+	my $val=shift // '';
+
+	my $evs= '$self->debugout("_VAR_ \$" . ' . '"' . $var . '=$val' . '") ' ;
+
+	eval $evs;
+	die $@ if $@;
+}
+
+sub debugout(){
+	my $self=shift;
+
+	my $text=shift // '';
+
+	$self->out("_DEBUG_ " . $text) if $self->_opt_true("debug");
+
+}
 # }}}
 # _die() {{{
 
@@ -98,7 +119,7 @@ sub _die(){
 
 	my $ref=shift // '';
 
-	my $msg=$self->{package_name} . "> Error: " . $ref;
+	my $msg=$self->{package_name} . "> _ERROR_ " . $ref;
 	die "$msg";
 
 }
@@ -979,6 +1000,8 @@ sub get_opt_after(){
 	$self->print_help() if $self->_opt_true("help");
 	$self->print_man() if $self->_opt_true("man");
 	$self->print_examples() if $self->_opt_true("examples");
+
+	$self->_opt_set("debug",1) if $self->_opt_true("debug");
 
 }
 

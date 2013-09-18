@@ -8,6 +8,7 @@ use warnings;
 use OP::Base qw/:vars :funcs/;
 use parent qw(OP::Script Class::Accessor::Complex);
 use Data::Dumper;
+use File::Slurp qw(read_file);
 
 __PACKAGE__
 	->mk_scalar_accessors(qw(texroot));
@@ -144,6 +145,21 @@ sub part(){
 	my $title=shift // '';
 
 	$self->_add_line("\\part{$title}");
+}
+
+sub _insert_file(){
+	my $self=shift;
+
+	my $file=shift // '';
+
+	return 1 unless -e $file;
+
+	my @lines=read_file $file;
+
+	foreach my $line (@lines) {
+		chomp($line);
+		$self->_add_line("$line");
+	}
 }
 
 sub input(){
