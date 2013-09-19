@@ -8,7 +8,6 @@ L<Class::Accessor::Complex>, L<OP::Script>
 
 =head1 USES
 
-	use File::Find ();
 	use Getopt::Long;
 	use Pod::Usage;
 	use Cwd;
@@ -43,7 +42,6 @@ use warnings;
 our $VERSION = '0.01';
 
 ###_USE
-use File::Find ();
 use FindBin qw($Bin $Script);
 use Getopt::Long;
 use Pod::Usage;
@@ -53,12 +51,6 @@ use OP::Base qw/:vars :funcs/;
 use File::Grep qw( fgrep fmap fdo );
 use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 use parent qw( OP::Script Class::Accessor::Complex );
-
-# for the convenience of &wanted calls, including -eval statements:
-use vars qw/*name *dir *prune/;
-*name  = *File::Find::name;
-*dir   = *File::Find::dir;
-*prune = *File::Find::prune;
 
 ###__ACCESSORS_SCALAR
 our @scalar_accessors = qw(
@@ -155,8 +147,6 @@ sub init_vars() {
 
     print DP "# Project dir: " . $self->dirs("ppath") . "\n";
     print DP "# Program name: " . $self->PROGNAME . "\n";
-
-	close(DP);
 
 }
 
@@ -354,6 +344,7 @@ sub resolve_line() {
                 my $include_file = $1;
                 open( IFILE, "<", $include_file ) || die $!;
 				$self->say("Current include file is: $include_file");
+
                 while (<IFILE>) {
                     chomp;
                     $self->resolve_line( $_, "use_module" );
@@ -480,9 +471,10 @@ sub make_deps() {
         if ( (@incs) || ( $self->modules ) ) {
             ( $objfile = $file ) =~ s/\.[^\.]+$/.o/g;
             my $regex = $self->regex('fortran')->{prefix_slash};
-            if ( ( $objfile !~ /$regex/ || $self->_opt_true("print_non_root") )
-                && (
-                    $objfile !~ /$self->regex('fortran')->{not_used_patterns}/ )
+            if ( 
+				( $objfile !~ /$regex/ || $self->_opt_true("print_non_root") )
+                && 
+				( $objfile !~ /$self->regex('fortran')->{not_used_patterns}/ )
               )
             {
                 #{{{
@@ -531,11 +523,13 @@ sub make_deps() {
     foreach my $mode (qw( nexist nused)) {
         print DP "# $mode dependencies:\n";
         foreach my $file ( $self->fortranfiles ) {
-            if ( @{ $DEPS->{$file}->{$mode} } ) {
-                print DP "# 	$file =>  ";
-                foreach ( @{ $DEPS->{$file}->{$mode} } ) { print DP "$_ "; }
-                print DP "\n";
-            }
+            if ( defined $DEPS->{$file}->{$mode}  ) {
+            	if ( @{ $DEPS->{$file}->{$mode} } ) {
+                	print DP "# 	$file =>  ";
+                	foreach ( @{ $DEPS->{$file}->{$mode} } ) { print DP "$_ "; }
+                	print DP "\n";
+            	}
+			}
         }
     }
 
@@ -543,17 +537,18 @@ sub make_deps() {
         &eoo("Source search dirs were not given!\n");
     }
     if ( $self->exmods ) {
-        $self->fortranfiles = qw();
+        $self->fortranfiles(qw());
         $self->exmods( sort( &uniq( sort( $self->exmods ) ) ) );
         foreach ( $self->exmods ) {
             print( "Ex Module: $_" . $self->rec_lev($subname) . "\n" );
             $self->module_name($_);
-            if ( $self->used_source_search_dirs ) {
-                File::Find::find(
-                    { wanted => \&_used_source_wanted },
-                    $self->used_source_search_dirs
-                );
-            }
+
+            #if ( $self->used_source_search_dirs ) {
+                #File::Find::find(
+                    #{ wanted => \&_used_source_wanted },
+                    #$self->used_source_search_dirs
+                #);
+            #}
         }
         if ( $self->fortranfiles ) {
             my $flist = join( ' ', $self->fortranfiles );
@@ -594,9 +589,6 @@ sub _get_fortranfiles() {
     if ( $self->_opt_true("flist") ) {
         $self->fortranfiles( map { chomp; $_; }
               `$shd/get_flist.pl --out --file` );
-    }
-    else {
-        File::Find::find( { wanted => \&_wanted }, $self->source_search_dirs );
     }
 }
 
