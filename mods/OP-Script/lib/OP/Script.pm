@@ -65,6 +65,22 @@ sub _begin(){
 
 }
 # }}}
+	
+# say() {{{
+
+=head3 say() {{{
+
+=cut
+
+sub say() {
+	my $self=shift;
+
+	my $text=shift;
+
+	$self->out("$text" . "\n");
+
+}
+# }}}
 # out() {{{
 
 =head3 out()

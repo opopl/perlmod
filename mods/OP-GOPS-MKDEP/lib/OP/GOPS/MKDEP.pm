@@ -44,14 +44,14 @@ our $VERSION = '0.01';
 
 ###_USE
 use File::Find ();
+use FindBin qw($Bin $Script);
 use Getopt::Long;
 use Pod::Usage;
 use Cwd;
-use File::Basename qw(basename);
+use File::Basename qw(basename dirname);
 use OP::Base qw/:vars :funcs/;
 use File::Grep qw( fgrep fmap fdo );
-
-use OP::Base qw/:vars :funcs/;
+use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 use parent qw( OP::Script Class::Accessor::Complex );
 
 # for the convenience of &wanted calls, including -eval statements:
@@ -63,17 +63,19 @@ use vars qw/*name *dir *prune/;
 ###__ACCESSORS_SCALAR
 our @scalar_accessors = qw(
   PROGNAME
+  date
   fext
   fname
   module_name
   nuexist
+  resline_lev
   val
   var
-  date
 );
 
 ###__ACCESSORS_HASH
 our @hash_accessors = qw(
+  accessors
   deps
   dirs
   excluded
@@ -98,16 +100,16 @@ our @array_accessors = qw(
   used_source_search_dirs
 );
 
+our $DEPS;
+
 ###_ACCESSORS
-__PACKAGE__
-      ->mk_new
-	  ->scalar_accessors(@scalar_accessors)
-	  ->hash_accessors(@hash_accessors)
-	  ->array_accessors(@array_accessors);
+__PACKAGE__->mk_scalar_accessors(@scalar_accessors)
+  ->mk_hash_accessors(@hash_accessors)->mk_array_accessors(@array_accessors);
 
 sub init_vars() {
     my $self = shift;
 
+###set_regex
     $self->regex(
         fortran => {
             "include_file"      => qr/^\s*include\s+["\']([^"\']+)["\']/i,
@@ -124,7 +126,7 @@ sub init_vars() {
     $self->source_search_dirs(qw( . ));
 
     # current project full path, e.g., /home/op226/gops/G
-    $self->dirs( "ppath" => &cwd() );
+    $self->dirs( "ppath" => rel2abs( curdir() ) );
 
     # current program name, e.g., G
     $self->PROGNAME( basename( $self->dirs("ppath") ) );
@@ -132,26 +134,29 @@ sub init_vars() {
     $self->_set_ussd();
 
     ## scripts/all/
-    $self->dirs( scripts => { all => &dirname($0) } );
+    $self->dirs( scripts => { all => $Bin } );
 
     # $HOME/gops/
     $self->dirs( root => catdir( $self->dirs("scripts")->{all}, "..", ".." ) );
-    $self->dirs( inc => catdir( $dirs{root}, "inc" ) );
+    $self->dirs( inc => catdir( $self->dirs("root"), "inc" ) );
 
     $self->files(
-        "notused" => "$self->dirs('inc')/nu_" . $self->PROGNAME . ".mk" );
+        "notused" => $self->dirs('inc') . "/nu_" . $self->PROGNAME . ".mk" );
 
-    if ( defined $opt{dpfile} )
-	{ 
-		$self->files( 'deps' => catfile($self->dirs("ppath"),"$opt{dpfile}") ); 
-	}
-    else 
-	{
-        $files{deps} = "deps.mk";
+    if ( $self->_opt_true("dpfile") ) {
+        $self->files( 'deps' =>
+              catfile( $self->dirs("ppath"), $self->_opt_get("dpfile") ) );
     }
-    open( DP, ">$files{deps}" ) or die $!;
-    print DP "# Project dir: $dirs{ppath}\n";
+    else {
+        $self->files( "deps" => "deps.mk" );
+    }
+
+    open( DP, ">", $self->files("deps") ) or die $!;
+
+    print DP "# Project dir: " . $self->dirs("ppath") . "\n";
     print DP "# Program name: " . $self->PROGNAME . "\n";
+
+	close(DP);
 
 }
 
@@ -165,9 +170,10 @@ sub init_vars() {
 =cut
 
 sub new() {
-    my ( $class, %parameters ) = @_;
-    my $self = bless( {}, ref($class) || $class );
-    return $self;
+    my $self = shift;
+
+    $self->OP::Script::new();
+
 }
 
 # 													}}}
@@ -218,23 +224,32 @@ sub _set_ussd() {
 sub set_these_cmdopts() {
     my $self = shift;
 
-    my @mycmdopts = (
-        { name => "h,help",   desc => "Print the help message" },
-        { name => "man",      desc => "Print the man page" },
-        { name => "examples", desc => "Show examples of usage" },
-        { name => "vm",       desc => "View myself" },
+    my $opts;
+
+    push( @$opts, { name => "h,help",   desc => "Print the help message" } );
+    push( @$opts, { name => "man",      desc => "Print the man page" } );
+    push( @$opts, { name => "examples", desc => "Show examples of usage" } );
+    push( @$opts, { name => "vm",       desc => "View myself" } );
+
+    push( @$opts,
         {
             name => "dpfile",
             desc => "Provide the filename of the dependency file",
             type => "s"
-        },
-        { name => "nolibs",         desc => "" },
-        { name => "print_non_root", desc => "" },
-        { name => "flist",          desc => "Use the flist fortran files" }
-
-        #,{ cmd	=>	"<++>", 		desc	=>	"<++>", type	=>	"s"	}
+        }
     );
-    &cmd_opt_add( \@mycmdopts );
+
+    push( @$opts, { name => "nolibs", desc => "" } );
+    push( @$opts, { name => "print_non_root", desc => "" } );
+    
+    push( @$opts,
+        {
+            name => "flist",
+            desc => "Use the flist fortran files"
+        }
+      );
+
+    $self->add_cmd_opts($opts);
 }
 
 #}}}
@@ -247,7 +262,8 @@ sub set_these_cmdopts() {
 sub _get_unused() {
     my $self = shift;
 
-    $self->nuexist = 1;
+    my @nused;
+    $self->nuexist(1);
 
     open( NUF, $self->files("notused") ) or $self->nuexist(0);
 
@@ -255,58 +271,18 @@ sub _get_unused() {
         while (<NUF>) {
             chomp;
             if ( !/^(#|d:)/ ) {
-                $self->nused_push($_);
+                push( @nused, $_ );
             }
             elsif (/^d:\s*(.*)/g) {
                 $self->nudirs_push($1);
                 print DP "# Not used dir: $1\n";
             }
         }
-        foreach ( $self->nused ) { s/^\s+//; s/\s+$//; }
+        foreach (@nused) { s/^\s+//; s/\s+$//; }
         close(NUF);
     }
 
 }
-
-#sub _used_source_wanted() {
-##{{{
-#my ($dev,$ino,$mode,$nlink,$uid,$gid);
-#my $dirname=$File::Find::dir;
-
-#if ( ( /^.*\.(f90|f|F)\z/s) &&
-#( $nlink || (($dev,$ino,$mode,$nlink,$uid,$gid) = lstat($_)) ) &&
-#( ! /^.*\.(save|o|old|ref)\..*\z/s ) &&
-#( ! grep { $_ eq $dirname } $self->nudirs )
-#) {
-#$name=$_;
-#if ( ! grep { $_ eq $name } @nused ) {
-#if ( fgrep { /^\s*module\s+$module_name\s*$/i } "$name" ){
-##print "Pushing to \$self->fortranfiles: $dirname/$name\n";
-#push($self->fortranfiles,"$dirname/$name");
-#}
-#}
-#}
-##}}}
-#}
-
-#sub _wanted() {
-##{{{
-#my ($dev,$ino,$mode,$nlink,$uid,$gid);
-#( my $dirname = $File::Find::dir ) =~ s/$dirs{ppath}//g;
-#$dirname =~ s/^(\.|\/)+//g;
-
-#if ( ( /^.*\.(f90|f|F)\z/s) &&
-#( $nlink || (($dev,$ino,$mode,$nlink,$uid,$gid) = lstat($_)) ) &&
-#( ! /^.*\.(save|o|old|ref)\..*\z/s ) &&
-#( ! grep { $_ eq $dirname } @{$self->nudirs} )
-#) {
-#$name =~ s/^\.\///;
-#if ( ! grep { $_ eq $name } @nused ) {
-#push($self->fortranfiles,"$name");
-#}
-#}
-##}}}
-#}
 
 #}}}
 # PrintWords() {{{
@@ -324,6 +300,7 @@ sub PrintWords {
     my ($wordlength);
     #
     print DP $_[0];
+
     $columns -= length( shift(@_) );
     foreach my $word (@_) {
         $wordlength = length($word);
@@ -356,17 +333,27 @@ sub PrintWords {
 
 sub resolve_line() {
     my $self = shift;
+
     my ( $line, $switch ) = @_;
+
+	if ($self->resline_lev){
+		$self->resline_lev($self->resline_lev+1);
+	}else{
+		$self->resline_lev(1);
+	}
+	$self->say("resline_lev: " . $self->resline_lev );
 
     my $regex = $self->regex('fortran')->{$switch};
 
     if ( $line =~ m/$regex/ig ) {
+###switch_include_file
         if ( $switch eq "include_file" ) {
             unless ( $self->excluded_exists($1) ) {
 
                 # push(@incs, $1);
                 my $include_file = $1;
-                open( IFILE, $include_file );
+                open( IFILE, "<", $include_file ) || die $!;
+				$self->say("Current include file is: $include_file");
                 while (<IFILE>) {
                     chomp;
                     $self->resolve_line( $_, "use_module" );
@@ -375,6 +362,7 @@ sub resolve_line() {
                 close IFILE;
             }
         }
+###switch_use_module
         elsif ( $switch eq "use_module" ) {
             if ( defined($1) ) {
                 my $mod = &toLower($1);
@@ -395,6 +383,8 @@ sub resolve_line() {
             }
         }
     }
+
+	$self->resline_lev($self->resline_lev-1);
 }
 
 # }}}
@@ -417,20 +407,23 @@ sub make_deps() {
 
     $self->aumods(qw());
 
-    $self->date = localtime;
+    $self->date(localtime);
 
-    print DP "#	-------------------------- \n";
-    print DP "#	File: \n";
-    print DP "#		$files{deps}\n";
-    print DP "#	Program:\n";
-    print DP "#		" . $self->PROGNAME . "\n";
-    print DP "#	Purpose: \n";
-    print DP "#		Contains Fortran object files dependencies\n";
-    print DP "#	Created: \n";
-    print DP "#		" . $self->date . "\n";
-    print DP "#	Creating script:\n";
-    print DP "#		$0\n";
-    print DP "#	-------------------------- \n";
+	my $endl="\n";
+	my $delim='-' x 50;
+
+    print DP "#	" . $delim                                      . $endl ;
+    print DP "#	File: "                                         . $endl ;
+    print DP "#" .	$self->files("deps")                        . $endl ;
+    print DP "#	Program:"                                       . $endl ;
+    print DP "#		" . $self->PROGNAME                         . $endl ;
+    print DP "#	Purpose:"                                       . $endl ;
+    print DP "#		Contains Fortran object files dependencies" . $endl ;
+    print DP "#	Created: "                                      . $endl ;
+    print DP "#		" . $self->date                             . $endl ;
+    print DP "#	Creating script:"                               . $endl ;
+    print DP "#		$Script"                                    . $endl ;
+    print DP "#	" . $delim                                      . $endl ;
 
     unless ( $self->rec_lev_exists($subname) ) {
         $self->rec_lev( $subname => 0 );
@@ -454,8 +447,8 @@ sub make_deps() {
         # get the object name for the module
         while (<FILE>) {
 
-			my $regex=$self->regex('fortran')->{declare_module};
-			my $fext=$self->fext;
+            my $regex = $self->regex('fortran')->{declare_module};
+            my $fext  = $self->fext;
 
             if (/^$regex/) {
                 $mod = lc $1 if ( defined($1) );
@@ -472,7 +465,7 @@ sub make_deps() {
     foreach my $file ( $self->fortranfiles ) {
 
         open( FILE, "<$file" ) || die $!;
-        $self->fname ( $self->remove_extension($file) );
+        $self->fname( $self->remove_extension($file) );
 
         while (<FILE>) {
             chomp;
@@ -484,22 +477,19 @@ sub make_deps() {
 
         close(FILE);
 
-        if ( (@incs) || ($self->modules) ) {
+        if ( (@incs) || ( $self->modules ) ) {
             ( $objfile = $file ) =~ s/\.[^\.]+$/.o/g;
-			my $regex=$self->regex('fortran')->{prefix_slash};
-            if (
-                (
-                       $objfile !~ /$regex/
-                    || $opt{print_non_root}
-                )
-                && ( $objfile !~ /$self->regex('fortran')->{not_used_patterns}/ )
+            my $regex = $self->regex('fortran')->{prefix_slash};
+            if ( ( $objfile !~ /$regex/ || $self->_opt_true("print_non_root") )
+                && (
+                    $objfile !~ /$self->regex('fortran')->{not_used_patterns}/ )
               )
             {
                 #{{{
                 print DP "$objfile: ";
                 undef @dependencies;
 
-                foreach my $module ($self->modules) {
+                foreach my $module ( $self->modules ) {
                     if ( defined $filename{src}{$module} ) {
                         $mo = $filename{obj}{$module};
 
@@ -511,17 +501,18 @@ sub make_deps() {
 
                             # check for not-used
                             ( my $moname = $mo ) =~ s/\.o$//g;
-                            unless ( grep { /^$filename{src}{$module}$/ } $self->nused )
+                            unless ( grep { /^$filename{src}{$module}$/ }
+                                $self->nused )
                             {
                                 push( @dependencies, $mo );
                             }
                             else {
-                                push( @{ $self->deps($file)->{nused} }, $mo );
+								push(@{ $DEPS->{$file}->{nexist} },$mo);
                             }
                         }
                     }
                     else {
-                        push( @{ $self->deps($file)->{nexist} }, $module );
+                        push( @{ $DEPS->{$file}->{nexist} }, $module );
                     }
                 }
                 if (@dependencies) {
@@ -540,9 +531,9 @@ sub make_deps() {
     foreach my $mode (qw( nexist nused)) {
         print DP "# $mode dependencies:\n";
         foreach my $file ( $self->fortranfiles ) {
-            if ( @{ $self->deps($file)->{$mode} } ) {
+            if ( @{ $DEPS->{$file}->{$mode} } ) {
                 print DP "# 	$file =>  ";
-                foreach ( @{ $self->deps($file)->{$mode} } ) { print DP "$_ "; }
+                foreach ( @{ $DEPS->{$file}->{$mode} } ) { print DP "$_ "; }
                 print DP "\n";
             }
         }
@@ -551,15 +542,17 @@ sub make_deps() {
     unless ( $self->used_source_search_dirs ) {
         &eoo("Source search dirs were not given!\n");
     }
-    if ($self->exmods) {
+    if ( $self->exmods ) {
         $self->fortranfiles = qw();
-        $self->exmods ( sort( &uniq( sort($self->exmods) ) ) );
-        foreach ($self->exmods) {
-            print("Ex Module: $_" .  $self->rec_lev($subname) . "\n");
-            $self->module_name ($_);
-            if ($self->used_source_search_dirs) {
-                File::Find::find( { wanted => \&_used_source_wanted },
-                    $self->used_source_search_dirs );
+        $self->exmods( sort( &uniq( sort( $self->exmods ) ) ) );
+        foreach ( $self->exmods ) {
+            print( "Ex Module: $_" . $self->rec_lev($subname) . "\n" );
+            $self->module_name($_);
+            if ( $self->used_source_search_dirs ) {
+                File::Find::find(
+                    { wanted => \&_used_source_wanted },
+                    $self->used_source_search_dirs
+                );
             }
         }
         if ( $self->fortranfiles ) {
@@ -610,6 +603,34 @@ sub _get_fortranfiles() {
 # }}}
 
 # }}}
+# _begin() {{{
+
+=head3 _begin()
+
+=cut
+
+sub _begin() {
+    my $self = shift;
+
+    $self->{package_name} = __PACKAGE__ unless defined $self->{package_name};
+
+    $self->accessors(
+        array    => \@array_accessors,
+        hash     => \@hash_accessors,
+        'scalar' => \@scalar_accessors
+    );
+
+}
+
+# }}}
+
+
+sub get_opt() {
+    my $self = shift;
+
+    $self->OP::Script::get_opt();
+}
+
 # main() {{{
 
 =head3 main()
@@ -621,7 +642,7 @@ sub main() {
 
     $self->init_vars();
 
-    $self->OP::Script::get_opt();
+    $self->get_opt();
 
     $self->_set_libs();
     $self->_get_unused();
