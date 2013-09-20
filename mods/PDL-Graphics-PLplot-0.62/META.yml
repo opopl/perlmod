@@ -1,0 +1,24 @@
+--- #YAML:1.0
+name:               PDL-Graphics-PLplot
+version:            0.62
+abstract:           ~
+author:  []
+license:            unknown
+distribution_type:  module
+configure_requires:
+    ExtUtils::MakeMaker:  0
+build_requires:
+    ExtUtils::MakeMaker:  0
+requires:  {}
+provides:
+    PDL::Graphics::PLplot:
+        file:     plplot.pd
+        version:  0.61
+no_index:
+    directory:
+        - t
+        - inc
+generated_by:       ExtUtils::MakeMaker version 6.56
+meta-spec:
+    url:      http://module-build.sourceforge.net/META-spec-v1.4.html
+    version:  1.4

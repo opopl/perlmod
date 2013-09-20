@@ -1,0 +1,25 @@
+---
+abstract: unknown
+author:
+  - unknown
+build_requires:
+  ExtUtils::MakeMaker: 0
+configure_requires:
+  ExtUtils::MakeMaker: 0
+dynamic_config: 0
+generated_by: 'ExtUtils::MakeMaker version 6.56, CPAN::Meta::Converter version 2.120921'
+license: unknown
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: PDL-Graphics-PLplot
+no_index:
+  directory:
+    - t
+    - inc
+provides:
+  PDL::Graphics::PLplot:
+    file: plplot.pd
+    version: 0.61
+requires: {}
+version: 0.62

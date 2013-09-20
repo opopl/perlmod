@@ -983,6 +983,34 @@ sub print_man(){
   	&OP::Base::printman();
 }
 
+sub acc_arr_sortuniq() {
+	my $self=shift;
+
+	my $arr=shift;
+	my @a;
+
+	my $evs;
+
+	$evs.=  ' @a=$self->' . $arr . ';' . "\n";
+	$evs.=  ' @a=sort(&uniq(@a)) if @a;';
+	$evs.=  ' $self->' . $arr . '(@a);';
+
+	eval $evs;
+	die $@ if $@;
+
+}
+
+sub acc_arr_printarr(){
+	my $self=shift;
+
+	my $arr=shift;
+
+	my $evs='print $_ . "\n" for($self->' . $arr . ');' ;
+	eval $evs;
+	die $@ if $@;
+
+}
+
 =head3 print_examples()
 
 =cut

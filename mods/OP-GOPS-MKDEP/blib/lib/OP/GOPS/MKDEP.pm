@@ -331,7 +331,6 @@ sub resolve_line() {
 	}else{
 		$self->resline_lev(1);
 	}
-	$self->say("resline_lev: " . $self->resline_lev );
 
     my $regex = $self->regex('fortran')->{$switch};
 

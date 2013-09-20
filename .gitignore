@@ -1,7 +1,15 @@
 *.pod
 *.log
 mods/*/blib/libdoc/
-mods/*/blib/
+mods/**/blib/
+mods/**/blib/
+mods/**/_build/
+i.examples.pod  
+tags
+i.help.pod
+mods/**/MYMETA.json
+mods/**/MYMETA.yml
+mods/**/*.tmp
 *.lgpl
 *.idx
 *_log.tex

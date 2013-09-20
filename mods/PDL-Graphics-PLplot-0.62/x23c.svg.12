@@ -1,0 +1,924 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+        "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  version="1.1"
+  width="720pt"
+  height="540pt"
+  viewBox="0 0 720 540"
+  >
+  <rect
+    x="0"
+    y="0"
+    width="720"
+    height="540"
+    stroke="none"
+    fill="#000000"
+    fill-opacity="1.000000"
+    />
+  <g
+    transform="matrix(1 0 0 -1 0 540)"
+    >
+    <clipPath
+      id="text-clipping1273"
+      >
+      <polygon
+        points="0.000000,0.000000 0.000000,539.994507 720.000000,539.994507 720.000000,0.000000"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1273)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 359.989013 504.903104)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 6.451584)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="16"
+            text-anchor="middle"
+            x="0.000000"
+            y="0"
+><tspan font-family="sans-serif" font-style="normal" font-weight="normal"><tspan font-family="serif" font-style="normal" font-weight="normal">&#x50;&#x4c;&#x70;&#x6c;&#x6f;&#x74;&#x20;&#x45;&#x78;&#x61;&#x6d;&#x70;&#x6c;&#x65;&#x20;&#x32;&#x33;&#x20;&#x2d;&#x20;&#x53;&#x65;&#x74;&#x20;&#x46;&#x6f;&#x6e;&#x74;&#x20;&#x77;&#x69;&#x74;&#x68;&#x20;&#x70;&#x6c;&#x73;&#x66;&#x63;&#x69;</tspan></tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1274"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1274)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 478.864711)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="sans-serif" font-style="normal" font-weight="normal">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x61;&#x6e;&#x73;&#x2d;&#x73;&#x65;&#x72;&#x69;&#x66;&#x2c;&#x20;&#x75;&#x70;&#x72;&#x69;&#x67;&#x68;&#x74;&#x2c;&#x20;&#x6d;&#x65;&#x64;&#x69;&#x75;&#x6d;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1275"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1275)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 464.604022)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="serif" font-style="normal" font-weight="normal">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x65;&#x72;&#x69;&#x66;&#x2c;&#x20;&#x75;&#x70;&#x72;&#x69;&#x67;&#x68;&#x74;&#x2c;&#x20;&#x6d;&#x65;&#x64;&#x69;&#x75;&#x6d;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1276"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1276)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 450.343333)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="mono-space" font-style="normal" font-weight="normal">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x6d;&#x6f;&#x6e;&#x6f;&#x73;&#x70;&#x61;&#x63;&#x65;&#x2c;&#x20;&#x75;&#x70;&#x72;&#x69;&#x67;&#x68;&#x74;&#x2c;&#x20;&#x6d;&#x65;&#x64;&#x69;&#x75;&#x6d;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1277"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1277)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 436.082644)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="cursive" font-style="normal" font-weight="normal">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x2c;&#x20;&#x75;&#x70;&#x72;&#x69;&#x67;&#x68;&#x74;&#x2c;&#x20;&#x6d;&#x65;&#x64;&#x69;&#x75;&#x6d;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1278"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1278)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 421.843928)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="sans-serif" font-style="normal" font-weight="normal">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x79;&#x6d;&#x62;&#x6f;&#x6c;&#x2c;&#x20;&#x75;&#x70;&#x72;&#x69;&#x67;&#x68;&#x74;&#x2c;&#x20;&#x6d;&#x65;&#x64;&#x69;&#x75;&#x6d;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1279"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1279)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 407.583239)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="sans-serif" font-style="italic" font-weight="normal">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x61;&#x6e;&#x73;&#x2d;&#x73;&#x65;&#x72;&#x69;&#x66;&#x2c;&#x20;&#x69;&#x74;&#x61;&#x6c;&#x69;&#x63;&#x2c;&#x20;&#x6d;&#x65;&#x64;&#x69;&#x75;&#x6d;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1280"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1280)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 393.322550)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="serif" font-style="italic" font-weight="normal">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x65;&#x72;&#x69;&#x66;&#x2c;&#x20;&#x69;&#x74;&#x61;&#x6c;&#x69;&#x63;&#x2c;&#x20;&#x6d;&#x65;&#x64;&#x69;&#x75;&#x6d;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1281"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1281)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 379.061861)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="mono-space" font-style="italic" font-weight="normal">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x6d;&#x6f;&#x6e;&#x6f;&#x73;&#x70;&#x61;&#x63;&#x65;&#x2c;&#x20;&#x69;&#x74;&#x61;&#x6c;&#x69;&#x63;&#x2c;&#x20;&#x6d;&#x65;&#x64;&#x69;&#x75;&#x6d;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1282"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1282)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 364.823145)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="cursive" font-style="italic" font-weight="normal">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x2c;&#x20;&#x69;&#x74;&#x61;&#x6c;&#x69;&#x63;&#x2c;&#x20;&#x6d;&#x65;&#x64;&#x69;&#x75;&#x6d;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1283"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1283)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 350.562456)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="sans-serif" font-style="italic" font-weight="normal">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x79;&#x6d;&#x62;&#x6f;&#x6c;&#x2c;&#x20;&#x69;&#x74;&#x61;&#x6c;&#x69;&#x63;&#x2c;&#x20;&#x6d;&#x65;&#x64;&#x69;&#x75;&#x6d;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1284"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1284)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 336.301767)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="sans-serif" font-style="oblique" font-weight="normal">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x61;&#x6e;&#x73;&#x2d;&#x73;&#x65;&#x72;&#x69;&#x66;&#x2c;&#x20;&#x6f;&#x62;&#x6c;&#x69;&#x71;&#x75;&#x65;&#x2c;&#x20;&#x6d;&#x65;&#x64;&#x69;&#x75;&#x6d;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1285"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1285)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 322.041078)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="serif" font-style="oblique" font-weight="normal">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x65;&#x72;&#x69;&#x66;&#x2c;&#x20;&#x6f;&#x62;&#x6c;&#x69;&#x71;&#x75;&#x65;&#x2c;&#x20;&#x6d;&#x65;&#x64;&#x69;&#x75;&#x6d;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1286"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1286)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 307.780389)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="mono-space" font-style="oblique" font-weight="normal">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x6d;&#x6f;&#x6e;&#x6f;&#x73;&#x70;&#x61;&#x63;&#x65;&#x2c;&#x20;&#x6f;&#x62;&#x6c;&#x69;&#x71;&#x75;&#x65;&#x2c;&#x20;&#x6d;&#x65;&#x64;&#x69;&#x75;&#x6d;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1287"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1287)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 293.541673)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="cursive" font-style="oblique" font-weight="normal">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x2c;&#x20;&#x6f;&#x62;&#x6c;&#x69;&#x71;&#x75;&#x65;&#x2c;&#x20;&#x6d;&#x65;&#x64;&#x69;&#x75;&#x6d;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1288"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1288)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 279.280984)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="sans-serif" font-style="oblique" font-weight="normal">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x79;&#x6d;&#x62;&#x6f;&#x6c;&#x2c;&#x20;&#x6f;&#x62;&#x6c;&#x69;&#x71;&#x75;&#x65;&#x2c;&#x20;&#x6d;&#x65;&#x64;&#x69;&#x75;&#x6d;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1289"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1289)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 265.020295)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="sans-serif" font-style="normal" font-weight="bold">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x61;&#x6e;&#x73;&#x2d;&#x73;&#x65;&#x72;&#x69;&#x66;&#x2c;&#x20;&#x75;&#x70;&#x72;&#x69;&#x67;&#x68;&#x74;&#x2c;&#x20;&#x62;&#x6f;&#x6c;&#x64;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1290"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1290)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 250.759606)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="serif" font-style="normal" font-weight="bold">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x65;&#x72;&#x69;&#x66;&#x2c;&#x20;&#x75;&#x70;&#x72;&#x69;&#x67;&#x68;&#x74;&#x2c;&#x20;&#x62;&#x6f;&#x6c;&#x64;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1291"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1291)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 236.520890)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="mono-space" font-style="normal" font-weight="bold">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x6d;&#x6f;&#x6e;&#x6f;&#x73;&#x70;&#x61;&#x63;&#x65;&#x2c;&#x20;&#x75;&#x70;&#x72;&#x69;&#x67;&#x68;&#x74;&#x2c;&#x20;&#x62;&#x6f;&#x6c;&#x64;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1292"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1292)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 222.260201)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="cursive" font-style="normal" font-weight="bold">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x2c;&#x20;&#x75;&#x70;&#x72;&#x69;&#x67;&#x68;&#x74;&#x2c;&#x20;&#x62;&#x6f;&#x6c;&#x64;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1293"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1293)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 207.999512)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="sans-serif" font-style="normal" font-weight="bold">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x79;&#x6d;&#x62;&#x6f;&#x6c;&#x2c;&#x20;&#x75;&#x70;&#x72;&#x69;&#x67;&#x68;&#x74;&#x2c;&#x20;&#x62;&#x6f;&#x6c;&#x64;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1294"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1294)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 193.738823)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="sans-serif" font-style="italic" font-weight="bold">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x61;&#x6e;&#x73;&#x2d;&#x73;&#x65;&#x72;&#x69;&#x66;&#x2c;&#x20;&#x69;&#x74;&#x61;&#x6c;&#x69;&#x63;&#x2c;&#x20;&#x62;&#x6f;&#x6c;&#x64;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1295"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1295)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 179.500107)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="serif" font-style="italic" font-weight="bold">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x65;&#x72;&#x69;&#x66;&#x2c;&#x20;&#x69;&#x74;&#x61;&#x6c;&#x69;&#x63;&#x2c;&#x20;&#x62;&#x6f;&#x6c;&#x64;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1296"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1296)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 165.239418)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="mono-space" font-style="italic" font-weight="bold">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x6d;&#x6f;&#x6e;&#x6f;&#x73;&#x70;&#x61;&#x63;&#x65;&#x2c;&#x20;&#x69;&#x74;&#x61;&#x6c;&#x69;&#x63;&#x2c;&#x20;&#x62;&#x6f;&#x6c;&#x64;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1297"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1297)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 150.978729)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="cursive" font-style="italic" font-weight="bold">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x2c;&#x20;&#x69;&#x74;&#x61;&#x6c;&#x69;&#x63;&#x2c;&#x20;&#x62;&#x6f;&#x6c;&#x64;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1298"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1298)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 136.718039)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="sans-serif" font-style="italic" font-weight="bold">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x79;&#x6d;&#x62;&#x6f;&#x6c;&#x2c;&#x20;&#x69;&#x74;&#x61;&#x6c;&#x69;&#x63;&#x2c;&#x20;&#x62;&#x6f;&#x6c;&#x64;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1299"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1299)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 122.457350)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="sans-serif" font-style="oblique" font-weight="bold">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x61;&#x6e;&#x73;&#x2d;&#x73;&#x65;&#x72;&#x69;&#x66;&#x2c;&#x20;&#x6f;&#x62;&#x6c;&#x69;&#x71;&#x75;&#x65;&#x2c;&#x20;&#x62;&#x6f;&#x6c;&#x64;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1300"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1300)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 108.218635)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="serif" font-style="oblique" font-weight="bold">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x65;&#x72;&#x69;&#x66;&#x2c;&#x20;&#x6f;&#x62;&#x6c;&#x69;&#x71;&#x75;&#x65;&#x2c;&#x20;&#x62;&#x6f;&#x6c;&#x64;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1301"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1301)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 93.957945)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="mono-space" font-style="oblique" font-weight="bold">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x6d;&#x6f;&#x6e;&#x6f;&#x73;&#x70;&#x61;&#x63;&#x65;&#x2c;&#x20;&#x6f;&#x62;&#x6c;&#x69;&#x71;&#x75;&#x65;&#x2c;&#x20;&#x62;&#x6f;&#x6c;&#x64;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1302"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1302)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 79.697256)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="cursive" font-style="oblique" font-weight="bold">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x2c;&#x20;&#x6f;&#x62;&#x6c;&#x69;&#x71;&#x75;&#x65;&#x2c;&#x20;&#x62;&#x6f;&#x6c;&#x64;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+    <clipPath
+      id="text-clipping1303"
+      >
+      <polygon
+        points="14.392529,10.810877 14.392529,486.006043 705.607471,486.006043 705.607471,10.810877"
+        />
+    </clipPath>
+    <g
+      clip-path="url(#text-clipping1303)"
+      >
+      <g
+        transform="matrix(1.000000 0.000000 0.000000 -1.000000 14.392529 65.436567)"
+        >
+        <g
+          transform="matrix(1.0 0.0 0.0 1.0 0.0 4.963688)"
+          >
+          <text
+            dominant-baseline="no-change"
+            fill="#FFFFFF"
+            fill-opacity="1.000000"
+            xml:space="preserve"
+            font-size="12"
+            text-anchor="start"
+            x="-0.000000"
+            y="0"
+><tspan font-family="sans-serif" font-style="oblique" font-weight="bold">&#x50;&#x61;&#x67;&#x65;&#x20;&#x31;&#x32;&#x2c;&#x20;&#x73;&#x79;&#x6d;&#x62;&#x6f;&#x6c;&#x2c;&#x20;&#x6f;&#x62;&#x6c;&#x69;&#x71;&#x75;&#x65;&#x2c;&#x20;&#x62;&#x6f;&#x6c;&#x64;&#x3a;&#x20;&#x20;&#x54;&#x68;&#x65;&#x20;&#x71;&#x75;&#x69;&#x63;&#x6b;&#x20;&#x62;&#x72;&#x6f;&#x77;&#x6e;&#x20;&#x66;&#x6f;&#x78;&#x20;&#x6a;&#x75;&#x6d;&#x70;&#x73;&#x20;&#x6f;&#x76;&#x65;&#x72;&#x20;&#x74;&#x68;&#x65;&#x20;&#x6c;&#x61;&#x7a;&#x79;&#x20;&#x64;&#x6f;&#x67;</tspan></text>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
