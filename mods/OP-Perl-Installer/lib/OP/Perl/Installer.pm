@@ -20,7 +20,7 @@ use FindBin;
 use Getopt::Long;
 use Pod::Usage;
 use Module::Build;
-use File::Spec::Functions qw(catfile);
+use File::Spec::Functions qw(catfile catdir );
 
 use lib("$FindBin::Bin/OP-Base/lib");
 
@@ -313,8 +313,8 @@ sub install_modules() {
     $self->selected_modules(
         qw(
           OP::Script
+          OP::GOPS::MKDEP
           OP::Perl::Installer
-          OP::GOPS::RIF
           )
     );
 
@@ -350,20 +350,14 @@ sub run_build_install() {
     my ( @exclude, @only );
 
     @exclude = qw( OP::Module::Build );
-
-    #@only=qw(OP::Script OP::TEX::Text OP::Perl::Installer);
-    #@o#nly=qw(OP::Script OP::TEX::Text OP::Perl::Installer OP::TEX::LATEX2HTML);
-    #@only = qw(
-      #OP::Script
-      #OP::GOPS::MKDEP
-      #OP::TEX::Text
-      #OP::Perl::Installer
-    #);
-
     @only = $self->selected_modules; 
 
     foreach my $mod ( $self->mod_def_names ) {
-        my $dirmod = "$shd/mods/" . $mod;
+
+		# $dirmod = e.g. ~/wrk/perlmod/mods/OP-Base
+        my $dirmod = catdir($shd, "mods",  $mod );
+
+		# e.g $module=OP::Base
         my $module = $self->def_to_module($mod);
 
         next if ( grep { /^$module$/ } @exclude );
@@ -372,10 +366,32 @@ sub run_build_install() {
             next unless grep { /^$module$/ } @only;
         }
 
-        chdir $dirmod;
+		if (-e $dirmod){
+        	chdir $dirmod;
+		}else{
+			next;
+		}
 
 		if (-e "./install.sh"){
 			system('./install.sh');
+		}elsif(-e "Makefile.PL"){
+			my @icmds;
+
+			push(@icmds,'perl Makefile.PL');
+			push(@icmds,'make');
+			push(@icmds,'make test');
+			push(@icmds,'make install');
+
+			system(join(' && ',@icmds));
+		}elsif(-e "Build.PL"){
+			my @icmds;
+
+			push(@icmds,'perl ./Build.PL');
+			push(@icmds,'perl ./Build');
+			push(@icmds,'perl ./Build test');
+			push(@icmds,'perl ./Build install');
+
+			system(join(' && ',@icmds));
 		}else{
 	        my $build = Module::Build->new(
 	            module_name => "$module",
@@ -399,7 +415,7 @@ sub run_build_install() {
 	##		select $fh{log};
 	        $build->dispatch( 'install', install_base => "$ENV{HOME}" );
 		}
-    }
+    } # end loop over $mod_def_names
 }
 
 # }}}

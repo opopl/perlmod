@@ -49,7 +49,14 @@ sub init_vars(){
 
 	# Initialize LaTeX::BibTeX stuff
 	$self->bibfile(LaTeX::BibTeX::File->new());
+
+	open(BLOG,">latex-bibtex.log") || die $!;
+	select(BLOG);
+
 	$self->bibfile->open($self->bibfname) || die $!;
+
+	select(STDOUT);
+	close(BLOG);
 
 	# rmfields     - remove specific fields in a BibTeX entry, e.g. month={} etc.
 	$self->rmfields_push( 

@@ -1,4 +1,4 @@
-# This Makefile is for the OP::App::Cpan extension to perl.
+# This Makefile is for the Class::Accessor::Complex extension to perl.
 #
 # It was generated automatically by MakeMaker version
 # 6.6302 (Revision: 66302) from the contents of
@@ -11,17 +11,17 @@
 
 #   MakeMaker Parameters:
 
-#     ABSTRACT => q[Interact with CPAN from the command line]
-#     AUTHOR => [q[(OP) brian d foy <bdfoy@cpan.org>]]
+#     ABSTRACT => q[Arrays, hashes, booleans, integers, sets and more]
+#     AUTHOR => [q[Marcel Gruenauer <marcel@cpan.org>]]
 #     BUILD_REQUIRES => {  }
-#     CONFIGURE_REQUIRES => {  }
-#     EXE_FILES => [q[script/opcpan]]
+#     CONFIGURE_REQUIRES => { ExtUtils::MakeMaker=>q[6.11] }
+#     DISTNAME => q[Class-Accessor-Complex]
+#     EXE_FILES => []
 #     LICENSE => q[perl]
-#     META_MERGE => { no_index=>{ directory=>[q[t], q[inc], q[examples]] } }
-#     NAME => q[OP::App::Cpan]
-#     PREREQ_PM => { Test::More=>q[0], CPAN=>q[1.9301] }
-#     VERSION_FROM => q[lib/OP/App/Cpan.pm]
-#     clean => { FILES=>q[*.bak App-* cpan-* cover_db] }
+#     NAME => q[Class::Accessor::Complex]
+#     PREREQ_PM => { Scalar::Util=>q[0], parent=>q[0], Data::Miscellany=>q[0], English=>q[0], Class::Accessor=>q[0], constant=>q[0], Class::Accessor::Installer=>q[0], Carp=>q[0], Test::More=>q[0.88], File::Find=>q[0], File::Temp=>q[0], List::MoreUtils=>q[0] }
+#     VERSION => q[1.100880]
+#     test => { TESTS=>q[t/*.t] }
 
 # --- MakeMaker post_initialize section:
 
@@ -58,13 +58,13 @@ VENDORLIBEXP =
 AR_STATIC_ARGS = cr
 DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
-NAME = OP::App::Cpan
-NAME_SYM = OP_App_Cpan
-VERSION = 1.5902
+NAME = Class::Accessor::Complex
+NAME_SYM = Class_Accessor_Complex
+VERSION = 1.100880
 VERSION_MACRO = VERSION
-VERSION_SYM = 1_5902
+VERSION_SYM = 1_100880
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 1.5902
+XS_VERSION = 1.100880
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -148,11 +148,11 @@ MM_REVISION = 66302
 # PARENT_NAME = NAME without BASEEXT and no trailing :: (eg Foo::Bar)
 # DLBASE  = Basename part of dynamic library. May be just equal BASEEXT.
 MAKE = make
-FULLEXT = OP/App/Cpan
-BASEEXT = Cpan
-PARENT_NAME = OP::App
+FULLEXT = Class/Accessor/Complex
+BASEEXT = Complex
+PARENT_NAME = Class::Accessor
 DLBASE = $(BASEEXT)
-VERSION_FROM = lib/OP/App/Cpan.pm
+VERSION_FROM = 
 OBJECT = 
 LDFROM = $(OBJECT)
 LINKTYPE = dynamic
@@ -163,15 +163,17 @@ XS_FILES =
 C_FILES  = 
 O_FILES  = 
 H_FILES  = 
-MAN1PODS = script/opcpan
-MAN3PODS = lib/OP/App/Cpan.pm
+MAN1PODS = 
+MAN3PODS = PerlModScript.examples.pod \
+	PerlModScript.help.pod \
+	lib/Class/Accessor/Complex.pm
 
 # Where is the Config information that we are using/depend on
 CONFIGDEP = $(PERL_ARCHLIB)$(DFSEP)Config.pm $(PERL_INC)$(DFSEP)config.h
 
 # Where to build things
-INST_LIBDIR      = $(INST_LIB)/OP/App
-INST_ARCHLIBDIR  = $(INST_ARCHLIB)/OP/App
+INST_LIBDIR      = $(INST_LIB)/Class/Accessor
+INST_ARCHLIBDIR  = $(INST_ARCHLIB)/Class/Accessor
 
 INST_AUTODIR     = $(INST_LIB)/auto/$(FULLEXT)
 INST_ARCHAUTODIR = $(INST_ARCHLIB)/auto/$(FULLEXT)
@@ -186,10 +188,16 @@ PERL_ARCHIVE       =
 PERL_ARCHIVE_AFTER = 
 
 
-TO_INST_PM = lib/OP/App/Cpan.pm
+TO_INST_PM = PerlModScript.examples.pod \
+	PerlModScript.help.pod \
+	lib/Class/Accessor/Complex.pm
 
-PM_TO_BLIB = lib/OP/App/Cpan.pm \
-	blib/lib/OP/App/Cpan.pm
+PM_TO_BLIB = lib/Class/Accessor/Complex.pm \
+	blib/lib/Class/Accessor/Complex.pm \
+	PerlModScript.help.pod \
+	$(INST_LIB)/Class/Accessor/PerlModScript.help.pod \
+	PerlModScript.examples.pod \
+	$(INST_LIB)/Class/Accessor/PerlModScript.examples.pod
 
 
 # --- MakeMaker platform_constants section:
@@ -257,8 +265,8 @@ CI = ci -u
 RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
-DISTNAME = OP-App-Cpan
-DISTVNAME = OP-App-Cpan-1.5902
+DISTNAME = Class-Accessor-Complex
+DISTVNAME = Class-Accessor-Complex-1.100880
 
 
 # --- MakeMaker macro section:
@@ -411,12 +419,13 @@ POD2MAN = $(POD2MAN_EXE)
 
 
 manifypods : pure_all  \
-	script/opcpan \
-	lib/OP/App/Cpan.pm
-	$(NOECHO) $(POD2MAN) --section=1 --perm_rw=$(PERM_RW) \
-	  script/opcpan $(INST_MAN1DIR)/opcpan.$(MAN1EXT) 
+	lib/Class/Accessor/Complex.pm \
+	PerlModScript.help.pod \
+	PerlModScript.examples.pod
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
-	  lib/OP/App/Cpan.pm $(INST_MAN3DIR)/OP::App::Cpan.$(MAN3EXT) 
+	  lib/Class/Accessor/Complex.pm $(INST_MAN3DIR)/Class::Accessor::Complex.$(MAN3EXT) \
+	  PerlModScript.help.pod $(INST_MAN3DIR)/Class::Accessor::PerlModScript.help.$(MAN3EXT) \
+	  PerlModScript.examples.pod $(INST_MAN3DIR)/Class::Accessor::PerlModScript.examples.$(MAN3EXT) 
 
 
 
@@ -425,22 +434,6 @@ manifypods : pure_all  \
 
 
 # --- MakeMaker installbin section:
-
-EXE_FILES = script/opcpan
-
-pure_all :: $(INST_SCRIPT)/opcpan
-	$(NOECHO) $(NOOP)
-
-realclean ::
-	$(RM_F) \
-	  $(INST_SCRIPT)/opcpan 
-
-$(INST_SCRIPT)/opcpan : script/opcpan $(FIRST_MAKEFILE) $(INST_SCRIPT)$(DFSEP).exists $(INST_BIN)$(DFSEP).exists
-	$(NOECHO) $(RM_F) $(INST_SCRIPT)/opcpan
-	$(CP) script/opcpan $(INST_SCRIPT)/opcpan
-	$(FIXIN) $(INST_SCRIPT)/opcpan
-	-$(NOECHO) $(CHMOD) $(PERM_RWX) $(INST_SCRIPT)/opcpan
-
 
 
 # --- MakeMaker subdirs section:
@@ -476,8 +469,6 @@ clean :: clean_subdirs
 	  perl.exe so_locations \
 	  $(BASEEXT).exp 
 	- $(RM_RF) \
-	  cover_db cpan-* \
-	  App-* *.bak \
 	  blib 
 	- $(MV) $(FIRST_MAKEFILE) $(MAKEFILE_OLD) $(DEV_NULL)
 
@@ -500,37 +491,43 @@ realclean purge ::  clean realclean_subdirs
 metafile : create_distdir
 	$(NOECHO) $(ECHO) Generating META.yml
 	$(NOECHO) $(ECHO) '---' > META_new.yml
-	$(NOECHO) $(ECHO) 'abstract: '\''Interact with CPAN from the command line'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'abstract: '\''Arrays, hashes, booleans, integers, sets and more'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'author:' >> META_new.yml
-	$(NOECHO) $(ECHO) '  - '\''(OP) brian d foy <bdfoy@cpan.org>'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'build_requires:' >> META_new.yml
-	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  - '\''Marcel Gruenauer <marcel@cpan.org>'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'build_requires: {}' >> META_new.yml
 	$(NOECHO) $(ECHO) 'configure_requires:' >> META_new.yml
-	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 6.11' >> META_new.yml
 	$(NOECHO) $(ECHO) 'dynamic_config: 1' >> META_new.yml
 	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120921'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'license: perl' >> META_new.yml
 	$(NOECHO) $(ECHO) 'meta-spec:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  url: http://module-build.sourceforge.net/META-spec-v1.4.html' >> META_new.yml
 	$(NOECHO) $(ECHO) '  version: 1.4' >> META_new.yml
-	$(NOECHO) $(ECHO) 'name: OP-App-Cpan' >> META_new.yml
+	$(NOECHO) $(ECHO) 'name: Class-Accessor-Complex' >> META_new.yml
 	$(NOECHO) $(ECHO) 'no_index:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  directory:' >> META_new.yml
 	$(NOECHO) $(ECHO) '    - t' >> META_new.yml
 	$(NOECHO) $(ECHO) '    - inc' >> META_new.yml
-	$(NOECHO) $(ECHO) '    - t' >> META_new.yml
-	$(NOECHO) $(ECHO) '    - inc' >> META_new.yml
-	$(NOECHO) $(ECHO) '    - examples' >> META_new.yml
 	$(NOECHO) $(ECHO) 'requires:' >> META_new.yml
-	$(NOECHO) $(ECHO) '  CPAN: 1.9301' >> META_new.yml
-	$(NOECHO) $(ECHO) '  Test::More: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: 1.5902' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Carp: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Class::Accessor: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Class::Accessor::Installer: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Data::Miscellany: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  English: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  File::Find: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  File::Temp: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  List::MoreUtils: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Scalar::Util: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Test::More: 0.88' >> META_new.yml
+	$(NOECHO) $(ECHO) '  constant: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  parent: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: 1.100880' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
-	$(NOECHO) $(ECHO) '   "abstract" : "Interact with CPAN from the command line",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "abstract" : "Arrays, hashes, booleans, integers, sets and more",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "author" : [' >> META_new.json
-	$(NOECHO) $(ECHO) '      "(OP) brian d foy <bdfoy@cpan.org>"' >> META_new.json
+	$(NOECHO) $(ECHO) '      "Marcel Gruenauer <marcel@cpan.org>"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
 	$(NOECHO) $(ECHO) '   "dynamic_config" : 1,' >> META_new.json
 	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120921",' >> META_new.json
@@ -541,36 +538,41 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",' >> META_new.json
 	$(NOECHO) $(ECHO) '      "version" : "2"' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
-	$(NOECHO) $(ECHO) '   "name" : "OP-App-Cpan",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "name" : "Class-Accessor-Complex",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "no_index" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '      "directory" : [' >> META_new.json
 	$(NOECHO) $(ECHO) '         "t",' >> META_new.json
-	$(NOECHO) $(ECHO) '         "inc",' >> META_new.json
-	$(NOECHO) $(ECHO) '         "t",' >> META_new.json
-	$(NOECHO) $(ECHO) '         "inc",' >> META_new.json
-	$(NOECHO) $(ECHO) '         "examples"' >> META_new.json
+	$(NOECHO) $(ECHO) '         "inc"' >> META_new.json
 	$(NOECHO) $(ECHO) '      ]' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "prereqs" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '      "build" : {' >> META_new.json
-	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
-	$(NOECHO) $(ECHO) '            "ExtUtils::MakeMaker" : "0"' >> META_new.json
-	$(NOECHO) $(ECHO) '         }' >> META_new.json
+	$(NOECHO) $(ECHO) '         "requires" : {}' >> META_new.json
 	$(NOECHO) $(ECHO) '      },' >> META_new.json
 	$(NOECHO) $(ECHO) '      "configure" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
-	$(NOECHO) $(ECHO) '            "ExtUtils::MakeMaker" : "0"' >> META_new.json
+	$(NOECHO) $(ECHO) '            "ExtUtils::MakeMaker" : "6.11"' >> META_new.json
 	$(NOECHO) $(ECHO) '         }' >> META_new.json
 	$(NOECHO) $(ECHO) '      },' >> META_new.json
 	$(NOECHO) $(ECHO) '      "runtime" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
-	$(NOECHO) $(ECHO) '            "CPAN" : "1.9301",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Test::More" : "0"' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Carp" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Class::Accessor" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Class::Accessor::Installer" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Data::Miscellany" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "English" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "File::Find" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "File::Temp" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "List::MoreUtils" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Scalar::Util" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Test::More" : "0.88",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "constant" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "parent" : "0"' >> META_new.json
 	$(NOECHO) $(ECHO) '         }' >> META_new.json
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "1.5902"' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "1.100880"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
 
@@ -852,7 +854,7 @@ subdirs-test ::
 
 
 test_dynamic :: pure_all
-	$(FULLPERLRUN) "-MTest::Manifest" "-e" "run_t_manifest($(TEST_VERBOSE), '$(INST_LIB)', '$(INST_ARCHLIB)', $(TEST_LEVEL) )"
+	PERL_DL_NONLAZY=1 $(FULLPERLRUN) "-MExtUtils::Command::MM" "-e" "test_harness($(TEST_VERBOSE), '$(INST_LIB)', '$(INST_ARCHLIB)')" $(TEST_FILES)
 
 testdb_dynamic :: pure_all
 	PERL_DL_NONLAZY=1 $(FULLPERLRUN) $(TESTDB_SW) "-I$(INST_LIB)" "-I$(INST_ARCHLIB)" $(TEST_FILE)
@@ -867,11 +869,21 @@ testdb_static :: testdb_dynamic
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
 	$(NOECHO) $(ECHO) '<SOFTPKG NAME="$(DISTNAME)" VERSION="$(VERSION)">' > $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '    <ABSTRACT>Interact with CPAN from the command line</ABSTRACT>' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '    <AUTHOR>(OP) brian d foy &lt;bdfoy@cpan.org&gt;</AUTHOR>' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '    <ABSTRACT>Arrays, hashes, booleans, integers, sets and more</ABSTRACT>' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '    <AUTHOR>Marcel Gruenauer &lt;marcel@cpan.org&gt;</AUTHOR>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="CPAN::" VERSION="1.9301" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Test::More" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Carp::" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Class::Accessor" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Class::Accessor::Installer" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Data::Miscellany" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="English::" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="File::Find" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="File::Temp" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="List::MoreUtils" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Scalar::Util" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Test::More" VERSION="0.88" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="constant::" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="parent::" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="i686-linux-5.16" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <CODEBASE HREF="" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    </IMPLEMENTATION>' >> $(DISTNAME).ppd
@@ -882,7 +894,9 @@ ppd :
 
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
-	  lib/OP/App/Cpan.pm blib/lib/OP/App/Cpan.pm 
+	  lib/Class/Accessor/Complex.pm blib/lib/Class/Accessor/Complex.pm \
+	  PerlModScript.help.pod $(INST_LIB)/Class/Accessor/PerlModScript.help.pod \
+	  PerlModScript.examples.pod $(INST_LIB)/Class/Accessor/PerlModScript.examples.pod 
 	$(NOECHO) $(TOUCH) pm_to_blib
 
 
