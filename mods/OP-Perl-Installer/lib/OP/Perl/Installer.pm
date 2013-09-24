@@ -45,7 +45,9 @@ __PACKAGE__
 		selected_modules
 	))
 ###_ACCESSORS_HASH
-	->mk_hash_accessors(qw());
+	->mk_hash_accessors(qw(
+    moddeps
+  ));
 
 # }}}
 # Methods {{{
@@ -310,6 +312,8 @@ sub install_modules() {
         $self->modules_push( $self->def_to_module($file) );
     }
 
+    $self->modules_sort();
+
     $self->selected_modules(
         qw(
           OP::Script
@@ -331,10 +335,8 @@ sub install_modules() {
 sub list_modules() {
     my $self = shift;
 
-    foreach my $mod ( $self->mod_def_names ) {
-        my $module = $self->def_to_module($mod);
-        print "$module\n";
-    }
+    $self->modules_print();
+
 }
 
 # }}}
@@ -497,6 +499,10 @@ sub init_vars() {
 	$self->moddir("$shd/mods/");
 
 	$self->_term_get_commands();
+
+  $self->moddeps(
+    "Directory::Iterator" => "Directory::Iterator::PP"
+  );
 
 }
 

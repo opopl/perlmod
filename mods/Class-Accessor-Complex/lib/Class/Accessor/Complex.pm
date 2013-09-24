@@ -372,6 +372,33 @@ EODOC
             examples   => ["my \$value = \$obj->$shift_methods[0];"],
             belongs_to => $field,
         );
+
+###array_uniq
+        my @uniq_methods = uniq "uniq_${field}", "${field}_uniq";
+
+        for my $name (@uniq_methods) {
+            $self->install_accessor(
+                name => $name,
+                code => sub {
+                    local $DB::sub = local *__ANON__ = "${class}::${name}"
+                      if defined &DB::DB && !$Devel::DProf::VERSION;
+
+                      my $self=shift;
+
+                      @{ $self->{$field} }= uniq @{ $self->{$field} };
+                      wantarray ?  @{ $self->{$field} } : $self->{$field};
+                },
+            );
+        }
+        $self->document_accessor(
+            name    => \@uniq_methods,
+            purpose => <<'EODOC',
+Only unique elements in the array
+EODOC
+            examples   => [],
+            belongs_to => $field,
+        );
+
 ###array_sort
         my @sort_methods = uniq "sort_${field}", "${field}_sort";
 
@@ -393,6 +420,38 @@ EODOC
             name    => \@sort_methods,
             purpose => <<'EODOC',
 Sorts the array
+EODOC
+            examples   => [],
+            belongs_to => $field,
+        );
+
+###array_print
+        my @print_methods = uniq "print_${field}", "${field}_print";
+
+        for my $name (@print_methods) {
+            $self->install_accessor(
+                name => $name,
+                code => sub {
+                    local $DB::sub = local *__ANON__ = "${class}::${name}"
+                      if defined &DB::DB && !$Devel::DProf::VERSION;
+
+                      my $self=shift;
+                      local *F;
+
+                      if (@_){ 
+                          *F=shift;
+                      }else{
+                          *F=*STDOUT;
+                      }
+
+                      print F "$_\n" for(@{ $self->{$field} });
+                },
+            );
+        }
+        $self->document_accessor(
+            name    => \@print_methods,
+            purpose => <<'EODOC',
+prints the array
 EODOC
             examples   => [],
             belongs_to => $field,

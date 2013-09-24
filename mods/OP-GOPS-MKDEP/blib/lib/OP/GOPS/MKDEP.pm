@@ -616,7 +616,6 @@ sub _begin() {
 
 # }}}
 
-
 sub get_opt() {
     my $self = shift;
 

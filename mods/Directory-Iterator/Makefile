@@ -1,4 +1,4 @@
-# This Makefile is for the Class::Accessor::Complex extension to perl.
+# This Makefile is for the Directory::Iterator extension to perl.
 #
 # It was generated automatically by MakeMaker version
 # 6.6302 (Revision: 66302) from the contents of
@@ -11,17 +11,14 @@
 
 #   MakeMaker Parameters:
 
-#     ABSTRACT => q[Arrays, hashes, booleans, integers, sets and more]
-#     AUTHOR => [q[Marcel Gruenauer <marcel@cpan.org>]]
+#     ABSTRACT_FROM => q[lib/Directory/Iterator.pm]
+#     AUTHOR => [q[Steve Sanbeg]]
 #     BUILD_REQUIRES => {  }
-#     CONFIGURE_REQUIRES => { ExtUtils::MakeMaker=>q[6.11] }
-#     DISTNAME => q[Class-Accessor-Complex]
-#     EXE_FILES => []
+#     CONFIGURE_REQUIRES => {  }
 #     LICENSE => q[perl]
-#     NAME => q[Class::Accessor::Complex]
-#     PREREQ_PM => { Scalar::Util=>q[0], parent=>q[0], Data::Miscellany=>q[0], English=>q[0], Class::Accessor=>q[0], constant=>q[0], Class::Accessor::Installer=>q[0], Carp=>q[0], Test::More=>q[0.88], File::Find=>q[0], File::Temp=>q[0], List::MoreUtils=>q[0] }
-#     VERSION => q[1.100880]
-#     test => { TESTS=>q[t/*.t] }
+#     NAME => q[Directory::Iterator]
+#     PREREQ_PM => { Directory::Iterator::PP=>q[0] }
+#     VERSION_FROM => q[lib/Directory/Iterator.pm]
 
 # --- MakeMaker post_initialize section:
 
@@ -58,13 +55,13 @@ VENDORLIBEXP =
 AR_STATIC_ARGS = cr
 DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
-NAME = Class::Accessor::Complex
-NAME_SYM = Class_Accessor_Complex
-VERSION = 1.100880
+NAME = Directory::Iterator
+NAME_SYM = Directory_Iterator
+VERSION = 1.001
 VERSION_MACRO = VERSION
-VERSION_SYM = 1_100880
+VERSION_SYM = 1_001
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 1.100880
+XS_VERSION = 1.001
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -148,11 +145,11 @@ MM_REVISION = 66302
 # PARENT_NAME = NAME without BASEEXT and no trailing :: (eg Foo::Bar)
 # DLBASE  = Basename part of dynamic library. May be just equal BASEEXT.
 MAKE = make
-FULLEXT = Class/Accessor/Complex
-BASEEXT = Complex
-PARENT_NAME = Class::Accessor
+FULLEXT = Directory/Iterator
+BASEEXT = Iterator
+PARENT_NAME = Directory
 DLBASE = $(BASEEXT)
-VERSION_FROM = 
+VERSION_FROM = lib/Directory/Iterator.pm
 OBJECT = 
 LDFROM = $(OBJECT)
 LINKTYPE = dynamic
@@ -164,14 +161,14 @@ C_FILES  =
 O_FILES  = 
 H_FILES  = 
 MAN1PODS = 
-MAN3PODS = lib/Class/Accessor/Complex.pm
+MAN3PODS = lib/Directory/Iterator.pm
 
 # Where is the Config information that we are using/depend on
 CONFIGDEP = $(PERL_ARCHLIB)$(DFSEP)Config.pm $(PERL_INC)$(DFSEP)config.h
 
 # Where to build things
-INST_LIBDIR      = $(INST_LIB)/Class/Accessor
-INST_ARCHLIBDIR  = $(INST_ARCHLIB)/Class/Accessor
+INST_LIBDIR      = $(INST_LIB)/Directory
+INST_ARCHLIBDIR  = $(INST_ARCHLIB)/Directory
 
 INST_AUTODIR     = $(INST_LIB)/auto/$(FULLEXT)
 INST_ARCHAUTODIR = $(INST_ARCHLIB)/auto/$(FULLEXT)
@@ -186,10 +183,10 @@ PERL_ARCHIVE       =
 PERL_ARCHIVE_AFTER = 
 
 
-TO_INST_PM = lib/Class/Accessor/Complex.pm
+TO_INST_PM = lib/Directory/Iterator.pm
 
-PM_TO_BLIB = lib/Class/Accessor/Complex.pm \
-	blib/lib/Class/Accessor/Complex.pm
+PM_TO_BLIB = lib/Directory/Iterator.pm \
+	blib/lib/Directory/Iterator.pm
 
 
 # --- MakeMaker platform_constants section:
@@ -257,8 +254,8 @@ CI = ci -u
 RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
-DISTNAME = Class-Accessor-Complex
-DISTVNAME = Class-Accessor-Complex-1.100880
+DISTNAME = Directory-Iterator
+DISTVNAME = Directory-Iterator-1.001
 
 
 # --- MakeMaker macro section:
@@ -411,9 +408,9 @@ POD2MAN = $(POD2MAN_EXE)
 
 
 manifypods : pure_all  \
-	lib/Class/Accessor/Complex.pm
+	lib/Directory/Iterator.pm
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
-	  lib/Class/Accessor/Complex.pm $(INST_MAN3DIR)/Class::Accessor::Complex.$(MAN3EXT) 
+	  lib/Directory/Iterator.pm $(INST_MAN3DIR)/Directory::Iterator.$(MAN3EXT) 
 
 
 
@@ -426,11 +423,21 @@ manifypods : pure_all  \
 
 # --- MakeMaker subdirs section:
 
-# none
+# The default clean, realclean and test targets in this Makefile
+# have automatically been given entries for each subdir.
+
+
+subdirs ::
+	$(NOECHO) cd Directory-Iterator-1.001-xgHzWK && $(MAKE) $(USEMAKEFILE) $(FIRST_MAKEFILE) all $(PASTHRU)
+
+subdirs ::
+	$(NOECHO) cd Directory-Iterator-PP-1.001002-pc5nb6 && $(MAKE) $(USEMAKEFILE) $(FIRST_MAKEFILE) all $(PASTHRU)
+
 
 # --- MakeMaker clean_subdirs section:
 clean_subdirs :
-	$(NOECHO) $(NOOP)
+	$(ABSPERLRUN)  -e 'chdir '\''Directory-Iterator-1.001-xgHzWK'\'';  system '\''$(MAKE) clean'\'' if -f '\''$(FIRST_MAKEFILE)'\'';' --
+	$(ABSPERLRUN)  -e 'chdir '\''Directory-Iterator-PP-1.001002-pc5nb6'\'';  system '\''$(MAKE) clean'\'' if -f '\''$(FIRST_MAKEFILE)'\'';' --
 
 
 # --- MakeMaker clean section:
@@ -453,8 +460,8 @@ clean :: clean_subdirs
 	  core.*perl.*.? $(MAKE_APERL_FILE) \
 	  $(BASEEXT).def perl \
 	  core.[0-9][0-9][0-9] mon.out \
-	  lib$(BASEEXT).def perlmain.c \
-	  perl.exe so_locations \
+	  lib$(BASEEXT).def perl.exe \
+	  perlmain.c so_locations \
 	  $(BASEEXT).exp 
 	- $(RM_RF) \
 	  blib 
@@ -463,7 +470,10 @@ clean :: clean_subdirs
 
 # --- MakeMaker realclean_subdirs section:
 realclean_subdirs :
-	$(NOECHO) $(NOOP)
+	- $(ABSPERLRUN)  -e 'chdir '\''Directory-Iterator-1.001-xgHzWK'\'';  system '\''$(MAKE) $(USEMAKEFILE) $(MAKEFILE_OLD) realclean'\'' if -f '\''$(MAKEFILE_OLD)'\'';' --
+	- $(ABSPERLRUN)  -e 'chdir '\''Directory-Iterator-1.001-xgHzWK'\'';  system '\''$(MAKE) $(USEMAKEFILE) $(FIRST_MAKEFILE) realclean'\'' if -f '\''$(FIRST_MAKEFILE)'\'';' --
+	- $(ABSPERLRUN)  -e 'chdir '\''Directory-Iterator-PP-1.001002-pc5nb6'\'';  system '\''$(MAKE) $(USEMAKEFILE) $(MAKEFILE_OLD) realclean'\'' if -f '\''$(MAKEFILE_OLD)'\'';' --
+	- $(ABSPERLRUN)  -e 'chdir '\''Directory-Iterator-PP-1.001002-pc5nb6'\'';  system '\''$(MAKE) $(USEMAKEFILE) $(FIRST_MAKEFILE) realclean'\'' if -f '\''$(FIRST_MAKEFILE)'\'';' --
 
 
 # --- MakeMaker realclean section:
@@ -479,43 +489,33 @@ realclean purge ::  clean realclean_subdirs
 metafile : create_distdir
 	$(NOECHO) $(ECHO) Generating META.yml
 	$(NOECHO) $(ECHO) '---' > META_new.yml
-	$(NOECHO) $(ECHO) 'abstract: '\''Arrays, hashes, booleans, integers, sets and more'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'abstract: '\''Simple, efficient recursive directory listing'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'author:' >> META_new.yml
-	$(NOECHO) $(ECHO) '  - '\''Marcel Gruenauer <marcel@cpan.org>'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'build_requires: {}' >> META_new.yml
+	$(NOECHO) $(ECHO) '  - '\''Steve Sanbeg'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'build_requires:' >> META_new.yml
+	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) 'configure_requires:' >> META_new.yml
-	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 6.11' >> META_new.yml
+	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) 'dynamic_config: 1' >> META_new.yml
 	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120921'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'license: perl' >> META_new.yml
 	$(NOECHO) $(ECHO) 'meta-spec:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  url: http://module-build.sourceforge.net/META-spec-v1.4.html' >> META_new.yml
 	$(NOECHO) $(ECHO) '  version: 1.4' >> META_new.yml
-	$(NOECHO) $(ECHO) 'name: Class-Accessor-Complex' >> META_new.yml
+	$(NOECHO) $(ECHO) 'name: Directory-Iterator' >> META_new.yml
 	$(NOECHO) $(ECHO) 'no_index:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  directory:' >> META_new.yml
 	$(NOECHO) $(ECHO) '    - t' >> META_new.yml
 	$(NOECHO) $(ECHO) '    - inc' >> META_new.yml
 	$(NOECHO) $(ECHO) 'requires:' >> META_new.yml
-	$(NOECHO) $(ECHO) '  Carp: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  Class::Accessor: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  Class::Accessor::Installer: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  Data::Miscellany: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  English: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  File::Find: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  File::Temp: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  List::MoreUtils: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  Scalar::Util: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  Test::More: 0.88' >> META_new.yml
-	$(NOECHO) $(ECHO) '  constant: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  parent: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: 1.100880' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Directory::Iterator::PP: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: 1.001' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
-	$(NOECHO) $(ECHO) '   "abstract" : "Arrays, hashes, booleans, integers, sets and more",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "abstract" : "Simple, efficient recursive directory listing",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "author" : [' >> META_new.json
-	$(NOECHO) $(ECHO) '      "Marcel Gruenauer <marcel@cpan.org>"' >> META_new.json
+	$(NOECHO) $(ECHO) '      "Steve Sanbeg"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
 	$(NOECHO) $(ECHO) '   "dynamic_config" : 1,' >> META_new.json
 	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120921",' >> META_new.json
@@ -526,7 +526,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",' >> META_new.json
 	$(NOECHO) $(ECHO) '      "version" : "2"' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
-	$(NOECHO) $(ECHO) '   "name" : "Class-Accessor-Complex",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "name" : "Directory-Iterator",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "no_index" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '      "directory" : [' >> META_new.json
 	$(NOECHO) $(ECHO) '         "t",' >> META_new.json
@@ -535,32 +535,23 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "prereqs" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '      "build" : {' >> META_new.json
-	$(NOECHO) $(ECHO) '         "requires" : {}' >> META_new.json
+	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
+	$(NOECHO) $(ECHO) '            "ExtUtils::MakeMaker" : "0"' >> META_new.json
+	$(NOECHO) $(ECHO) '         }' >> META_new.json
 	$(NOECHO) $(ECHO) '      },' >> META_new.json
 	$(NOECHO) $(ECHO) '      "configure" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
-	$(NOECHO) $(ECHO) '            "ExtUtils::MakeMaker" : "6.11"' >> META_new.json
+	$(NOECHO) $(ECHO) '            "ExtUtils::MakeMaker" : "0"' >> META_new.json
 	$(NOECHO) $(ECHO) '         }' >> META_new.json
 	$(NOECHO) $(ECHO) '      },' >> META_new.json
 	$(NOECHO) $(ECHO) '      "runtime" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Carp" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Class::Accessor" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Class::Accessor::Installer" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Data::Miscellany" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "English" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "File::Find" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "File::Temp" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "List::MoreUtils" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Scalar::Util" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Test::More" : "0.88",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "constant" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "parent" : "0"' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Directory::Iterator::PP" : "0"' >> META_new.json
 	$(NOECHO) $(ECHO) '         }' >> META_new.json
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "1.100880"' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "1.001"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
 
@@ -820,7 +811,7 @@ $(MAP_TARGET) :: static $(MAKE_APERL_FILE)
 $(MAKE_APERL_FILE) : $(FIRST_MAKEFILE) pm_to_blib
 	$(NOECHO) $(ECHO) Writing \"$(MAKE_APERL_FILE)\" for this $(MAP_TARGET)
 	$(NOECHO) $(PERLRUNINST) \
-		Makefile.PL DIR= \
+		Makefile.PL DIR=Directory-Iterator-1.001-xgHzWK:Directory-Iterator-PP-1.001002-pc5nb6 \
 		MAKEFILE=$(MAKE_APERL_FILE) LINKTYPE=static \
 		MAKEAPERL=1 NORECURS=1 CCCDLFLAGS=
 
@@ -840,6 +831,12 @@ test :: $(TEST_TYPE) subdirs-test
 subdirs-test ::
 	$(NOECHO) $(NOOP)
 
+subdirs-test ::
+	$(NOECHO) cd Directory-Iterator-1.001-xgHzWK && $(MAKE) test $(PASTHRU)
+
+subdirs-test ::
+	$(NOECHO) cd Directory-Iterator-PP-1.001002-pc5nb6 && $(MAKE) test $(PASTHRU)
+
 
 test_dynamic :: pure_all
 	PERL_DL_NONLAZY=1 $(FULLPERLRUN) "-MExtUtils::Command::MM" "-e" "test_harness($(TEST_VERBOSE), '$(INST_LIB)', '$(INST_ARCHLIB)')" $(TEST_FILES)
@@ -857,21 +854,10 @@ testdb_static :: testdb_dynamic
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
 	$(NOECHO) $(ECHO) '<SOFTPKG NAME="$(DISTNAME)" VERSION="$(VERSION)">' > $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '    <ABSTRACT>Arrays, hashes, booleans, integers, sets and more</ABSTRACT>' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '    <AUTHOR>Marcel Gruenauer &lt;marcel@cpan.org&gt;</AUTHOR>' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '    <ABSTRACT>Simple, efficient recursive directory listing</ABSTRACT>' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '    <AUTHOR>Steve Sanbeg</AUTHOR>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Carp::" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Class::Accessor" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Class::Accessor::Installer" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Data::Miscellany" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="English::" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="File::Find" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="File::Temp" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="List::MoreUtils" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Scalar::Util" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Test::More" VERSION="0.88" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="constant::" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="parent::" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Directory::Iterator::PP" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="i686-linux-5.16" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <CODEBASE HREF="" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    </IMPLEMENTATION>' >> $(DISTNAME).ppd
@@ -882,7 +868,7 @@ ppd :
 
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
-	  lib/Class/Accessor/Complex.pm blib/lib/Class/Accessor/Complex.pm 
+	  lib/Directory/Iterator.pm blib/lib/Directory/Iterator.pm 
 	$(NOECHO) $(TOUCH) pm_to_blib
 
 

@@ -1,37 +1,143 @@
 package OP::GOPS::RIF;
+# ==============================
 # intro {{{
 
 use warnings;
 use strict;
 
-use FindBin;
-use lib("$FindBin::Bin/../../inc/perl");
+=head1 INHERITANCE
+
+L<Class::Accessor::Complex>, L<OP::Script>
+
+=head1 USES
+
+use FindBin qw($Bin $Script);
+use lib("$Bin/../../inc/perl");
+
 use File::Basename;
 use File::Find ();
 use File::Copy;
 use Getopt::Long;
 use Pod::Usage;
 use Cwd;
-use OP::Parse::BL;
 use Data::Dumper;
 
+use OP::Parse::BL;
+use OP::Base qw/:vars :funcs/;
+use OP::GOPS qw/:vars :funcs/;
+
+use parent qw( OP::Script Class::Accessor::Complex );
+
+=head1 ACCESSORS
+
+=head2 Scalar Accessors
+
+=head2 Array Accessors
+
+=head2 Hash Accessors
+
+=cut
+
+use FindBin qw($Bin $Script);
+use lib("$Bin/../../inc/perl");
+
+use File::Basename;
+use File::Find ();
+use File::Copy;
+use Getopt::Long;
+use Pod::Usage;
+use Cwd;
+use Data::Dumper;
+
+use OP::Parse::BL;
 use OP::Base qw/:vars :funcs/;
 use OP::GOPS qw/:vars :funcs/;
 
 our $VERSION='0.01';
 
-sub new()
-{
-    my ($class, %parameters) = @_;
-    my $self = bless ({}, ref ($class) || $class);
-    return $self;
-}
 # }}}
+# ==============================
+# Accessors {{{
+
+use parent qw( OP::Script Class::Accessor::Complex );
+
+###__ACCESSORS_SCALAR
+our @scalar_accessors=qw(
+    PROGNAME
+    ROOT
+);
+
+###__ACCESSORS_HASH
+our @hash_accessors=qw(
+    suffs
+    files
+    dirs
+);
+
+###__ACCESSORS_ARRAY
+our @array_accessors=qw(
+    fileprefs
+    riffiles
+    files
+    lfiles
+);
+
+__PACKAGE__
+    ->mk_scalar_accessors(@scalar_accessors)
+    ->mk_array_accessors(@array_accessors)
+    ->mk_hash_accessors(@hash_accessors);
+
+# }}}
+# ==============================
+# Methods {{{
+# _begin() {{{
+
+=head3 _begin()
+
+=cut
+
+sub _begin() {
+    my $self = shift;
+
+    $self->{package_name} = __PACKAGE__ unless defined $self->{package_name};
+
+    $self->accessors(
+        array    => \@array_accessors,
+        hash     => \@hash_accessors,
+        'scalar' => \@scalar_accessors
+    );
+
+}
+
+# }}}
+# get_opt() {{{
+
+sub get_opt() {
+    my $self = shift;
+
+    $self->OP::Script::get_opt();
+}
+
+# }}}
+# new()												{{{
+
+=head3 new()
+
+=cut
+
+sub new() {
+    my $self = shift;
+
+    $self->OP::Script::new();
+
+}
+
+# 													}}}
+# }}}
+# ==============================
 # vars {{{
 
-my(@fileprefs,%suffs);
-my(@riffiles);
-my @lfiles;
+
 my $date;
 my($var,$val);
 my $nline;
@@ -62,7 +168,7 @@ my(%elsearr,%printarr);
 my $tabif;
 my $new;
 my($ifprint,$iif,$ifprev);
-my($prog,$pwd);
+my($pwd);
 my(%lgcond,%lgconds,$rest);
 my(@res0,$res_and,%ares);
 my $in_string = 1;
@@ -95,8 +201,9 @@ $dirs{bin}="$dirs{root}/bin/";
 $dirs{inc}="$dirs{root}/inc/";
 
 $pwd=&cwd();
-$prog=&basename($pwd);
-$prog=$opt{prog} if (defined($opt{prog}));
+
+$self->PROGNAME(basename($pwd));
+$self->PROGNAME=$opt{prog} if (defined($opt{prog}));
 
 if($opts{prefix}){
 	$prefix=$opts{prefix};
@@ -104,8 +211,11 @@ if($opts{prefix}){
 
 if (defined($ifile)){
 	$if="$ifile";
-	$files{rif}=&dirname($if) . "/" . "$prefix" . &basename($if);
-	$files{rif} =~ s/^\.\///g;
+
+	$self->files('rif'   => join(dirname($if), "/" , "$prefix" , basename($if)));
+    
+    #TODO
+	#$self->files('rif'   => =~ s/^\.\///g;
 	
 	if (! ($ifile =~ m/\.(f90|f)$/) ){
 		$if="$ifile.f90";
@@ -334,20 +444,22 @@ sub evalp(){
 }
 	# }}}
 # %files {{{
-%files=( %files,
-   	flist		=>	"$dirs{inc}/flist_$prog.dat",
-	false		=>	[ "$dirs{inc}/$prog.false.i.dat" ],
-	true		=>	[ "$dirs{inc}/$prog.true.i.dat" ],
-	initvars	=>	"$dirs{inc}/$prog.initvars.vars.i.f90",
+
+$self->files(
+   	flist		=>	"$dirs{inc}/flist_$self->PROGNAME.dat",
+	false		=>	[ "$dirs{inc}/$self->PROGNAME.false.i.dat" ],
+	true		=>	[ "$dirs{inc}/$self->PROGNAME.true.i.dat" ],
+	initvars	=>	"$dirs{inc}/$self->PROGNAME.initvars.vars.i.f90",
 	vars		=>	"v.f90",
-	kw			=>	"$prog.kw.i.dat",
+	kw			=>	"$self->PROGNAME.kw.i.dat",
 	kwperl		=>	"kw.pl",
 	kw_setvars_perl		=>	"kw.setvars.i.pl",
-	lfiles		=>	"$ts.lfiles.dat",
-	constvars	=>	[ "$dirs{inc}/$prog.constvars.i.dat", "constvars.i.dat" ]
+	lfiles		=>	"$Script.lfiles.dat",
+	constvars	=>	[ "$dirs{inc}/$self->PROGNAME.constvars.i.dat", "constvars.i.dat" ]
 );
-if ($opts{ikw}){ $files{kw}=$opts{ikw}; }
-if ($opts{ikwperl}){ $files{kwperl}=$opts{ikwperl}; }
+
+if ($opts{ikw}){ $self->files(kw)=$opts{ikw}; }
+if ($opts{ikwperl}){ $self->files(kwperl)=$opts{ikwperl}; }
 
 # }}}
 # pdebug(){{{
@@ -384,7 +496,7 @@ sub pdebug(){
 sub read_in_ifs(){
 	my $self=shift;
 
-	@ifs=@{&readarr("$files{ifs}")} if (-e $files{ifs});
+	@ifs=@{&readarr("$self->files(ifs)")} if (-e $self->files(ifs));
 }
 # }}}
 # set_arr_trues() - specify array @true for true values  {{{
@@ -548,8 +660,8 @@ sub set_these_regex_vars(){
 sub set_these_vars(){ 
 	my $self=shift;
 
-	@fileprefs=qw( rif com plines pdumper diff );
-	%suffs=( "pdumper"	=>	"pl");
+	$self->fileprefs(qw( rif com plines pdumper diff ));
+	$self->suffs( "pdumper"	=>	"pl");
 }
 # }}}
 # set_this_sdata() {{{
@@ -588,22 +700,25 @@ sub set_this_sdata() {
 sub process_kw_data(){
 	my $self=shift;
 
-	if (-e $files{kw}){
-		&eoolog("Processing the keyword data file:\n");
-		&eoolog("	$files{kw}\n");
-		&eoolog("Perl keyword script is:\n");
-		&eoolog("	$files{kwperl}\n");
+	if (-e $self->files(kw)){
+
+		&eoolog("Processing the keyword data file: \n");
+		&eoolog("	" . $self->files("kw") . "\n");
+		&eoolog("Perl keyword script is: \n");
+		&eoolog("	" . $self->files("kwperl") . "\n");
+
 		my @strue=map { chomp; $_; } grep { ! ( /^\s*#/ || /^\s*$/ ) } 
-			`$files{kwperl} --prog $prog --rinit -i $files{kw} --true `;
+			`$self->files("kwperl") --prog $self->PROGNAME --rinit -i $self->files("kw") --true `;
+
 		my @sfalse=map { chomp; $_; } grep { ! ( /^\s*#/ || /^\s*$/ ) } 
-			`$files{kwperl} --prog $prog --rinit -i $files{kw} --false `;
+			`$self->files("kwperl") --prog $self->PROGNAME --rinit -i $self->files("kw") --false `;
 		@true=split(" ",$strue[0]);
 		@false=split(" ",$sfalse[0]);
 		&eoolog("Re-setting the variables by invoking eval() on the perl file: \n");
-		&eoolog("	$files{kw_setvars_perl}\n");
+		&eoolog("	$self->files(kw_setvars_perl)\n");
 	
-		if (-e $files{kw_setvars_perl}){
-			&evali(files=>[ "$files{kw_setvars_perl}" ],dir=>"",pref=>"",suff=>"");
+		if (-e $self->files(kw_setvars_perl)){
+			&evali(files=>[ "$self->files(kw_setvars_perl)" ],dir=>"",pref=>"",suff=>"");
 		}else{
 			&eoolog("Setvars file does not exist!\n");
 		}
@@ -636,7 +751,7 @@ sub view_rif(){
 		$self->_if_set_rif_files($if);
 	}
 	print @rifnames,"\n";
-	system("gvim -n -p @riffiles");
+	system("gvim -n -p $self->riffiles");
 	exit 0;
 }
 #}}}
@@ -651,15 +766,17 @@ sub view_rif(){
 sub _if_set_rif_files(){	
 	my $self=shift;
 
-	foreach (@fileprefs){
-		my $suff=$suffs{$_};
+	foreach ($self->fileprefs){
+		my $suff=$self->suffs($_);
 		my $pref=$_;
+
 		$pref=$_.".rif" if ($_ ne "rif");
-		$files{$_}=&dirname($if) . "/" . "$pref." . &basename($if);
-		$files{$_}.=".$suff" if (defined ($suff));
-		push(@riffiles,$files{$_});
+		$self->files($_)=&dirname($if) . "/" . "$pref." . &basename($if);
+		$self->files($_).=".$suff" if (defined ($suff));
+
+		$self->riffiles_push($self->files($_));
 	}
-	foreach (keys %files){ $files{$_} =~ s/^\.\///g; }
+	foreach (keys %files){ $self->files($_) =~ s/^\.\///g; }
 }
 #}}}
 # _if_print_opts_info() {{{
@@ -672,15 +789,15 @@ sub _if_print_opts_info(){
 	my $self=shift;
 
 	if ($opts{com}){
-		open($fh{NC},">$files{com}");
+		open($fh{NC},">$self->files(com)");
 		&eoolog("--com: additional comments, together with the code are written into file:\n");
-		&eoolog("			$files{com}\n");
+		&eoolog("			$self->files(com)\n");
 	}
 	if ($opts{plines}){
 		&eoolog("--plines: per-line commenting enabled.\n");
 		&eoolog("		Output file with per-line comments: \n");
-		&eoolog("			$files{plines}\n");
-		open($fh{PL},">$files{plines}");
+		&eoolog("			$self->files(plines)\n");
+		open($fh{PL},">$self->files(plines)");
 		print $fh{PL}, "! Explanations $s{of}\n";
 		print $fh{PL}, "!" . "=" x 50 . "\n";
 		foreach ( @lvarkeysall ){
@@ -700,9 +817,9 @@ sub _if_print_opts_info(){
 		if ($opts{pdumper}){
 			&eoolog("--pdumper: use Data::Dumper for boolean trees printing.\n");
 			&eoolog("		Tree will be printed into:\n");
-			&eoolog("			$files{pdumper}\n");
-			open($fh{D},">$files{pdumper}") || die $!;
-			$self->print_head($fh{D},"$files{pdumper}"); 
+			&eoolog("			$self->files(pdumper)\n");
+			open($fh{D},">$self->files(pdumper)") || die $!;
+			$self->print_head($fh{D},"$self->files(pdumper)"); 
 		}
 		if ($opts{debugBL}){
 			&eoolog("--debugBL: print debugging information for the Parse::BL parser.\n");
@@ -714,8 +831,8 @@ sub _if_print_opts_info(){
 			push(@lfiles,$if);
 			print L "$if\n";
 			foreach(qw(pdumper com plines rif)){
-				push(@lfiles,$files{$_});
-				print L "$files{$_}\n";
+				push(@lfiles,$self->files($_));
+				print L "$self->files($_)\n";
 			}
 		}
 }
@@ -745,9 +862,9 @@ sub _if_print_verbatim(){
 sub _if_open_files(){
 	my $self=shift;
 
-	&eoolog("Output file will be: $files{rif}\n");
+	&eoolog("Output file will be: $self->files(rif)\n");
 	open($fh{O},"<$if") || die $!;
-	open($fh{N},">$files{rif}");
+	open($fh{N},">$self->files(rif)");
 }
 # }}}
 # _if_print_heads() {{{
@@ -759,11 +876,11 @@ sub _if_open_files(){
 sub _if_print_heads(){
 	my $self=shift;
 
-	$self->print_head($fh{N},"$files{rif}");
+	$self->print_head($fh{N},"$self->files(rif)");
 
-	if ($opts{com}){ $self->print_head($fh{NC},"$files{com}"); }
-	if ($opts{plines}){ $self->print_head($fh{PL},"$files{plines}"); }
-	if ($opts{plines}){ $self->print_true($fh{PL},"$files{plines}"); }
+	if ($opts{com}){ $self->print_head($fh{NC},"$self->files(com)"); }
+	if ($opts{plines}){ $self->print_head($fh{PL},"$self->files(plines)"); }
+	if ($opts{plines}){ $self->print_true($fh{PL},"$self->files(plines)"); }
 }
 # }}}
 # _if_intro() {{{
@@ -1143,14 +1260,14 @@ sub _if_close_files(){
 sub _if_write_new(){
 	my $self=shift;
 
-	open($fh{N},">$files{fnew}") || die $!;
+	open($fh{N},">$self->files(fnew)") || die $!;
 	foreach my $line (@flines){
 		$line =~ s/\r//g;
 		print($fh{N},"$line\n");
 	}
 	close($fh{N});
 
-	move("$files{fnew}","$files{rif}");
+	move("$self->files(fnew)","$self->files(rif)");
 }
 # }}}
 # _if_final_output() {{{
@@ -1163,9 +1280,9 @@ sub _if_final_output(){
 	my $self=shift;
 
 	&eoolog("Diff the old and the new files...\n");
-	`diff  $files{rif} $if > $files{diff} `;
+	`diff  $self->files(rif) $if > $self->files(diff) `;
 	&eoolog("Output diff file is:\n");
-	&eoolog("	$files{diff}\n");
+	&eoolog("	$self->files(diff)\n");
 	&eoolog("","end_verbatim"=>1,vspaces=>1);
 }
 # }}}
@@ -1196,9 +1313,9 @@ sub _if_reopen_files(){
 	my $self=shift;
 
 	# reopen the file for additional editing
-	$files{fnew}="$files{rif}.new";
+	$self->files(fnew)="$self->files(rif).new";
 	###
-	open(O,"<$files{rif}") || die $!;
+	open(O,"<$self->files(rif)") || die $!;
 	my $ftext= do { local $/; <O> };
 	close(O);
 
@@ -1266,12 +1383,14 @@ sub handle_lfiles(){
 
 	if ($opts{lfiles}){
 		&eoolog("--lfiles: print the list of output files to:\n");
-		&eoolog("	$files{lfiles}\n");
-		@lfiles=();
-		open L, ">$files{lfiles}" || die $!;
+		&eoolog("	$self->files(lfiles)\n");
+
+		$self->lfiles(qw());
+		open L, ">", $self->files("lfiles") || die $!;
+
 		foreach (qw( tkw kw kwperl kw_setvars_perl flist logtex lfiles )){
-			push(@lfiles,$files{$_});
-			print L "$files{$_}\n";
+			$self->lfiles_push($self->files($_));
+			print L $self->files($_) . "\n";
 		}
 	}
 }
