@@ -54,6 +54,7 @@ use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 use parent qw( OP::Script Class::Accessor::Complex );
 
 ###__ACCESSORS_SCALAR
+
 our @scalar_accessors = qw(
   PROGNAME
   date
@@ -613,14 +614,16 @@ sub _begin() {
 }
 
 # }}}
-
-# }}}
+# get_opt() {{{
 
 sub get_opt() {
     my $self = shift;
 
     $self->OP::Script::get_opt();
 }
+
+# }}}
+# }}}
 
 # main() {{{
 

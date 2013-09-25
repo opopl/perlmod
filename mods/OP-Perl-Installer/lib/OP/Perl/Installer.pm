@@ -15,7 +15,7 @@ our $VERSION = '0.01';
 use OP::Script;
 
 use File::Basename;
-use File::Path qw( remove_tree );
+use File::Path qw( remove_tree make_path );
 use FindBin;
 use Getopt::Long;
 use Pod::Usage;
@@ -35,7 +35,8 @@ __PACKAGE__
     ->mk_new
 ###_ACCESSORS_SCALAR
 	->mk_scalar_accessors(qw(
-		moddir
+        PERLMODDIR
+        viewcmd
 	))
 	->mk_integer_accessors(qw())
 ###_ACCESSORS_ARRAY
@@ -47,6 +48,8 @@ __PACKAGE__
 ###_ACCESSORS_HASH
 	->mk_hash_accessors(qw(
     moddeps
+    dirs
+    files
   ));
 
 # }}}
@@ -154,21 +157,26 @@ sub add_modules() {
 
     foreach my $module (@modules) {
         my $def_module = $self->module_to_def($module);
-        push( @files, $def_module . "/lib/" . $self->module_to_path($module) );
-        mkdir "$shd/mods/";
-        mkdir "$shd/mods/" . $self->module_to_def($module);
-        mkdir "$shd/mods/" . $self->module_to_def($module) . "/lib/";
-        chdir "$shd/mods";
+
+        push( @files, catfile($def_module , "lib" , $self->module_to_path($module) ));
+
+        make_path(catfile(  $self->dirs("mods"), $self->module_to_def($module),"lib"));
+
+        chdir $self->dirs("mods");
+
         $mods{$module} = ExtUtils::ModuleMaker->new(
             NAME         => "$module",
             LICENSE      => "perl",
             BUILD_SYSTEM => "Module::Build",
             COMPACT      => 1
         );
+
         $mods{$module}->complete_build();
 
         # Write the install.sh script
-        open( F, ">", catfile( $def_module, "install.sh" ) );
+        my $installsh=catfile( $def_module, "install.sh" );
+
+        open( F, ">", $installsh );
 
         print F "#!/bin/bash\n";
         print F "" . "\n";
@@ -178,10 +186,15 @@ sub add_modules() {
         print F "./Build install" . "\n";
 
         close(F);
+
+        system("chmod +rx $installsh");
+
     }
-    foreach (@files) { s/^/$shd\/mods\//g; }
+    my $pmdir=$self->PERLMODDIR;
+    foreach (@files) { s/^/$pmdir\/mods\//g; }
     print "@files\n";
-    system("gvim -n -p --remote-tab-silent @files");
+
+    system($self->viewcmd . "@files");
 
     #exit 0;
 }
@@ -199,7 +212,7 @@ sub remove_modules() {
     @modules = split( ',', $opt{rm} );
 
     foreach my $module (@modules) {
-        my $mdir = "$shd/mods/" . $self->module_to_def($module);
+        my $mdir = "$self->PERLMODDIR/mods/" . $self->module_to_def($module);
         remove_tree($mdir) if ( ( -e $mdir ) && ( -d $mdir ) );
     }
     exit 0;
@@ -234,9 +247,11 @@ sub edit_modules() {
           . $self->module_to_path($module);
         push( @files, $mfile );
     }
-    foreach (@files) { s/^/$shd\/mods\//g; }
 
-    system("gvim -n -p --remote-tab-silent @files");
+    my $pmdir=$self->PERLMODDIR;
+    foreach (@files) { s/^/$pmdir\/mods\//g; }
+
+    system($self->viewcmd . "  @files");
 }
 
 # }}}
@@ -299,10 +314,10 @@ sub choose_modules() {
 sub install_modules() {
     my $self = shift;
 
-    opendir( D, $self->moddir );
+    opendir( D, $self->dirs("mods") );
 
     while ( my $file = readdir(D) ) {
-		my $fpath=catfile($self->moddir,$file);
+		my $fpath=catfile($self->dirs("mods"),$file);
 
         next if $file =~ m/^\./;
         next if $file =~ m/^pod$/;
@@ -357,7 +372,7 @@ sub run_build_install() {
     foreach my $mod ( $self->mod_def_names ) {
 
 		# $dirmod = e.g. ~/wrk/perlmod/mods/OP-Base
-        my $dirmod = catdir($shd, "mods",  $mod );
+        my $dirmod = catdir($self->PERLMODDIR, "mods",  $mod );
 
 		# e.g $module=OP::Base
         my $module = $self->def_to_module($mod);
@@ -496,7 +511,10 @@ sub _complete_modules() {
 sub init_vars() {
     my $self = shift;
 
-	$self->moddir("$shd/mods/");
+    $self->PERLMODDIR($ENV{PERLMODDIR} // catfile($ENV{HOME}, qw(wrk perlmod )));
+
+	$self->dirs( "mods"  => catfile($self->PERLMODDIR, qw(mods)) );
+    $self->viewcmd("gvim -n -p --remote-tab-silent ");
 
 	$self->_term_get_commands();
 

@@ -68,7 +68,7 @@ sub _begin(){
 	
 # say() {{{
 
-=head3 say() {{{
+=head3 say() 
 
 =cut
 
@@ -80,6 +80,43 @@ sub say() {
 	$self->out("$text" . "\n");
 
 }
+# }}}
+
+# opts_to_vars () {{{
+
+sub opts_to_scalar_vars(){
+    my $self=shift;
+
+    my @vars=@_;
+
+    foreach my $var (@vars) {
+        my $evs=join('','$self->',$var, 
+                '('  , '$self->_opt_get("' , $var,'") // "" );'
+            );
+        eval($evs);
+        die $@ if $@;
+    }
+}
+
+sub opts_bool_to_scalar_vars(){
+    my $self=shift;
+
+    my @vars=@_;
+
+    foreach my $var (@vars) {
+        my $evs="";
+        
+        $evs.=join('','$self->',$var, '(0);',"\n");
+        $evs.=join('','$self->',$var, '(1) if '  , 
+                '$self->_opt_true("' , $var,'");',"\n");
+
+        eval "$evs";
+
+        die $@ if $@;
+    }
+}
+
+
 # }}}
 # out() {{{
 
@@ -997,7 +1034,6 @@ sub acc_arr_sortuniq() {
 
 	eval $evs;
 	die $@ if $@;
-
 
 }
 

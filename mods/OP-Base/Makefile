@@ -41,7 +41,7 @@ LIBC =
 LIB_EXT = .a
 OBJ_EXT = .o
 OSNAME = linux
-OSVERS = 3.2.0-23-generic
+OSVERS = 2.6.38-15-generic-pae
 RANLIB = :
 SITELIBEXP = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/site_perl/5.16.2
 SITEARCHEXP = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/site_perl/5.16.2/i686-linux
@@ -160,7 +160,9 @@ C_FILES  =
 O_FILES  = 
 H_FILES  = 
 MAN1PODS = 
-MAN3PODS = lib/OP/Base.pm
+MAN3PODS = lib/OP/Base.pm \
+	lib/i.examples.pod \
+	lib/i.help.pod
 
 # Where is the Config information that we are using/depend on
 CONFIGDEP = $(PERL_ARCHLIB)$(DFSEP)Config.pm $(PERL_INC)$(DFSEP)config.h
@@ -183,10 +185,19 @@ PERL_ARCHIVE_AFTER =
 
 
 TO_INST_PM = install.pl \
-	lib/OP/Base.pm
+	lib/OP/Base.pm \
+	lib/cpan.install.ExtUtils::ModuleMaker.log \
+	lib/i.examples.pod \
+	lib/i.help.pod
 
 PM_TO_BLIB = install.pl \
 	$(INST_LIB)/OP/install.pl \
+	lib/cpan.install.ExtUtils::ModuleMaker.log \
+	blib/lib/cpan.install.ExtUtils::ModuleMaker.log \
+	lib/i.help.pod \
+	blib/lib/i.help.pod \
+	lib/i.examples.pod \
+	blib/lib/i.examples.pod \
 	lib/OP/Base.pm \
 	blib/lib/OP/Base.pm
 
@@ -410,8 +421,12 @@ POD2MAN = $(POD2MAN_EXE)
 
 
 manifypods : pure_all  \
+	lib/i.help.pod \
+	lib/i.examples.pod \
 	lib/OP/Base.pm
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
+	  lib/i.help.pod $(INST_MAN3DIR)/i.help.$(MAN3EXT) \
+	  lib/i.examples.pod $(INST_MAN3DIR)/i.examples.$(MAN3EXT) \
 	  lib/OP/Base.pm $(INST_MAN3DIR)/OP::Base.$(MAN3EXT) 
 
 
@@ -486,7 +501,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) 'configure_requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) 'dynamic_config: 1' >> META_new.yml
-	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120630'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120921'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'license: unknown' >> META_new.yml
 	$(NOECHO) $(ECHO) 'meta-spec:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  url: http://module-build.sourceforge.net/META-spec-v1.4.html' >> META_new.yml
@@ -506,7 +521,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      "op <op@>"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
 	$(NOECHO) $(ECHO) '   "dynamic_config" : 1,' >> META_new.json
-	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120630",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120921",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "license" : [' >> META_new.json
 	$(NOECHO) $(ECHO) '      "unknown"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
@@ -848,6 +863,9 @@ ppd :
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
 	  install.pl $(INST_LIB)/OP/install.pl \
+	  lib/cpan.install.ExtUtils::ModuleMaker.log blib/lib/cpan.install.ExtUtils::ModuleMaker.log \
+	  lib/i.help.pod blib/lib/i.help.pod \
+	  lib/i.examples.pod blib/lib/i.examples.pod \
 	  lib/OP/Base.pm blib/lib/OP/Base.pm 
 	$(NOECHO) $(TOUCH) pm_to_blib
 

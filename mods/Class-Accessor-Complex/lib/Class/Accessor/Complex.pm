@@ -457,6 +457,35 @@ EODOC
             belongs_to => $field,
         );
 
+###array_join
+my @join_methods = uniq "join_${field}", "${field}_join";
+
+        for my $name (@join_methods) {
+            $self->install_accessor(
+                name => $name,
+                code => sub {
+                    local $DB::sub = local *__ANON__ = "${class}::${name}"
+                      if defined &DB::DB && !$Devel::DProf::VERSION;
+
+                      my $self=shift;
+                      
+                      # separator to be used in join() command
+                      #     below
+                      my $sep=shift // ' ';
+
+                      return join($sep,@{ $self->{$field} });
+                },
+            );
+        }
+        $self->document_accessor(
+            name    => \@join_methods,
+            purpose => <<'EODOC',
+Returns the result of the action of  join() command on the array
+EODOC
+            examples   => [],
+            belongs_to => $field,
+        );
+
 ###array_clear
         my @clear_methods = uniq "clear_${field}", "${field}_clear";
 
