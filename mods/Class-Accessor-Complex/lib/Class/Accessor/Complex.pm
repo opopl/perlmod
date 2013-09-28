@@ -456,6 +456,33 @@ EODOC
             examples   => [],
             belongs_to => $field,
         );
+###array_belongsto
+        my @belongsto_methods = uniq "belongsto_${field}", "${field}_belongsto";
+
+        for my $name (@belongsto_methods) {
+            $self->install_accessor(
+                name => $name,
+                code => sub {
+                    local $DB::sub = local *__ANON__ = "${class}::${name}"
+                      if defined &DB::DB && !$Devel::DProf::VERSION;
+
+                      my $self=shift;
+
+                      my $element=shift;
+
+                      return ( grep { /^$element$/ } @{ $self->{$field} }) ? 1 : 0 ;
+                },
+            );
+        }
+        $self->document_accessor(
+            name    => \@belongsto_methods,
+            purpose => <<'EODOC',
+belongstos the array
+EODOC
+            examples   => [],
+            belongs_to => $field,
+        );
+
 
 ###array_join
 my @join_methods = uniq "join_${field}", "${field}_join";
