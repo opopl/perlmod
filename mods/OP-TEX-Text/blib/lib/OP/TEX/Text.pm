@@ -745,14 +745,22 @@ sub _print(){
 			foreach ($opts->{fmode}){
 				/^w$/ && do { open(F, ">$file") || die $!; next; };
 				/^a$/ && do { 
-					open(F, ">>$file") || die $!; next; 
+					open(F, ">>$file") || die $!;
+                    next; 
 				};
 			}
 
 			print F $self->_text;
 
 			close F;
-		}else{
+
+		}elsif( defined $opts{fh} ){
+
+            my $fh=$opts{fh};
+
+			print $fh { $self->_text };
+
+        }else{
 			print $self->_text;
 		}
 	}

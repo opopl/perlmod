@@ -16,7 +16,11 @@ BEGIN {
     #Give a hoot don't pollute, do not export more than needed by default
     @EXPORT      = qw();
     %EXPORT_TAGS = (
-        'funcs' => [qw( readdat )],
+        'funcs' => [qw( 
+            readdat
+            read_secorder
+            Fcat
+         )],
         'vars'  => [
             qw(
               $bkey
@@ -25,6 +29,9 @@ BEGIN {
               $figs_h
               $refs_h
               $texroot
+              %greek_letters
+              %subsyms
+              %RE
               )
         ]
     );
@@ -36,13 +43,13 @@ BEGIN {
 
 }
 
-our $texroot = $ENV{'PSH_TEXROOT'} 
-    // catfile( "$ENV{hm}", qw(wrk p) )
-    // catfile( "$ENV{HOME}", qw(wrk p) );
-
-our ( $refs_h, $eqs_h, $figs_h, $bkey, $config );
+###our
+our ( $refs_h, $eqs_h, $figs_h, $bkey, $config, $texroot );
+our (%greek_letters,%subsyms,%RE);
 
 sub readdat;
+sub init_vars;
+sub Fcat;
 
 sub new {
     my ( $class, %parameters ) = @_;
@@ -87,5 +94,101 @@ sub readdat() {
     }
 
 }
+
+sub Fcat () {
+    my @names=@_;
+
+    return catfile($texroot,@names);
+}
+
+sub read_secorder () {
+
+    my $file=&Fcat( 'p.' . $bkey . '.secorder.i.dat' );
+    my @lines=read_file $file;
+
+    @lines=map { chomp; /^\s*#/ ? () : $_ } @lines;
+
+    wantarray ? @lines : \@lines;
+}
+
+sub init_RE() {
+
+    %RE=(
+        papereq  => qr/(\\begin\{paper(eq|align)\})/,
+        labeleq  => qr/\\labeleq\{([\w\d]+)\}/,
+        alignbegin    => qr/\\(?<begin>begin)\{align\}/,
+        alignend    => qr/\\(?<end>end)\{align\}/,
+    );
+
+}
+
+sub init_vars() {
+
+    &init_RE();
+
+    $texroot = $ENV{'PSH_TEXROOT'} 
+        // catfile( "$ENV{hm}", qw(wrk p) )
+        // catfile( "$ENV{HOME}", qw(wrk p) );
+
+###def_greek_letters
+    %greek_letters=(
+        "α" => "alpha" ,
+        "β" => "beta" ,
+        "γ" => "gamma" ,
+        "δ" => "delta" ,
+        "ε" => "epsilon",
+        "ζ" => "zeta",
+        "η" => "eta",
+        "θ" => "theta",
+        "ι" => "iota",
+        "κ" => "kappa",
+        "ν" => "nu",
+        "π" => "pi",
+        "ρ" => "rho",
+        "σ" => "sigma",
+        "τ" => "tau",
+        "χ" => "hi",
+        "ω" => "omega",
+        "λ" => "lambda",
+        "ξ" => "xi",
+        "φ" => "varphi",
+        "ψ" => "psi",
+        "μ" => "mu",
+        "Α" => "Alpha" ,
+        "Β" => "Beta" ,
+        "Γ" => "Gamma" ,
+        "Δ" => "Delta" ,
+        "Ε" => "Epsilon",
+        "Ζ" => "Zeta",
+        "Η" => "Eta",
+        "Θ" => "Theta",
+        "Ι" => "Iota",
+        "Κ" => "Kappa",
+        "Ν" => "Nu",
+        "Π" => "Pi",
+        "Ρ" => "Rho",
+        "Σ" => "Sigma",
+        "Τ" => "Tau",
+        "Χ" => "Hi",
+        "Ω" => "Omega",
+        "Λ" => "Lambda",
+        "Ξ" => "Xi",
+        "Φ" => "Varphi",
+        "Ψ" => "Psi",
+        "Μ" => "Mu",
+    );
+
+###def_subsyms
+    %subsyms=(
+            "×" => "\\times ",
+            "≡" => "\\equiv ",
+            "±" => "\\pm ",
+	        "–" => "-",
+            "−" => "-",
+    );
+
+}
+
+&init_vars();
 
 1;

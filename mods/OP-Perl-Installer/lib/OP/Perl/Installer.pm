@@ -14,7 +14,7 @@ our $VERSION = '0.01';
 
 use OP::Script;
 
-use File::Basename;
+use File::Basename qw(basename dirname );
 use File::Path qw( remove_tree make_path );
 use FindBin;
 use Getopt::Long;
@@ -103,6 +103,36 @@ sub module_to_path() {
 }
 
 # }}}
+
+sub module_full_local_paths() {
+    my $self=shift;
+
+    my $module=shift;
+
+    my @dirs=qw( . lib );
+    my @lpaths=();
+
+    foreach my $dir (@dirs) {
+        my $mfile=catfile($self->module_to_def($module), $dir, $self->module_to_path($module));
+
+        for($module){
+          /^LaTeX::BibTeX$/ && do {
+            $mfile=catfile($self->module_to_def($module), 
+                basename($self->module_to_path($module)));
+            next;
+          };
+        }
+        my $fullpath=catfile($self->dirs("mods"),$mfile);
+        print "$fullpath\n";
+        push(@lpaths,$mfile) if -e $fullpath;
+    }
+
+    @lpaths=&uniq(@lpaths);
+
+    wantarray ? @lpaths : \@lpaths ;
+    
+}
+
 # module_to_def() {{{
 
 =head3 module_to_def()
@@ -243,15 +273,16 @@ sub edit_modules() {
     }
 
     foreach my $module (@emodules) {
-        $mfile = $self->module_to_def($module) . "/lib/"
-          . $self->module_to_path($module);
-        push( @files, $mfile );
+        my @mfiles = $self->module_full_local_paths($module);
+        push( @files, @mfiles );
     }
 
     my $pmdir=$self->PERLMODDIR;
     foreach (@files) { s/^/$pmdir\/mods\//g; }
 
-    system($self->viewcmd . "  @files");
+    if (@files){
+      system($self->viewcmd . "  @files");
+    }
 }
 
 # }}}

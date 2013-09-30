@@ -1,4 +1,5 @@
 package OP::Script;
+#---------------------------------
 # intro {{{
 
 =head1 NAME
@@ -24,12 +25,16 @@ use IPC::Cmd qw(can_run run);
 
 our $VERSION     = '0.01';
 
-# }}}
-# Methods {{{
-
 =head1 METHODS
 
 =cut
+
+# }}}
+#---------------------------------
+# Methods {{{
+
+#=================================
+# Core: new() _begin() main() {{{
 
 # new() {{{
 
@@ -65,58 +70,46 @@ sub _begin(){
 
 }
 # }}}
-	
-# say() {{{
+# main() {{{
 
-=head3 say() 
+=head3 main()
 
 =cut
 
-sub say() {
-	my $self=shift;
+sub main(){
+  my $self=shift;
+  
+  &OP::Base::sbvars();
+  &OP::Base::setsdata();
+  &OP::Base::setfiles();
 
-	my $text=shift;
+  $self->set_these_cmdopts();
 
-	$self->out("$text" . "\n");
+  &OP::Base::setcmdopts();
+  &OP::Base::getopt();
 
 }
 # }}}
 
-# opts_to_vars () {{{
+# }}}
+#=================================
+# Output: _die out say warn {{{
 
-sub opts_to_scalar_vars(){
-    my $self=shift;
+# _die() {{{
 
-    my @vars=@_;
+=head3 _die()
 
-    foreach my $var (@vars) {
-        my $evs=join('','$self->',$var, 
-                '('  , '$self->_opt_get("' , $var,'") // "" );'
-            );
-        eval($evs);
-        die $@ if $@;
-    }
+=cut
+
+sub _die(){
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	my $msg=$self->{package_name} . "> _ERROR_ " . $ref;
+	die "$msg";
+
 }
-
-sub opts_bool_to_scalar_vars(){
-    my $self=shift;
-
-    my @vars=@_;
-
-    foreach my $var (@vars) {
-        my $evs="";
-        
-        $evs.=join('','$self->',$var, '(0);',"\n");
-        $evs.=join('','$self->',$var, '(1) if '  , 
-                '$self->_opt_true("' , $var,'");',"\n");
-
-        eval "$evs";
-
-        die $@ if $@;
-    }
-}
-
-
 # }}}
 # out() {{{
 
@@ -127,16 +120,29 @@ sub opts_bool_to_scalar_vars(){
 sub out(){
 	my $self=shift;
 
-	my($ref,$text,$prefix,$opts,%o);
+	my $ref=shift;
+	my %opts=@_;
+
+	my($text,$prefix,$opts,%o,$color);
 
 	$prefix=$self->{package_name} . "> ";
 
-	$ref=shift;
+    eval '$color=$self->textcolor // ""';
+    $color=$opts{color} if %opts;
 
 	unless(ref $ref){
 		$text="$prefix$ref";
 	}	
-	print "$text";
+
+    if ($color){
+        print color $color;
+    }
+
+    print "$text";
+
+    if ($color){
+        print color 'reset';
+    }
 
 }
 
@@ -161,84 +167,44 @@ sub debugout(){
 
 }
 # }}}
-# _die() {{{
+# say() {{{
 
-=head3 _die()
+=head3 say() 
 
 =cut
 
-sub _die(){
+sub say() {
 	my $self=shift;
 
-	my $ref=shift // '';
+	my $text=shift;
+	my %opts=@_;
 
-	my $msg=$self->{package_name} . "> _ERROR_ " . $ref;
-	die "$msg";
+	$self->out("$text" . "\n", %opts);
+
+}
+# }}}
+# warn() {{{
+
+=head3 warn() 
+
+=cut
+
+sub warn() {
+	my $self=shift;
+
+	my $text=shift;
+	my %opts=@_;
+
+	$self->say("$text" . "\n", (color  => 'bold yellow', %opts));
 
 }
 # }}}
 
-# exec() {{{
-
-=head3 exec()
-
-=cut
-
-sub exec(){
-	my $self=shift;
-
-	my $ref=shift // '';
-
-	# Command to be executed
-	my($cmd);
-
-	# Logfile to which the command's 
-	#	standard & error output may be written
-	#	(if required)
-	my($log);
-
-	# Verbosity level for the command's output
-	my($verbose);
-
-	return 1 unless $ref;
-
-	if (ref $ref eq "HASH"){
-		$cmd=$ref->{cmd} // '';
-		$log=$ref->{log} // '';
-		$verbose=$ref->{verbose} // 0;
-
-		unless($cmd){
-			$self->out("No command provided for OP::Script::exec()!\n");
-			exit 1;
-		}
-
-		$self->out("Running command: $cmd\n");
-
-		my($ok, $err, $fullbuf, $stdout, $stderr) = 
-			IPC::Cmd::run( command => $cmd, verbose => $verbose);
-
-		my $s_fullbuf=join "",@$fullbuf;
-
-		my $fu=File::Util->new();
-		
-		if($log){ 
-			$fu->write_file(
-				file => $log, 
-				content => $s_fullbuf,
-			   	mode => "write");
-		}
-
-		#print Dumper($fullbuf);
-		#exit 0;
-
-		unless ($ok){
-			die "Failure\n";
-		}
-	}
-
-}
 # }}}
-# _opt_* - methods for handling command-line options {{{
+#=================================
+# Command-line options {{{
+
+# _opt_*  {{{
 
 =head2 Command-line options handling 
 
@@ -367,6 +333,264 @@ sub _opt_defined(){
 }
 
 # }}}
+# }}}
+# get_opt() {{{
+
+=head3 get_opt()
+
+=cut
+
+sub get_opt(){
+	my $self=shift;
+
+	my @argv=@_;
+
+	&OP::Base::sbvars();
+  	&OP::Base::setsdata();
+  	&OP::Base::setfiles();
+
+  	$self->set_these_cmdopts();
+
+  	&OP::Base::setcmdopts();
+  	&OP::Base::getopt(@argv);
+
+	$self->{v}->{cmdline}=$OP::Base::cmdline;
+
+  	$self->get_opt_after();
+}
+
+=head3 print_help()
+
+=cut
+
+sub print_help(){
+	my $self=shift;
+
+  	&OP::Base::printhelp();
+}
+
+=head3 print_man() 
+
+=cut
+
+sub print_man(){
+	my $self=shift;
+
+  	&OP::Base::printman();
+}
+
+sub acc_arr_sortuniq() {
+	my $self=shift;
+
+	my $arr=shift;
+	my @a;
+
+	my $evs;
+
+	$evs.=  ' @a=$self->' . $arr . ';' . "\n";
+	$evs.=  ' @a=sort(&uniq(@a)) if @a;';
+	$evs.=  ' $self->' . $arr . '(@a);';
+
+	eval $evs;
+	die $@ if $@;
+
+}
+
+sub acc_arr_printarr(){
+	my $self=shift;
+
+	my $arr=shift;
+
+	my $evs='print $_ . "\n" for($self->' . $arr . ');' ;
+	eval $evs;
+	die $@ if $@;
+
+}
+
+=head3 print_examples()
+
+=cut
+
+sub print_examples(){
+	my $self=shift;
+
+  	&OP::Base::printexamples();
+}
+
+=head3 print_pod_options
+
+=cut
+
+sub print_pod_options(){
+	my $self=shift;
+
+  	&OP::Base::printpodoptions();
+}
+
+=head3 get_opt_after()
+
+=cut
+
+sub get_opt_after(){
+	my $self=shift;
+
+    #&OP::Base::getopt_after();
+
+	$self->print_pod_options();
+	$self->print_help() if $self->_opt_true("help");
+	$self->print_man() if $self->_opt_true("man");
+	$self->print_examples() if $self->_opt_true("examples");
+
+	$self->_opt_set("debug",1) if $self->_opt_true("debug");
+
+}
+
+# }}}
+# add_cmd_cmdsopts() {{{
+
+=head3 add_cmd_cmdsopts()
+
+=cut
+
+sub add_cmd_opts(){
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	unless ($ref){
+		return 1;
+	}else{
+		if (ref $ref eq "ARRAY") {
+			foreach my $opt_struct (@$ref) {
+				$self->_opt_struct_check($opt_struct);
+				push(@OP::Base::cmdopts,$opt_struct);
+			}
+		}elsif(ref $ref eq "HASH"){
+			my $opt_struct=$ref;
+			$self->_opt_struct_check($opt_struct);
+			push(@OP::Base::cmdopts,$opt_struct);
+		}
+	}
+}
+# }}}
+# set_these_cmdsopts() {{{
+
+=head3 set_these_cmdsopts()
+
+=cut
+
+sub set_these_cmdopts(){ 
+  my $self=shift;
+
+  @OP::Base::cmdopts=( 
+	{ name	=>	"h,help", 		desc	=>	"Print the help message"	}
+	,{ name	=>	"man", 			desc	=>	"Print the man page"		}
+	,{ name	=>	"examples", 	desc	=>	"Show examples of usage"	}
+	,{ name	=>	"vm", 			desc	=>	"View myself"	}
+	,{ name	=>	"d,debug",		desc	=>	"For debugging purposes"	}
+	,{ name	=>	"i", 			desc	=>	"Short option"	}
+	#,{ cmd	=>	"<++>", 		desc	=>	"<++>", type	=>	"s"	}
+  );
+}
+# }}}
+
+# }}}
+#=================================
+# opts_to_vars() {{{
+
+sub opts_to_scalar_vars(){
+    my $self=shift;
+
+    my @vars=@_;
+
+    foreach my $var (@vars) {
+        my $evs=join('','$self->',$var, 
+                '('  , '$self->_opt_get("' , $var,'") // "" );'
+            );
+        eval($evs);
+        die $@ if $@;
+    }
+}
+
+sub opts_bool_to_scalar_vars(){
+    my $self=shift;
+
+    my @vars=@_;
+
+    foreach my $var (@vars) {
+        my $evs="";
+        
+        $evs.=join('','$self->',$var, '(0);',"\n");
+        $evs.=join('','$self->',$var, '(1) if '  , 
+                '$self->_opt_true("' , $var,'");',"\n");
+
+        eval "$evs";
+
+        die $@ if $@;
+    }
+}
+
+
+# }}}
+# exec() {{{
+
+=head3 exec()
+
+=cut
+
+sub exec(){
+	my $self=shift;
+
+	my $ref=shift // '';
+
+	# Command to be executed
+	my($cmd);
+
+	# Logfile to which the command's 
+	#	standard & error output may be written
+	#	(if required)
+	my($log);
+
+	# Verbosity level for the command's output
+	my($verbose);
+
+	return 1 unless $ref;
+
+	if (ref $ref eq "HASH"){
+		$cmd=$ref->{cmd} // '';
+		$log=$ref->{log} // '';
+		$verbose=$ref->{verbose} // 0;
+
+		unless($cmd){
+			$self->out("No command provided for OP::Script::exec()!\n");
+			exit 1;
+		}
+
+		$self->out("Running command: $cmd\n");
+
+		my($ok, $err, $fullbuf, $stdout, $stderr) = 
+			IPC::Cmd::run( command => $cmd, verbose => $verbose);
+
+		my $s_fullbuf=join "",@$fullbuf;
+
+		my $fu=File::Util->new();
+		
+		if($log){ 
+			$fu->write_file(
+				file => $log, 
+				content => $s_fullbuf,
+			   	mode => "write");
+		}
+
+		#print Dumper($fullbuf);
+		#exit 0;
+
+		unless ($ok){
+			die "Failure\n";
+		}
+	}
+
+}
 # }}}
 # _a_* -  array methods {{{
 
@@ -975,185 +1199,7 @@ sub _view(){
 
 }
 # }}}
-# get_opt() {{{
-
-=head3 get_opt()
-
-=cut
-
-sub get_opt(){
-	my $self=shift;
-
-	my @argv=@_;
-
-	&OP::Base::sbvars();
-  	&OP::Base::setsdata();
-  	&OP::Base::setfiles();
-
-  	$self->set_these_cmdopts();
-
-  	&OP::Base::setcmdopts();
-  	&OP::Base::getopt(@argv);
-
-	$self->{v}->{cmdline}=$OP::Base::cmdline;
-
-  	$self->get_opt_after();
-}
-
-=head3 print_help()
-
-=cut
-
-sub print_help(){
-	my $self=shift;
-
-  	&OP::Base::printhelp();
-}
-
-=head3 print_man() 
-
-=cut
-
-sub print_man(){
-	my $self=shift;
-
-  	&OP::Base::printman();
-}
-
-sub acc_arr_sortuniq() {
-	my $self=shift;
-
-	my $arr=shift;
-	my @a;
-
-	my $evs;
-
-	$evs.=  ' @a=$self->' . $arr . ';' . "\n";
-	$evs.=  ' @a=sort(&uniq(@a)) if @a;';
-	$evs.=  ' $self->' . $arr . '(@a);';
-
-	eval $evs;
-	die $@ if $@;
-
-}
-
-sub acc_arr_printarr(){
-	my $self=shift;
-
-	my $arr=shift;
-
-	my $evs='print $_ . "\n" for($self->' . $arr . ');' ;
-	eval $evs;
-	die $@ if $@;
-
-}
-
-=head3 print_examples()
-
-=cut
-
-sub print_examples(){
-	my $self=shift;
-
-  	&OP::Base::printexamples();
-}
-
-=head3 print_pod_options
-
-=cut
-
-sub print_pod_options(){
-	my $self=shift;
-
-  	&OP::Base::printpodoptions();
-}
-
-=head3 get_opt_after()
-
-=cut
-
-sub get_opt_after(){
-	my $self=shift;
-
-    #&OP::Base::getopt_after();
-
-	$self->print_pod_options();
-	$self->print_help() if $self->_opt_true("help");
-	$self->print_man() if $self->_opt_true("man");
-	$self->print_examples() if $self->_opt_true("examples");
-
-	$self->_opt_set("debug",1) if $self->_opt_true("debug");
-
-}
-
+#=================================
 # }}}
-# add_cmd_cmdsopts() {{{
-
-=head3 add_cmd_cmdsopts()
-
-=cut
-
-sub add_cmd_opts(){
-	my $self=shift;
-
-	my $ref=shift // '';
-
-	unless ($ref){
-		return 1;
-	}else{
-		if (ref $ref eq "ARRAY") {
-			foreach my $opt_struct (@$ref) {
-				$self->_opt_struct_check($opt_struct);
-				push(@OP::Base::cmdopts,$opt_struct);
-			}
-		}elsif(ref $ref eq "HASH"){
-			my $opt_struct=$ref;
-			$self->_opt_struct_check($opt_struct);
-			push(@OP::Base::cmdopts,$opt_struct);
-		}
-	}
-}
-# }}}
-# set_these_cmdsopts() {{{
-
-=head3 set_these_cmdsopts()
-
-=cut
-
-sub set_these_cmdopts(){ 
-  my $self=shift;
-
-  @OP::Base::cmdopts=( 
-	{ name	=>	"h,help", 		desc	=>	"Print the help message"	}
-	,{ name	=>	"man", 			desc	=>	"Print the man page"		}
-	,{ name	=>	"examples", 	desc	=>	"Show examples of usage"	}
-	,{ name	=>	"vm", 			desc	=>	"View myself"	}
-	,{ name	=>	"d,debug",		desc	=>	"For debugging purposes"	}
-	,{ name	=>	"i", 			desc	=>	"Short option"	}
-	#,{ cmd	=>	"<++>", 		desc	=>	"<++>", type	=>	"s"	}
-  );
-}
-# }}}
-# main() {{{
-
-=head3 main()
-
-=cut
-
-sub main(){
-  my $self=shift;
-  
-  &OP::Base::sbvars();
-  &OP::Base::setsdata();
-  &OP::Base::setfiles();
-
-  $self->set_these_cmdopts();
-
-  &OP::Base::setcmdopts();
-  &OP::Base::getopt();
-
-}
-# }}}
-
-# }}}
+#---------------------------------
 1;
