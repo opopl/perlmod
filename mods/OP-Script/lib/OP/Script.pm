@@ -156,6 +156,16 @@ sub debugout_var(){
 
 	eval $evs;
 	die $@ if $@;
+
+}
+
+sub debugsay(){
+	my $self=shift;
+
+	my $text=shift // '';
+
+    $self->debugout("$text" . "\n");
+
 }
 
 sub debugout(){

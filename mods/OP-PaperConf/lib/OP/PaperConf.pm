@@ -100,6 +100,10 @@ sub tex_nice_base () {
 			        my $sym=$subsyms{$w};
 			        s/$w/$sym/g;
 			}
+            s/(?<tagid>%%page)\s+(?<pagenum>.*)$/$+{tagid} page_$+{pagenum}/g;
+            s/(?<tagid>%%equation)\s+(?<eqnum>\d+)/$+{tagid} eq_$+{eqnum}/g;
+            s/(?<tagid>%%figure)\s+(?<fignum>\d+)/$+{tagid} fig_$+{fignum}/g;
+            s/(?<tagid>%%section)\s+(?<secname>.*)/$+{tagid} sec_$+{secname}/g;
 
         } $file;
   }
