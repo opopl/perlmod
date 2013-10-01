@@ -1,8 +1,10 @@
+
 use 5.010;
 use strict;
 use warnings;
 
 package OP::VimTag;
+
 BEGIN {
   $OP::VimTag::VERSION = '1.110690';
 }
@@ -13,15 +15,52 @@ use File::Slurp;
 use Hash::Rename;
 use UNIVERSAL::require;
 use OP::VimTag::Null;
+use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 
-use parent qw(Class::Accessor::Constructor Getopt::Inherited);
-__PACKAGE__->mk_constructor->mk_scalar_accessors(qw(tags))
-  ->mk_array_accessors(qw(libs))
-  ->mk_hash_accessors(qw(is_fake_package filename_for has_super_class));
+use parent qw(Class::Accessor::Constructor Getopt::Inherited OP::Script );
 
-use constant DEFAULTS => (tags => {});
-use constant GETOPT => (qw(use=s out|o=s first|f libs|l=s@));
-use constant GETOPT_DEFAULTS => (verbose => 0, out => '-');
+###__ACCESSORS_SCALAR
+our @scalar_accessors=qw(
+    tags
+    tagfile
+    textcolor
+);
+
+###__ACCESSORS_HASH
+our @hash_accessors=qw(
+    accessors
+    is_fake_package 
+    filename_for 
+    has_super_class
+);
+
+###__ACCESSORS_ARRAY
+our @array_accessors=qw(
+    libs
+);
+
+__PACKAGE__
+    ->mk_constructor
+    ->mk_scalar_accessors(@scalar_accessors)
+    ->mk_array_accessors(@array_accessors)
+    ->mk_hash_accessors(@hash_accessors);
+
+use constant DEFAULTS => (
+    tags => {}
+);
+
+###constant_GETOPT
+use constant GETOPT => (qw(
+    use=s 
+    out|o=s 
+    first|f 
+    libs|l=s@)
+);
+
+use constant GETOPT_DEFAULTS => (
+    verbose => 0, 
+    out => catfile($ENV{HOME},qw( tags perl.tags ))
+);
 
 # --use: whether to 'use' the package; might gen more tags. The value is the
 # path prefix under which to use() modules.
@@ -30,30 +69,85 @@ use constant GETOPT_DEFAULTS => (verbose => 0, out => '-');
 # seen. Seeing a package twice could happen if you have a development version
 # but have it installed as well. Use this option if you index the development
 # directory first and only want to see that version.
-sub run {
+
+#sub new() {
+    #my $self = shift;
+
+    #$self->SUPER::new();
+
+
+#}
+
+sub process_opt {
     my $self = shift;
-    $self->init;
-    $self->do_getopt;
-    $self->determine_libs;
-    exit unless $self->libs;
-    $self->generate_tags;
-    $self->add_SUPER_tags;
-    $self->add_yaml_marshall_tags;
-    $self->finalize;
-    $self->write_tags;
+
+    $self->tagfile( $self->opt('out') );
+    $self->say("    Output tag file is: " . $self->tagfile );
+
 }
-sub init { }
+
+sub main {
+    my $self = shift;
+
+    $self->_begin();
+
+    $self->init_vars;
+
+    $self->Getopt::Inherited::do_getopt;
+
+    $self->process_opt;
+
+    $self->determine_libs;
+
+    exit unless $self->libs;
+
+    $self->generate_tags;
+
+    $self->add_SUPER_tags;
+
+    $self->add_yaml_marshall_tags;
+
+    $self->finalize;
+
+    $self->write_tags;
+
+}
+
+sub init_vars() { 
+    my $self=shift;
+
+    $self->textcolor('bold blue');
+
+    $self->say("Initializing variables ... ");
+
+}
 
 sub finalize {
     my $self = shift;
+
+    $self->say("Finalizing ... ");
 
     # avoid Test::Base doing END{} processing, which, in the absence of real
     # tests, would produce annoying error messages.
     Test::Builder::plan(1) if $Test::Base::VERSION;
 }
 
+sub _begin() {
+    my $self = shift;
+
+    $self->{package_name} = __PACKAGE__ unless defined $self->{package_name};
+
+    $self->accessors(
+        array    => \@array_accessors,
+        hash     => \@hash_accessors,
+        'scalar' => \@scalar_accessors
+    );
+
+}
+
 sub setup_fake_package {
     my ($self, @packages) = @_;
+
     for my $package (@packages) {
         (my $file = "$package.pm") =~ s!::!/!g;
         $INC{$file} = 'DUMMY';
@@ -61,11 +155,14 @@ sub setup_fake_package {
         @{ $package . '::ISA' } = qw(OP::VimTag::Null);
         $self->is_fake_package($package, 1);
     }
+
     $self;
 }
 
 sub determine_libs {
     my $self = shift;
+
+    $self->say("Determining library directories...");
 
     our @libs = grep { !/^\.+$/ } grep { ref ne 'CODE' } @INC;
     {
@@ -77,16 +174,27 @@ sub determine_libs {
     }
 
     my @keep_inc;
+
     for my $candidate (sort { length($a) <=> length($b) } @libs) {
         next if grep { index($candidate, $_) == 0 } @keep_inc;
         push @keep_inc => $candidate;
     }
+
     $self->libs(@keep_inc);
+
+    if ( $self->libs ){
+        $self->say("Determined library directories to be processed: " 
+                . join("\n   ",$self->libs) );
+    }
 }
 
 sub generate_tags {
     my $self = shift;
+
+    $self->say("Generating tags ... ");
+
     $::PTAGS = $self;
+
     for ($self->libs) {
         find(
             {   follow => 1,
@@ -109,13 +217,18 @@ sub generate_tags {
 
 sub write_tags {
     my $self    = shift;
+
+    $self->say("Writing tags...");
+
     my %tags    = %{ $self->tags };
-    my $outfile = $self->opt('out');
     ## no critic (ProhibitTwoArgOpen)
+    my $outfile=$self->tagfile;
     open my $fh, ">$outfile" or die "can't open $outfile for writing: $!\n";
+
     for my $tag (sort keys %tags) {
         printf $fh "%s\t%s\t%s\n", $tag, @$_ for @{ $tags{$tag} };
     }
+
     close $fh or die "can't close $outfile: $!\n";
 }
 
@@ -160,13 +273,16 @@ sub add_tag {
 
 sub make_package_tag {
     my ($self, %args) = @_;
+
     $self->filename_for($args{tag}, $args{filename})
       unless $self->exists_filename_for($args{tag});
+
     $self->add_tag($args{tag}, $args{filename}, "?^$args{search}\\>");
 }
 
 sub process_pm_file {
     my $self     = shift;
+
     my $text     = read_file($_);
     my $filename = $File::Find::name;
     my $package;
@@ -288,9 +404,12 @@ sub process_pod_file {
 }
 
 # Add those tags that couldn't be added from looking at one file alone.
+
 sub add_SUPER_tags {
     my $self            = shift;
+
     my %has_super_class = $self->has_super_class;
+
     while (my ($class, $super_array_ref) = each %has_super_class) {
         for my $super (@{ $super_array_ref || [] }) {
             next if $self->is_fake_package($super);

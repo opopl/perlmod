@@ -443,7 +443,7 @@ sub getopt(){
 	}
 
 	# view the script itself
-	system("gvim -n -p $0"),exit 0 if $opt{vm};
+	system("gvim -n -p --remote-tab-silent $0"),exit 0 if $opt{vm};
 
 }
 

@@ -15,25 +15,43 @@ BEGIN {
 
     #Give a hoot don't pollute, do not export more than needed by default
     @EXPORT      = qw();
-    %EXPORT_TAGS = (
-        'funcs' => [qw( 
-            readdat
-            read_secorder
-            Fcat
-         )],
-        'vars'  => [
-            qw(
+
+###export_vars_scalar
+    my @ex_vars_scalar=qw(
               $bkey
               $config
               $eqs_h
+              $eqs_h_order
               $figs_h
+              $figs_h_order
+              $pfiles
               $refs_h
+              $refs_h_order
               $texroot
+         );
+###export_vars_hash
+    my @ex_vars_hash=qw(
               %greek_letters
               %subsyms
               %RE
-              )
-        ]
+              %FILES
+              %seclabels
+         );
+###export_vars_array
+    my @ex_vars_array=qw(
+              @secorder
+         );
+
+    %EXPORT_TAGS = (
+###export_funcs
+        'funcs' => [qw( 
+            readdat
+            read_secorder
+            read_seclabels
+            Fcat
+            tex_nice_base
+         )],
+        'vars'  => [ @ex_vars_scalar,@ex_vars_array,@ex_vars_hash ]
     );
 
     our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
@@ -45,7 +63,12 @@ BEGIN {
 
 ###our
 our ( $refs_h, $eqs_h, $figs_h, $bkey, $config, $texroot );
+our ( $refs_h_order, $eqs_h_order, $figs_h_order);
 our (%greek_letters,%subsyms,%RE);
+our $pfiles;
+our %seclabels;
+our @secorder;
+our %FILES;
 
 sub readdat;
 sub init_vars;
@@ -57,11 +80,39 @@ sub new {
     return $self;
 }
 
+sub tex_nice_base () {
+
+###loop_secorder
+  foreach my $sec (@secorder) {
+        my $file="p.$bkey.sec.$sec.i.tex";
+  }
+
+###loop_pfiles
+  foreach my $file (@$pfiles) {
+	    edit_file_lines {
+
+            foreach my $lett (keys %greek_letters) {
+			        my $sym=$greek_letters{$lett};
+			        s/$lett/\\$sym/g;
+			}
+
+            foreach my $w (keys %subsyms) {
+			        my $sym=$subsyms{$w};
+			        s/$w/$sym/g;
+			}
+
+        } $file;
+  }
+
+}
+
 sub readdat() {
 
-    foreach my $id (qw(refs eqs figs )) {
+    foreach my $id (qw( refs eqs figs )) {
         my $fdat = catfile( $texroot, "p." . $bkey . ".$id.i.dat" );
-        my $H;
+        my($H,$HORDER);
+
+        $HORDER=[];
 
         # dat-file contents will have priority over manually typed contents for
         #   *_h hashes ( $refs_h, $eqs_h etc. )
@@ -75,6 +126,8 @@ sub readdat() {
                 my @F   = split;
                 my $num = shift @F;
 
+                push(@$HORDER,$num);
+
                 unless ( defined $H->{$num} ) {
                     $H->{$num} = join( " ", @F );
                 }
@@ -83,13 +136,24 @@ sub readdat() {
                 }
             }
 
-            eval '$' . $id . '_h=$H';
+            my $evs='';
+
+            $evs.= '$' . $id . '_h=$H;' . "\n";
+            $evs.= '$' . $id . '_h_order=$HORDER;' . "\n";
+
+            eval ("$evs");
             die $@ if $@;
 
         }
         else {
-            $refs_h = { 1 => "" };
-            $eqs_h  = { 1 => "" };
+            my $evs='';
+            
+            $evs.='$' . $id . '_h  = { 1 => "" };' . "\n" ; 
+            $evs.='$' . $id . '_h_order  = ();' . "\n" ; 
+
+            eval ("$evs");
+            die $@ if $@;
+
         }
     }
 
@@ -101,14 +165,27 @@ sub Fcat () {
     return catfile($texroot,@names);
 }
 
+sub read_seclabels () {
+
+    my $i=1;
+
+    for(@secorder){
+        $seclabels{$i}=$_;
+        $i++;
+    }
+}
+
 sub read_secorder () {
 
-    my $file=&Fcat( 'p.' . $bkey . '.secorder.i.dat' );
-    my @lines=read_file $file;
+    $FILES{secorder}=&Fcat( 'p.' . $bkey . '.secorder.i.dat' );
+    my @lines;
 
-    @lines=map { chomp; /^\s*#/ ? () : $_ } @lines;
+    if (-e $FILES{secorder}){
+        @lines=read_file $FILES{secorder};
+        @secorder=map { chomp; /^\s*#/ ? () : $_ } @lines;
+    }
 
-    wantarray ? @lines : \@lines;
+
 }
 
 sub init_RE() {
@@ -116,19 +193,41 @@ sub init_RE() {
     %RE=(
         papereq  => qr/(\\begin\{paper(eq|align)\})/,
         labeleq  => qr/\\labeleq\{([\w\d]+)\}/,
-        alignbegin    => qr/\\(?<begin>begin)\{align\}/,
+        alignbegin  => qr/\\(?<begin>begin)\{align\}/,
         alignend    => qr/\\(?<end>end)\{align\}/,
     );
 
 }
 
+sub init_pfiles(){
+
+     # Base paper file
+	push(@$pfiles,"p.$bkey.tex");
+	push(@$pfiles,glob("p.$bkey.sec.*.i.tex"));
+	push(@$pfiles,glob("p.$bkey.fig.*.tex"));
+
+	foreach my $piece (@{$config->{include_tex_parts}}) {
+		push(@$pfiles,"p.$bkey.$piece.tex");
+	}
+
+}
+
 sub init_vars() {
 
+    return 0 unless defined $bkey;
+
     &init_RE();
+    &init_pfiles();
 
     $texroot = $ENV{'PSH_TEXROOT'} 
         // catfile( "$ENV{hm}", qw(wrk p) )
         // catfile( "$ENV{HOME}", qw(wrk p) );
+
+    # fill in @secorder
+    &read_secorder();
+
+    # fill in %seclabels
+    &read_seclabels();
 
 ###def_greek_letters
     %greek_letters=(

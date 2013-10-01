@@ -1,10 +1,14 @@
 #!/usr/bin/env perl
+
 # PODNAME: ptags
 # ABSTRACT: generate Vim-style tags for your modules
+
 use warnings;
 use strict;
-use parent qw(Vim::Tag);
-main->new->run;
+
+use parent qw(OP::VimTag);
+
+main->new->main;
 
 __END__
 =pod

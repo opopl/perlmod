@@ -7,8 +7,12 @@ our $VERSION = '1.100880';
 
 # ABSTRACT: Arrays, hashes, booleans, integers, sets and more
 use Carp qw(carp croak cluck);
+
 use Data::Miscellany 'flatten';
+use Data::Dumper;
+use Text::TabularDisplay;
 use List::MoreUtils 'uniq';
+
 use parent qw(Class::Accessor Class::Accessor::Installer);
 
 sub mk_new {
@@ -261,6 +265,7 @@ sub mk_array_accessors {
     for my $field (@fields) {
 
 ###array_set_get
+###array_
         $self->install_accessor(
             name => $field,
             code => sub {
@@ -944,7 +949,10 @@ EODOC
 
 sub mk_hash_accessors {
     my ($self, @fields) = @_;
+
     my $class = ref $self || $self;
+
+###hash_
     for my $field (@fields) {
         $self->install_accessor(
             name => $field,
@@ -1012,7 +1020,9 @@ EODOC
                 "\$obj->$field(foo => 23, bar => 42);",
             ],
         );
+###hash_clear
         my @clear_methods = uniq "clear_${field}", "${field}_clear";
+
         for my $name (@clear_methods) {
             $self->install_accessor(
                 name => $name,
@@ -1032,7 +1042,10 @@ EODOC
             examples   => ["\$obj->$clear_methods[0];"],
             belongs_to => $field,
         );
+
+###hash_keys
         my @keys_methods = uniq "keys_${field}", "${field}_keys";
+
         for my $name (@keys_methods) {
             $self->install_accessor(
                 name => $name,
@@ -1051,7 +1064,9 @@ EODOC
             examples   => ["my \@keys = \$obj->$keys_methods[0];"],
             belongs_to => $field,
         );
+###hash_count
         my @count_methods = uniq "count_${field}", "${field}_count";
+
         for my $name (@count_methods) {
             $self->install_accessor(
                 name => $name,
@@ -1070,7 +1085,9 @@ EODOC
             examples   => ["my \$count = \$obj->$count_methods[0];"],
             belongs_to => $field,
         );
+###hash_values
         my @values_methods = uniq "values_${field}", "${field}_values";
+
         for my $name (@values_methods) {
             $self->install_accessor(
                 name => $name,
@@ -1089,7 +1106,41 @@ EODOC
             examples   => ["my \@values = \$obj->$values_methods[0];"],
             belongs_to => $field,
         );
+###hash_print
+        my @print_methods = uniq "print_${field}", "${field}_print";
+
+        for my $name (@print_methods) {
+            $self->install_accessor(
+                name => $name,
+                code => sub {
+                    local $DB::sub = local *__ANON__ = "${class}::${name}"
+                      if defined &DB::DB && !$Devel::DProf::VERSION;
+
+                    my @columns=qw( Key Value );
+                    my $table = Text::TabularDisplay->new(@columns);
+                    my $hash=shift->{$field};
+
+                    while(my($k,$v)=each %{$hash}) {
+                        my @row=($k,$v);
+                        $table->add(@row);
+                    }
+
+                    print $table->render . "\n";
+
+                },
+            );
+        }
+        $self->document_accessor(
+            name    => \@print_methods,
+            purpose => <<'EODOC',
+            Print the contents of the hash
+EODOC
+            examples   => [""],
+            belongs_to => $field,
+        );
+###hash_exists
         my @exists_methods = uniq "exists_${field}", "${field}_exists";
+
         for my $name (@exists_methods) {
             $self->install_accessor(
                 name => $name,
@@ -1110,7 +1161,9 @@ EODOC
             examples   => ["if (\$obj->$exists_methods[0](\$key)) { ... }"],
             belongs_to => $field,
         );
+###hash_delete
         my @delete_methods = uniq "delete_${field}", "${field}_delete";
+
         for my $name (@delete_methods) {
             $self->install_accessor(
                 name => $name,

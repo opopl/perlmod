@@ -255,6 +255,44 @@ sub nc(){
 	}
 }
 
+sub idef(){
+    my $self=shift;
+
+    my $name=shift;
+
+    $self->_add_line("\\idef{$name}");
+
+}
+
+sub bookmark(){
+    my $self=shift;
+
+    my %opts=@_;
+    my $ostr='';
+    my $str='';
+    my $title='';
+
+  #\bookmark[view={FitB},dest=sec:\SEC#1,level=2]{#2}%
+
+    while(my($k,$v)=each %opts){
+        for($k){
+            /^(level|dest)$/ && do {
+                $ostr.="$k=" . "$v" . ',';
+                next;
+            };
+            /^(title)$/ && do {
+                $title=$v;
+                next;
+            };
+        }
+    }
+
+    $str="\\bookmark[$ostr]{$title}";
+
+    $self->_add_line("$str");
+
+}
+
 sub subsubsection(){
 	my $self=shift;
 

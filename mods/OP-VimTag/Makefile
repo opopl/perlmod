@@ -168,7 +168,9 @@ MAN1PODS = bin/ptagdir \
 MAN3PODS = PerlModScript.examples.pod \
 	PerlModScript.help.pod \
 	lib/OP/VimTag.pm \
-	lib/OP/VimTag/Null.pm
+	lib/OP/VimTag/Null.pm \
+	lib/OP/get_perl_package_name.examples.pod \
+	lib/OP/get_perl_package_name.help.pod
 
 # Where is the Config information that we are using/depend on
 CONFIGDEP = $(PERL_ARCHLIB)$(DFSEP)Config.pm $(PERL_INC)$(DFSEP)config.h
@@ -193,16 +195,22 @@ PERL_ARCHIVE_AFTER =
 TO_INST_PM = PerlModScript.examples.pod \
 	PerlModScript.help.pod \
 	lib/OP/VimTag.pm \
-	lib/OP/VimTag/Null.pm
+	lib/OP/VimTag/Null.pm \
+	lib/OP/get_perl_package_name.examples.pod \
+	lib/OP/get_perl_package_name.help.pod
 
 PM_TO_BLIB = lib/OP/VimTag.pm \
 	blib/lib/OP/VimTag.pm \
+	lib/OP/get_perl_package_name.help.pod \
+	blib/lib/OP/get_perl_package_name.help.pod \
 	PerlModScript.help.pod \
 	$(INST_LIB)/OP/PerlModScript.help.pod \
 	PerlModScript.examples.pod \
 	$(INST_LIB)/OP/PerlModScript.examples.pod \
 	lib/OP/VimTag/Null.pm \
-	blib/lib/OP/VimTag/Null.pm
+	blib/lib/OP/VimTag/Null.pm \
+	lib/OP/get_perl_package_name.examples.pod \
+	blib/lib/OP/get_perl_package_name.examples.pod
 
 
 # --- MakeMaker platform_constants section:
@@ -427,17 +435,21 @@ manifypods : pure_all  \
 	bin/ptags \
 	bin/ptagdir \
 	lib/OP/VimTag.pm \
+	lib/OP/get_perl_package_name.help.pod \
 	PerlModScript.help.pod \
 	PerlModScript.examples.pod \
-	lib/OP/VimTag/Null.pm
+	lib/OP/VimTag/Null.pm \
+	lib/OP/get_perl_package_name.examples.pod
 	$(NOECHO) $(POD2MAN) --section=1 --perm_rw=$(PERM_RW) \
 	  bin/ptags $(INST_MAN1DIR)/ptags.$(MAN1EXT) \
 	  bin/ptagdir $(INST_MAN1DIR)/ptagdir.$(MAN1EXT) 
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
 	  lib/OP/VimTag.pm $(INST_MAN3DIR)/OP::VimTag.$(MAN3EXT) \
+	  lib/OP/get_perl_package_name.help.pod $(INST_MAN3DIR)/OP::get_perl_package_name.help.$(MAN3EXT) \
 	  PerlModScript.help.pod $(INST_MAN3DIR)/OP::PerlModScript.help.$(MAN3EXT) \
 	  PerlModScript.examples.pod $(INST_MAN3DIR)/OP::PerlModScript.examples.$(MAN3EXT) \
-	  lib/OP/VimTag/Null.pm $(INST_MAN3DIR)/OP::VimTag::Null.$(MAN3EXT) 
+	  lib/OP/VimTag/Null.pm $(INST_MAN3DIR)/OP::VimTag::Null.$(MAN3EXT) \
+	  lib/OP/get_perl_package_name.examples.pod $(INST_MAN3DIR)/OP::get_perl_package_name.examples.$(MAN3EXT) 
 
 
 
@@ -928,9 +940,11 @@ ppd :
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
 	  lib/OP/VimTag.pm blib/lib/OP/VimTag.pm \
+	  lib/OP/get_perl_package_name.help.pod blib/lib/OP/get_perl_package_name.help.pod \
 	  PerlModScript.help.pod $(INST_LIB)/OP/PerlModScript.help.pod \
 	  PerlModScript.examples.pod $(INST_LIB)/OP/PerlModScript.examples.pod \
-	  lib/OP/VimTag/Null.pm blib/lib/OP/VimTag/Null.pm 
+	  lib/OP/VimTag/Null.pm blib/lib/OP/VimTag/Null.pm \
+	  lib/OP/get_perl_package_name.examples.pod blib/lib/OP/get_perl_package_name.examples.pod 
 	$(NOECHO) $(TOUCH) pm_to_blib
 
 
