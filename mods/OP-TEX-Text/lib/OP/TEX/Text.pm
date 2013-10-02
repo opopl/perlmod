@@ -9,12 +9,40 @@ use OP::Base qw/:vars :funcs/;
 use parent qw(OP::Script Class::Accessor::Complex);
 use Data::Dumper;
 use File::Slurp qw(read_file);
+use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 
 __PACKAGE__
 	->mk_scalar_accessors(qw(texroot));
 
 # }}}
 # Methods {{{
+
+sub _write_hash(){
+    my $self=shift;
+
+    my $ncname=shift // '';
+    my $ref=shift // '';
+    my $str='';
+
+    if (ref $ref eq "HASH"){
+        if (%$ref){
+            while(my($k,$v)=each %{$ref}){
+              $str.='   \ifthenelse{\equal{#1}{' . $k . '}}{' . $v . '}{}%' . "\n" ;
+            }
+        }else{
+          $self->warn("_write_hash: zero-size hash supplied");
+        }
+
+    }   
+   
+    if ($str){
+        $str="%\n" . $str;
+        $self->_c_delim;
+        $self->nc($ncname,$str,1);
+        $self->_c_delim;
+    }
+
+}
 
 sub _flush(){
 	my $self=shift;
@@ -84,6 +112,12 @@ sub _c() {
 	my $text=$ref;
 
 	$self->_add_line("%$text");
+}
+
+sub _clear(){
+    my $self=shift;
+
+    $self->_v_set('text', '');
 }
 
 sub _empty_lines() {
@@ -264,6 +298,64 @@ sub idef(){
 
 }
 
+sub figure(){
+    my $self=shift;
+
+    my %opts=@_;
+    my $ostr='';
+
+    my $width='10cm';
+
+    # graphics file to be used in includegraphics statements
+    my @gfiles;
+    my @igs;
+    my $pdir='ppics';
+    my $pos='';
+
+    while(my($k,$v)=each %opts){
+        for($k){
+            /^(width|pdir)$/ && do {
+                my $evs= '$' . $k . '=$v' ;
+                eval ("$evs");
+                die $@ if $@;
+                next;
+            };
+            /^(position)$/ && do {
+                $pos= $v;
+                next;
+            };
+            /^(files)$/ && do {
+                unless(ref $v){
+                    push(@gfiles,$v);
+                }elsif( ref $v eq "ARRAY"){
+                    push(@gfiles,@$v);
+                }
+                next;
+            };
+        }
+    }
+
+    foreach my $gfile (@gfiles) {
+        push(@igs,'\includegraphics[width=' . $width . ']{' . catfile($pdir,$gfile) . '}');
+    }
+
+    $pos='[' . $pos . ']' if ($pos);
+
+    $ostr.='\begin{figure}' . $pos . "\n";
+    $ostr.=' \begin{center}' . "\n";
+
+    if (@igs == 1) {
+        $ostr.= shift(@igs) . "\n";
+    }else{
+    }
+
+    $ostr.='  \end{center}' . "\n";
+    $ostr.='\end{figure}' . "\n";
+
+    $self->_add_line("$ostr");
+
+}
+
 sub bookmark(){
     my $self=shift;
 
@@ -292,6 +384,7 @@ sub bookmark(){
     $self->_add_line("$str");
 
 }
+
 
 sub subsubsection(){
 	my $self=shift;
@@ -519,6 +612,12 @@ sub bibliography() {
 
 }
 
+sub clearpage(){
+    my $self=shift;
+
+    $self->_add_line('\clearpage');
+}
+
 sub printindex(){
 	my $self=shift;
 
@@ -687,8 +786,15 @@ sub preamble() {
 EOF
 			$self->_add_line($s);
 		}
-
 	}
+}
+
+sub hypertarget(){
+	my $self=shift;
+
+	my $ref=shift // '';
+
+    $self->_add_line('\hypertarget{' . $ref . '}{}');
 }
 
 sub hypsetup() {

@@ -416,7 +416,19 @@ EODOC
 
                       my $self=shift;
 
-                      @{ $self->{$field} }=sort @{ $self->{$field} };
+                      my $mode=shift // 'alph';
+
+                      for($mode){
+                          /^alph$/ && do {
+                              @{ $self->{$field} }=sort @{ $self->{$field} };
+                              next;
+                          };
+                          /^num$/ && do {
+                              @{ $self->{$field} }=sort { $a <=> $b } @{ $self->{$field} };
+                              next;
+                          };
+                      }
+
                       wantarray ?  @{ $self->{$field} } : $self->{$field};
                 },
             );
@@ -429,6 +441,7 @@ EODOC
             examples   => [],
             belongs_to => $field,
         );
+
 
 ###array_print
         my @print_methods = uniq "print_${field}", "${field}_print";
@@ -1116,11 +1129,13 @@ EODOC
                     local $DB::sub = local *__ANON__ = "${class}::${name}"
                       if defined &DB::DB && !$Devel::DProf::VERSION;
 
-                    my @columns=qw( Key Value );
+                    my @columns=qw( ===Key=== ===Value=== );
                     my $table = Text::TabularDisplay->new(@columns);
                     my $hash=shift->{$field};
+                    my @keys=sort keys %$hash;
 
-                    while(my($k,$v)=each %{$hash}) {
+                    for my $k (@keys){
+                        my $v=$hash->{$k};
                         my @row=($k,$v);
                         $table->add(@row);
                     }

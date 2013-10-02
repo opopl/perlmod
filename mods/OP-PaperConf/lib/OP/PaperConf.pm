@@ -5,6 +5,8 @@ use warnings;
 
 use File::Slurp qw( edit_file edit_file_lines read_file );
 use File::Spec::Functions qw(catfile rel2abs curdir );
+use Term::ANSIColor;
+use Data::Dumper;
 
 BEGIN {
     use Exporter ();
@@ -35,6 +37,7 @@ BEGIN {
               %subsyms
               %RE
               %FILES
+              %COLORS
               %seclabels
          );
 ###export_vars_array
@@ -49,6 +52,8 @@ BEGIN {
             read_secorder
             read_seclabels
             Fcat
+            psay
+            pwarn
             tex_nice_base
          )],
         'vars'  => [ @ex_vars_scalar,@ex_vars_array,@ex_vars_hash ]
@@ -69,18 +74,48 @@ our $pfiles;
 our %seclabels;
 our @secorder;
 our %FILES;
+our %COLORS;
 
 sub readdat;
 sub init_vars;
 sub Fcat;
 
 sub new {
+
     my ( $class, %parameters ) = @_;
     my $self = bless( {}, ref($class) || $class );
+
     return $self;
 }
 
-sub tex_nice_base () {
+sub pwarn {
+  my $text=shift;
+
+  my $evs="print color '" . $COLORS{'warn'} . "';";
+  eval ("$evs");
+  die $@ if $@;
+
+  print __PACKAGE__ . "> $text\n";
+  print color 'reset';
+
+}
+
+sub psay {
+  my $text=shift;
+
+  my $evs="print color '" . $COLORS{'say'} . "';";
+  eval ("$evs");
+  die $@ if $@;
+
+  print __PACKAGE__ . "> $text\n";
+  print color 'reset';
+
+}
+
+
+sub tex_nice_base {
+
+  &psay("Running tex_nice_base() for key $bkey");
 
 ###loop_secorder
   foreach my $sec (@secorder) {
@@ -94,16 +129,21 @@ sub tex_nice_base () {
             foreach my $lett (keys %greek_letters) {
 			        my $sym=$greek_letters{$lett};
 			        s/$lett/\\$sym/g;
-			}
+			      }
 
             foreach my $w (keys %subsyms) {
 			        my $sym=$subsyms{$w};
 			        s/$w/$sym/g;
-			}
-            s/(?<tagid>%%page)\s+(?<pagenum>.*)$/$+{tagid} page_$+{pagenum}/g;
-            s/(?<tagid>%%equation)\s+(?<eqnum>\d+)/$+{tagid} eq_$+{eqnum}/g;
-            s/(?<tagid>%%figure)\s+(?<fignum>\d+)/$+{tagid} fig_$+{fignum}/g;
-            s/(?<tagid>%%section)\s+(?<secname>.*)/$+{tagid} sec_$+{secname}/g;
+			      }
+
+            s/^(?<tagid>%%page)\s+(?<pagenum>\d+)$/$+{tagid} page_$+{pagenum}/g;
+            s/^(?<tagid>%%page)\s+(?<pagetrash>[page_]*(?<pnum>\d+))\s*$/$+{tagid} page_$+{pnum}/g;
+
+            s/^(?<tagid>%%equation)\s+(?<eqnum>\d+)/$+{tagid} eq_$+{eqnum}/g;
+            s/^(?<tagid>%%figure)\s+(?<fignum>\d+)/$+{tagid} fig_$+{fignum}/g;
+
+            s/^(?<tagid>%%section)\s+(?<secname>.*)/$+{tagid} sec_$+{secname}/g;
+            s/^(?<tagid>%%section)\s+(?<sectrash>[sec_]*(?<sname>\w+))$/$+{tagid} sec_$+{sname}/g;
 
         } $file;
   }
@@ -181,14 +221,18 @@ sub read_seclabels () {
 
 sub read_secorder () {
 
-    $FILES{secorder}=&Fcat( 'p.' . $bkey . '.secorder.i.dat' );
     my @lines;
 
     if (-e $FILES{secorder}){
+
+        &psay("reading secorder.i.dat file for key $bkey");
+
         @lines=read_file $FILES{secorder};
         @secorder=map { chomp; /^\s*#/ ? () : $_ } @lines;
-    }
 
+    }else{
+        &pwarn("secorder.i.dat file not found: ". $FILES{secorder} );
+    }
 
 }
 
@@ -205,14 +249,20 @@ sub init_RE() {
 
 sub init_pfiles(){
 
-     # Base paper file
+  # Base paper file
 	push(@$pfiles,"p.$bkey.tex");
 	push(@$pfiles,glob("p.$bkey.sec.*.i.tex"));
 	push(@$pfiles,glob("p.$bkey.fig.*.tex"));
 
 	foreach my $piece (@{$config->{include_tex_parts}}) {
-		push(@$pfiles,"p.$bkey.$piece.tex");
+  		push(@$pfiles,"p.$bkey.$piece.tex");
 	}
+
+}
+
+sub init_FILES() {
+
+    $FILES{secorder}=&Fcat( 'p.' . $bkey . '.secorder.i.dat' );
 
 }
 
@@ -220,12 +270,18 @@ sub init_vars() {
 
     return 0 unless defined $bkey;
 
-    &init_RE();
-    &init_pfiles();
+    %COLORS=(
+      "say"   => 'blue',
+      "warn"  => 'bold red',
+    );
 
     $texroot = $ENV{'PSH_TEXROOT'} 
         // catfile( "$ENV{hm}", qw(wrk p) )
         // catfile( "$ENV{HOME}", qw(wrk p) );
+
+    &init_FILES();
+    &init_RE();
+    &init_pfiles();
 
     # fill in @secorder
     &read_secorder();
@@ -288,10 +344,15 @@ sub init_vars() {
             "±" => "\\pm ",
 	        "–" => "-",
             "−" => "-",
+			"ô" => "o",
     );
 
 }
 
-&init_vars();
+sub main {
+  &init_vars();
+}
+
+&main();
 
 1;

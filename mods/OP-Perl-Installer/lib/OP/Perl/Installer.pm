@@ -420,6 +420,7 @@ sub run_build_install() {
 			next;
 		}
 
+###install_modules_order
 		if (-e "./install.sh"){
 			system('./install.sh');
 		}elsif(-e "Makefile.PL"){

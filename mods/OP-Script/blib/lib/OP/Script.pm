@@ -205,7 +205,7 @@ sub warn() {
 	my $text=shift;
 	my %opts=@_;
 
-	$self->say("$text" . "\n", (color  => 'bold yellow', %opts));
+	$self->say("$text" . "\n", (color  => 'bold red', %opts));
 
 }
 # }}}
