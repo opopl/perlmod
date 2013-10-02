@@ -105,9 +105,12 @@ EODOC
     $self;    # for chaining
 }
 
+###scalar_
 sub mk_scalar_accessors {
     my ($self, @fields) = @_;
+
     my $class = ref $self || $self;
+
     for my $field (@fields) {
         $self->install_accessor(
             name => $field,
@@ -127,6 +130,7 @@ EODOC
             examples =>
               [ "my \$value = \$obj->$field;", "\$obj->$field(\$value);", ],
         );
+###scalar_clear
         my @clear_methods = uniq "clear_${field}", "${field}_clear";
         for my $name (@clear_methods) {
             $self->install_accessor(
@@ -144,6 +148,31 @@ EODOC
             examples   => ["\$obj->$clear_methods[0];"],
             belongs_to => $field,
         );
+
+###scalar_append
+    my @append_methods = uniq "append_${field}", "${field}_append";
+        for my $name (@append_methods) {
+            $self->install_accessor(
+                name => $name,
+                code => sub {
+                    local $DB::sub = local *__ANON__ = "${class}::${name}"
+                      if defined &DB::DB && !$Devel::DProf::VERSION;
+
+                    my $self=shift;
+
+                    my $str=shift;
+
+                    $self->{$field}.=  $str;
+                },
+            );
+        }
+        $self->document_accessor(
+            name       => \@append_methods,
+            purpose    => 'Change the value by appending smth.',
+            examples   => ["\$obj->$append_methods[0];"],
+            belongs_to => $field,
+        );
+
     }
     $self;    # for chaining
 }

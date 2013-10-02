@@ -30,6 +30,7 @@ BEGIN {
               $refs_h
               $refs_h_order
               $texroot
+              $viewfiles
          );
 ###export_vars_hash
     my @ex_vars_hash=qw(
@@ -71,6 +72,7 @@ our ( $refs_h, $eqs_h, $figs_h, $bkey, $config, $texroot );
 our ( $refs_h_order, $eqs_h_order, $figs_h_order);
 our (%greek_letters,%subsyms,%RE);
 our $pfiles;
+our $viewfiles;
 our %seclabels;
 our @secorder;
 our %FILES;

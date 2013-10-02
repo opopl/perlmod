@@ -104,6 +104,15 @@ sub module_to_path() {
 
 # }}}
 
+sub module_full_local_path {
+    my $self=shift;
+
+    my $module=shift;
+
+    return shift $self->module_full_local_paths($module);
+
+}
+
 sub module_full_local_paths() {
     my $self=shift;
 
@@ -123,7 +132,6 @@ sub module_full_local_paths() {
           };
         }
         my $fullpath=catfile($self->dirs("mods"),$mfile);
-        print "$fullpath\n";
         push(@lpaths,$mfile) if -e $fullpath;
     }
 

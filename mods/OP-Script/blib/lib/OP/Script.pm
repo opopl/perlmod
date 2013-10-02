@@ -514,9 +514,12 @@ sub opts_to_scalar_vars(){
     my @vars=@_;
 
     foreach my $var (@vars) {
-        my $evs=join('','$self->',$var, 
-                '('  , '$self->_opt_get("' , $var,'") // "" );'
-            );
+        my $evs=''; 
+        
+        $evs.=join('','if ( $self->_opt_defined("' , $var, '") ){ ' . "\n");
+        $evs.=join('','$self->',$var, '('  , '$self->_opt_get("' , $var,'") );');
+        $evs.=join('','}' . "\n");
+
         eval($evs);
         die $@ if $@;
     }
@@ -531,8 +534,7 @@ sub opts_bool_to_scalar_vars(){
         my $evs="";
         
         $evs.=join('','$self->',$var, '(0);',"\n");
-        $evs.=join('','$self->',$var, '(1) if '  , 
-                '$self->_opt_true("' , $var,'");',"\n");
+        $evs.=join('','$self->',$var, '(1) if ' , '$self->_opt_true("' , $var,'");',"\n");
 
         eval "$evs";
 

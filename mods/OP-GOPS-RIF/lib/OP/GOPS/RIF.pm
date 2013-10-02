@@ -80,6 +80,8 @@ our @array_accessors=qw(
     riffiles
     files
     lfiles
+    true 
+    false
 );
 
 __PACKAGE__
@@ -141,21 +143,11 @@ sub new() {
 my $date;
 my($var,$val);
 my $nline;
-# Parser::BL
-my($oph,$opname,$boolparser);
-my(%fortranops,%perlops);
-# Regex
-my(%reif,%re);
-my(@matchkeys,@kreif);
-my(%reend);
-my %match;
 # used in handle_ifs()
-my @flines;
 
-my(%linevars);
-my(%lvarkeys,@lvarkeysall);
+  %lvarkeys
 
-my($ifile,@ifs,$if);
+my($ifile,$if);
 my $nextline;
 my %printo;
 my $nplines=3;
