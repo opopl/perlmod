@@ -525,6 +525,25 @@ sub opts_to_scalar_vars(){
     }
 }
 
+sub apply_vars {
+    my $self=shift;
+
+    my $module=shift;
+    my @vars=@_;
+
+    foreach my $var (@vars) {
+        my $evs=''; 
+        
+        $evs.='if (defined $' . $module . '::' .  $var . '){ ' . "\n";
+        $evs.=join('','$self->',$var, '($'  , $module, '::' , $var,');');
+        $evs.=join('','}' . "\n");
+
+        eval($evs);
+        die $@ if $@;
+    }
+
+}
+
 sub opts_bool_to_scalar_vars(){
     my $self=shift;
 

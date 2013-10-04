@@ -792,7 +792,7 @@ sub readarr(){
 
  my $if=shift;
 
- open(FILE,"<$if") || die $!;
+ open(FILE,"<$if") || die "Opening $if : $!";
 
  my @vars;
 
@@ -837,6 +837,9 @@ sub readhash(){
 	$mainline=0 if ( /^\s+/ );
 
 	$line=$_;
+
+    $line =~ s/\s*$//g;
+    $line =~ s/^\s*//g;
 
 	if ($mainline){
 

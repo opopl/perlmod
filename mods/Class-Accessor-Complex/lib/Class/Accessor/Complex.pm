@@ -173,6 +173,52 @@ EODOC
             belongs_to => $field,
         );
 
+###scalar_print
+    my @print_methods = uniq "print_${field}", "${field}_print";
+        for my $name (@print_methods) {
+            $self->install_accessor(
+                name => $name,
+                code => sub {
+                    local $DB::sub = local *__ANON__ = "${class}::${name}"
+                      if defined &DB::DB && !$Devel::DProf::VERSION;
+
+                    my $self=shift;
+
+                    print Data::Dumper->Dump([ $self->{$field}], [ $field ]);
+                },
+            );
+        }
+        $self->document_accessor(
+            name       => \@print_methods,
+            purpose    => 'Change the value by printing smth.',
+            examples   => ["\$obj->$print_methods[0];"],
+            belongs_to => $field,
+        );
+###scalar_eq
+    my @eq_methods = uniq "eq_${field}", "${field}_eq";
+        for my $name (@eq_methods) {
+            $self->install_accessor(
+                name => $name,
+                code => sub {
+                    local $DB::sub = local *__ANON__ = "${class}::${name}"
+                      if defined &DB::DB && !$Devel::DProf::VERSION;
+
+                    my $self=shift;
+
+                    my $val=shift;
+
+                    return 1 if ($self->{$field} eq $val);
+                    return 0;
+                },
+            );
+        }
+        $self->document_accessor(
+            name       => \@eq_methods,
+            purpose    => 'Change the value by eqing smth.',
+            examples   => ["\$obj->$eq_methods[0];"],
+            belongs_to => $field,
+        );
+
     }
     $self;    # for chaining
 }
@@ -579,6 +625,29 @@ EODOC
 Deletes all elements from the array.
 EODOC
             examples   => ["\$obj->$clear_methods[0];"],
+            belongs_to => $field,
+        );
+###array_ref
+        my @ref_methods = uniq "ref_${field}", "${field}_ref";
+
+        for my $name (@ref_methods) {
+            $self->install_accessor(
+                name => $name,
+                code => sub {
+                    local $DB::sub = local *__ANON__ = "${class}::${name}"
+                      if defined &DB::DB && !$Devel::DProf::VERSION;
+                      my $self=shift;
+
+                      return $self->{$field};
+                },
+            );
+        }
+        $self->document_accessor(
+            name    => \@ref_methods,
+            purpose => <<'EODOC',
+            Return reference to the array
+EODOC
+            examples   => ["\$obj->$ref_methods[0];"],
             belongs_to => $field,
         );
 ###array_count
@@ -1084,7 +1153,29 @@ EODOC
             examples   => ["\$obj->$clear_methods[0];"],
             belongs_to => $field,
         );
+###hash_ref
+        my @ref_methods = uniq "ref_${field}", "${field}_ref";
 
+        for my $name (@ref_methods) {
+            $self->install_accessor(
+                name => $name,
+                code => sub {
+                    local $DB::sub = local *__ANON__ = "${class}::${name}"
+                      if defined &DB::DB && !$Devel::DProf::VERSION;
+                    my $self = shift;
+
+                    return $self->{$field};
+                },
+            );
+        }
+        $self->document_accessor(
+            name    => \@ref_methods,
+            purpose => <<'EODOC',
+            Returns hash reference
+EODOC
+            examples   => ["\$obj->$ref_methods[0];"],
+            belongs_to => $field,
+        );
 ###hash_keys
         my @keys_methods = uniq "keys_${field}", "${field}_keys";
 
