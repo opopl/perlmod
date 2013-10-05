@@ -210,7 +210,7 @@ sub _join($$){
 
 =cut
 
-sub cmd_opt_add(){
+sub cmd_opt_add{
 	my($type,$name);
 
     my $ref=shift;
@@ -236,7 +236,7 @@ sub cmd_opt_add(){
 
 =cut
 
-sub edelim(){
+sub edelim{
 	my $sfin;
 	my $s="$_[0]";
 	my $num=$_[1];
@@ -250,7 +250,7 @@ sub edelim(){
 
 =cut
 
-sub eoo(){ print "$pref_eoo $_[0]"; }
+sub eoo{ print "$pref_eoo $_[0]"; }
 # }}}
 # eoolog() {{{
 
@@ -258,7 +258,7 @@ sub eoo(){ print "$pref_eoo $_[0]"; }
 
 =cut
 
-sub eoolog(){
+sub eoolog{
 	my $text=shift;
 	my $nopts=scalar @_;
 	my %o=@_;
@@ -313,7 +313,7 @@ sub eoolog(){
 	# }}}
 # eoo_arr(){{{
 
-sub eoo_arr(){
+sub eoo_arr{
 	my $msg=shift;
 	my $arr=shift;
 	&eoo("$msg\n");
@@ -324,7 +324,7 @@ sub eoo_arr(){
 # }}}
 # eoo_vars(){{{
 
-sub eoo_vars(){
+sub eoo_vars{
 	my $msg=shift;
 	my $arr=shift;
 	&eoo("$msg\n");
@@ -334,7 +334,7 @@ sub eoo_vars(){
 }
 # }}}
 # eval_fortran(){{{
-sub eval_fortran(){
+sub eval_fortran{
 
 my $x=$_[0];
 $x =~ s/\s*//g;
@@ -350,7 +350,7 @@ return $x;
 
 =cut
 
-sub evali() {
+sub evali {
 	use DB;
 	my %O;
 	%O=(
@@ -377,7 +377,7 @@ sub evali() {
 }
 	# }}}
 # open_files(){{{
-sub open_files(){
+sub open_files{
 	my %argopts=@_;
 	my $echo=0;
 	$echo=$argopts{echo} if defined $argopts{echo};
@@ -415,7 +415,7 @@ if ($opts{log}){
 
 =cut
 
-sub getopt_init(){
+sub getopt_init{
 	Getopt::Long::Configure(qw(bundling no_getopt_compat no_auto_abbrev no_ignore_case_always));
 }
 
@@ -423,7 +423,7 @@ sub getopt_init(){
 
 =cut
 
-sub getopt(){
+sub getopt{
 
 	my @argv=@_;
 	@ARGV=@argv if (@argv);
@@ -450,7 +450,7 @@ sub getopt(){
 #}}}
 # getopt_after() {{{
 
-sub getopt_after(){
+sub getopt_after{
 
 	&printpodoptions();
 	&printhelp() if $opt{help};
@@ -458,26 +458,26 @@ sub getopt_after(){
 	&printexamples() if $opt{examples};
 
 }
-sub printpodoptions() {
+sub printpodoptions {
 	foreach my $pod_option (@allowed_pod_options) {
 		&printpod("$pod_option");
 	}
 }
 
-sub printhelp(){
+sub printhelp{
 	pod2usage(-input=> $files{pod}{help}, -verbose => 1) if $opt{help};
 }
-sub printman(){
+sub printman{
 	pod2usage(-input=> $files{pod}{help}, -verbose => 2) if $opt{man};
 }
-sub printexamples(){
+sub printexamples{
 	pod2usage(-input=> $files{pod}{examples}, -verbose => 2) if $opt{examples};
 }
 
 # }}}
 # gettime () {{{
 
-sub gettime(){
+sub gettime{
 my @months = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
 my @weekDays = qw(Sun Mon Tue Wed Thu Fri Sat Sun);
 my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime();
@@ -489,7 +489,7 @@ return $time;
 #}}}
 # is_log() is_const (){{{
 
-sub is_log(){
+sub is_log{
 	my $var=shift;
 	if (defined($ftype{$var})){
 		return 1 if ($ftype{$var} =~ /^logical/i) ;
@@ -497,7 +497,7 @@ sub is_log(){
 	return 0;
 }
 
-sub is_const(){
+sub is_const{
 	my $var=shift;
 	return 1 if (grep { uc($var) eq $_ } @constvars );
 	return 0;
@@ -509,7 +509,7 @@ sub is_const(){
 
 =cut
 
-sub printpod(){
+sub printpod{
 	my $topic=shift;
 	my $o;
 	open(POD,">$files{pod}{$topic}") || die $!;
@@ -564,7 +564,7 @@ sub printpod(){
 
 # read_*  {{{
 # read_const(){{{
-sub read_const(){
+sub read_const{
 
 my @ifsconst=@{$files{constvars}};
 foreach (@ifsconst){ 
@@ -587,7 +587,7 @@ foreach (@ifsconst){
 }
 # }}}
 # read_TF(){{{
-sub read_TF(){
+sub read_TF{
 
 # read in true/false values
 foreach my $switch (qw( false true )){
@@ -617,7 +617,7 @@ foreach my $switch (qw( false true )){
 }
 # }}}
 # read_all_vars() {{{
-sub read_all_vars(){
+sub read_all_vars{
 
 if (-e $files{vars}){
 	&eoolog("Reading in the list of variables from $files{vars}\n");
@@ -658,7 +658,7 @@ if (-e $files{vars}){
 }
 # }}}
 # read_init_vars(){{{
-sub read_init_vars(){
+sub read_init_vars{
 
 	my $var;
 	# read in initialized variable values 
@@ -681,7 +681,7 @@ sub read_init_vars(){
 #}}}
 # read_in_flist() - read in flist {{{
 
-sub read_in_flist(){
+sub read_in_flist{
 	my @ifs=qw();
 	if ($opts{flist}){
 		&eoolog("--flist: fortran files are specified in a special flist-file.\n");
@@ -706,7 +706,7 @@ sub read_in_flist(){
 }
 # }}}
 # read_line_char_array(){{{
-sub read_line_char_array(){
+sub read_line_char_array{
 	local *A=shift;
 	my $name=shift;
 	my $line=<A>;
@@ -714,7 +714,7 @@ sub read_line_char_array(){
 }
 # }}}
 # read_line_vars(){{{
-sub read_line_vars(){
+sub read_line_vars{
 	local *A=shift;
 	my $listvars=shift;
 	my $line=<A>;
@@ -725,7 +725,7 @@ sub read_line_vars(){
 }
 # }}}
 # read_TF_cmd() - read in true/false from command line {{{
-sub read_TF_cmd(){
+sub read_TF_cmd{
 	foreach my $switch (qw(false true)){
 		if (defined($opt{$switch})){
 			my @F=split(",",$opt{$switch});
@@ -742,7 +742,7 @@ sub read_TF_cmd(){
 
 =cut
 
-sub read_kw_file(){
+sub read_kw_file{
 	my %argopts=@_;
 	my $echo=0;
 	$echo=$argopts{echo} if defined $argopts{echo};
@@ -788,7 +788,7 @@ sub read_kw_file(){
 
 =cut
 
-sub readarr(){
+sub readarr{
 
  my $if=shift;
 
@@ -806,7 +806,8 @@ sub readarr(){
  	push(@vars,@F);
  }
  close(FILE);
- return \@vars;
+
+ wantarray ? @vars : \@vars;
 
 }
 # }}}
@@ -816,7 +817,7 @@ sub readarr(){
 
 =cut
 
-sub readhash(){
+sub readhash{
  my $if=shift;
 
  open(FILE,"<$if") || die $!;
@@ -871,7 +872,7 @@ sub readhash(){
 
 =cut
 
-sub setsdata() {
+sub setsdata {
 	%sdata=( 
 	  "desc"	=>	{ 
 			short 	=> "do ...",
@@ -889,7 +890,7 @@ sub setsdata() {
 
 =cut
 
-sub setcmdopts(){
+sub setcmdopts{
 
   my($otype,@optnames);
   
@@ -916,7 +917,7 @@ sub setcmdopts(){
 
 # }}}
 # skip_lines(){{{
-sub skip_lines(){
+sub skip_lines{
 	local *A=shift;
 	my $count=shift;
 	for(my $i=0;$i<$count;$i++){ my $line=<A>; }
@@ -928,7 +929,7 @@ sub skip_lines(){
 
 =cut
 
-sub sbvars(){
+sub sbvars{
 
   $this_script=&basename($0);
 ( $ts=$this_script) =~ s/\.(\w+)$//g;
@@ -945,7 +946,7 @@ sub sbvars(){
 }
 # }}}
 # setfiles() {{{
-sub setfiles() {
+sub setfiles {
 	foreach my $podo (@allowed_pod_options) {
 		$files{pod}{$podo}="$sdata{sname}.$podo.pod";
 	}
@@ -964,7 +965,7 @@ sub toLower {
 # }}}
 # uniq() {{{
 
-sub uniq() {
+sub uniq {
    my(@words,%h);
    %h  = map { $_ => 1 } @_;
    @words=keys %h;
