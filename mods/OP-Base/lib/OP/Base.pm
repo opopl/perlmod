@@ -792,6 +792,10 @@ sub readarr{
 
  my $if=shift;
 
+ unless (-e $if){
+    return wantarray ? () : [];
+ }
+
  open(FILE,"<$if") || die "Opening $if : $!";
 
  my @vars;

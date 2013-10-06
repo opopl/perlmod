@@ -309,8 +309,6 @@ sub update_config {
 
 sub init_vars() {
 
-    return 0 unless defined $bkey;
-
     %COLORS = (
         "say"  => 'blue',
         "warn" => 'bold red',
@@ -318,6 +316,8 @@ sub init_vars() {
 
     $texroot = $ENV{'PSH_TEXROOT'} // catfile( "$ENV{hm}", qw(wrk p) )
       // catfile( "$ENV{HOME}", qw(wrk p) );
+
+    return 0 unless defined $bkey;
 
     &init_FILES();
     &init_RE();

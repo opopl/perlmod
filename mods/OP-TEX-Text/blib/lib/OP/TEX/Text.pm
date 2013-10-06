@@ -26,6 +26,7 @@ our @scalar_accessors = qw(
   packopts
   put_today_date
   shift_parname
+  text
   texroot
   textcolor
   usedpacks
@@ -83,12 +84,6 @@ sub _flush() {
     my $self = shift;
 
     $self->_v_set( "text", "" );
-}
-
-sub _text() {
-    my $self = shift;
-
-    $self->_v_get("text") // '';
 }
 
 sub _cmd() {
@@ -186,7 +181,7 @@ sub _add_line() {
 
     return 1 unless $ref;
 
-    $oldtext = $self->_v_get("text") // '';
+    $oldtext = $self->text // '';
 
     # In case a string is supplied, this
     #	string is passed as the value of the
@@ -203,7 +198,7 @@ sub _add_line() {
     }
 
     $text = $oldtext . $addtext . "\n";
-    $self->_v_set( "text", $text );
+    $self->text( $text );
 }
 
 sub section() {
@@ -994,6 +989,8 @@ sub new() {
 
     $self->_init();
 
+    $self->text('');
+
     return $self;
 }
 
@@ -1044,7 +1041,7 @@ sub _print() {
     $opts = shift // '';
 
     unless ($opts) {
-        print $self->_text;
+        print $self->text;
         return 1;
     }
 
@@ -1064,7 +1061,7 @@ sub _print() {
                 };
             }
 
-            print F $self->_text;
+            print F $self->text;
 
             close F;
 
@@ -1073,11 +1070,11 @@ sub _print() {
 
             my $fh = $opts{fh};
 
-            print $fh { $self->_text };
+            print $fh { $self->text };
 
         }
         else {
-            print $self->_text;
+            print $self->text;
         }
     }
 }

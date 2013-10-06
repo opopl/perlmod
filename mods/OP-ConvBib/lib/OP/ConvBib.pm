@@ -118,13 +118,7 @@ sub print_INFO {
 
 sub process_PFILES {
 
-    %DONKEYS = (
-        "fogler"      => [qw(Fogler96 Koulakov96 Moessner96)],
-        "fogler.QHLC" => [qw(Fradkin99 Fogler01)],
-        "antonioRev"  => [qw(CastroNeto09)],
-        "eva"         => [qw(Li_Luican_Andrei_arxiv_arxiv_0803_4016)],
-    );
-
+    
     foreach my $pfile (@PFILES) {
         next if ( $pfile =~ /\.bib\.tex$/ );
         print "Replacing cite occurences in file: $pfile \n";
