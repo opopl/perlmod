@@ -23,7 +23,7 @@ use File::Basename;
 use Getopt::Long;
 use Pod::Usage;
 use Data::Dumper;
-use FindBin;
+use FindBin qw($Bin $Script);
 
 require Exporter;
 
@@ -79,8 +79,6 @@ our %EXPORT_TAGS = (
 					$cmdline
 					$ncmdopts
 					$pref_eoo 
-					$shd 
-					$this_script 
 					$ts 
 					%arrays
 					%cmd_opts
@@ -115,7 +113,7 @@ our $VERSION = '0.01';
 # }}}
 # vars{{{
 
-our($this_script,$ts,$shd,$pref_eoo,@allowed_pod_options);
+our($ts,$pref_eoo,@allowed_pod_options);
 our(%files,%dirs,%sdata,@cmdopts,$ncmdopts,@opthaspar);
 our(%opt,%opts,@optstr,@longopts);
 our($cmdline);
@@ -356,7 +354,7 @@ sub evali {
 	%O=(
 		pref	=>	"std.",
 		suff	=>	".i.pl",
-		dir		=>	"$shd"
+		dir		=>	"$Bin"
 	);
 	while(@_){
 		my $key=shift;
@@ -384,8 +382,8 @@ sub open_files{
 
 %files=( 
 	%files,
-	"log"			=> "$this_script.log",
-	"logtex"		=> "log.$this_script.tex"	
+	"log"			=> "$Script.log",
+	"logtex"		=> "log.$Script.tex"	
 );
 if ($opts{"logname"}){
 	$files{"log"}="$opts{logname}.log";
@@ -431,7 +429,7 @@ sub getopt{
 	&getopt_init();
 
 	unless (@ARGV){ 
-	  	pod2usage("Try '$this_script --help' for more information");
+	  	pod2usage("Try '$Script --help' for more information");
 		exit 0;
 	}else{
 		$cmdline=join(' ',@ARGV);
@@ -824,6 +822,14 @@ sub readarr{
 sub readhash{
  my $if=shift;
 
+ unless(-e $if){
+     if (wantarray) {
+         return ();
+     }else{
+         return [];
+     }
+ }
+
  open(FILE,"<$if") || die $!;
 
  my %hash=();
@@ -865,7 +871,8 @@ sub readhash{
  }
 
  close(FILE);
- return \%hash;
+
+ wantarray ? %hash : \%hash;
 }
 # }}}
 
@@ -882,7 +889,7 @@ sub setsdata {
 			short 	=> "do ...",
 		  	long	=>	"...long description..."
 		  },
-	  "name" 	=>	"$this_script",
+	  "name" 	=>	"$Script",
 	  "sname"	=>	"$ts",
 	  "usage"	=>	"This script performs ..."
 	);
@@ -935,10 +942,8 @@ sub skip_lines{
 
 sub sbvars{
 
-  $this_script=&basename($0);
-( $ts=$this_script) =~ s/\.(\w+)$//g;
- $shd=$FindBin::Bin;
- $pref_eoo="$this_script>";
+( $ts=$Script) =~ s/\.(\w+)$//g;
+ $pref_eoo="$Script>";
  @allowed_pod_options=qw( help examples );
  %dirs=( 
 	 pod	 => "pod"
