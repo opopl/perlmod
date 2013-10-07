@@ -129,7 +129,7 @@ sub out(){
 	unless(ref $ref){
 		$text="$prefix$ref";
 	}	
-    $self->outtext("$text");
+    $self->outtext("$text",%opts);
 }
 
 sub saytext() {
@@ -238,7 +238,10 @@ sub warn() {
 	my $text=shift;
 	my %opts=@_;
 
-	$self->say("$text" . "\n", (color  => 'bold red', %opts));
+    my $color='bold red';
+
+    eval '$color=$self->warncolor if $self->warncolor';
+	$self->say(" WARNING: $text", color  => $color, %opts);
 
 }
 

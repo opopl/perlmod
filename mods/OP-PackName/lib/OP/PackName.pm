@@ -1,6 +1,7 @@
 package OP::PackName;
 
 use strict;
+
 use warnings;
 
 use File::Slurp qw(
@@ -131,7 +132,7 @@ sub init_vars () {
         { skip_get_opt  => 0 }
     );
 
-    $self->opts($self->onew);
+    $self->opts($self->optsnew);
 
     $self->opts_to_scalar_vars(qw( ifile ));
     $self->opts_bool_to_scalar_vars(qw( printdir ));

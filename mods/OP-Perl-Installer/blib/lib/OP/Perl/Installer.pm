@@ -7,14 +7,19 @@ package OP::Perl::Installer;
 use strict;
 use warnings;
 
-use lib ("/home/op/wrk/perlmod/mods/OP-Perl-Installer/lib");
-use lib ("/home/op/wrk/perlmod/mods/OP-Script/lib");
+#use lib ("/home/op/wrk/perlmod/mods/OP-Script/lib");
+#use lib ("/home/op/wrk/perlmod/mods/OP-Perl-Installer/lib");
+#use lib("$FindBin::Bin/OP-Base/lib");
+
+#use lib("$ENV{PERLMODDIR}/mods/OP-PERL-PMINST/lib");
+#use lib("$ENV{PERLMODDIR}/mods/OP-Perl-Installer/lib");
 
 our $VERSION = '0.01';
 
 use OP::Script;
 use OP::Base qw/:vars :funcs/;
 use OP::Git;
+use OP::PERL::PMINST;
 
 use File::Basename qw(basename dirname );
 use File::Path qw( remove_tree make_path );
@@ -23,8 +28,6 @@ use Getopt::Long;
 use Pod::Usage;
 use Module::Build;
 use File::Spec::Functions qw(catfile catdir );
-
-use lib("$FindBin::Bin/OP-Base/lib");
 
 use ExtUtils::ModuleMaker;
 use Term::ShellUI;
@@ -39,6 +42,7 @@ __PACKAGE__
         PERLMODDIR
         viewcmd
         textcolor
+        warncolor
         usecolor
 	))
 	->mk_integer_accessors(qw())
@@ -114,6 +118,10 @@ sub _sys(){
     my $cmd=shift;
 
     system("$cmd");
+}
+
+sub module_installed_path {
+    my $self=shift;
 }
 
 sub module_full_local_path {
@@ -230,10 +238,10 @@ sub add_modules() {
 
         print F "#!/bin/bash\n";
         print F "" . "\n";
-        print F "perl Build.PL" . "\n";
-        print F "./Build" . "\n";
-        print F "./Build test" . "\n";
-        print F "./Build install" . "\n";
+        print F "perl Build.PL" . " &&";
+        print F "./Build " . " &&";
+        print F "./Build test " . " &&";
+        print F "./Build install";
 
         close(F);
 
@@ -447,14 +455,60 @@ sub run_build_install() {
 
     foreach my $module ( @imodules ) {
         next if grep { /^$module$/ } @processed;
+        
         push(@processed,$module);
+
+        # Local path to the module
+        my $lpath=catfile($self->dirs("mods"),$self->module_full_local_path($module));
+
+        unless (-e $lpath){
+            $self->warn("Local path points to non-existing file: $lpath");
+        }   
+
+        # Locations of the installed module
+        my $pminst=OP::PERL::PMINST->new;
+        $pminst->main({ 
+                PATTERN => '^' . "$module" . '$', 
+                mode => 'fullpath',
+            });
+
+        my @ipaths=$pminst->MPATHS;
+
+        use File::stat;
+
+        my $stat;
+
+        # Size time of the local module file
+        $stat=stat($lpath);
+        my $lsize=$stat->size;
+
+        # Size of the installed module file
+        my $different=0;
+        my $ipath;
+
+##TODO todo_install
+        $self->warn("Failed to get installed location for $module")
+            unless @ipaths;
+
+        for $ipath (@ipaths){
+            $stat=stat($ipath);
+            my $isize=stat($ipath)->size;
+
+            $different= ( $lsize == $isize ) ? 0 : 1 ;
+            
+            last if $different;
+        }
+
+        # do not install the module if the local and installed versions
+        #   are the same
+        next unless $different;
 
         my $mod=$self->module_to_def($module);
 
 		# $dirmod = e.g. ~/wrk/perlmod/mods/OP-Base
         my $dirmod = catdir($self->PERLMODDIR, "mods",  $mod );
 
-        next if ( grep { /^$module$/ } $self->modules_to_exclude );
+        next if ( grep { /^$module$/ } @exclude );
 
         if (@only) {
             next unless grep { /^$module$/ } @only;
@@ -470,16 +524,16 @@ sub run_build_install() {
     my(@icmds);
     my $icmd='';
 
-		if (-e "./install.sh"){
-      $icmd='./install.sh';
-		}elsif(-e "Makefile.PL"){
+    if (-e "./install.sh"){
+            $icmd='./install.sh';
+	}elsif(-e "Makefile.PL"){
 
 			push(@icmds,'perl Makefile.PL');
 			push(@icmds,'make');
 			push(@icmds,'make test');
 			push(@icmds,'make install');
 
-		}elsif(-e "Build.PL"){
+	}elsif(-e "Build.PL"){
 
 			push(@icmds,'perl ./Build.PL');
 			push(@icmds,'perl ./Build');
@@ -521,7 +575,6 @@ sub run_build_install() {
           $self->outtext($_ . "\n",%oo);
         }
       }
-##TODO todo_install
 		}else{
 	        my $build = Module::Build->new(
 	            module_name => "$module",
@@ -546,6 +599,12 @@ sub run_build_install() {
 	        $build->dispatch( 'install', install_base => "$ENV{HOME}" );
 		}
     } # end loop over $mod_def_names
+    foreach my $module (@ok) {
+      $self->saytext("OK: $module",color => 'bold yellow');
+    }
+    foreach my $module (@fail) {
+      $self->saytext("FAIL: $module",color => 'bold red');
+    }
 }
 
 # }}}
@@ -680,6 +739,7 @@ sub init_vars() {
     "Directory::Iterator" => "Directory::Iterator::PP"
   );
   $self->textcolor('blue');
+  $self->warncolor('red');
   $self->usecolor(1);
 
 }

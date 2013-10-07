@@ -7,14 +7,19 @@ package OP::Perl::Installer;
 use strict;
 use warnings;
 
-use lib ("/home/op/wrk/perlmod/mods/OP-Perl-Installer/lib");
-use lib ("/home/op/wrk/perlmod/mods/OP-Script/lib");
+#use lib ("/home/op/wrk/perlmod/mods/OP-Script/lib");
+#use lib ("/home/op/wrk/perlmod/mods/OP-Perl-Installer/lib");
+#use lib("$FindBin::Bin/OP-Base/lib");
+
+#use lib("$ENV{PERLMODDIR}/mods/OP-PERL-PMINST/lib");
+#use lib("$ENV{PERLMODDIR}/mods/OP-Perl-Installer/lib");
 
 our $VERSION = '0.01';
 
 use OP::Script;
 use OP::Base qw/:vars :funcs/;
 use OP::Git;
+use OP::PERL::PMINST;
 
 use File::Basename qw(basename dirname );
 use File::Path qw( remove_tree make_path );
@@ -23,8 +28,6 @@ use Getopt::Long;
 use Pod::Usage;
 use Module::Build;
 use File::Spec::Functions qw(catfile catdir );
-
-use lib("$FindBin::Bin/OP-Base/lib");
 
 use ExtUtils::ModuleMaker;
 use Term::ShellUI;
@@ -39,6 +42,7 @@ __PACKAGE__
         PERLMODDIR
         viewcmd
         textcolor
+        warncolor
         usecolor
 	))
 	->mk_integer_accessors(qw())
@@ -451,34 +455,53 @@ sub run_build_install() {
 
     foreach my $module ( @imodules ) {
         next if grep { /^$module$/ } @processed;
+        
         push(@processed,$module);
 
-##TODO todo_install
         # Local path to the module
-        my $lpath=$self->module_full_local_path($module);
+        my $lpath=catfile($self->dirs("mods"),$self->module_full_local_path($module));
 
-        $self->warn("Local path points to non-existing file")
-            unless -e $lpath;
+        unless (-e $lpath){
+            $self->warn("Local path points to non-existing file: $lpath");
+        }   
 
-        # Location of the installed module
-        my $ipath=$self->module_full_local_path($module);
-        print "$ipath\n";
+        # Locations of the installed module
+        my $pminst=OP::PERL::PMINST->new;
+        $pminst->main({ 
+                PATTERN => '^' . "$module" . '$', 
+                mode => 'fullpath',
+            });
+
+        my @ipaths=$pminst->MPATHS;
 
         use File::stat;
 
         my $stat;
 
-        # Modification time of the local module
+        # Size time of the local module file
         $stat=stat($lpath);
-        my $ltime=$stat->mtime;
+        my $lsize=$stat->size;
 
-        # Modification time of the installed module
-        $stat=stat($ipath);
-        my $itime=stat($ipath)->mtime;
+        # Size of the installed module file
+        my $different=0;
+        my $ipath;
+
+##TODO todo_install
+        $self->warn("Failed to get installed location for $module")
+            unless @ipaths;
+
+        for $ipath (@ipaths){
+            $stat=stat($ipath);
+            my $isize=stat($ipath)->size;
+
+            $different= ( $lsize == $isize ) ? 0 : 1 ;
+            
+            last if $different;
+        }
 
         # do not install the module if the local and installed versions
         #   are the same
-        next if ($ltime == $itime);
+        next unless $different;
 
         my $mod=$self->module_to_def($module);
 
@@ -501,16 +524,16 @@ sub run_build_install() {
     my(@icmds);
     my $icmd='';
 
-		if (-e "./install.sh"){
-      $icmd='./install.sh';
-		}elsif(-e "Makefile.PL"){
+    if (-e "./install.sh"){
+            $icmd='./install.sh';
+	}elsif(-e "Makefile.PL"){
 
 			push(@icmds,'perl Makefile.PL');
 			push(@icmds,'make');
 			push(@icmds,'make test');
 			push(@icmds,'make install');
 
-		}elsif(-e "Build.PL"){
+	}elsif(-e "Build.PL"){
 
 			push(@icmds,'perl ./Build.PL');
 			push(@icmds,'perl ./Build');
@@ -576,6 +599,12 @@ sub run_build_install() {
 	        $build->dispatch( 'install', install_base => "$ENV{HOME}" );
 		}
     } # end loop over $mod_def_names
+    foreach my $module (@ok) {
+      $self->saytext("OK: $module",color => 'bold yellow');
+    }
+    foreach my $module (@fail) {
+      $self->saytext("FAIL: $module",color => 'bold red');
+    }
 }
 
 # }}}
@@ -710,6 +739,7 @@ sub init_vars() {
     "Directory::Iterator" => "Directory::Iterator::PP"
   );
   $self->textcolor('blue');
+  $self->warncolor('red');
   $self->usecolor(1);
 
 }
