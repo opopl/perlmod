@@ -7,12 +7,9 @@ package OP::Perl::Installer;
 use strict;
 use warnings;
 
-#use lib ("/home/op/wrk/perlmod/mods/OP-Script/lib");
-#use lib ("/home/op/wrk/perlmod/mods/OP-Perl-Installer/lib");
-#use lib("$FindBin::Bin/OP-Base/lib");
-
-#use lib("$ENV{PERLMODDIR}/mods/OP-PERL-PMINST/lib");
-#use lib("$ENV{PERLMODDIR}/mods/OP-Perl-Installer/lib");
+use lib("$ENV{PERLMODDIR}/mods/OP-PERL-PMINST/lib");
+use lib("$ENV{PERLMODDIR}/mods/OP-Perl-Installer/lib");
+use lib("$ENV{PERLMODDIR}/mods/OP-Script/lib");
 
 our $VERSION = '0.01';
 
