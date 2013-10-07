@@ -11,8 +11,8 @@ OP::Script - Base script class
 use strict;
 use warnings;
 
-use FindBin;
-use lib("$ENV{hm}/wrk/perlmod/mods/OP-Base/lib");
+use FindBin qw($Bin $Script);
+#use lib("$ENV{hm}/wrk/perlmod/mods/OP-Base/lib");
 
 use File::Basename;
 use File::Util;

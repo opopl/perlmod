@@ -26,6 +26,7 @@ our @MPATHS;
 our %OPTS;
 our $CLOPTS;
 our %RE;
+our @EXCLUDEDIRS;
 
 use parent qw( Class::Accessor::Complex );
 
@@ -55,7 +56,6 @@ sub main {
 
     my $o = shift // {};
     $self->opts($o);
-
 
     $self->init;
 
@@ -119,6 +119,7 @@ sub init {
     my $self = shift;
 
     @MODULES     = ();
+    @EXCLUDEDIRS  = ();
     @MPATHS      = ();
     $PATTERN     = '';
     %RE          = ();
@@ -160,6 +161,16 @@ sub process_opts {
         elsif ( $k eq "PATTERN" ) {
             $PATTERN = $v;
             $self->PATTERN($PATTERN);
+        } elsif ( $k eq "remove" ) {
+            $PATTERN = "^" .  $v . '$';
+            $OPTS{r}=1;
+        }
+        elsif ( $k eq "excludedirs" ) {
+            unless(ref $v){
+                @EXCLUDEDIRS=split("\n",$v);
+            }elsif(ref $v eq "ARRAY"){
+                @EXCLUDEDIRS=@$v;
+            }
         }
     }
 
@@ -184,6 +195,11 @@ sub find_module_matches {
 
     for $INCDIR (@INC) {
         next unless -d $INCDIR;
+
+        if ( grep { /^\s*$INCDIR/ } @EXCLUDEDIRS ){
+            next;
+        }
+
         find( \&wanted, $INCDIR );
     }
 

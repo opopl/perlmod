@@ -7,9 +7,8 @@ package OP::Perl::Installer;
 use strict;
 use warnings;
 
-use lib("$ENV{PERLMODDIR}/mods/OP-PERL-PMINST/lib");
 use lib("$ENV{PERLMODDIR}/mods/OP-Perl-Installer/lib");
-use lib("$ENV{PERLMODDIR}/mods/OP-Script/lib");
+use lib("$ENV{PERLMODDIR}/mods/OP-PERL-PMINST/lib");
 
 our $VERSION = '0.01';
 
@@ -251,7 +250,6 @@ sub add_modules() {
 
     system($self->viewcmd . "@files");
 
-    #exit 0;
 }
 
 # }}}
@@ -464,9 +462,11 @@ sub run_build_install() {
 
         # Locations of the installed module
         my $pminst=OP::PERL::PMINST->new;
+        (my $mdef=$module )=~ s/::/-/g;
         $pminst->main({ 
                 PATTERN => '^' . "$module" . '$', 
                 mode => 'fullpath',
+                excludedirs  => catfile($self->dirs("mods"),$mdef,qw(lib)),
             });
 
         my @ipaths=$pminst->MPATHS;
@@ -487,13 +487,29 @@ sub run_build_install() {
         $self->warn("Failed to get installed location for $module")
             unless @ipaths;
 
-        for $ipath (@ipaths){
-            $stat=stat($ipath);
-            my $isize=stat($ipath)->size;
+        # if @ipath=(), this means that the module was not installed,
+        #   hence we will need to install it
 
-            $different= ( $lsize == $isize ) ? 0 : 1 ;
-            
-            last if $different;
+            # two or more different installation locations; need to install
+##loop_ipaths
+        if (@ipaths > 1){
+            $pminst->main({ remove => "$module" });
+            $different=1;
+        }elsif( @ipaths == 1 ){
+            $ipath=shift @ipaths;
+
+            if ($ipath){
+                $stat=stat($ipath);
+                my $isize=stat($ipath)->size // '';
+
+                $different= ( $lsize == $isize ) ? 0 : 1 ;
+            }else{   
+                $different=1;
+            }
+
+        }else{
+            # module was not installed at all; need to install
+            $different=1;
         }
 
         # do not install the module if the local and installed versions

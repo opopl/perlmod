@@ -17,6 +17,14 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 use OP::Base qw(readarr);
 use Data::Dumper;
+use File::Slurp qw(
+  append_file
+  edit_file
+  edit_file_lines
+  read_file
+  write_file
+  prepend_file
+);
 
 $VERSION = '0.01';
 @ISA     = qw(Exporter);
@@ -35,7 +43,7 @@ $VERSION = '0.01';
 my @ex_vars_scalar = qw(
     $ArgString
     $NumArgs
-    $FunName
+    
     $CurBuf
 );
 ###export_vars_hash
@@ -62,6 +70,7 @@ my @ex_vars_array = qw(
           VimArg
           VimCmd
           VimEcho
+          VimEditBufFiles
           VimEval
           VimExists
           VimGrep
@@ -90,6 +99,7 @@ sub init_PIECES;
 sub VimArg;
 sub VimCmd;
 sub VimEcho;
+sub VimEditBufFiles;
 sub VimEval;
 sub VimExists;
 sub VimGrep;
@@ -119,7 +129,7 @@ our %DIRS;
 our @PIECES;
 our(@Args,@NamedArgs);
 our($NumArgs);
-our($FunName);
+our($SubName);
 our($CurBuf);
 our(@INITIDS);
 
@@ -248,9 +258,28 @@ sub VimVarType {
 
     return '_NOT_EXIST_' unless VimExists($var);
 
-    VimCmd('let vartype=F_type(' . $var . ')');
+		my $vimcode=<<"EOV";
 
-    my $vartype=VimEval('vartype');
+		if exists("*F_type")
+    	let type=F_type($var)
+		else
+		  if type($var) == type('')
+		    let type='String'
+		  elseif type($var) == type(1)
+		    let type='Number'
+		  elseif type($var) == type(1.1)
+		    let type='Float'
+		  elseif type($var) == type([])
+		    let type='List'
+		  elseif type($var) == type({})
+		    let type='Dictionary'
+		  endif
+		endif
+	
+EOV
+		VimCmd("$vimcode");
+
+    my $vartype=VimEval('type');
     return $vartype;
 
 }
@@ -312,13 +341,21 @@ sub VimExists {
 sub VimMsg {
     my $text=shift;
 
-    VIM::Msg("VIMPERL_$FunName() : $text");
+    my $opts=shift;
+
+    if ($opts->{warn}){	
+        VimCmd("echohl WarningMsg");
+    }
+
+    VIM::Msg("VIMPERL_$SubName() : $text");
+
+    VimCmd("echohl None");
 }
 
 sub VimMsgE {
     my $text=shift;
 
-    VIM::Msg("VIMPERL_$FunName() : $text","ErrorMsg");
+    VIM::Msg("VIMPERL_$SubName() : $text","ErrorMsg");
 }
 
 =head3 VimLet ( $var, $ref, $vtype )
@@ -444,9 +481,12 @@ sub init {
 
     my %opts=@_;
 
-    unless(defined $FunName){
-        $FunName=$opts{FunName} // '';
+    unless(defined ){
+        $SubName=$opts{SubName} // '';
+        $SubName=VimVar('g:SubName');
     }
+
+    VimMsg("g:SubName is: ");
 
     @INITIDS=qw(
             Args 
@@ -462,6 +502,8 @@ sub init {
         'MKVIMRC'  => catfile($ENV{HOME},qw( config mk vimrc )),
     );
 
+    @BFILES=();
+
     foreach my $buf (@BUFLIST) {
         my $name = $buf->Name();
         $name =~ s/^\s*//g;
@@ -476,10 +518,21 @@ sub init {
 
 }
 
+sub VimEditBufFiles {
+    my $cmds=shift // $ArgString;
+
+	foreach my $bfile (@BFILES) {
+	    my $evs='edit_file_lines { ' . $cmds . ' } $bfile;' ; 
+	    eval "$evs";
+	    die $@ if $@;
+	}
+	
+}
+
 sub _die {
     my $text=shift;
 
-    die "VIMPERL_$FunName : $text"
+    die "VIMPERL_$SubName : $text"
 }
 
 =head3 init_Args()
@@ -522,6 +575,12 @@ sub new {
 
     return $self;
 
+}
+
+BEGIN {
+    if (exists &VIM::Eval){
+        init;
+    }
 }
 
 1;

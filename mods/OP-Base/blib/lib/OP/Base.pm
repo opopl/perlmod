@@ -25,6 +25,14 @@ use Pod::Usage;
 use Data::Dumper;
 use FindBin qw($Bin $Script);
 use File::Spec::Functions qw(catfile rel2abs curdir catdir );
+use File::Slurp qw(
+  append_file
+  edit_file
+  edit_file_lines
+  read_file
+  write_file
+  prepend_file
+);
 
 require Exporter;
 
@@ -50,6 +58,7 @@ our %EXPORT_TAGS = (
 						getopt 
 						getopt_after
 						gettime
+                        ListModuleSubs
 						open_files
 						printpod 
 						printhelp
@@ -155,6 +164,7 @@ sub getopt;
 sub getopt_init;
 sub getopt_after;
 sub gettime;
+sub ListModuleSubs;
 sub open_files;
 sub printpod;
 sub printhelp;
@@ -782,6 +792,30 @@ sub read_kw_file{
 }
 # }}}
 # }}}
+
+sub ListModuleSubs {
+    my $module=shift;
+
+    my @subs;
+
+	my @loc=map { chomp; $_; } `pmi -l $module`;
+	my $mfile=shift @loc;
+	
+	my @lines=read_file $mfile;
+	foreach (@lines){
+	    chomp;
+	    next if /^\s*#/;
+	    /^\s*sub\s*(?<subname>\w+)[\n\s]*{/ && do {
+	        push(@subs,$+{subname});
+	        next;
+	    };
+	}
+
+    wantarray ? @subs : \@subs;
+	
+}
+
+
 # readarr(){{{
 
 =head3 readarr()

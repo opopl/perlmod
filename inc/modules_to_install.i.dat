@@ -1,6 +1,6 @@
+OP::Perl::Installer
 OP::Script
 OP::PERL::PMINST
-OP::Perl::Installer
 Class::Accessor::Complex
 OP::BIBTEX
 OP::Base
@@ -8,6 +8,7 @@ OP::Git
 OP::PackName
 OP::PaperConf
 OP::PERL::PMINST
+OP::VIMPERL
 #######################
 #Directory::Iterator
 #Directory::Iterator::PP
@@ -31,7 +32,6 @@ OP::PERL::PMINST
 #OP::TEX::NICE
 #OP::TEX::Text
 #OP::Time
-#OP::VIMPERL
 #OP::Viewer
 #OP::VimTag
 #PDL::Graphics::PLplot::0.62
