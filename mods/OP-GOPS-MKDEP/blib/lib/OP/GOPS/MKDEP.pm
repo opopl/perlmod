@@ -134,6 +134,8 @@ sub init_vars() {
     $self->dirs( root => catdir( $self->dirs("scripts")->{all}, "..", ".." ) );
     $self->dirs( inc => catdir( $self->dirs("root"), "inc" ) );
 
+    $self->dirs( sall => $self->dirs("scripts")->{all}, "inc"  );
+
     $self->files(
         "notused" => $self->dirs('inc') . "/nu_" . $self->PROGNAME . ".mk" );
 
@@ -588,8 +590,8 @@ sub _get_fortranfiles() {
     my $self = shift;
 
     if ( $self->_opt_true("flist") ) {
-        $self->fortranfiles( map { chomp; $_; }
-              `$shd/get_flist.pl --out --file` );
+        my $str=$self->dirs('sall') . '/get_flist.pl --out --file';
+        $self->fortranfiles( map { chomp; $_; } `$str` );
     }
 }
 

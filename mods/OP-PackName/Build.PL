@@ -4,4 +4,5 @@ use Module::Build;
 Module::Build->new
     ( module_name     => 'OP::PackName',
       license         => 'perl',
+      dist_abstract         => 'Perl package name extraction module',
     )->create_build_script;

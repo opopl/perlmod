@@ -32,6 +32,7 @@ our @hash_accessors=qw(
     accessors
     accdesc
     opts
+    optsnew
 );
 
 ###__ACCESSORS_ARRAY
@@ -80,12 +81,12 @@ sub set_these_cmdopts() {
 
     $self->OP::Script::set_these_cmdopts();
 
-    my $opts = [];
+    my $o = [];
     my $desc = {};
 
 ###define_opt_ifile
     push(
-        @$opts,
+        @$o,
         {
             name => "ifile",
             desc => "Input Perl package name",
@@ -94,29 +95,27 @@ sub set_these_cmdopts() {
     );
 
 ###define_opt_printdir
-    push( @$opts, { 
+    push( @$o, { 
             name => "printdir", 
             desc => "Return the package's root directory" 
         } );
 
-    $self->add_cmd_opts($opts);
+    $self->add_cmd_opts($o);
 
 }
 
 # new() {{{
 
 sub new() {
-    my $self = shift;
+    my $pack = shift;
 
-    my $opts = shift;
+    my $o = shift // '';
 
-    $self->OP::Script::new();
+    my $self=$pack->OP::Script::new();
 
-    $self->opts(
-        { skip_get_opt  => 0 }
-    );
+    $self->optsnew($o);
 
-    $self->opts($opts);
+    return $self;
 
 }
 
@@ -128,6 +127,12 @@ sub init_vars () {
 
     $self->notpod(1);
 
+    $self->opts(
+        { skip_get_opt  => 0 }
+    );
+
+    $self->opts($self->onew);
+
     $self->opts_to_scalar_vars(qw( ifile ));
     $self->opts_bool_to_scalar_vars(qw( printdir ));
 
@@ -138,12 +143,12 @@ sub init_vars () {
 sub process_opts {
     my $self=shift;
 
-    my $opts=shift // '';
+    my $o=shift // '';
 
-    return unless $opts;
+    return unless $o;
 
     foreach my $id (qw( ifile printdir )) {
-        my $evs='$self->' . $id . '($opts->{' . $id . '})' ;
+        my $evs='$self->' . $id . '($o->{' . $id . '})' ;
         eval "$evs";
         die $@ if $@;
     }
@@ -206,10 +211,13 @@ sub getpackstr {
 sub run() {
     my $self=shift;
 
-    my $opts=shift // '';
+    my $o=shift // '';
 
-    $self->process_opts($opts);
+    # $o -> $self->opts
+    $self->process_opts($o);
+
     $self->getpackstr;
+
     $self->printresult;
 
     exit 0;
@@ -219,13 +227,13 @@ sub run() {
 sub main() {
     my $self=shift;
 
-    my $opts=shift // '';
+    my $o=shift // '';
 
     $self->get_opt() unless $self->opts('skip_get_opt');
 
     $self->init_vars();
 
-    $self->run($opts);
+    $self->run($o);
 
     return $self->packstr;
 

@@ -13,6 +13,8 @@ use lib ("/home/op/wrk/perlmod/mods/OP-Script/lib");
 our $VERSION = '0.01';
 
 use OP::Script;
+use OP::Base qw/:vars :funcs/;
+use OP::Git;
 
 use File::Basename qw(basename dirname );
 use File::Path qw( remove_tree make_path );
@@ -24,7 +26,6 @@ use File::Spec::Functions qw(catfile catdir );
 
 use lib("$FindBin::Bin/OP-Base/lib");
 
-use OP::Base qw/:vars :funcs/;
 use ExtUtils::ModuleMaker;
 use Term::ShellUI;
 use Data::Dumper;
@@ -37,13 +38,16 @@ __PACKAGE__
 	->mk_scalar_accessors(qw(
         PERLMODDIR
         viewcmd
+        textcolor
+        usecolor
 	))
 	->mk_integer_accessors(qw())
 ###_ACCESSORS_ARRAY
 	->mk_array_accessors(qw(
 		mod_def_names
 		modules
-		selected_modules
+		modules_to_install
+		modules_to_exclude
 	))
 ###_ACCESSORS_HASH
 	->mk_hash_accessors(qw(
@@ -103,6 +107,18 @@ sub module_to_path() {
 }
 
 # }}}
+
+sub _sys(){
+    my $self=shift;
+
+    my $cmd=shift;
+
+    system("$cmd");
+}
+
+sub module_installed_path {
+    my $self=shift;
+}
 
 sub module_full_local_path {
     my $self=shift;
@@ -218,10 +234,10 @@ sub add_modules() {
 
         print F "#!/bin/bash\n";
         print F "" . "\n";
-        print F "perl Build.PL" . "\n";
-        print F "./Build" . "\n";
-        print F "./Build test" . "\n";
-        print F "./Build install" . "\n";
+        print F "perl Build.PL" . " &&";
+        print F "./Build " . " &&";
+        print F "./Build test " . " &&";
+        print F "./Build install";
 
         close(F);
 
@@ -277,7 +293,7 @@ sub edit_modules() {
         @emodules = $self->modules ;
     }
     elsif ( $s_modules eq "_sel" ) {
-        @emodules = $self->selected_modules ;
+        @emodules = $self->modules_to_install ;
     }
 
     foreach my $module (@emodules) {
@@ -339,18 +355,18 @@ sub choose_modules() {
 	my $self=shift;
 
 	my @mods=split(',',shift);
-	$self->selected_modules(@mods);
+	$self->modules_to_install(@mods);
 
 }
 
 # }}}
-# install_modules() {{{
+# load_modules() {{{
 
-=head3 install_modules()
+=head3 load_modules()
 
 =cut
 
-sub install_modules() {
+sub load_modules() {
     my $self = shift;
 
     opendir( D, $self->dirs("mods") );
@@ -368,15 +384,31 @@ sub install_modules() {
 
     $self->modules_sort();
 
-    $self->selected_modules(
+    $self->modules_to_install(
         qw(
           OP::Script
+          OP::Base
           OP::GOPS::MKDEP
           OP::Perl::Installer
           )
     );
 
+    $self->modules_to_exclude(qw(OP::Module::Build));
+
+    $self->load_dat();
+
+
     closedir(D);
+}
+
+sub load_dat(){
+    my $self=shift;
+
+    my $datfile=$DATFILES{modules_to_install};
+    if (-e $datfile){
+        $self->modules_to_install_clear;
+        $self->modules_to_install(readarr($datfile));
+    }
 }
 
 #}}}
@@ -403,18 +435,55 @@ sub list_modules() {
 sub run_build_install() {
     my $self = shift;
 
-    my ( @exclude, @only );
+    my @imodules;
 
-    @exclude = qw( OP::Module::Build );
-    @only = $self->selected_modules; 
+    @imodules=@_ if @_;
 
-    foreach my $mod ( $self->mod_def_names ) {
+    unless (@imodules){
+      $self->load_dat();
+      @imodules=$self->modules_to_install;
+    }
+
+    my ( @exclude, @only, @ok, @fail, @processed );
+
+    @only = $self->modules_to_install; 
+    @exclude = $self->modules_to_exclude; 
+
+    foreach my $module ( @imodules ) {
+        next if grep { /^$module$/ } @processed;
+        push(@processed,$module);
+
+##TODO todo_install
+        # Local path to the module
+        my $lpath=$self->module_full_local_path($module);
+
+        $self->warn("Local path points to non-existing file")
+            unless -e $lpath;
+
+        # Location of the installed module
+        my $ipath=$self->module_full_local_path($module);
+        print "$ipath\n";
+
+        use File::stat;
+
+        my $stat;
+
+        # Modification time of the local module
+        $stat=stat($lpath);
+        my $ltime=$stat->mtime;
+
+        # Modification time of the installed module
+        $stat=stat($ipath);
+        my $itime=stat($ipath)->mtime;
+
+        # do not install the module if the local and installed versions
+        #   are the same
+        next if ($ltime == $itime);
+
+        my $mod=$self->module_to_def($module);
 
 		# $dirmod = e.g. ~/wrk/perlmod/mods/OP-Base
         my $dirmod = catdir($self->PERLMODDIR, "mods",  $mod );
-
-		# e.g $module=OP::Base
-        my $module = $self->def_to_module($mod);
 
         next if ( grep { /^$module$/ } @exclude );
 
@@ -428,34 +497,68 @@ sub run_build_install() {
 			next;
 		}
 
-###install_modules_order
+###load_modules_order
+    my(@icmds);
+    my $icmd='';
+
 		if (-e "./install.sh"){
-			system('./install.sh');
+      $icmd='./install.sh';
 		}elsif(-e "Makefile.PL"){
-			my @icmds;
 
 			push(@icmds,'perl Makefile.PL');
 			push(@icmds,'make');
 			push(@icmds,'make test');
 			push(@icmds,'make install');
 
-			system(join(' && ',@icmds));
 		}elsif(-e "Build.PL"){
-			my @icmds;
 
 			push(@icmds,'perl ./Build.PL');
 			push(@icmds,'perl ./Build');
 			push(@icmds,'perl ./Build test');
 			push(@icmds,'perl ./Build install');
 
-			system(join(' && ',@icmds));
+    }
+    $icmd=join(' && ',@icmds) if @icmds;
+
+    if ($icmd){
+      my $imsg='Installing module: ' . $module;
+      $self->out($imsg);
+      my ( $ok, $error_message, $full_buf, $stdout_buf, $stderr_buf ) =
+        IPC::Cmd::run( command => $icmd, verbose => 0 );
+
+      my $indent=0;
+      my $linelength=50;
+      my %oo=();
+      
+      if ($ok) {
+        push(@ok,$module);
+
+        $indent=$linelength-length('OK')-length($imsg);
+        $oo{indent}=$indent if $indent > 0;
+        $oo{color}='yellow';
+
+        $self->saytext('OK',%oo );
+      } else {
+        push(@fail,$module);
+
+        $indent=$linelength-length('FAIL')-length($imsg);
+        $oo{indent}=$indent if $indent > 0;
+
+        $self->warntext('FAIL', %oo );
+
+        %oo=(color => 'bold red', indent => 5 );
+        my @olines=split("\n",join("",@$full_buf));
+        for(@olines){
+          $self->outtext($_ . "\n",%oo);
+        }
+      }
 		}else{
 	        my $build = Module::Build->new(
 	            module_name => "$module",
 	            license     => 'perl'
 	        );
 	
-	        $self->out("Building module: $module\n");
+	        $self->OP::Script::out("Building module: $module\n",color => 'blue');
 	
 	        #		select $fh{log};
 	        $build->dispatch('build');
@@ -512,6 +615,51 @@ sub run_shell() {
 }
 
 # }}}
+
+sub _complete_cmd() {
+    my $self = shift;
+
+    my $ref_cmds = shift // '';
+
+    return [] unless $ref_cmds;
+
+    my @comps = ();
+    my $ref;
+
+    return 1 unless ( ref $ref_cmds eq "ARRAY" );
+
+    while ( my $cmd = shift @$ref_cmds ) {
+        foreach ($cmd) {
+            # List of targets 
+###complete_ALLPROJS
+            /^ALLPROJS$/ && do {
+                push(@comps,$self->PROJS);
+                next;
+            };
+            /^MKTARGETS$/ && do {
+                push(@comps,$self->MKTARGETS);
+                next;
+            };
+###complete_sys
+            /^sys$/ && do {
+                push(@comps,qw( clear ls  ));
+                next;
+            };
+###complete_git
+            /^git$/ && do {
+                push(@comps,@$OP::Git::commands);
+                next;
+            };
+        }
+    }
+    @comps=sort(uniq(@comps));
+
+    $ref = \@comps if @comps;
+
+    return $ref;
+}
+
+
 # _complete_modules() {{{
 
 =head3 _complete_modules()
@@ -561,6 +709,8 @@ sub init_vars() {
   $self->moddeps(
     "Directory::Iterator" => "Directory::Iterator::PP"
   );
+  $self->textcolor('blue');
+  $self->usecolor(1);
 
 }
 
@@ -604,11 +754,21 @@ sub _term_get_commands() {
 				$self->_complete_modules(@_); 
 			}
         },
+###cmd_nocolor
+        "nocolor" => {
+            desc    => "Disable color print",
+            maxargs => 0,
+            proc    => sub { $self->usecolor(0); },
+        },
 ###scmd_rbi
         "rbi" => {
             desc    => "Run-build-install",
-            maxargs => 0,
-            proc    => sub { $self->run_build_install(); },
+            args    => sub { 
+                my $s = shift;
+                $s->suppress_completion_append_character();
+				        $self->_complete_modules(@_); 
+			        },
+            proc    => sub { $self->run_build_install(@_); },
         },
 ###scmd_eam
         "eam" => {
@@ -632,6 +792,23 @@ sub _term_get_commands() {
         "lm" => {
             desc    => "List available modules",
             proc    => sub { $self->list_modules(); },
+            maxargs => 0
+        },
+##cmd_sys
+        "sys" => {
+            desc => "Invoke system command",
+            proc => sub { $self->_sys(@_) },
+            args => sub { shift; $self->_complete_cmd( [qw( sys )], @_ ); },
+        },
+##cmd_clear
+        "clear" => {
+            desc => "Invoke clear ",
+            proc => sub { $self->_sys('clear') },
+        },
+###cmd_vm
+        "vm" => {
+            desc    => "Edit OP::Perl::Installer",
+            proc    => sub { $self->edit_modules('OP::Perl::Installer'); },
             maxargs => 0
         },
 ###cmd_list
@@ -678,6 +855,8 @@ sub _term_get_commands() {
 }
 
 # }}}
+
+
 # main() {{{
 
 sub main() {
@@ -689,7 +868,7 @@ sub main() {
 
     $self->init_vars();
 
-    $self->install_modules();
+    $self->load_modules();
 
     do { $self->run_build_install(); exit 0; } if ( $opt{run}  || $opt{r} );
     do { $self->list_modules();      exit 0; } if ( $opt{list} || $opt{l} );

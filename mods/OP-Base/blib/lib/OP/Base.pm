@@ -24,6 +24,7 @@ use Getopt::Long;
 use Pod::Usage;
 use Data::Dumper;
 use FindBin qw($Bin $Script);
+use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 
 require Exporter;
 
@@ -67,7 +68,7 @@ our %EXPORT_TAGS = (
 						skip_lines
 						read_line_char_array
 						sbvars 
-						setfiles 
+						set_FILES 
 						setsdata 
 						setcmdopts 
 						uniq
@@ -82,9 +83,10 @@ our %EXPORT_TAGS = (
 					$ts 
 					%arrays
 					%cmd_opts
-					%dirs
+					%DIRS
 					%eval_sw
-					%files
+					%FILES
+					%DATFILES
 					%fh
 					%opt
 					%opts
@@ -114,7 +116,7 @@ our $VERSION = '0.01';
 # vars{{{
 
 our($ts,$pref_eoo,@allowed_pod_options);
-our(%files,%dirs,%sdata,@cmdopts,$ncmdopts,@opthaspar);
+our(%DATFILES,%FILES,%DIRS,%sdata,@cmdopts,$ncmdopts,@opthaspar);
 our(%opt,%opts,@optstr,@longopts);
 our($cmdline);
 our(%cmd_opts);
@@ -173,7 +175,7 @@ sub read_line_char_array;
 sub read_TF;
 sub read_TF_cmd;
 sub sbvars;
-sub setfiles;
+sub set_FILES;
 sub setsdata;
 sub setcmdopts;
 sub uniq;
@@ -380,26 +382,26 @@ sub open_files{
 	my $echo=0;
 	$echo=$argopts{echo} if defined $argopts{echo};
 
-%files=( 
-	%files,
+%FILES=( 
+	%FILES,
 	"log"			=> "$Script.log",
 	"logtex"		=> "log.$Script.tex"	
 );
 if ($opts{"logname"}){
-	$files{"log"}="$opts{logname}.log";
-	$files{"logtex"}="log.$opts{logname}.tex";
+	$FILES{"log"}="$opts{logname}.log";
+	$FILES{"logtex"}="log.$opts{logname}.tex";
 }
 # File handle for the testing-log file 
 if ($opts{log}){
 	foreach(@logtypes){
 		if ($opts{appendlog}){
-			open($fh{$_},">>$files{$_}") || die $!;
+			open($fh{$_},">>$FILES{$_}") || die $!;
 			&eoolog("Opening $_-file for appending:\n",echo=>$echo);
-			&eoolog("	$files{$_}\n",echo=>$echo);
+			&eoolog("	$FILES{$_}\n",echo=>$echo);
 		}else{
-			open($fh{$_},">$files{$_}") || die $!;
+			open($fh{$_},">$FILES{$_}") || die $!;
 			&eoolog("Opening $_-file for write:\n",echo=>$echo);
-			&eoolog("	$files{$_}\n",echo=>$echo);
+			&eoolog("	$FILES{$_}\n",echo=>$echo);
 		}
 	}
 }
@@ -463,13 +465,13 @@ sub printpodoptions {
 }
 
 sub printhelp{
-	pod2usage(-input=> $files{pod}{help}, -verbose => 1) if $opt{help};
+	pod2usage(-input=> $FILES{pod}{help}, -verbose => 1) if $opt{help};
 }
 sub printman{
-	pod2usage(-input=> $files{pod}{help}, -verbose => 2) if $opt{man};
+	pod2usage(-input=> $FILES{pod}{help}, -verbose => 2) if $opt{man};
 }
 sub printexamples{
-	pod2usage(-input=> $files{pod}{examples}, -verbose => 2) if $opt{examples};
+	pod2usage(-input=> $FILES{pod}{examples}, -verbose => 2) if $opt{examples};
 }
 
 # }}}
@@ -510,7 +512,7 @@ sub is_const{
 sub printpod{
 	my $topic=shift;
 	my $o;
-	open(POD,">$files{pod}{$topic}") || die $!;
+	open(POD,">$FILES{pod}{$topic}") || die $!;
 		
 	if (grep { $topic eq $_ } @allowed_pod_options ){
 		if ($topic eq "help"){
@@ -564,7 +566,7 @@ sub printpod{
 # read_const(){{{
 sub read_const{
 
-my @ifsconst=@{$files{constvars}};
+my @ifsconst=@{$FILES{constvars}};
 foreach (@ifsconst){ 
 	my $if=$_;
 	if (-e $if){
@@ -590,9 +592,9 @@ sub read_TF{
 # read in true/false values
 foreach my $switch (qw( false true )){
 	if (-e "$switch.rif.dat" ){
-		push(@{$files{$switch}},"$switch.rif.dat");
+		push(@{$FILES{$switch}},"$switch.rif.dat");
 	}
-	foreach (@{$files{$switch}}){
+	foreach (@{$FILES{$switch}}){
 		my $if=$_;
 		if (-e $if){
 			open(F,"<$if") || die "$!";
@@ -617,9 +619,9 @@ foreach my $switch (qw( false true )){
 # read_all_vars() {{{
 sub read_all_vars{
 
-if (-e $files{vars}){
-	&eoolog("Reading in the list of variables from $files{vars}\n");
-	open(V,"<$files{vars}") || die "$!";
+if (-e $FILES{vars}){
+	&eoolog("Reading in the list of variables from $FILES{vars}\n");
+	open(V,"<$FILES{vars}") || die "$!";
 	while(<V>){
 		chomp; next if /^\s*!(.*)$/ || /^\s*$/;
 		s/^\s*//g; s/\s*$//g;
@@ -661,9 +663,9 @@ sub read_init_vars{
 	my $var;
 	# read in initialized variable values 
 	if ($opts{rinit}){
-		open(IV,"<$files{initvars}") || die "$!";
+		open(IV,"<$FILES{initvars}") || die "$!";
 		&eoolog("Reading in pre-initialized variable values...\n");
-		&eoolog("	Input file: $files{initvars}\n");
+		&eoolog("	Input file: $FILES{initvars}\n");
 		while(<IV>){
 			chomp;
 			next if /^\s*[!#](.*)$/;
@@ -685,13 +687,13 @@ sub read_in_flist{
 		&eoolog("--flist: fortran files are specified in a special flist-file.\n");
 		&eoolog("		To see the list of files in this flist-file, invoke:\n");
 		&eoolog("			get_flist.pl --out --file\n");
-		if(! -e $files{flist}){
+		if(! -e $FILES{flist}){
 			&eoolog("Error: flist file does not exist.\n");
 			die "\n";
 		}else{
 			&eoolog("Reading in the flist input file:\n");
-			&eoolog("	$files{flist}\n");
-			open(F,"<$files{flist}") || die $!;
+			&eoolog("	$FILES{flist}\n");
+			open(F,"<$FILES{flist}") || die $!;
 			@ifs=map { chomp($_); $_; } 
 					grep { (! ( /^\s*#/ || /^\s*$/  )) } <F>;
 			@ifs=sort(&uniq(@ifs));
@@ -754,10 +756,10 @@ sub read_kw_file{
 	}
 	
 	my $atype;
-	if (-e $files{tkw}){
+	if (-e $FILES{tkw}){
 		&eoolog("Reading in options for the script from the input keyword file:\n",out=>$echo);
-		&eoolog("	$files{tkw}\n",out=>$echo);
-		open(TKW,"<$files{tkw}") || die $!;
+		&eoolog("	$FILES{tkw}\n",out=>$echo);
+		open(TKW,"<$FILES{tkw}") || die $!;
 		while(<TKW>){
 			chomp;
 			my @F;
@@ -786,14 +788,20 @@ sub read_kw_file{
 
 =cut
 
-sub readarr{
+sub readarr {
 
- my $if=shift;
+ my $if=shift // '';
 
- unless (-e $if){
-    return wantarray ? () : [];
+ unless ($if){
+     warn "OP::Base::readarr(): empty file name provided: $if";
+     return wantarray ? () : [];
  }
 
+ unless (-e $if){
+     warn "OP::Base::readarr(): file does not exist: $if";
+     return wantarray ? () : [];
+ }
+    
  open(FILE,"<$if") || die "Opening $if : $!";
 
  my @vars;
@@ -945,22 +953,36 @@ sub sbvars{
 ( $ts=$Script) =~ s/\.(\w+)$//g;
  $pref_eoo="$Script>";
  @allowed_pod_options=qw( help examples );
- %dirs=( 
-	 pod	 => "pod"
+
+ %DIRS=( 
+	 pod	 => "pod",
+     PERLMOD  => $ENV{PERLMODDIR} // catfile($ENV{HOME}, qw(wrk perlmod)),
  );
 
- foreach my $k (keys %dirs) {
- 	mkdir $dirs{$k};
+
+ foreach my $k (keys %DIRS) {
+ 	mkdir $DIRS{$k};
  }
+
 }
 # }}}
-# setfiles() {{{
-sub setfiles {
+# set_FILES() {{{
+sub set_FILES {
 	foreach my $podo (@allowed_pod_options) {
-		$files{pod}{$podo}="$sdata{sname}.$podo.pod";
+		$FILES{pod}{$podo}="$sdata{sname}.$podo.pod";
 	}
-	$files{tkw}="$ts.kw.i.dat";
-	$files{ifs}="$ts.ifs.i.dat";
+	$FILES{tkw}="$ts.kw.i.dat";
+	$FILES{ifs}="$ts.ifs.i.dat";
+}
+sub set_DATFILES {
+    %DATFILES=(
+        modules_to_install  => catfile($DIRS{PERLMOD},qw(inc)),
+    );
+
+    while(my($k,$v)=each %DATFILES){
+        $DATFILES{$k}=catfile($v,$k . '.i.dat');
+    }
+
 }
 # }}}
 # toLower() {{{
@@ -990,7 +1012,9 @@ sub uniq {
 BEGIN { 
 	&sbvars();
 	&setsdata();
-	&setfiles();
+
+	&set_FILES();
+	&set_DATFILES();
 }
 
 1;

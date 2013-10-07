@@ -81,7 +81,7 @@ sub main(){
   
   &OP::Base::sbvars();
   &OP::Base::setsdata();
-  &OP::Base::setfiles();
+  &OP::Base::set_FILES();
 
   $self->set_these_cmdopts();
 
@@ -118,29 +118,62 @@ sub _die(){
 =cut
 
 sub out(){
-	my $self=shift;
+    my $self=shift;
 
 	my $ref=shift;
 	my %opts=@_;
+	my $text;
 
-	my($text,$prefix,$opts,%o,$color);
-
-	$prefix=$self->{package_name} . "> ";
-
-    eval '$color=$self->textcolor // ""';
-    $color=$opts{color} if %opts;
+	my $prefix=$self->{package_name} . "> ";
 
 	unless(ref $ref){
 		$text="$prefix$ref";
 	}	
+    $self->outtext("$text");
+}
 
-    if ($color){
+sub saytext() {
+	my $self=shift;
+
+	my $text=shift;
+	my %opts=@_;
+
+	$self->outtext("$text" . "\n", %opts);
+
+}
+
+sub outtext(){
+	my $self=shift;
+
+	my $text=shift;
+
+	my %opts=@_;
+
+    my $usecolor=1;
+    my $indent=0;
+	my($color);
+
+    eval '$color=$self->textcolor // ""; ';
+    eval '$usecolor=$self->usecolor // ""; ';
+
+    my $evs='';
+    for my $opt (qw( usecolor color indent )){
+        $evs.='$' . $opt . '=$opts{' . $opt . '} if defined $opts{' . $opt . '}; ' . "\n";
+    }
+    eval "$evs";
+    die $@ if $@;
+
+    if ($color && $usecolor){
         print color $color;
+    }
+
+    if ($indent){
+        $text=' ' x $indent . $text;
     }
 
     print "$text";
 
-    if ($color){
+    if ($color && $usecolor){
         print color 'reset';
     }
 
@@ -206,6 +239,16 @@ sub warn() {
 	my %opts=@_;
 
 	$self->say("$text" . "\n", (color  => 'bold red', %opts));
+
+}
+
+sub warntext() {
+	my $self=shift;
+
+	my $text=shift;
+	my %opts=@_;
+
+	$self->saytext("$text", (color  => 'bold red', %opts));
 
 }
 # }}}
@@ -357,7 +400,7 @@ sub get_opt(){
 
 	&OP::Base::sbvars();
   	&OP::Base::setsdata();
-  	&OP::Base::setfiles();
+  	&OP::Base::set_FILES();
 
   	$self->set_these_cmdopts();
 
