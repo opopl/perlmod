@@ -19,6 +19,8 @@ use vars qw($opt_l $opt_s);
 our $PATTERN;
 our $STARTDIR;
 our @MODULES;
+our @MPATHS;
+our %OPTS;
 
 use parent qw( Class::Accessor::Complex );
 
@@ -30,15 +32,16 @@ our @scalar_accessors=qw(
 ###__ACCESSORS_HASH
 our @hash_accessors=qw(
     accessors
+    opts
 );
 
 ###__ACCESSORS_ARRAY
 our @array_accessors=qw(
     MODULES
+    MPATHS
 );
 
 __PACKAGE__
-    ->mk_new
     ->mk_scalar_accessors(@scalar_accessors)
     ->mk_array_accessors(@array_accessors)
     ->mk_hash_accessors(@hash_accessors);
@@ -46,9 +49,21 @@ __PACKAGE__
 sub main {
     my $self=shift;
 
-    $self->init;
+    $self->opts(shift // {});
+
+    $self->getopt unless $self->opts_count;
+
+    $self->process_opts;
+
     $self->find_module_matches;
-    $self->MODULES_print();
+
+    if($opt_l){
+        $self->MPATHS_uniq;
+        $self->print_MPATHS;
+    }elsif($opt_s){
+    }else{
+        $self->print_MODULES;
+    }
 
 }
 
@@ -61,7 +76,7 @@ sub new()
 
 }
     
-sub init {
+sub getopt {
     my $self=shift;
 
 	getopts('ls') || die "bad usage";
@@ -69,6 +84,11 @@ sub init {
 	if (@ARGV == 0) {
 	    @ARGV = ('.');
 	} 
+
+    %OPTS=( l  => 1, s  => 1 ) if $opt_l && $opt_s;
+
+    $OPTS{l}=1 if $opt_l;
+    $OPTS{s}=1 if $opt_s;
 	
 	die "usage: $0 [-l] [-s] pattern\n" unless @ARGV == 1;
 	
@@ -76,6 +96,30 @@ sub init {
 	$PATTERN =~ s/::/\//g;
 	
 
+}
+
+sub process_opts {
+    my $self=shift;
+
+    return unless $self->opts;
+
+    foreach my $k ($self->opts_keys) {
+        my $v=$self->opts("$k");
+        if ($k eq "mode"){
+	        for($v){
+	            ## list names 
+	            /^name$/ && do {
+                    %OPTS=();
+	                next;
+	            };
+	            ## list full paths
+	            /^fullpath$/ && do {
+                    $OPTS{l}=1;
+	                next;
+	            };
+	        }
+        }
+    }
 }
 
 sub find_module_matches {
@@ -86,8 +130,12 @@ sub find_module_matches {
 	    find(\&wanted, $STARTDIR);
 	}
 
-    $self->MODULES_push(@MODULES);
-    $self->MODULES_uniq;
+    my $evs;
+    foreach my $id (qw(MODULES MPATHS )) {
+        $evs.='$self->' . $id . '_push(@' . $id . ');' ; 
+    }
+    eval "$evs";
+    die $@ if $@;
 
 }
 
@@ -106,17 +154,18 @@ sub wanted {
     (my $tmpname = $_) =~ s{^\Q$STARTDIR/}{};
     return unless $tmpname =~ /$PATTERN/o;
 
-    if ($opt_l) { 
-	    s{^(\Q$STARTDIR\E)/}{$1 } if $opt_s;
+    if ($OPTS{l}) { 
+	    s{^(\Q$STARTDIR\E)/}{$1 } if $OPTS{s};
+        push(@MPATHS,$_);
     } 
     else {
 	    s{^\Q$STARTDIR/}{};  
 	    s/\.pm$//;
 	    s{/}{::}g;
-	    print "$STARTDIR " if $opt_s;
+	    print "$STARTDIR " if $OPTS{s};
+        push(@MODULES,$_);
     } 
 
-    push(@MODULES,$_);
 
 } 
 
