@@ -1,0 +1,11 @@
+$VAR1 = {
+          'c_plseed' => 1,
+          'plsvect' => 1,
+          'c_plsfont' => 1,
+          'c_plgcoloa' => 1,
+          'plsmem' => 1,
+          'c_plimagefr' => 1,
+          'C_COMPILE' => 'cc -fno-strict-aliasing -pipe -fstack-protector -I/usr/local/include -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -I/home/op/include/plplot -I/home/op/include -L/home/op/lib -lplplotd -lX11',
+          'PLPLOT_LIB' => '/home/op/lib',
+          'c_pllegend' => 1
+        };

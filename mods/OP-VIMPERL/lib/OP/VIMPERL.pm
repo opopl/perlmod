@@ -43,7 +43,8 @@ $VERSION = '0.01';
 my @ex_vars_scalar = qw(
   $ArgString
   $NumArgs
-
+  $MsgColor
+  $SubName
   $CurBuf
 );
 ###export_vars_hash
@@ -135,6 +136,7 @@ our ($NumArgs);
 our ($SubName);        #   => x
 our ($FullSubName);    #   => VIMPERL_x
 our ($CurBuf);
+our ($MsgColor);
 our (@INITIDS);
 
 =head1 SUBROUTINES
@@ -267,9 +269,6 @@ sub VimVarType {
 
     my $vimcode = <<"EOV";
 
-    if exists("*F_type")
-      let type=F_type($var)
-    else
       if type($var) == type('')
         let type='String'
       elseif type($var) == type(1)
@@ -281,7 +280,6 @@ sub VimVarType {
       elseif type($var) == type({})
         let type='Dictionary'
       endif
-    endif
   
 EOV
     VimCmd("$vimcode");
@@ -354,15 +352,52 @@ sub VimMsgPack {
 sub VimMsg {
     my $text = shift;
 
-    my $opts = shift;
+    my @o = @_; 
+    my $ref=shift @o;
+    my ($opts);
+    my $prefix;
 
-    if ( $opts->{warn} ) {
-        VimCmd("echohl WarningMsg");
+    my $keys=[qw(warn hl prefix color )];
+    foreach my $k (@$keys){ $opts->{$k}=''; }
+
+    $opts->{prefix}='subname';
+
+    unless(ref $ref){
+        if(@o){
+            my %oo=($ref,@o);
+            $opts->{$_}=$oo{$_} for(keys %oo);
+        }else{
+            $opts->{hl}=$ref unless @o;
+        }
+    }elsif(ref $ref eq "HASH"){
+        $opts->{$_}=$ref->{$_} for(keys %$ref);
     }
 
-    VIM::Msg("$FullSubName()> $text");
+    for($opts->{prefix}){
+        /^none$/ && do { $prefix=''; next; };
+        /^subname$/ && do { $prefix="$FullSubName()> "; next; };
+    }
 
-    VimCmd("echohl None");
+    $opts->{hl}='WarningMsg' if $opts->{warn};
+    $opts->{hl}='ErrorMsg' if $opts->{error};
+
+    my $colors={
+        yellow  => 'CursorLineNr',
+        red  => 'WarningMsg',
+    };
+    my $color=$MsgColor // '';
+    $color=$opts->{color} if $opts->{color};
+
+    $opts->{hl}=$colors->{$color} if $color;
+    
+    $text=$prefix . $text;
+
+    if ($opts->{hl}){
+        VIM::Msg("$text",$opts->{hl});
+    }else{
+        VIM::Msg("$text");
+    }
+
 }
 
 sub VimMsgE {
@@ -473,7 +508,7 @@ sub VimSetTags {
 
 =over 4
 
-=item VimJoin('000',' ','a') - Equivalent to join(a:000,' ') in vimscript
+=item VimJoin('a:000') - Equivalent to join(a:000,' ') in vimscript
 
 =back
 
@@ -483,8 +518,8 @@ sub VimSetTags {
 
 sub VimJoin {
     my $arr   = shift;
+
     my $sep   = shift;
-    my $vtype = shift // 'l';
 
     return '' unless VimExists($arr);
 
@@ -615,13 +650,11 @@ sub init_Args {
     $NumArgs = 0;
     @Args    = ();
 
-    $ArgString = VimJoin( 'a:000', ' ' );
-    return '' unless $ArgString;
-
     $NumArgs = VimLen('a:000');
 
     if ($NumArgs) {
         @Args = VimVar('a:000');
+        $ArgString = VimJoin( 'a:000', ' ' );
     }
 }
 
