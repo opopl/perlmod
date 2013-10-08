@@ -98,6 +98,7 @@ my @ex_vars_array = qw(
           VimMsg
           VimMsgDebug
           VimMsgE
+          VimMsgNL
           Vim_MsgColor
           Vim_MsgPrefix
           Vim_MsgDebug
@@ -136,6 +137,7 @@ sub VimJoin;
 sub VimLet;
 sub VimSet;
 sub VimMsg;
+sub VimMsgNL;
 sub VimMsgDebug;
 sub VimMsgE;
 sub VimMsgPack;
@@ -555,6 +557,9 @@ sub Vim_MsgDebug {
 
 }
 
+sub VimMsgNL {
+    VimMsg(" ",{prefix => 'none'});
+}
 
 sub VimMsg {
     my $text = shift // '';

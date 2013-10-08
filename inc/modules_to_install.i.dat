@@ -2,6 +2,7 @@ OP::Perl::Installer
 OP::Script
 OP::PERL::PMINST
 OP::VIMPERL
+OP::VIMPERL::TEST
 OP::PackName
 OP::Base
 #Class::Accessor::Complex
