@@ -3,6 +3,7 @@ OP::Script
 OP::PERL::PMINST
 OP::VIMPERL
 OP::PackName
+OP::Base
 #Class::Accessor::Complex
 #OP::BIBTEX
 #OP::Base

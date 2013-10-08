@@ -15,8 +15,14 @@ use Exporter ();
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use File::Spec::Functions qw(catfile rel2abs curdir catdir );
+
 use OP::Base qw(readarr);
+use OP::Perl::Installer;
+use OP::PERL::PMINST;
+use OP::PackName;
+
 use Data::Dumper;
+use File::Basename qw(basename dirname);
 use File::Slurp qw(
   append_file
   edit_file
@@ -44,7 +50,11 @@ my @ex_vars_scalar = qw(
   $ArgString
   $NumArgs
   $MsgColor
+  $MsgPrefix
+  $MsgDebug
+  $ModuleName
   $SubName
+  $FullSubName
   $CurBuf
 );
 ###export_vars_hash
@@ -58,6 +68,7 @@ my @ex_vars_array = qw(
   @Args
   @NamedArgs
   @PIECES
+  @LOCALMODULES
 );
 
 %EXPORT_TAGS = (
@@ -70,21 +81,32 @@ my @ex_vars_array = qw(
           init_PIECES
           VimArg
           VimBufFiles_Insert_SubName
+          VimChooseFromPrompt
+          VimCurBuf_Basename
           VimCmd
           VimEcho
           VimEditBufFiles
           VimEval
           VimExists
+          VimGetModuleName
           VimGrep
+          VimInput
           VimJoin
           VimLen
           VimLet
           VimSet
           VimMsg
+          VimMsgDebug
           VimMsgE
+          Vim_MsgColor
+          Vim_MsgPrefix
+          Vim_MsgDebug
+          VimPerlInstallModule
           VimPieceFullFile
+          VimResetVars
           VimSo
           VimSetTags
+          VimStrntok
           VimVar
           VimVarType
           VimVarDump
@@ -99,44 +121,75 @@ sub init_Args;
 sub init_PIECES;
 
 sub VimArg;
+sub VimCurBuf_Basename;
 sub VimBufFiles_Insert_SubName;
 sub VimCmd;
+sub VimChooseFromPrompt;
 sub VimEcho;
 sub VimEditBufFiles;
 sub VimEval;
 sub VimExists;
+sub VimGetModuleName;
 sub VimGrep;
+sub VimInput;
 sub VimJoin;
 sub VimLet;
 sub VimSet;
 sub VimMsg;
-sub VimMsgPack;
+sub VimMsgDebug;
 sub VimMsgE;
+sub VimMsgPack;
+sub VimMsg_PE;
+sub VimPerlInstallModule;
 sub VimPieceFullFile;
+sub VimResetVars;
 sub VimSo;
 sub VimSetTags;
+sub VimStrntok;
 sub VimVar;
 sub VimVarType;
 sub VimVarDump;
 sub VimLen;
 
+sub Vim_MsgColor;
+sub Vim_MsgPrefix;
+sub Vim_MsgDebug;
+
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
 our @EXPORT    = qw( );
 our $VERSION   = '0.01';
 
+################################
+# GLOBAL VARIABLE DECLARATIONS
+################################
 ###our
-our @BUFLIST;
-our @BFILES;
+###our_scalar
+#
+# --- join(a:000,' ') 
 our $ArgString;
-our ( $EvalCode, $res );
-our %DIRS;
-our @PIECES;
-our ( @Args, @NamedArgs );
+# --- len(a:000) 
 our ($NumArgs);
+# --- VIM::Eval return values
+our ( $EvalCode, $res );
+# ---
 our ($SubName);        #   => x
 our ($FullSubName);    #   => VIMPERL_x
+# ---
 our ($CurBuf);
+# ---
 our ($MsgColor);
+our ($MsgPrefix);
+our ($MsgDebug);
+# ---
+our ($ModuleName);
+###our_array
+our @BUFLIST;
+our @BFILES;
+our @PIECES;
+our @LOCALMODULES;
+our ( @Args, @NamedArgs );
+###our_hash
+our %DIRS;
 our (@INITIDS);
 
 =head1 SUBROUTINES
@@ -310,11 +363,7 @@ sub VimGrep {
 sub VimEcho {
     my $cmd = shift;
 
-    ( $EvalCode, $res ) = VIM::Eval("$cmd");
-
-    return '' unless $EvalCode;
-
-    VIM::Msg($res);
+    VimMsg(VimEval($cmd),{prefix => 'none'});
 
 }
 
@@ -349,8 +398,168 @@ sub VimMsgPack {
 
 }
 
+sub VimInput {
+    my ($dialog,$default)=@_;
+
+    unless(defined $default){
+        VimCmd("let input=input(" . "'" . $dialog . "'" . ")" );
+    }else{
+        VimCmd("let input=input(" . "'" . $dialog . "','" . $default . "'" . ")");
+    }
+
+    my $inp=VimVar("input");
+
+    return $inp;
+}
+
+
+=head3 VimChooseFromPrompt($dialog,$list,$sep,@args)
+
+=over 4
+
+=item $dialog (SCALAR) Input dialog message string
+=item $list   (ARRAY) List of values to be selected
+
+=back
+
+This is perl implementation of 
+vimscript function F_ChooseFromPrompt(dialog, list, sep, ...)
+in funcs.vim
+
+=cut
+
+#function! F_ChooseFromPrompt(dialog, list, sep, ...)
+
+sub VimChooseFromPrompt {
+    my ($dialog,$list,$sep,@args)=@_;
+
+	#let inp = input(a:dialog)
+    my $inp=VimInput($dialog);
+
+    #if a:0 
+		#let empty=a:1
+	#else
+		#let empty=a:list[0]
+	#endif
+    my $empty;
+    if(@args){
+        $empty=shift @args;
+    }else{
+        $empty=$list->[0];
+    }
+
+    #if inp =~ '\d\+'
+		#return F_Strntok(a:list, a:sep, inp)
+	#elseif inp == ''
+		#return empty
+	#else
+		#return inp
+	#endif
+
+    unless($inp){
+        return $empty;
+    }elsif($inp =~ /\d+/){
+		return VimStrntok($list,$sep,$inp);
+    }else{
+        return $inp;
+    }
+
+#endfunction 
+}
+
+sub VimStrntok {
+}
+
+##TODO todo_GetModuleName
+
+sub VimGetModuleName {
+
+	my $name=$CurBuf->{name} // '';
+	
+	unless($name){
+	  VimMsgE('Failed to get $CurBuf->{name} from OP::VIMPERL');
+	}else{
+      VimChooseFromPrompt;
+    }
+	
+	unless(-e $name){
+	  VimMsgE('File :' . $name . ' does not exist');
+	  return '';
+	}
+	
+	VimMsgDebug('Going to create OP::PackName instance '); 
+
+	my $p=OP::PackName->new({ skip_get_opt => 1 });
+	
+	VimMsgDebug('Have initialized OP::PackName instance to ' 
+        . Data::Dumper->Dump($p,[qw($p)]));
+	
+	my $packstr=$p->main({ ifile => "$name" });
+	
+	VimMsgDebug("after OP::PackName->main");
+
+	VimMsg($packstr);
+	
+	if ($packstr){
+	  VimLet("g:PMOD_ModuleName", $packstr);
+      $ModuleName=$packstr;
+
+	  VimMsgDebug('$ModuleName is set to ' . $ModuleName );
+	}else{
+	  VimMsgE('Failed to get $packstr from OP::PackName');
+	}
+
+}
+
+sub Vim_MsgColor {
+    my $color=shift;
+
+    $MsgColor=$color;
+    VimLet("g:MsgColor","$color");
+
+}
+
+sub VimResetVars {
+    my $vars=shift // '';
+
+    return '' unless $vars;
+
+    foreach my $var (@$vars) {
+        my $evs='Vim_' . $var . "('')";
+        eval "$evs";
+        if($@){
+            VimMsg_PE($@);
+        }
+    }
+}
+
+sub Vim_MsgPrefix {
+    my $prefix=shift;
+
+    if (defined $prefix){
+        $MsgPrefix=$prefix;
+        VimLet("g:MsgPrefix","$prefix");
+    }
+
+}
+
+sub Vim_MsgDebug {
+    my $val=shift;
+
+    if (defined $val){
+        $MsgDebug=$val;
+        VimLet("g:MsgDebug",$val);
+    }
+
+    return $MsgPrefix;
+
+}
+
+
 sub VimMsg {
-    my $text = shift;
+    my $text = shift // '';
+
+    return '' unless $text;
 
     my @o = @_; 
     my $ref=shift @o;
@@ -377,6 +586,7 @@ sub VimMsg {
         /^none$/ && do { $prefix=''; next; };
         /^subname$/ && do { $prefix="$FullSubName()> "; next; };
     }
+    $prefix=$MsgPrefix if $MsgPrefix;
 
     $opts->{hl}='WarningMsg' if $opts->{warn};
     $opts->{hl}='ErrorMsg' if $opts->{error};
@@ -384,6 +594,7 @@ sub VimMsg {
     my $colors={
         yellow  => 'CursorLineNr',
         red  => 'WarningMsg',
+        green => 'DiffChange',
     };
     my $color=$MsgColor // '';
     $color=$opts->{color} if $opts->{color};
@@ -397,6 +608,16 @@ sub VimMsg {
     }else{
         VIM::Msg("$text");
     }
+
+}
+
+sub VimMsg_PE {
+    my $text = shift;
+
+    my $subname=(caller(1))[3];
+
+    VimMsg("Error in $subname : " . $text, { error => 1 } );
+
 
 }
 
@@ -474,6 +695,24 @@ sub VimSet {
 
 }
 
+sub VimMsgDebug {
+    my $msg=shift;
+
+    if ( $MsgDebug == 1 ){
+        #VimMsg("(D) $msg",{ color => 'green'} );
+        VimMsg("(D) $msg",{ hl => 'Folded'} );
+    }
+}
+
+##TODO todo_PerlInstallModule
+sub VimPerlInstallModule {
+
+    VimGetModuleName;
+
+    my $module=$NumArgs ? $ArgString : $ModuleName;
+
+}
+
 sub VimPieceFullFile {
     my $piece = shift;
 
@@ -531,12 +770,34 @@ sub VimJoin {
 
 }
 
-sub VimBufFiles_Insert_SubName {
+sub VimCurBuf_Basename {
+    my $opts=shift // '';
+    
+    my $name;
+
+    $name=basename($CurBuf->{name});
+
+    if($opts){
+        if ($opts->{remove_extension}){
+            $name =~ s/\.(\w+)$//g;
+        }
+    }
+
+    $name;
+}
+
+sub VimBufFiles_Edit{
+
+    my $opts=shift;
+
+    my $editopt=$opts->{editopt} // '';
 
     foreach my $bfile (@BFILES) {
         next unless $bfile =~ /\.vim$/;
 
         VimMsg("Processing vim file: $bfile");
+
+        ( my $piece=$bfile ) =~ s/(\w+)\.vim/$1/g;
 
         my @lines = read_file $bfile;
 
@@ -547,29 +808,45 @@ sub VimBufFiles_Insert_SubName {
         foreach (@lines) {
             chomp;
 
-            /^\s*(?<fdec>fun|function)!\s+(?<fname>\w+)/ && do {
-                $fname = $+{fname};
-                $onfun{$fname} = 1;
-                $_ .= "\n" . " let g:SubName='" . $fname . "'";
-                push( @nlines, $_ );
+###BufFiles_InsertSubName
+            if( $editopt=="Insert_SubName"){
 
-                next;
-            };
-
-            /^\s*let\s*g:SubName=/ && do {
-                $_ = '';
-                next;
-            };
-            /^\s*endf(|un|unction)/ && do {
-                $onfun{$fname} = 0 if $fname;
-
-            };
+	            /^\s*(?<fdec>fun|function)!\s+(?<fname>\w+)/ && do {
+	                $fname = $+{fname};
+	                $onfun{$fname} = 1;
+	                $_ .= "\n" . " let g:SubName='" . $fname . "'";
+	                push( @nlines, $_ );
+	
+	                next;
+	            };
+	
+	            /^\s*let\s*g:SubName=/ && do {
+	                $_ = '';
+	                next;
+	            };
+	            /^\s*endf(|un|unction)/ && do {
+	                $onfun{$fname} = 0 if $fname;
+	
+	            };
+###BufFiles_EditSlurp
+            }elsif( $editopt == "EditSlurp"){
+                my $cmds=$opts->{cmds};
+                foreach my $cmd (@$cmds) {
+                    my $evs=$cmd;
+                    eval "$evs";
+                    die $@ if $@;
+                }
+            }
 
             push( @nlines, $_ );
         }
         open( F, ">$bfile" ) || die $!;
         foreach my $nline (@nlines) {
             print F $nline . "\n";
+        }
+
+        if( $editopt == "Append_g_Loaded_Pieces"){
+            print F "let g:LoadedPieces_$piece=1";
         }
         close(F);
     }
@@ -585,12 +862,11 @@ sub init {
 
     ( $SubName = $FullSubName ) =~ s/^VIMPERL_//g;
 
-    VimMsgPack("g:SubName is: $FullSubName ");
-
     @INITIDS = qw(
       Args
       CurBuf
       PIECES
+      MODULES
     );
 
     @BUFLIST = VIM::Buffers();
@@ -614,10 +890,19 @@ sub init {
         _die $@ if $@;
     }
 
+    $MsgColor=VimVar("g:MsgColor");
+    $MsgPrefix=VimVar("g:MsgPrefix");
+    $MsgDebug=VimVar("g:MsgDebug");
+
 }
 
 sub VimEditBufFiles {
     my $cmds = shift // $ArgString;
+
+    unless($cmds){
+        VimMsgE("No commands were provided");
+        return 0;
+    }
 
     my $slurpsub = shift // 'edit_file_lines';
 
@@ -648,6 +933,7 @@ vimscript function declarations )
 sub init_Args {
 
     $NumArgs = 0;
+    $ArgString = '';
     @Args    = ();
 
     $NumArgs = VimLen('a:000');
@@ -656,6 +942,10 @@ sub init_Args {
         @Args = VimVar('a:000');
         $ArgString = VimJoin( 'a:000', ' ' );
     }
+}
+
+sub init_MODULES {
+    @LOCALMODULES=VimVar('g:PMOD_available_mods');
 }
 
 sub init_CurBuf {

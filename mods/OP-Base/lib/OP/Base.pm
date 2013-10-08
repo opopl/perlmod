@@ -441,7 +441,9 @@ sub getopt{
 	&getopt_init();
 
 	unless (@ARGV){ 
-	  	pod2usage("Try '$Script --help' for more information");
+        if (defined $Script){
+	  	    pod2usage("Try '$Script --help' for more information");
+        }
 		exit 0;
 	}else{
 		$cmdline=join(' ',@ARGV);
@@ -796,20 +798,30 @@ sub read_kw_file{
 sub ListModuleSubs {
     my $module=shift;
 
-    my @subs;
+    my @subs=();
 
 	my @loc=map { chomp; $_; } `pmi -l $module`;
 	my $mfile=shift @loc;
 	
-	my @lines=read_file $mfile;
-	foreach (@lines){
-	    chomp;
-	    next if /^\s*#/;
-	    /^\s*sub\s*(?<subname>\w+)[\n\s]*{/ && do {
-	        push(@subs,$+{subname});
-	        next;
-	    };
-	}
+    while(1){
+        last unless $mfile;
+        last unless -e $mfile;
+
+		my @lines=read_file $mfile;
+		foreach (@lines){
+		    chomp;
+		    next if /^\s*#/;
+			#/^\s*sub\s*(?<subname>\w+)[\n\s]*(|\([\w\$,\n\s]*\))[\n\s]*{/ && do {
+		    /^\s*sub\s*(?<subname>\w+)\s*(|\([\w\$,\s]*\))\s*{/ && do {
+		        push(@subs,$+{subname});
+		        next;
+		    };
+		}
+
+        last;
+    }
+
+    @subs=sort(@subs);
 
     wantarray ? @subs : \@subs;
 	
