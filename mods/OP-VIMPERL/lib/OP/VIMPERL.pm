@@ -41,14 +41,14 @@ $VERSION = '0.01';
 
 ###export_vars_scalar
 my @ex_vars_scalar = qw(
-    $ArgString
-    $NumArgs
-    
-    $CurBuf
+  $ArgString
+  $NumArgs
+
+  $CurBuf
 );
 ###export_vars_hash
 my @ex_vars_hash = qw(
-    %DIRS
+  %DIRS
 );
 ###export_vars_array
 my @ex_vars_array = qw(
@@ -68,6 +68,7 @@ my @ex_vars_array = qw(
           init_Args
           init_PIECES
           VimArg
+          VimBufFiles_Insert_SubName
           VimCmd
           VimEcho
           VimEditBufFiles
@@ -86,7 +87,7 @@ my @ex_vars_array = qw(
           VimVar
           VimVarType
           VimVarDump
-        )
+          )
     ],
     'vars' => [ @ex_vars_scalar, @ex_vars_array, @ex_vars_hash ]
 );
@@ -97,6 +98,7 @@ sub init_Args;
 sub init_PIECES;
 
 sub VimArg;
+sub VimBufFiles_Insert_SubName;
 sub VimCmd;
 sub VimEcho;
 sub VimEditBufFiles;
@@ -107,6 +109,7 @@ sub VimJoin;
 sub VimLet;
 sub VimSet;
 sub VimMsg;
+sub VimMsgPack;
 sub VimMsgE;
 sub VimPieceFullFile;
 sub VimSo;
@@ -124,37 +127,38 @@ our $VERSION   = '0.01';
 our @BUFLIST;
 our @BFILES;
 our $ArgString;
-our ($EvalCode,$res);
+our ( $EvalCode, $res );
 our %DIRS;
 our @PIECES;
-our(@Args,@NamedArgs);
-our($NumArgs);
-our($SubName);
-our($CurBuf);
-our(@INITIDS);
+our ( @Args, @NamedArgs );
+our ($NumArgs);
+our ($SubName);        #   => x
+our ($FullSubName);    #   => VIMPERL_x
+our ($CurBuf);
+our (@INITIDS);
 
 =head1 SUBROUTINES
 
 =cut
 
 sub VimCmd {
-    my $cmd=shift;
+    my $cmd = shift;
 
     return VIM::DoCommand("$cmd");
 
 }
 
 sub VimArg {
-    my $num=shift;
+    my $num = shift;
 
-    my $arg=VimEval("a:$num");
+    my $arg = VimEval("a:$num");
 
     $arg;
 
 }
 
 sub VimSo {
-    my $file=shift;
+    my $file = shift;
 
     return unless $file;
 
@@ -163,12 +167,12 @@ sub VimSo {
 }
 
 sub VimLen {
-    my $name=shift;
+    my $name = shift;
 
-    my $len=0;
+    my $len = 0;
 
-    if (VimExists($name)){
-        $len=VimEval("len($name)");
+    if ( VimExists($name) ) {
+        $len = VimEval("len($name)");
     }
 
     return $len;
@@ -186,176 +190,185 @@ Return Perl representation of VimScript variable
 
 sub VimVar {
 
-    my $var=shift;
+    my $var = shift;
 
     return '' unless VimExists($var);
 
     my $res;
-    my $vartype=VimVarType($var);
+    my $vartype = VimVarType($var);
 
-    for($vartype){
-      /^(String|Number|Float)$/ && do {
-        $res=VimEval($var);
-        
-        next;
-      };
-      /^List$/ && do {
-        my $len=VimEval('len(' . $var . ')');
-        my $i=0;
-        $res=[];
+    for ($vartype) {
+        /^(String|Number|Float)$/ && do {
+            $res = VimEval($var);
 
-        while ($i<$len) {
-          my @v=split("\n",VimEval($var . '[' . $i . ']'));
-          my $first=shift @v;
+            next;
+        };
+        /^List$/ && do {
+            my $len = VimEval( 'len(' . $var . ')' );
+            my $i   = 0;
+            $res = [];
 
-          if (@v){
-              $res->[$i]=[ $first, @v ];
-          }else{
-              $res->[$i]=$first ;
-          }
+            while ( $i < $len ) {
+                my @v = split( "\n", VimEval( $var . '[' . $i . ']' ) );
+                my $first = shift @v;
 
-          $i++;
-        }
-        
-        next;
-      };
-      /^Dictionary$/ && do {
-        $res={};
-        my @keys=VimVar('keys(' . $var . ')');
+                if (@v) {
+                    $res->[$i] = [ $first, @v ];
+                }
+                else {
+                    $res->[$i] = $first;
+                }
 
-        foreach my $k (@keys) {
-           $res->{$k}=VimVar($var . '[' . $k . ']');
-        }
-        
-        next;
-      };
+                $i++;
+            }
+
+            next;
+        };
+        /^Dictionary$/ && do {
+            $res = {};
+            my @keys = VimVar( 'keys(' . $var . ')' );
+
+            foreach my $k (@keys) {
+                $res->{$k} = VimVar( $var . '[' . $k . ']' );
+            }
+
+            next;
+        };
     }
 
-    unless(ref $res){
+    unless ( ref $res ) {
         $res;
-    }elsif(ref $res eq "ARRAY"){
-        wantarray ? @$res : $res ;
-    }elsif(ref $res eq "HASH"){
-        wantarray ? %$res : $res ;
+    }
+    elsif ( ref $res eq "ARRAY" ) {
+        wantarray ? @$res : $res;
+    }
+    elsif ( ref $res eq "HASH" ) {
+        wantarray ? %$res : $res;
     }
 
 }
 
 sub VimVarDump {
-    my $var=shift;
+    my $var = shift;
 
-    my $ref=VimVar($var);
+    my $ref = VimVar($var);
 
     VIM::Msg("--------------------------------------");
-    VIM::Msg("Type of Vim variable $var : " . VimVarType($var));
+    VIM::Msg( "Type of Vim variable $var : " . VimVarType($var) );
     VIM::Msg("Contents of Vim variable $var :");
-    VIM::Msg(Data::Dumper->Dump([ $ref ], [ $var ]));
+    VIM::Msg( Data::Dumper->Dump( [$ref], [$var] ) );
 
 }
 
 sub VimVarType {
-    my $var=shift;
+    my $var = shift;
 
     return '_NOT_EXIST_' unless VimExists($var);
 
-		my $vimcode=<<"EOV";
+    my $vimcode = <<"EOV";
 
-		if exists("*F_type")
-    	let type=F_type($var)
-		else
-		  if type($var) == type('')
-		    let type='String'
-		  elseif type($var) == type(1)
-		    let type='Number'
-		  elseif type($var) == type(1.1)
-		    let type='Float'
-		  elseif type($var) == type([])
-		    let type='List'
-		  elseif type($var) == type({})
-		    let type='Dictionary'
-		  endif
-		endif
-	
+    if exists("*F_type")
+      let type=F_type($var)
+    else
+      if type($var) == type('')
+        let type='String'
+      elseif type($var) == type(1)
+        let type='Number'
+      elseif type($var) == type(1.1)
+        let type='Float'
+      elseif type($var) == type([])
+        let type='List'
+      elseif type($var) == type({})
+        let type='Dictionary'
+      endif
+    endif
+  
 EOV
-		VimCmd("$vimcode");
+    VimCmd("$vimcode");
 
-    my $vartype=VimEval('type');
+    my $vartype = VimEval('type');
     return $vartype;
 
 }
 
-
 sub VimGrep {
-  my $pat=shift;
+    my $pat = shift;
 
-  my $ref=shift;
-  my @files;
+    my $ref = shift;
+    my @files;
 
-  unless(ref $ref){
-    
-  }elsif(ref $ref eq "ARRAY"){
-    @files=@$ref;
-    VimCmd("vimgrep /$pat/ @files");
-  }
+    unless ( ref $ref ) {
 
-  return 1;
+    }
+    elsif ( ref $ref eq "ARRAY" ) {
+        @files = @$ref;
+        VimCmd("vimgrep /$pat/ @files");
+    }
+
+    return 1;
 
 }
 
-
 sub VimEcho {
-  my $cmd=shift;
+    my $cmd = shift;
 
-  ($EvalCode,$res)=VIM::Eval("$cmd");
+    ( $EvalCode, $res ) = VIM::Eval("$cmd");
 
-  return '' unless $EvalCode;
+    return '' unless $EvalCode;
 
-  VIM::Msg($res);
+    VIM::Msg($res);
 
 }
 
 sub VimEval {
-  my $cmd=shift;
+    my $cmd = shift;
 
-  #return '' unless VimExists($cmd);
+    #return '' unless VimExists($cmd);
 
-  ($EvalCode,$res)=VIM::Eval("$cmd");
+    ( $EvalCode, $res ) = VIM::Eval("$cmd");
 
-  unless($EvalCode){
-    _die "VIM::Eval evaluation failed for command: $cmd";
-  }
-  
-  $res;
-
-}
-
-sub VimExists {
-    my $expr=shift;
-
-    ($EvalCode,$res)=VIM::Eval('exists("' . $expr . '")');
+    unless ($EvalCode) {
+        _die "VIM::Eval evaluation failed for command: $cmd";
+    }
 
     $res;
 
 }
 
+sub VimExists {
+    my $expr = shift;
+
+    ( $EvalCode, $res ) = VIM::Eval( 'exists("' . $expr . '")' );
+
+    $res;
+
+}
+
+sub VimMsgPack {
+    my $text = shift;
+
+    VIM::Msg( __PACKAGE__ . "> $text" );
+
+}
+
 sub VimMsg {
-    my $text=shift;
+    my $text = shift;
 
-    my $opts=shift;
+    my $opts = shift;
 
-    if ($opts->{warn}){	
+    if ( $opts->{warn} ) {
         VimCmd("echohl WarningMsg");
     }
 
-    VIM::Msg("VIMPERL_$SubName() : $text");
+    VIM::Msg("$FullSubName()> $text");
 
     VimCmd("echohl None");
 }
 
 sub VimMsgE {
-    my $text=shift;
+    my $text = shift;
 
-    VIM::Msg("VIMPERL_$SubName() : $text","ErrorMsg");
+    VIM::Msg( "$FullSubName() : $text", "ErrorMsg" );
 }
 
 =head3 VimLet ( $var, $ref, $vtype )
@@ -381,69 +394,75 @@ sub VimMsgE {
 sub VimLet {
 
     # name of the vimscript variable to be assigned
-    my $var=shift;
+    my $var = shift;
+
     # contains value(s) to be assigned to $var
-    my $ref=shift;
+    my $ref = shift;
 
-    my $valstr='';
+    my $valstr = '';
 
-    my $lhs="let $var";
+    my $lhs = "let $var";
 
-    unless(ref $ref){
-      $valstr.="'$ref'";
-    }elsif(ref $ref eq "ARRAY"){
-      $valstr.="[ '";
-      $valstr.=join("' , '", @$ref);
-      $valstr.="' ]";
-    }elsif(ref $ref eq "HASH"){
-      unless(%$ref){
-          $valstr='{}' ;
-      }else{
-	      $valstr.="{ ";
-          while(my($k,$v)=each %{$ref}){
-	        $valstr.=" '$k' : '$v', "; 
-          }
-	      $valstr.=" }";
-     }
+    unless ( ref $ref ) {
+        $valstr .= "'$ref'";
+    }
+    elsif ( ref $ref eq "ARRAY" ) {
+        $valstr .= "[ '";
+        $valstr .= join( "' , '", @$ref );
+        $valstr .= "' ]";
+    }
+    elsif ( ref $ref eq "HASH" ) {
+        unless (%$ref) {
+            $valstr = '{}';
+        }
+        else {
+            $valstr .= "{ ";
+            while ( my ( $k, $v ) = each %{$ref} ) {
+                $valstr .= " '$k' : '$v', ";
+            }
+            $valstr .= " }";
+        }
     }
 
-    if ($valstr){
-        VimCmd('if exists("' . $var . '") | unlet ' . $var . ' | endif ');
-        VimCmd($lhs . '=' . $valstr);
+    if ($valstr) {
+        VimCmd( 'if exists("' . $var . '") | unlet ' . $var . ' | endif ' );
+        VimCmd( $lhs . '=' . $valstr );
     }
-    
+
 }
 
 sub VimSet {
-    my $opt=shift;
-    my $val=shift;
+    my $opt = shift;
+    my $val = shift;
 
     VimCmd("set $opt=$val");
 
 }
 
 sub VimPieceFullFile {
-    my $piece=shift;
+    my $piece = shift;
 
-    my $path=catfile($DIRS{MKVIMRC},$piece . '.vim');
+    my $path = catfile( $DIRS{MKVIMRC}, $piece . '.vim' );
 
 }
 
 sub VimSetTags {
-    my $ref=shift;
+    my $ref = shift;
 
-    unless(ref $ref){
-        VimSet("tags", $ref  );
-        
-    }elsif(ref $ref eq "ARRAY"){
-        my $first=$ref->[0];
+    unless ( ref $ref ) {
+        VimSet( "tags", $ref );
 
-        VimSet("tags", join(',',@$ref));
-        VimLet("g:CTAGS_CurrentTagID",'_buf_');
-        VimLet("g:tagfile",$first);
+    }
+    elsif ( ref $ref eq "ARRAY" ) {
+        my $first = $ref->[0];
+
+        VimSet( "tags", join( ',', @$ref ) );
+        VimLet( "g:CTAGS_CurrentTagID", '_buf_' );
+        VimLet( "g:tagfile",            $first );
 
     }
 }
+
 =head3 VimJoin( $arrname, $sep,  $vtype )
 
 =over 4
@@ -463,13 +482,13 @@ sub VimSetTags {
 =cut
 
 sub VimJoin {
-    my $arr=shift;
-    my $sep=shift;
-    my $vtype=shift // 'l';
+    my $arr   = shift;
+    my $sep   = shift;
+    my $vtype = shift // 'l';
 
     return '' unless VimExists($arr);
 
-    ($EvalCode,$res)=VIM::Eval("join($arr,'" . $sep . "')");
+    ( $EvalCode, $res ) = VIM::Eval( "join($arr,'" . $sep . "')" );
 
     return '' unless $EvalCode;
 
@@ -477,32 +496,76 @@ sub VimJoin {
 
 }
 
+sub VimBufFiles_Insert_SubName {
+
+    foreach my $bfile (@BFILES) {
+        next unless $bfile =~ /\.vim$/;
+
+        VimMsg("Processing vim file: $bfile");
+
+        my @lines = read_file $bfile;
+
+        my %onfun;
+        my $fname;
+        my @nlines;
+
+        foreach (@lines) {
+            chomp;
+
+            /^\s*(?<fdec>fun|function)!\s+(?<fname>\w+)/ && do {
+                $fname = $+{fname};
+                $onfun{$fname} = 1;
+                $_ .= "\n" . " let g:SubName='" . $fname . "'";
+                push( @nlines, $_ );
+
+                next;
+            };
+
+            /^\s*let\s*g:SubName=/ && do {
+                $_ = '';
+                next;
+            };
+            /^\s*endf(|un|unction)/ && do {
+                $onfun{$fname} = 0 if $fname;
+
+            };
+
+            push( @nlines, $_ );
+        }
+        open( F, ">$bfile" ) || die $!;
+        foreach my $nline (@nlines) {
+            print F $nline . "\n";
+        }
+        close(F);
+    }
+}
+
 sub init {
 
-    my %opts=@_;
+    my %opts = @_;
 
-    unless(defined ){
-        $SubName=$opts{SubName} // '';
-        $SubName=VimVar('g:SubName');
+    unless ( defined $SubName ) {
+        $FullSubName = VimVar('g:SubName');
     }
 
-    VimMsg("g:SubName is: ");
+    ( $SubName = $FullSubName ) =~ s/^VIMPERL_//g;
 
-    @INITIDS=qw(
-            Args 
-            CurBuf
-            PIECES
-            );
+    VimMsgPack("g:SubName is: $FullSubName ");
+
+    @INITIDS = qw(
+      Args
+      CurBuf
+      PIECES
+    );
 
     @BUFLIST = VIM::Buffers();
 
-
-    %DIRS=(
-        'TAGS'  => catfile($ENV{HOME},'tags'),
-        'MKVIMRC'  => catfile($ENV{HOME},qw( config mk vimrc )),
+    %DIRS = (
+        'TAGS'    => catfile( $ENV{HOME}, 'tags' ),
+        'MKVIMRC' => catfile( $ENV{HOME}, qw( config mk vimrc ) ),
     );
 
-    @BFILES=();
+    @BFILES = ();
 
     foreach my $buf (@BUFLIST) {
         my $name = $buf->Name();
@@ -512,27 +575,32 @@ sub init {
     }
 
     foreach my $id (@INITIDS) {
-            eval 'init_' . $id;
-	        _die $@ if $@;
+        eval 'init_' . $id;
+        _die $@ if $@;
     }
 
 }
 
 sub VimEditBufFiles {
-    my $cmds=shift // $ArgString;
+    my $cmds = shift // $ArgString;
 
-	foreach my $bfile (@BFILES) {
-	    my $evs='edit_file_lines { ' . $cmds . ' } $bfile;' ; 
-	    eval "$evs";
-	    die $@ if $@;
-	}
-	
+    my $slurpsub = shift // 'edit_file_lines';
+
+    VimMsg("Will apply to all buffers: $cmds");
+
+    foreach my $bfile (@BFILES) {
+        VimMsg("Processing buffer: $bfile");
+        my $evs = $slurpsub . ' { ' . $cmds . ' } $bfile';
+        eval "$evs";
+        die $@ if $@;
+    }
+
 }
 
 sub _die {
-    my $text=shift;
+    my $text = shift;
 
-    die "VIMPERL_$SubName : $text"
+    die "VIMPERL_$SubName : $text";
 }
 
 =head3 init_Args()
@@ -544,30 +612,29 @@ vimscript function declarations )
 
 sub init_Args {
 
-    $NumArgs=0;
-    @Args=();
+    $NumArgs = 0;
+    @Args    = ();
 
-    $ArgString=VimJoin('a:000',' ');
+    $ArgString = VimJoin( 'a:000', ' ' );
     return '' unless $ArgString;
 
-    $NumArgs=VimLen('a:000');
+    $NumArgs = VimLen('a:000');
 
-    if ($NumArgs){
-        @Args=VimVar('a:000');
+    if ($NumArgs) {
+        @Args = VimVar('a:000');
     }
 }
 
 sub init_CurBuf {
 
-    $CurBuf->{name}=VimEval("bufname('%')");
-    $CurBuf->{number}=VimEval("bufnr('%')");
+    $CurBuf->{name}   = VimEval("bufname('%')");
+    $CurBuf->{number} = VimEval("bufnr('%')");
 
 }
 
 sub init_PIECES {
-    @PIECES=readarr(catfile($DIRS{MKVIMRC}, qw(files.i.dat)));
+    @PIECES = readarr( catfile( $DIRS{MKVIMRC}, qw(files.i.dat) ) );
 }
-
 
 sub new {
     my ( $class, %parameters ) = @_;
@@ -578,7 +645,7 @@ sub new {
 }
 
 BEGIN {
-    if (exists &VIM::Eval){
+    if ( exists &VIM::Eval ) {
         init;
     }
 }

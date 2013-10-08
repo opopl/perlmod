@@ -13,9 +13,9 @@
 
 #     BUILD_REQUIRES => {  }
 #     CONFIGURE_REQUIRES => {  }
-#     INC => q[-I/home/op/lib/site_perl/5.16.2/i686-linux/PDL/Core  -I/home/op/include/plplot -I/home/op/include]
-#     LDDLFLAGS => q[ -shared -L/home/op/lib -L/usr/local/lib ]
-#     LIBS => [q[-L/home/op/lib -lplplotd -lX11]]
+#     INC => q[-I/home/op/lib/site_perl/5.16.2/i686-linux/PDL/Core  -I/usr/include/plplot -I/usr/include]
+#     LDDLFLAGS => q[ -shared -L/usr/lib -L/usr/local/lib ]
+#     LIBS => [q[-L/usr/lib -lplplotd -lX11]]
 #     MAN3PODS => { PLplot.pm=>q[$(INST_MAN3DIR)/PDL::Graphics::PLplot.$(MAN3EXT)] }
 #     META_MERGE => { provides=>{ PDL::Graphics::PLplot=>{ version=>q[0.61], file=>q[plplot.pd] } } }
 #     NAME => q[PDL::Graphics::PLplot]
@@ -43,13 +43,13 @@ DLSRC = dl_dlopen.xs
 EXE_EXT = 
 FULL_AR = /usr/bin/ar
 LD = cc
-LDDLFLAGS =  -shared -L/home/op/lib -L/usr/local/lib 
+LDDLFLAGS =  -shared -L/usr/lib -L/usr/local/lib 
 LDFLAGS =  -fstack-protector -L/usr/local/lib
 LIBC = 
 LIB_EXT = .a
 OBJ_EXT = .o
 OSNAME = linux
-OSVERS = 2.6.38-15-generic-pae
+OSVERS = 3.5.0-17-generic
 RANLIB = :
 SITELIBEXP = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/site_perl/5.16.2
 SITEARCHEXP = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/site_perl/5.16.2/i686-linux
@@ -157,16 +157,16 @@ BASEEXT = PLplot
 PARENT_NAME = PDL::Graphics
 DLBASE = $(BASEEXT)
 VERSION_FROM = plplot.pd
-INC = -I/home/op/lib/site_perl/5.16.2/i686-linux/PDL/Core  -I/home/op/include/plplot -I/home/op/include
+INC = -I/home/op/lib/site_perl/5.16.2/i686-linux/PDL/Core  -I/usr/include/plplot -I/usr/include
 OBJECT = PLplot$(OBJ_EXT)
 LDFROM = $(OBJECT)
 LINKTYPE = dynamic
 BOOTDEP = 
 
 # Handy lists of source code files:
-XS_FILES = 
-C_FILES  = 
-O_FILES  = 
+XS_FILES = PLplot.xs
+C_FILES  = PLplot.c
+O_FILES  = PLplot.o
 H_FILES  = 
 MAN1PODS = 
 MAN3PODS = PLplot.pm
@@ -210,7 +210,7 @@ AUTOSPLITFILE = $(ABSPERLRUN)  -e 'use AutoSplit;  autosplit($$$$ARGV[0], $$$$AR
 
 # --- MakeMaker tool_xsubpp section:
 
-XSUBPPDIR = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2/ExtUtils
+XSUBPPDIR = /home/op/lib/site_perl/5.16.2/ExtUtils
 XSUBPP = $(XSUBPPDIR)$(DFSEP)xsubpp
 XSUBPPRUN = $(PERLRUN) $(XSUBPP)
 XSPROTOARG = 
@@ -293,10 +293,10 @@ MPOLLUTE =
 # PDL::Graphics::PLplot might depend on some other libraries:
 # See ExtUtils::Liblist for details
 #
-EXTRALIBS = -L/home/op/lib -lplplotd -lX11
-LDLOADLIBS = -L/home/op/lib -lplplotd -lX11
+EXTRALIBS = -L/usr/lib -lplplotd -lX11
+LDLOADLIBS = -L/usr/lib -lplplotd -lX11
 BSLOADLIBS = 
-LD_RUN_PATH = /home/op/lib:/usr/lib/i386-linux-gnu
+LD_RUN_PATH = /usr/lib:/usr/lib/i386-linux-gnu
 
 
 # --- MakeMaker const_cccmd section:
@@ -551,8 +551,8 @@ clean :: clean_subdirs
 	  $(BASEEXT).def perl \
 	  core.[0-9][0-9][0-9] mon.out \
 	  lib$(BASEEXT).def perlmain.c \
-	  perl.exe so_locations \
-	  $(BASEEXT).exp 
+	  PLplot.c perl.exe \
+	  so_locations $(BASEEXT).exp 
 	- $(RM_RF) \
 	  *.xfig PLplot.pm \
 	  PLplot.bs OPTIONS! \
@@ -925,6 +925,8 @@ PERL_HDRS = \
 	$(PERL_INC)/util.h
 
 $(OBJECT) : $(PERL_HDRS)
+
+PLplot.c : $(XSUBPPDEPS)
 
 
 # --- MakeMaker makefile section:

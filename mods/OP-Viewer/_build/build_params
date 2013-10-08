@@ -34,7 +34,7 @@ do{ my $x = [
          'xs_files' => undef,
          'destdir' => undef,
          'metafile' => 'META.yml',
-         'mb_version' => '0.4',
+         'mb_version' => '0.4003',
          'use_tap_harness' => 0,
          'test_file_exts' => [
                                '.t'
@@ -62,16 +62,7 @@ do{ my $x = [
          'meta_merge' => {},
          'get_options' => {},
          'dist_version_from' => 'lib/OP/Viewer.pm',
-         '_added_to_INC' => [
-                              '/home/op/lib/site_perl/5.16.2/i686-linux',
-                              '/home/op/lib/site_perl/5.16.2',
-                              '/home/op/lib/5.16.2/i686-linux',
-                              '/home/op/lib/5.16.2',
-                              '/usr/local/texlive/2011/texmf/scripts/texlive/',
-                              '/usr/local/texlive/2011//tlpkg/',
-                              '/home/op/lib/perl5/i686-linux',
-                              '/home/op/lib/perl5'
-                            ],
+         '_added_to_INC' => [],
          'auto_configure_requires' => 1,
          'create_license' => undef,
          'debugger' => undef,
