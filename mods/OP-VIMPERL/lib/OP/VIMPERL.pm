@@ -16,10 +16,11 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 
-use OP::Base qw(readarr);
+use OP::Base qw( readarr _hash_add );
 use OP::Perl::Installer;
 use OP::PERL::PMINST;
 use OP::PackName;
+use Text::TabularDisplay;
 
 use Data::Dumper;
 use File::Basename qw(basename dirname);
@@ -82,6 +83,7 @@ my @ex_vars_array = qw(
           VimArg
           VimBufFiles_Insert_SubName
           VimChooseFromPrompt
+          VimCreatePrompt
           VimCurBuf_Basename
           VimCmd
           VimEcho
@@ -89,6 +91,7 @@ my @ex_vars_array = qw(
           VimEval
           VimExists
           VimGetModuleName
+          VimGetFromChooseDialog
           VimGrep
           VimInput
           VimJoin
@@ -102,12 +105,13 @@ my @ex_vars_array = qw(
           Vim_MsgColor
           Vim_MsgPrefix
           Vim_MsgDebug
+          Vim_Files
           VimPerlInstallModule
+          VimPerlModuleNameFromPath
           VimPieceFullFile
           VimResetVars
           VimSo
           VimSetTags
-          VimStrntok
           VimVar
           VimVarType
           VimVarDump
@@ -126,11 +130,13 @@ sub VimCurBuf_Basename;
 sub VimBufFiles_Insert_SubName;
 sub VimCmd;
 sub VimChooseFromPrompt;
+sub VimCreatePrompt;
 sub VimEcho;
 sub VimEditBufFiles;
 sub VimEval;
 sub VimExists;
 sub VimGetModuleName;
+sub VimGetFromChooseDialog;
 sub VimGrep;
 sub VimInput;
 sub VimJoin;
@@ -143,15 +149,17 @@ sub VimMsgE;
 sub VimMsgPack;
 sub VimMsg_PE;
 sub VimPerlInstallModule;
+sub VimPerlModuleNameFromPath;
 sub VimPieceFullFile;
 sub VimResetVars;
 sub VimSo;
 sub VimSetTags;
-sub VimStrntok;
 sub VimVar;
 sub VimVarType;
 sub VimVarDump;
 sub VimLen;
+
+sub Vim_Files;
 
 sub Vim_MsgColor;
 sub Vim_MsgPrefix;
@@ -420,7 +428,8 @@ sub VimInput {
 =over 4
 
 =item $dialog (SCALAR) Input dialog message string
-=item $list   (ARRAY) List of values to be selected
+=item $list   (SCALAR) String, containing list of values to be selected (separated by $sep)
+=item $sep   (SCALAR) Separator of values in $list 
 
 =back
 
@@ -435,14 +444,16 @@ in funcs.vim
 sub VimChooseFromPrompt {
     my ($dialog,$list,$sep,@args)=@_;
 
+    unless(ref $list eq ""){
+        VimMsg_PE("Input list is not SCALAR ");
+        return 0;
+    }
+
 	#let inp = input(a:dialog)
     my $inp=VimInput($dialog);
 
-    #if a:0 
-		#let empty=a:1
-	#else
-		#let empty=a:list[0]
-	#endif
+    my @opts=split("$sep",$list);
+
     my $empty;
     if(@args){
         $empty=shift @args;
@@ -450,44 +461,130 @@ sub VimChooseFromPrompt {
         $empty=$list->[0];
     }
 
-    #if inp =~ '\d\+'
-		#return F_Strntok(a:list, a:sep, inp)
-	#elseif inp == ''
-		#return empty
-	#else
-		#return inp
-	#endif
+    my $result;
 
     unless($inp){
-        return $empty;
-    }elsif($inp =~ /\d+/){
-		return VimStrntok($list,$sep,$inp);
+        $result= $empty;
+    }elsif($inp =~ /^\s*(?<num>\d+)\s*$/){
+		$result= $opts[$+{num}-1];
     }else{
-        return $inp;
+        $result= $inp;
     }
+
+    return $result;
 
 #endfunction 
 }
 
-sub VimStrntok {
+sub VimCreatePrompt {
+    my ($list, $cols, $listsep)=@_;
+
+    my $numcommon;
+
+    use integer;
+
+    $numcommon=scalar @$list;
+
+    my $promptstr="";
+
+    my @tableheader= split(" ","Number Option" x $cols );
+    my $table=Text::TabularDisplay->new(@tableheader);
+    my @row;
+
+    my $i=0;
+    my $nrows=$numcommon/$cols;
+
+    while ($i<$nrows) {
+        @row=();
+        my $j=$i;
+
+        for my $ncol((1..$cols)){
+            $j=$i+($ncol-1)*$nrows;
+
+            my $modj=$list->[$j];
+            push(@row,$j+1 );
+            push(@row,$modj );
+
+        }
+        $table->add(@row);
+        $i++;
+    }
+
+    $promptstr=$table->render;
+
+    return $promptstr;
+
+
+}
+
+
+sub VimGetFromChooseDialog {
+    my $iopts=shift;
+
+    unless(ref $iopts eq "HASH"){
+        VimMsg_PE("input parameter opts should be HASH");
+        return undef;
+    }
+    my $opts;
+
+    $opts={
+        numcols  => 1,
+        list  => [],
+        startopt => '',
+        header   => 'Option Choose Dialog',
+        bottom   => 'Choose an option: ',
+        selected => 'Selected: ',
+    };
+
+    my($dialog,$liststr);
+    my $opt;
+
+    $opts=_hash_add($opts,$iopts);
+    $liststr=_join("\n",$opts->{list});
+
+    $dialog.=$opts->{header} . "\n";
+    $dialog.=VimCreatePrompt($opts->{list},$opts->{numcols}) . "\n";
+    $dialog.=$opts->{bottom} . "\n";
+
+	$opt= VimChooseFromPrompt($dialog,$liststr,"\n",$opts->{startopt});
+    VimMsgNL;
+    VimMsg($opts->{selected} . $opt,{hl => 'Title'});
+
+    return $opt;
+
 }
 
 ##TODO todo_GetModuleName
 
 sub VimGetModuleName {
 
-	my $name=$CurBuf->{name} // '';
+	my $path=$CurBuf->{name} // '';
 	
-	unless($name){
+	unless($path){
 	  VimMsgE('Failed to get $CurBuf->{name} from OP::VIMPERL');
+
+      my $opts={
+          header    => "Choose the module name",
+          bottom    => "Select the number of the module: ",
+          list      => [@LOCALMODULES],
+          numcols   => 2,
+      };
+      my $module=VimGetFromChooseDialog($opts);
 	}else{
-      VimChooseFromPrompt;
+      my $module=VimPerlModuleNameFromPath($path);
     }
+
+}
+
+sub VimPerlModuleNameFromPath {
+    my $path=shift;
 	
-	unless(-e $name){
-	  VimMsgE('File :' . $name . ' does not exist');
+	unless(-e $path){
+	  VimMsgE('File :' . $path . ' does not exist');
 	  return '';
 	}
+
+  my $module;
 	
 	VimMsgDebug('Going to create OP::PackName instance '); 
 
@@ -496,7 +593,7 @@ sub VimGetModuleName {
 	VimMsgDebug('Have initialized OP::PackName instance to ' 
         . Data::Dumper->Dump($p,[qw($p)]));
 	
-	my $packstr=$p->main({ ifile => "$name" });
+	my $packstr=$p->main({ ifile => "$path" });
 	
 	VimMsgDebug("after OP::PackName->main");
 
@@ -505,11 +602,14 @@ sub VimGetModuleName {
 	if ($packstr){
 	  VimLet("g:PMOD_ModuleName", $packstr);
       $ModuleName=$packstr;
+      $module=$packstr;
 
 	  VimMsgDebug('$ModuleName is set to ' . $ModuleName );
 	}else{
 	  VimMsgE('Failed to get $packstr from OP::PackName');
 	}
+
+    return $module;
 
 }
 
@@ -519,6 +619,14 @@ sub Vim_MsgColor {
     $MsgColor=$color;
     VimLet("g:MsgColor","$color");
 
+}
+
+sub Vim_Files {
+    my $id=shift;
+
+    my $file=VimVar("g:files['$id']");
+
+    return $file;
 }
 
 sub VimResetVars {
@@ -629,7 +737,8 @@ sub VimMsg_PE {
 sub VimMsgE {
     my $text = shift;
 
-    VIM::Msg( "$FullSubName() : $text", "ErrorMsg" );
+    #VIM::Msg( "$FullSubName() : $text", "ErrorMsg" );
+    VIM::Msg( " $text", "ErrorMsg" );
 }
 
 =head3 VimLet ( $var, $ref, $vtype )
@@ -710,6 +819,8 @@ sub VimMsgDebug {
 }
 
 ##TODO todo_PerlInstallModule
+###imod
+
 sub VimPerlInstallModule {
 
     VimGetModuleName;

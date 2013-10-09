@@ -94,6 +94,12 @@ sub _vimtest_VimChooseFromPrompt {
 
     VimMsg("-----------------------------");
     VimMsg("Will test VimChooseFromPrompt...");
+
+    my $opt=VimChooseFromPrompt("Enter the number of option: ", "a:b:c", ":" , "empty");
+
+    VimMsgNL;
+    VimMsg("You selected option: $opt",{color => 'yellow'});
+    
    
 }
 

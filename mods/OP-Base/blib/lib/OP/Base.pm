@@ -45,6 +45,7 @@ our %EXPORT_TAGS = (
 		# 'funcs' {{{
 		'funcs'		=> [ qw( 
 						_join
+                        _hash_add
 						cmd_opt_add
 						is_const
 						is_log
@@ -152,6 +153,8 @@ our %ftype;
 
 sub _join($$);
 
+sub _hash_add;
+
 sub cmd_opt_add;
 sub eoo;
 sub eoo_arr;
@@ -193,6 +196,16 @@ sub toLower;
 
 # }}}
 # subs {{{
+
+
+sub _hash_add {
+    my ($h,$ih)=@_;
+    
+    while(my($k,$v)=each %{$ih}){
+        $h->{$k}=$ih->{$k};
+    }
+    return $h;
+}
 
 # _join() {{{
 
