@@ -18,10 +18,12 @@ use File::Basename;
 use File::Util;
 use Getopt::Long;
 use Pod::Usage;
-use OP::Base qw/:vars :funcs/;
+
 use Term::ANSIColor;
 use Data::Dumper;
 use IPC::Cmd qw(can_run run);
+
+use OP::Base qw/:vars :funcs/;
 
 our $VERSION     = '0.01';
 
@@ -170,6 +172,13 @@ sub outtext(){
     if ($indent){
         $text=' ' x $indent . $text;
     }
+#
+#    if ( exists &VIM::Eval ) {
+#        require OP::VIMPERL;
+#
+#        OP::VIMPERL::init();
+#        OP::VIMPERL::VimMsg("$text");
+#    }
 
     print "$text";
 

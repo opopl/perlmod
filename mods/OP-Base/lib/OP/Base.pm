@@ -454,10 +454,12 @@ sub getopt{
 	&getopt_init();
 
 	unless (@ARGV){ 
-        if (defined $Script){
-	  	    pod2usage("Try '$Script --help' for more information");
+        if ($Script =~ /^[\.\w]*$/){
+              pod2usage("Try '$Script --help' for more information");
+		      exit 0;
+        }else{
+              warn("Failed to run OP::Base::getopt() : no arguments and no script running");
         }
-		exit 0;
 	}else{
 		$cmdline=join(' ',@ARGV);
 		GetOptions(\%opt,@optstr);

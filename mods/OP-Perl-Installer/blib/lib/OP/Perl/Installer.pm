@@ -200,6 +200,23 @@ sub def_to_module() {
 
 =cut
 
+sub module_libdir {
+    my $self=shift;
+
+    my $module=shift;
+
+    return catfile(  $self->dirs("mods"), $self->module_to_def($module),"lib");
+
+}
+sub module_local_dir {
+    my $self=shift;
+
+    my $module=shift;
+
+    return catfile(  $self->dirs("mods"), $self->module_to_def($module));
+
+}
+
 sub add_modules() {
     my $self = shift;
 

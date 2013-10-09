@@ -71,7 +71,7 @@ sub _begin() {
 
 sub get_opt () {
     my $self=shift;
-
+    
     $self->OP::Script::get_opt();
 }
 
@@ -149,15 +149,25 @@ sub process_opts {
     return unless $o;
 
     foreach my $id (qw( ifile printdir )) {
+        eval 'next unless defined $o->{' . $id . '}' ;
+
         my $evs='$self->' . $id . '($o->{' . $id . '})' ;
         eval "$evs";
         die $@ if $@;
+
+        eval "die 'Failed to set accessor: " . $id . "' unless \$self->" . $id;
     }
+
 
 }
 
 sub printresult {
     my $self=shift;
+
+    unless ($self->ifile) {
+        warn "OP::PackName::printresult(): ifile accessor is zero!";
+        return;
+    }
 
     my $fpath=rel2abs($self->ifile);
 	
@@ -168,6 +178,12 @@ sub printresult {
         }
         print $fpath . "\n";
     }else{
+
+	    unless ($self->packstr) {
+			#warn "OP::PackName::printresult(): packstr accessor is zero!";
+	        return;
+	    }
+
         print $self->packstr . "\n";
     }
 
@@ -179,6 +195,11 @@ sub getpackstr {
     my @lines;
     my $str='';
     my $moddef;
+
+    unless ($self->ifile) {
+        warn "OP::PackName::getpackstr(): ifile accessor is zero!";
+        return;
+    }
 
 	if ( -e $self->ifile ){
 		@lines=read_file $self->ifile;
@@ -221,8 +242,6 @@ sub run() {
 
     $self->printresult;
 
-    exit 0;
-	
 }
 
 sub main() {

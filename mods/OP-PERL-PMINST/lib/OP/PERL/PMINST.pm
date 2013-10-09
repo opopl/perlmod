@@ -13,10 +13,12 @@ use File::Find;
 use Data::Dumper;
 use Term::ANSIColor;
 use File::Path qw(make_path remove_tree);
+use File::Spec::Functions qw(catfile rel2abs curdir catdir );
+use OP::PackName;
 
 no lib '.';
 
-use vars qw($opt_l $opt_s $opt_r);
+use vars qw($opt_l $opt_s $opt_r $opt_d);
 
 ###our
 our $PATTERN;
@@ -24,9 +26,11 @@ our $INCDIR;
 our @MODULES;
 our @MPATHS;
 our %OPTS;
-our $CLOPTS;
+our @CLOPTS;
 our %RE;
 our @EXCLUDEDIRS;
+our @SEARCHDIRS;
+our $PKN;
 
 use parent qw( Class::Accessor::Complex );
 
@@ -95,23 +99,27 @@ sub new() {
 sub getopt {
     my $self = shift;
 
-    $CLOPTS = 'lsr';
-    getopts("$CLOPTS") || die "bad usage";
+    @CLOPTS = qw(l s r d:);
+    getopts(join('',@CLOPTS)) || die "bad usage";
 
     if ( @ARGV == 0 ) {
         @ARGV = ('.');
     }
 
-    for ( split( "", $CLOPTS ) ) {
+    for ( @CLOPTS ) {
+        s/:$//g;
+
         my $evs = '$OPTS{' . $_ . '}=1 if $opt_' . $_ . ';';
         eval "$evs";
         die $@ if $@;
     }
 
-    die "USAGE: $0 [-l] [-s] [-r] PATTERN\n" unless @ARGV == 1;
+    die "USAGE: $0 [-l] [-s] [-r] [-d] DIRS PATTERN\n" unless @ARGV == 1;
 
     $PATTERN = shift(@ARGV);
     $self->PATTERN($PATTERN);
+
+    @SEARCHDIRS=split(':',$opt_d) if $opt_d;
 
 }
 
@@ -128,6 +136,10 @@ sub init {
 
     $OPTS{p} = 1;
     $OPTS{p}=0 if $self->opts_count;
+
+    @SEARCHDIRS = @INC;
+    $OPTS{search}='simple';
+
 
 }
 
@@ -172,6 +184,18 @@ sub process_opts {
                 @EXCLUDEDIRS=@$v;
             }
         }
+        elsif ( $k eq "searchdirs" ) {
+            unless(ref $v){
+                @SEARCHDIRS=split(':',$v);
+            }elsif(ref $v eq "ARRAY"){
+                @SEARCHDIRS=@$v;
+            }
+        }
+        elsif ( $k eq "search" ) {
+            $OPTS{search}=$v;
+
+            $PKN=OP::PackName->new;
+        }
     }
 
 }
@@ -193,7 +217,7 @@ sub find_module_matches {
 
     $RE{PATTERN} = qr/$PATTERN/;
 
-    for $INCDIR (@INC) {
+    for $INCDIR (@SEARCHDIRS) {
         next unless -d $INCDIR;
 
         if ( grep { /^\s*$INCDIR/ } @EXCLUDEDIRS ){
@@ -232,16 +256,20 @@ sub wanted {
     $modpath =~ s{^\Q$INCDIR/}{};
     ( my $modslash=$modpath ) =~ s/\.pm$//g;
 
-    unless ( $OPTS{match} ) {
-        return unless $modslash =~ /$RE{PATTERN}/;
-    }
-    elsif ( $OPTS{endofline} ) {
-        return unless $modslash =~ /$RE{PATTERN}$/;
+    if ($OPTS{search} eq 'simple'){
+	    unless ( $OPTS{match} ) {
+	        return unless $modslash =~ /$RE{PATTERN}/;
+	    }
+	    elsif ( $OPTS{endofline} ) {
+	        return unless $modslash =~ /$RE{PATTERN}$/;
+	    }
+    }elsif ($OPTS{search} eq 'allpm'){
+        # check each found .pm file for the package ... ; string
     }
 
     if ( $OPTS{l} ) {
         s{^(\Q$INCDIR\E)/}{$1 } if $OPTS{s};
-        push( @MPATHS, $_ );
+        push( @MPATHS, rel2abs($_) );
     }
     elsif ( $OPTS{r} ) {
         remove_tree($_);
@@ -365,38 +393,3 @@ Please note this is a change from the
 original pmtools-1.00 (still available on CPAN),
 as pmtools-1.00 were licensed only under the
 Perl "Artistic License".
-Class::Accessor::Complex
-Directory::Iterator
-Directory::Iterator::PP
-File::Slurp
-LaTeX::BibTeX
-OP::BIBTEX
-OP::Base
-OP::ConvBib
-OP::GOPS::BBH
-OP::GOPS::KW
-OP::GOPS::MKDEP
-OP::GOPS::RIF
-OP::GOPS::TEST
-OP::Git
-OP::MOD
-OP::Module::Build
-OP::PAPS::MKPAPPDF
-OP::PERL::PMINST
-OP::PMINST
-OP::POD
-OP::PackName
-OP::PaperConf
-OP::Parse::BL
-OP::Perl::Edit
-OP::Perl::Installer
-OP::RENAME::PMOD
-OP::Script
-OP::TEX::NICE
-OP::TEX::Text
-OP::Time
-OP::VIMPERL
-OP::Viewer
-OP::VimTag
-PDL::Graphics::PLplot::0.62
-Term::ShellUI

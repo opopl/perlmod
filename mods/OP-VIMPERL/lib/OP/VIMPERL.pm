@@ -57,6 +57,7 @@ my @ex_vars_scalar = qw(
   $SubName
   $FullSubName
   $CurBuf
+  $UnderVim
 );
 ###export_vars_hash
 my @ex_vars_hash = qw(
@@ -90,7 +91,7 @@ my @ex_vars_array = qw(
           VimEditBufFiles
           VimEval
           VimExists
-          VimGetModuleName
+          VimPerlGetModuleName
           VimGetFromChooseDialog
           VimGrep
           VimInput
@@ -107,7 +108,10 @@ my @ex_vars_array = qw(
           Vim_MsgDebug
           Vim_Files
           VimPerlInstallModule
+          VimPerlViewModule
           VimPerlModuleNameFromPath
+          VimPerlPathFromModuleName
+          VimPerlGetModuleNameFromDialog
           VimPieceFullFile
           VimResetVars
           VimSo
@@ -135,21 +139,27 @@ sub VimEcho;
 sub VimEditBufFiles;
 sub VimEval;
 sub VimExists;
-sub VimGetModuleName;
 sub VimGetFromChooseDialog;
 sub VimGrep;
 sub VimInput;
 sub VimJoin;
 sub VimLet;
 sub VimSet;
+# -------------- messages --------------------
 sub VimMsg;
 sub VimMsgNL;
 sub VimMsgDebug;
 sub VimMsgE;
 sub VimMsgPack;
 sub VimMsg_PE;
+# -------------- perl --------------------
+sub VimPerlGetModuleName;
 sub VimPerlInstallModule;
+sub VimPerlViewModule;
 sub VimPerlModuleNameFromPath;
+sub VimPerlPathFromModuleName;
+sub VimPerlGetModuleNameFromDialog;
+# -------------- vimrc pieces ------------
 sub VimPieceFullFile;
 sub VimResetVars;
 sub VimSo;
@@ -174,22 +184,30 @@ our $VERSION   = '0.01';
 ################################
 ###our
 ###our_scalar
+# --- package loading, running under vim  
+our $UnderVim;
 #
-# --- join(a:000,' ') 
+# --- join(a:000,' ')
 our $ArgString;
-# --- len(a:000) 
+
+# --- len(a:000)
 our ($NumArgs);
+
 # --- VIM::Eval return values
 our ( $EvalCode, $res );
+
 # ---
 our ($SubName);        #   => x
 our ($FullSubName);    #   => VIMPERL_x
+
 # ---
 our ($CurBuf);
+
 # ---
 our ($MsgColor);
 our ($MsgPrefix);
 our ($MsgDebug);
+
 # ---
 our ($ModuleName);
 ###our_array
@@ -373,7 +391,7 @@ sub VimGrep {
 sub VimEcho {
     my $cmd = shift;
 
-    VimMsg(VimEval($cmd),{prefix => 'none'});
+    VimMsg( VimEval($cmd), { prefix => 'none' } );
 
 }
 
@@ -409,19 +427,20 @@ sub VimMsgPack {
 }
 
 sub VimInput {
-    my ($dialog,$default)=@_;
+    my ( $dialog, $default ) = @_;
 
-    unless(defined $default){
-        VimCmd("let input=input(" . "'" . $dialog . "'" . ")" );
-    }else{
-        VimCmd("let input=input(" . "'" . $dialog . "','" . $default . "'" . ")");
+    unless ( defined $default ) {
+        VimCmd( "let input=input(" . "'" . $dialog . "'" . ")" );
+    }
+    else {
+        VimCmd(
+            "let input=input(" . "'" . $dialog . "','" . $default . "'" . ")" );
     }
 
-    my $inp=VimVar("input");
+    my $inp = VimVar("input");
 
     return $inp;
 }
-
 
 =head3 VimChooseFromPrompt($dialog,$list,$sep,@args)
 
@@ -442,223 +461,281 @@ in funcs.vim
 #function! F_ChooseFromPrompt(dialog, list, sep, ...)
 
 sub VimChooseFromPrompt {
-    my ($dialog,$list,$sep,@args)=@_;
+    my ( $dialog, $list, $sep, @args ) = @_;
 
-    unless(ref $list eq ""){
+    unless ( ref $list eq "" ) {
         VimMsg_PE("Input list is not SCALAR ");
         return 0;
     }
 
-	#let inp = input(a:dialog)
-    my $inp=VimInput($dialog);
+    #let inp = input(a:dialog)
+    my $inp = VimInput($dialog);
 
-    my @opts=split("$sep",$list);
+    my @opts = split( "$sep", $list );
 
     my $empty;
-    if(@args){
-        $empty=shift @args;
-    }else{
-        $empty=$list->[0];
+    if (@args) {
+        $empty = shift @args;
+    }
+    else {
+        $empty = $list->[0];
     }
 
     my $result;
 
-    unless($inp){
-        $result= $empty;
-    }elsif($inp =~ /^\s*(?<num>\d+)\s*$/){
-		$result= $opts[$+{num}-1];
-    }else{
-        $result= $inp;
+    unless ($inp) {
+        $result = $empty;
+    }
+    elsif ( $inp =~ /^\s*(?<num>\d+)\s*$/ ) {
+        $result = $opts[ $+{num} - 1 ];
+    }
+    else {
+        $result = $inp;
     }
 
     return $result;
 
-#endfunction 
+    #endfunction
 }
 
 sub VimCreatePrompt {
-    my ($list, $cols, $listsep)=@_;
+    my ( $list, $cols, $listsep ) = @_;
 
     my $numcommon;
 
     use integer;
 
-    $numcommon=scalar @$list;
+    $numcommon = scalar @$list;
 
-    my $promptstr="";
+    my $promptstr = "";
 
-    my @tableheader= split(" ","Number Option" x $cols );
-    my $table=Text::TabularDisplay->new(@tableheader);
+    my @tableheader = split( " ", "Number Option" x $cols );
+    my $table = Text::TabularDisplay->new(@tableheader);
     my @row;
 
-    my $i=0;
-    my $nrows=$numcommon/$cols;
+    my $i     = 0;
+    my $nrows = $numcommon / $cols;
 
-    while ($i<$nrows) {
-        @row=();
-        my $j=$i;
+    while ( $i < $nrows ) {
+        @row = ();
+        my $j = $i;
 
-        for my $ncol((1..$cols)){
-            $j=$i+($ncol-1)*$nrows;
+        for my $ncol ( ( 1 .. $cols ) ) {
+            $j = $i + ( $ncol - 1 ) * $nrows;
 
-            my $modj=$list->[$j];
-            push(@row,$j+1 );
-            push(@row,$modj );
+            my $modj = $list->[$j];
+            push( @row, $j + 1 );
+            push( @row, $modj );
 
         }
         $table->add(@row);
         $i++;
     }
 
-    $promptstr=$table->render;
+    $promptstr = $table->render;
 
     return $promptstr;
 
-
 }
 
-
 sub VimGetFromChooseDialog {
-    my $iopts=shift;
+    my $iopts = shift;
 
-    unless(ref $iopts eq "HASH"){
+    unless ( ref $iopts eq "HASH" ) {
         VimMsg_PE("input parameter opts should be HASH");
         return undef;
     }
     my $opts;
 
-    $opts={
+    $opts = {
         numcols  => 1,
-        list  => [],
+        list     => [],
         startopt => '',
         header   => 'Option Choose Dialog',
         bottom   => 'Choose an option: ',
         selected => 'Selected: ',
     };
 
-    my($dialog,$liststr);
+    my ( $dialog, $liststr );
     my $opt;
 
-    $opts=_hash_add($opts,$iopts);
-    $liststr=_join("\n",$opts->{list});
+    $opts = _hash_add( $opts, $iopts );
+    $liststr = _join( "\n", $opts->{list} );
 
-    $dialog.=$opts->{header} . "\n";
-    $dialog.=VimCreatePrompt($opts->{list},$opts->{numcols}) . "\n";
-    $dialog.=$opts->{bottom} . "\n";
+    $dialog .= $opts->{header} . "\n";
+    $dialog .= VimCreatePrompt( $opts->{list}, $opts->{numcols} ) . "\n";
+    $dialog .= $opts->{bottom} . "\n";
 
-	$opt= VimChooseFromPrompt($dialog,$liststr,"\n",$opts->{startopt});
+    $opt = VimChooseFromPrompt( $dialog, $liststr, "\n", $opts->{startopt} );
     VimMsgNL;
-    VimMsg($opts->{selected} . $opt,{hl => 'Title'});
+    VimMsg( $opts->{selected} . $opt, { hl => 'Title' } );
 
     return $opt;
 
 }
 
+sub VimPerlGetModuleNameFromDialog {
+
+    my $opts = {
+        header  => "Choose the module name",
+        bottom  => "Select the number of the module: ",
+        list    => [@LOCALMODULES],
+        numcols => 2,
+    };
+
+    my $module = VimGetFromChooseDialog($opts);
+
+    return $module;
+
+}
+
 ##TODO todo_GetModuleName
 
-sub VimGetModuleName {
+sub VimPerlGetModuleName {
 
-	my $path=$CurBuf->{name} // '';
-	
-	unless($path){
-	  VimMsgE('Failed to get $CurBuf->{name} from OP::VIMPERL');
+    my $path = $CurBuf->{name} // '';
+    my $module = '';
 
-      my $opts={
-          header    => "Choose the module name",
-          bottom    => "Select the number of the module: ",
-          list      => [@LOCALMODULES],
-          numcols   => 2,
-      };
-      my $module=VimGetFromChooseDialog($opts);
-	}else{
-      my $module=VimPerlModuleNameFromPath($path);
+    unless ($path) {
+        VimMsgE('Failed to get $CurBuf->{name} from OP::VIMPERL');
+
+        $module = VimPerlGetModuleNameFromDialog;
     }
+    else {
+        $module = VimPerlModuleNameFromPath($path);
+    }
+    VimMsg("Module name is set as: $module");
+
+    $ModuleName = $module if $module;
+
+    return $module;
+
+}
+
+sub VimPerlPathFromModuleName {
+    my $module = shift // $ModuleName // '';
+
+    return '' unless $module;
+
+    my $pmi = OP::PERL::PMINST->new;
+
+    my $i = OP::Perl::Installer->new;
+    $i->main;
+
+    my $opts    = {};
+    my $pattern = '.';
+
+    $opts = {
+        PATTERN    => "^" . $module . '$',
+        mode       => "fullpath",
+        searchdirs => $i->module_libdir($module),
+    };
+
+    $pmi->main($opts);
+
+    my @localpaths = $pmi->MPATHS;
+
+    return shift @localpaths;
 
 }
 
 sub VimPerlModuleNameFromPath {
-    my $path=shift;
-	
-	unless(-e $path){
-	  VimMsgE('File :' . $path . ' does not exist');
-	  return '';
-	}
+    my $path = shift;
 
-  my $module;
-	
-	VimMsgDebug('Going to create OP::PackName instance '); 
+    unless ( -e $path ) {
+        VimMsgE( 'File :' . $path . ' does not exist' );
+        return '';
+    }
 
-	my $p=OP::PackName->new({ skip_get_opt => 1 });
-	
-	VimMsgDebug('Have initialized OP::PackName instance to ' 
-        . Data::Dumper->Dump($p,[qw($p)]));
-	
-	my $packstr=$p->main({ ifile => "$path" });
-	
-	VimMsgDebug("after OP::PackName->main");
+    my $module;
 
-	VimMsg($packstr);
-	
-	if ($packstr){
-	  VimLet("g:PMOD_ModuleName", $packstr);
-      $ModuleName=$packstr;
-      $module=$packstr;
+    VimMsgDebug('Going to create OP::PackName instance ');
 
-	  VimMsgDebug('$ModuleName is set to ' . $ModuleName );
-	}else{
-	  VimMsgE('Failed to get $packstr from OP::PackName');
-	}
+    my $p = OP::PackName->new(
+        {
+            skip_get_opt => 1,
+            ifile        => "$path",
+        }
+    );
+
+    VimMsgDebug( 'Have initialized OP::PackName instance to '
+          . Data::Dumper->Dump( [$p], [qw($p)] ) );
+
+    $p->init_vars;
+
+    VimMsgDebug( 'After OP::PackName::init_vars '
+          . Data::Dumper->Dump( [$p], [qw($p)] ) );
+
+    $p->run;
+
+    VimMsgDebug(
+        'After OP::PackName::run ' . Data::Dumper->Dump( [$p], [qw($p)] ) );
+
+    my $packstr = $p->packstr;
+
+    VimMsg($packstr);
+
+    if ($packstr) {
+        VimLet( "g:PMOD_ModuleName", $packstr );
+        $ModuleName = $packstr;
+        $module     = $packstr;
+
+        VimMsgDebug( '$ModuleName is set to ' . $ModuleName );
+    }
+    else {
+        VimMsgE('Failed to get $packstr from OP::PackName');
+    }
 
     return $module;
 
 }
 
 sub Vim_MsgColor {
-    my $color=shift;
+    my $color = shift;
 
-    $MsgColor=$color;
-    VimLet("g:MsgColor","$color");
+    $MsgColor = $color;
+    VimLet( "g:MsgColor", "$color" );
 
 }
 
 sub Vim_Files {
-    my $id=shift;
+    my $id = shift;
 
-    my $file=VimVar("g:files['$id']");
+    my $file = VimVar("g:files['$id']");
 
     return $file;
 }
 
 sub VimResetVars {
-    my $vars=shift // '';
+    my $vars = shift // '';
 
     return '' unless $vars;
 
     foreach my $var (@$vars) {
-        my $evs='Vim_' . $var . "('')";
+        my $evs = 'Vim_' . $var . "('')";
         eval "$evs";
-        if($@){
+        if ($@) {
             VimMsg_PE($@);
         }
     }
 }
 
 sub Vim_MsgPrefix {
-    my $prefix=shift;
+    my $prefix = shift;
 
-    if (defined $prefix){
-        $MsgPrefix=$prefix;
-        VimLet("g:MsgPrefix","$prefix");
+    if ( defined $prefix ) {
+        $MsgPrefix = $prefix;
+        VimLet( "g:MsgPrefix", "$prefix" );
     }
 
 }
 
 sub Vim_MsgDebug {
-    my $val=shift;
+    my $val = shift;
 
-    if (defined $val){
-        $MsgDebug=$val;
-        VimLet("g:MsgDebug",$val);
+    if ( defined $val ) {
+        $MsgDebug = $val;
+        VimLet( "g:MsgDebug", $val );
     }
 
     return $MsgPrefix;
@@ -666,7 +743,7 @@ sub Vim_MsgDebug {
 }
 
 sub VimMsgNL {
-    VimMsg(" ",{prefix => 'none'});
+    VimMsg( " ", { prefix => 'none' } );
 }
 
 sub VimMsg {
@@ -674,51 +751,54 @@ sub VimMsg {
 
     return '' unless $text;
 
-    my @o = @_; 
-    my $ref=shift @o;
+    my @o   = @_;
+    my $ref = shift @o;
     my ($opts);
     my $prefix;
 
-    my $keys=[qw(warn hl prefix color )];
-    foreach my $k (@$keys){ $opts->{$k}=''; }
+    my $keys = [qw(warn hl prefix color )];
+    foreach my $k (@$keys) { $opts->{$k} = ''; }
 
-    $opts->{prefix}='subname';
+    $opts->{prefix} = 'subname';
 
-    unless(ref $ref){
-        if(@o){
-            my %oo=($ref,@o);
-            $opts->{$_}=$oo{$_} for(keys %oo);
-        }else{
-            $opts->{hl}=$ref unless @o;
+    unless ( ref $ref ) {
+        if (@o) {
+            my %oo = ( $ref, @o );
+            $opts->{$_} = $oo{$_} for ( keys %oo );
         }
-    }elsif(ref $ref eq "HASH"){
-        $opts->{$_}=$ref->{$_} for(keys %$ref);
+        else {
+            $opts->{hl} = $ref unless @o;
+        }
+    }
+    elsif ( ref $ref eq "HASH" ) {
+        $opts->{$_} = $ref->{$_} for ( keys %$ref );
     }
 
-    for($opts->{prefix}){
-        /^none$/ && do { $prefix=''; next; };
-        /^subname$/ && do { $prefix="$FullSubName()> "; next; };
+    for ( $opts->{prefix} ) {
+        /^none$/ && do { $prefix = ''; next; };
+        /^subname$/ && do { $prefix = "$FullSubName()> "; next; };
     }
-    $prefix=$MsgPrefix if $MsgPrefix;
+    $prefix = $MsgPrefix if $MsgPrefix;
 
-    $opts->{hl}='WarningMsg' if $opts->{warn};
-    $opts->{hl}='ErrorMsg' if $opts->{error};
+    $opts->{hl} = 'WarningMsg' if $opts->{warn};
+    $opts->{hl} = 'ErrorMsg'   if $opts->{error};
 
-    my $colors={
-        yellow  => 'CursorLineNr',
-        red  => 'WarningMsg',
-        green => 'DiffChange',
+    my $colors = {
+        yellow => 'CursorLineNr',
+        red    => 'WarningMsg',
+        green  => 'DiffChange',
     };
-    my $color=$MsgColor // '';
-    $color=$opts->{color} if $opts->{color};
+    my $color = $MsgColor // '';
+    $color = $opts->{color} if $opts->{color};
 
-    $opts->{hl}=$colors->{$color} if $color;
-    
-    $text=$prefix . $text;
+    $opts->{hl} = $colors->{$color} if $color;
 
-    if ($opts->{hl}){
-        VIM::Msg("$text",$opts->{hl});
-    }else{
+    $text = $prefix . $text;
+
+    if ( $opts->{hl} ) {
+        VIM::Msg( "$text", $opts->{hl} );
+    }
+    else {
         VIM::Msg("$text");
     }
 
@@ -727,10 +807,9 @@ sub VimMsg {
 sub VimMsg_PE {
     my $text = shift;
 
-    my $subname=(caller(1))[3];
+    my $subname = ( caller(1) )[3];
 
-    VimMsg("Error in $subname : " . $text, { error => 1 } );
-
+    VimMsg( "Error in $subname : " . $text, { error => 1 } );
 
 }
 
@@ -810,11 +889,12 @@ sub VimSet {
 }
 
 sub VimMsgDebug {
-    my $msg=shift;
+    my $msg = shift;
 
-    if ( $MsgDebug == 1 ){
+    if ( $MsgDebug eq "1" ) {
+
         #VimMsg("(D) $msg",{ color => 'green'} );
-        VimMsg("(D) $msg",{ hl => 'Folded'} );
+        VimMsg( "(D) $msg", { hl => 'Folded' } );
     }
 }
 
@@ -823,9 +903,32 @@ sub VimMsgDebug {
 
 sub VimPerlInstallModule {
 
-    VimGetModuleName;
+    VimPerlGetModuleName;
 
-    my $module=$NumArgs ? $ArgString : $ModuleName;
+    my $module = $NumArgs ? $ArgString : $ModuleName;
+
+    my $i=OP::Perl::Installer->new;
+    $i->main;
+    VimMsg("Running install for module $module");
+    $i->run_build_install($module);
+
+}
+
+sub VimPerlViewModule {
+
+    my $module;
+
+    unless($NumArgs){
+        $module = VimPerlGetModuleNameFromDialog;
+    }else{
+        $module = $ArgString;
+    }
+
+    my $path = VimPerlPathFromModuleName($module);
+
+    if ( -e $path ) {
+        VimCmd("tabnew $path");
+    }
 
 }
 
@@ -872,9 +975,9 @@ sub VimSetTags {
 =cut
 
 sub VimJoin {
-    my $arr   = shift;
+    my $arr = shift;
 
-    my $sep   = shift;
+    my $sep = shift;
 
     return '' unless VimExists($arr);
 
@@ -887,14 +990,16 @@ sub VimJoin {
 }
 
 sub VimCurBuf_Basename {
-    my $opts=shift // '';
-    
-    my $name;
+    my $opts = shift // '';
 
-    $name=basename($CurBuf->{name});
+    my $name=$CurBuf->{name} // '';
 
-    if($opts){
-        if ($opts->{remove_extension}){
+		return $name unless $name;
+
+    $name = basename( $name );
+
+    if ($opts) {
+        if ( $opts->{remove_extension} ) {
             $name =~ s/\.(\w+)$//g;
         }
     }
@@ -902,18 +1007,18 @@ sub VimCurBuf_Basename {
     $name;
 }
 
-sub VimBufFiles_Edit{
+sub VimBufFiles_Edit {
 
-    my $opts=shift;
+    my $opts = shift;
 
-    my $editopt=$opts->{editopt} // '';
+    my $editopt = $opts->{editopt} // '';
 
     foreach my $bfile (@BFILES) {
         next unless $bfile =~ /\.vim$/;
 
         VimMsg("Processing vim file: $bfile");
 
-        ( my $piece=$bfile ) =~ s/(\w+)\.vim/$1/g;
+        ( my $piece = $bfile ) =~ s/(\w+)\.vim/$1/g;
 
         my @lines = read_file $bfile;
 
@@ -925,30 +1030,31 @@ sub VimBufFiles_Edit{
             chomp;
 
 ###BufFiles_InsertSubName
-            if( $editopt=="Insert_SubName"){
+            if ( $editopt == "Insert_SubName" ) {
 
-	            /^\s*(?<fdec>fun|function)!\s+(?<fname>\w+)/ && do {
-	                $fname = $+{fname};
-	                $onfun{$fname} = 1;
-	                $_ .= "\n" . " let g:SubName='" . $fname . "'";
-	                push( @nlines, $_ );
-	
-	                next;
-	            };
-	
-	            /^\s*let\s*g:SubName=/ && do {
-	                $_ = '';
-	                next;
-	            };
-	            /^\s*endf(|un|unction)/ && do {
-	                $onfun{$fname} = 0 if $fname;
-	
-	            };
+                /^\s*(?<fdec>fun|function)!\s+(?<fname>\w+)/ && do {
+                    $fname = $+{fname};
+                    $onfun{$fname} = 1;
+                    $_ .= "\n" . " let g:SubName='" . $fname . "'";
+                    push( @nlines, $_ );
+
+                    next;
+                };
+
+                /^\s*let\s*g:SubName=/ && do {
+                    $_ = '';
+                    next;
+                };
+                /^\s*endf(|un|unction)/ && do {
+                    $onfun{$fname} = 0 if $fname;
+
+                };
 ###BufFiles_EditSlurp
-            }elsif( $editopt == "EditSlurp"){
-                my $cmds=$opts->{cmds};
+            }
+            elsif ( $editopt == "EditSlurp" ) {
+                my $cmds = $opts->{cmds};
                 foreach my $cmd (@$cmds) {
-                    my $evs=$cmd;
+                    my $evs = $cmd;
                     eval "$evs";
                     die $@ if $@;
                 }
@@ -961,7 +1067,7 @@ sub VimBufFiles_Edit{
             print F $nline . "\n";
         }
 
-        if( $editopt == "Append_g_Loaded_Pieces"){
+        if ( $editopt == "Append_g_Loaded_Pieces" ) {
             print F "let g:LoadedPieces_$piece=1";
         }
         close(F);
@@ -971,6 +1077,14 @@ sub VimBufFiles_Edit{
 sub init {
 
     my %opts = @_;
+
+    eval 'Vim::Eval("1")';
+    unless ($@) {
+        $UnderVim=1;
+    }else{
+        $UnderVim=0;
+        return;
+    }
 
     unless ( defined $SubName ) {
         $FullSubName = VimVar('g:SubName');
@@ -1006,16 +1120,16 @@ sub init {
         _die $@ if $@;
     }
 
-    $MsgColor=VimVar("g:MsgColor");
-    $MsgPrefix=VimVar("g:MsgPrefix");
-    $MsgDebug=VimVar("g:MsgDebug");
+    $MsgColor  = VimVar("g:MsgColor");
+    $MsgPrefix = VimVar("g:MsgPrefix");
+    $MsgDebug  = VimVar("g:MsgDebug");
 
 }
 
 sub VimEditBufFiles {
     my $cmds = shift // $ArgString;
 
-    unless($cmds){
+    unless ($cmds) {
         VimMsgE("No commands were provided");
         return 0;
     }
@@ -1048,9 +1162,9 @@ vimscript function declarations )
 
 sub init_Args {
 
-    $NumArgs = 0;
+    $NumArgs   = 0;
     $ArgString = '';
-    @Args    = ();
+    @Args      = ();
 
     $NumArgs = VimLen('a:000');
 
@@ -1061,7 +1175,7 @@ sub init_Args {
 }
 
 sub init_MODULES {
-    @LOCALMODULES=VimVar('g:PMOD_available_mods');
+    @LOCALMODULES = VimVar('g:PMOD_available_mods');
 }
 
 sub init_CurBuf {
@@ -1075,18 +1189,9 @@ sub init_PIECES {
     @PIECES = readarr( catfile( $DIRS{MKVIMRC}, qw(files.i.dat) ) );
 }
 
-sub new {
-    my ( $class, %parameters ) = @_;
-    my $self = bless( {}, ref($class) || $class );
-
-    return $self;
-
-}
-
+###BEGIN
 BEGIN {
-    if ( exists &VIM::Eval ) {
-        init;
-    }
+    init;
 }
 
 1;
