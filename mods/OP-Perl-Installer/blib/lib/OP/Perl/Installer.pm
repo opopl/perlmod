@@ -7,9 +7,6 @@ package OP::Perl::Installer;
 use strict;
 use warnings;
 
-use lib("$ENV{PERLMODDIR}/mods/OP-Perl-Installer/lib");
-use lib("$ENV{PERLMODDIR}/mods/OP-PERL-PMINST/lib");
-
 our $VERSION = '0.01';
 
 use OP::Script;
@@ -31,30 +28,36 @@ use Data::Dumper;
 
 use parent qw( Class::Accessor::Complex OP::Script  );
 
-__PACKAGE__
-    ->mk_new
+__PACKAGE__->mk_new
 ###_ACCESSORS_SCALAR
-	->mk_scalar_accessors(qw(
-        PERLMODDIR
-        viewcmd
-        textcolor
-        warncolor
-        usecolor
-	))
-	->mk_integer_accessors(qw())
+  ->mk_scalar_accessors(
+    qw(
+      PERLMODDIR
+      viewcmd
+      textcolor
+      warncolor
+      usecolor
+      rbi_force
+      rbi_discard_loaddat
+      )
+  )->mk_integer_accessors(qw())
 ###_ACCESSORS_ARRAY
-	->mk_array_accessors(qw(
-		mod_def_names
-		modules
-		modules_to_install
-		modules_to_exclude
-	))
+  ->mk_array_accessors(
+    qw(
+      mod_def_names
+      modules
+      modules_to_install
+      modules_to_exclude
+      )
+  )
 ###_ACCESSORS_HASH
-	->mk_hash_accessors(qw(
-    moddeps
-    dirs
-    files
-  ));
+  ->mk_hash_accessors(
+    qw(
+      moddeps
+      dirs
+      files
+      )
+  );
 
 # }}}
 # Methods {{{
@@ -67,14 +70,13 @@ __PACKAGE__
 
 =cut
 
-
 #sub new() {
-    #my ( $class, %parameters ) = @_;
-    #my $self = bless( {}, ref($class) || $class );
+#my ( $class, %parameters ) = @_;
+#my $self = bless( {}, ref($class) || $class );
 
-    #$self->init();
+#$self->init();
 
-    #return $self;
+#return $self;
 #}
 
 =head3 init()
@@ -108,53 +110,54 @@ sub module_to_path() {
 
 # }}}
 
-sub _sys(){
-    my $self=shift;
+sub _sys() {
+    my $self = shift;
 
-    my $cmd=shift;
+    my $cmd = shift;
 
     system("$cmd");
 }
 
 sub module_installed_path {
-    my $self=shift;
+    my $self = shift;
 }
 
 sub module_full_local_path {
-    my $self=shift;
+    my $self = shift;
 
-    my $module=shift;
+    my $module = shift;
 
     return shift $self->module_full_local_paths($module);
 
 }
 
 sub module_full_local_paths() {
-    my $self=shift;
+    my $self = shift;
 
-    my $module=shift;
+    my $module = shift;
 
-    my @dirs=qw( . lib );
-    my @lpaths=();
+    my @dirs   = qw( . lib );
+    my @lpaths = ();
 
     foreach my $dir (@dirs) {
-        my $mfile=catfile($self->module_to_def($module), $dir, $self->module_to_path($module));
+        my $mfile = catfile( $self->module_to_def($module),
+            $dir, $self->module_to_path($module) );
 
-        for($module){
-          /^LaTeX::BibTeX$/ && do {
-            $mfile=catfile($self->module_to_def($module), 
-                basename($self->module_to_path($module)));
-            next;
-          };
+        for ($module) {
+            /^LaTeX::BibTeX$/ && do {
+                $mfile = catfile( $self->module_to_def($module),
+                    basename( $self->module_to_path($module) ) );
+                next;
+            };
         }
-        my $fullpath=catfile($self->dirs("mods"),$mfile);
-        push(@lpaths,$mfile) if -e $fullpath;
+        my $fullpath = catfile( $self->dirs("mods"), $mfile );
+        push( @lpaths, $mfile ) if -e $fullpath;
     }
 
-    @lpaths=&uniq(@lpaths);
+    @lpaths = &uniq(@lpaths);
 
-    wantarray ? @lpaths : \@lpaths ;
-    
+    wantarray ? @lpaths : \@lpaths;
+
 }
 
 # module_to_def() {{{
@@ -201,19 +204,20 @@ sub def_to_module() {
 =cut
 
 sub module_libdir {
-    my $self=shift;
+    my $self = shift;
 
-    my $module=shift;
+    my $module = shift;
 
-    return catfile(  $self->dirs("mods"), $self->module_to_def($module),"lib");
+    return catfile( $self->dirs("mods"), $self->module_to_def($module), "lib" );
 
 }
+
 sub module_local_dir {
-    my $self=shift;
+    my $self = shift;
 
-    my $module=shift;
+    my $module = shift;
 
-    return catfile(  $self->dirs("mods"), $self->module_to_def($module));
+    return catfile( $self->dirs("mods"), $self->module_to_def($module) );
 
 }
 
@@ -229,9 +233,14 @@ sub add_modules() {
     foreach my $module (@modules) {
         my $def_module = $self->module_to_def($module);
 
-        push( @files, catfile($def_module , "lib" , $self->module_to_path($module) ));
+        push( @files,
+            catfile( $def_module, "lib", $self->module_to_path($module) ) );
 
-        make_path(catfile(  $self->dirs("mods"), $self->module_to_def($module),"lib"));
+        make_path(
+            catfile(
+                $self->dirs("mods"), $self->module_to_def($module), "lib"
+            )
+        );
 
         chdir $self->dirs("mods");
 
@@ -245,7 +254,7 @@ sub add_modules() {
         $mods{$module}->complete_build();
 
         # Write the install.sh script
-        my $installsh=catfile( $def_module, "install.sh" );
+        my $installsh = catfile( $def_module, "install.sh" );
 
         open( F, ">", $installsh );
 
@@ -261,11 +270,11 @@ sub add_modules() {
         system("chmod +rx $installsh");
 
     }
-    my $pmdir=$self->PERLMODDIR;
+    my $pmdir = $self->PERLMODDIR;
     foreach (@files) { s/^/$pmdir\/mods\//g; }
     print "@files\n";
 
-    system($self->viewcmd . "@files");
+    system( $self->viewcmd . "@files" );
 
 }
 
@@ -306,10 +315,10 @@ sub edit_modules() {
     @emodules = split( ',', $s_modules ) if defined $s_modules;
 
     if ( $s_modules eq "_all" ) {
-        @emodules = $self->modules ;
+        @emodules = $self->modules;
     }
     elsif ( $s_modules eq "_sel" ) {
-        @emodules = $self->modules_to_install ;
+        @emodules = $self->modules_to_install;
     }
 
     foreach my $module (@emodules) {
@@ -317,11 +326,11 @@ sub edit_modules() {
         push( @files, @mfiles );
     }
 
-    my $pmdir=$self->PERLMODDIR;
+    my $pmdir = $self->PERLMODDIR;
     foreach (@files) { s/^/$pmdir\/mods\//g; }
 
-    if (@files){
-      system($self->viewcmd . "  @files");
+    if (@files) {
+        system( $self->viewcmd . "  @files" );
     }
 }
 
@@ -368,10 +377,10 @@ sub set_these_cmdopts() {
 =cut
 
 sub choose_modules() {
-	my $self=shift;
+    my $self = shift;
 
-	my @mods=split(',',shift);
-	$self->modules_to_install(@mods);
+    my @mods = split( ',', shift );
+    $self->modules_to_install(@mods);
 
 }
 
@@ -388,13 +397,13 @@ sub load_modules() {
     opendir( D, $self->dirs("mods") );
 
     while ( my $file = readdir(D) ) {
-		my $fpath=catfile($self->dirs("mods"),$file);
+        my $fpath = catfile( $self->dirs("mods"), $file );
 
         next if $file =~ m/^\./;
         next if $file =~ m/^pod$/;
         next unless -d $fpath;
 
-        $self->mod_def_names_push( $file );
+        $self->mod_def_names_push($file);
         $self->modules_push( $self->def_to_module($file) );
     }
 
@@ -413,17 +422,16 @@ sub load_modules() {
 
     $self->load_dat();
 
-
     closedir(D);
 }
 
-sub load_dat(){
-    my $self=shift;
+sub load_dat() {
+    my $self = shift;
 
-    my $datfile=$DATFILES{modules_to_install};
-    if (-e $datfile){
+    my $datfile = $DATFILES{modules_to_install};
+    if ( -e $datfile ) {
         $self->modules_to_install_clear;
-        $self->modules_to_install(readarr($datfile));
+        $self->modules_to_install( readarr($datfile) );
     }
 }
 
@@ -448,193 +456,234 @@ sub list_modules() {
 
 =cut
 
+###rbi_
 sub run_build_install() {
     my $self = shift;
 
     my @imodules;
 
-    @imodules=@_ if @_;
+	my $errorlines;
 
-    unless (@imodules){
-      $self->load_dat();
-      @imodules=$self->modules_to_install;
+    @imodules = @_ if @_;
+
+    unless (@imodules) {
+        $self->load_dat();
+        @imodules = $self->modules_to_install;
     }
 
-    my ( @exclude, @only, @ok, @fail, @processed );
+    my ( @exclude, @only, @okmods, @failmods, @processed );
 
-    @only = $self->modules_to_install; 
-    @exclude = $self->modules_to_exclude; 
+    @only    = $self->modules_to_install;
+    @exclude = $self->modules_to_exclude;
 
-    foreach my $module ( @imodules ) {
+    foreach my $module (@imodules) {
+###rbi_loop_imodules
         next if grep { /^$module$/ } @processed;
-        
-        push(@processed,$module);
+
+        push( @processed, $module );
 
         # Local path to the module
-        my $lpath=catfile($self->dirs("mods"),$self->module_full_local_path($module));
+        my $lpath = catfile( $self->dirs("mods"),
+            $self->module_full_local_path($module) );
 
-        unless (-e $lpath){
+        unless ( -e $lpath ) {
             $self->warn("Local path points to non-existing file: $lpath");
-        }   
+        }
 
         # Locations of the installed module
-        my $pminst=OP::PERL::PMINST->new;
-        (my $mdef=$module )=~ s/::/-/g;
-        $pminst->main({ 
-                PATTERN => '^' . "$module" . '$', 
-                mode => 'fullpath',
-                excludedirs  => catfile($self->dirs("mods"),$mdef,qw(lib)),
-            });
+        my $pminst = OP::PERL::PMINST->new;
+        ( my $mdef = $module ) =~ s/::/-/g;
+        $pminst->main(
+            {
+                PATTERN     => '^' . "$module" . '$',
+                mode        => 'fullpath',
+                excludedirs => catfile( $self->dirs("mods"), $mdef, qw(lib) ),
+            }
+        );
 
-        my @ipaths=$pminst->MPATHS;
+        my @ipaths = $pminst->MPATHS;
 
         use File::stat;
 
         my $stat;
 
         # Size time of the local module file
-        $stat=stat($lpath);
-        my $lsize=$stat->size;
+        $stat = stat($lpath);
+        my $lsize = $stat->size;
 
         # Size of the installed module file
-        my $different=0;
+        my $different = 0;
         my $ipath;
 
 ##TODO todo_install
         $self->warn("Failed to get installed location for $module")
-            unless @ipaths;
+          unless @ipaths;
 
         # if @ipath=(), this means that the module was not installed,
         #   hence we will need to install it
 
-            # two or more different installation locations; need to install
-##loop_ipaths
-        if (@ipaths > 1){
-            $pminst->main({ remove => "$module" });
-            $different=1;
-        }elsif( @ipaths == 1 ){
-            $ipath=shift @ipaths;
+        # two or more different installation locations; need to install
+###rbi_loop_ipaths
+        if ( @ipaths > 1 ) {
+            $pminst->main( { remove => "$module" } );
+            $different = 1;
+        }
+        elsif ( @ipaths == 1 ) {
+            $ipath = shift @ipaths;
 
-            if ($ipath){
-                $stat=stat($ipath);
-                my $isize=stat($ipath)->size // '';
+            if ($ipath) {
+                $stat = stat($ipath);
+                my $isize = stat($ipath)->size // '';
 
-                $different= ( $lsize == $isize ) ? 0 : 1 ;
-            }else{   
-                $different=1;
+                $different = ( $lsize == $isize ) ? 0 : 1;
+            }
+            else {
+                $different = 1;
             }
 
-        }else{
+        }
+        else {
             # module was not installed at all; need to install
-            $different=1;
+            $different = 1;
         }
 
         # do not install the module if the local and installed versions
         #   are the same
-        next unless $different;
+###rbi_next_unless_different
+        unless ( $self->rbi_force ) {
+            next unless $different;
+        }
 
-        my $mod=$self->module_to_def($module);
+        my $mod = $self->module_to_def($module);
 
-		# $dirmod = e.g. ~/wrk/perlmod/mods/OP-Base
-        my $dirmod = catdir($self->PERLMODDIR, "mods",  $mod );
+        # $dirmod = e.g. ~/wrk/perlmod/mods/OP-Base
+        my $dirmod = catdir( $self->PERLMODDIR, "mods", $mod );
 
         next if ( grep { /^$module$/ } @exclude );
 
-        if (@only) {
-            next unless grep { /^$module$/ } @only;
+        unless ( $self->rbi_discard_loaddat ) {
+            if (@only) {
+                next unless grep { /^$module$/ } @only;
+            }
         }
 
-		if (-e $dirmod){
-        	chdir $dirmod;
-		}else{
-			next;
-		}
-
-###load_modules_order
-    my(@icmds);
-    my $icmd='';
-
-    if (-e "./install.sh"){
-            $icmd='./install.sh';
-	}elsif(-e "Makefile.PL"){
-
-			push(@icmds,'perl Makefile.PL');
-			push(@icmds,'make');
-			push(@icmds,'make test');
-			push(@icmds,'make install');
-
-	}elsif(-e "Build.PL"){
-
-			push(@icmds,'perl ./Build.PL');
-			push(@icmds,'perl ./Build');
-			push(@icmds,'perl ./Build test');
-			push(@icmds,'perl ./Build install');
-
-    }
-    $icmd=join(' && ',@icmds) if @icmds;
-
-    if ($icmd){
-      my $imsg='Installing module: ' . $module;
-      $self->out($imsg);
-      my ( $ok, $error_message, $full_buf, $stdout_buf, $stderr_buf ) =
-        IPC::Cmd::run( command => $icmd, verbose => 0 );
-
-      my $indent=0;
-      my $linelength=50;
-      my %oo=();
-      
-      if ($ok) {
-        push(@ok,$module);
-
-        $indent=$linelength-length('OK')-length($imsg);
-        $oo{indent}=$indent if $indent > 0;
-        $oo{color}='yellow';
-
-        $self->saytext('OK',%oo );
-      } else {
-        push(@fail,$module);
-
-        $indent=$linelength-length('FAIL')-length($imsg);
-        $oo{indent}=$indent if $indent > 0;
-
-        $self->warntext('FAIL', %oo );
-
-        %oo=(color => 'bold red', indent => 5 );
-        my @olines=split("\n",join("",@$full_buf));
-        for(@olines){
-          $self->outtext($_ . "\n",%oo);
+        if ( -e $dirmod ) {
+            chdir $dirmod;
         }
-      }
-		}else{
-	        my $build = Module::Build->new(
-	            module_name => "$module",
-	            license     => 'perl'
-	        );
-	
-	        $self->OP::Script::out("Building module: $module\n",color => 'blue');
-	
-	        #		select $fh{log};
-	        $build->dispatch('build');
-	
-	        #		select STDOUT;
-	        $self->out("Testing module: $module\n");
-	
-	##		select $fh{log};
-	        $build->dispatch( 'test', quiet => 1 );
-	
-	##		select STDOUT;
-	        $self->out("Installing module: $module\n");
-	
-	##		select $fh{log};
-	        $build->dispatch( 'install', install_base => "$ENV{HOME}" );
-		}
-    } # end loop over $mod_def_names
-    foreach my $module (@ok) {
-      $self->saytext("OK: $module",color => 'bold yellow');
+        else {
+            next;
+        }
+
+###rbi_load_modules_order
+        my (@icmds);
+        my $icmd = '';
+
+        if ( -e "./install.sh" ) {
+            $icmd = './install.sh';
+        }
+        elsif ( -e "Makefile.PL" ) {
+###rbi_Makefile_PL
+
+            push( @icmds, 'perl Makefile.PL' );
+            push( @icmds, 'make' );
+            push( @icmds, 'make test' );
+            push( @icmds, 'make install' );
+
+        }
+###rbi_Build_PL
+        elsif ( -e "Build.PL" ) {
+
+            push( @icmds, 'perl ./Build.PL' );
+            push( @icmds, 'perl ./Build' );
+            push( @icmds, 'perl ./Build test' );
+            push( @icmds, 'perl ./Build install' );
+
+        }
+        $icmd = join( ' && ', @icmds ) if @icmds;
+
+        if ($icmd) {
+            my $imsg = 'Installing module: ' . $module;
+            $self->out($imsg);
+            my ( $ok, $error_message, $full_buf, $stdout_buf, $stderr_buf ) =
+              IPC::Cmd::run( command => $icmd, verbose => 0 );
+
+            my $indent     = 0;
+            my $linelength = 50;
+            my %oo         = ();
+
+            if ($ok) {
+###rbi_push_okmods
+                push( @okmods, $module );
+
+                $indent = $linelength - length('OK') - length($imsg);
+                $oo{indent} = $indent if $indent > 0;
+                $oo{color} = 'yellow';
+
+                $self->saytext( 'OK', %oo );
+            }
+            else {
+###rbi_push_failmods
+                push( @failmods, $module );
+
+                $indent = $linelength - length('FAIL') - length($imsg);
+                $oo{indent} = $indent if $indent > 0;
+
+                $self->warntext( 'FAIL', %oo );
+
+                %oo = ( color => 'bold red', indent => 5 );
+                my @olines = split( "\n", join( "", @$full_buf ) );
+                for (@olines) {
+                    $self->outtext( $_ . "\n", %oo );
+###rbi_push_errorlines
+                    push(@{$errorlines->{$module}},$_);
+                }
+            }
+        }
+        else {
+            my $build = Module::Build->new(
+                module_name => "$module",
+                license     => 'perl'
+            );
+
+            $self->OP::Script::out( "Building module: $module\n",
+                color => 'blue' );
+
+            #		select $fh{log};
+            $build->dispatch('build');
+
+            #		select STDOUT;
+            $self->out("Testing module: $module\n");
+
+            ##		select $fh{log};
+            $build->dispatch( 'test', quiet => 1 );
+
+            ##		select STDOUT;
+            $self->out("Installing module: $module\n");
+
+            ##		select $fh{log};
+            $build->dispatch( 'install', install_base => "$ENV{HOME}" );
+        }
+    }    # end loop over $mod_def_names
+    my ( $SUCCESS, $FAIL, $OK, @RESULT );
+    $SUCCESS = 0;
+    $FAIL    = 0;
+    $OK      = 1;
+
+    foreach my $module (@okmods) {
+        $self->saytext( "OK: $module", color => 'bold yellow' );
+        $SUCCESS++;
     }
-    foreach my $module (@fail) {
-      $self->saytext("FAIL: $module",color => 'bold red');
+    foreach my $module (@failmods) {
+        $self->saytext( "FAIL: $module", color => 'bold red' );
+        $FAIL++;
     }
+
+    $OK = 0 if $FAIL;
+    @RESULT = ( $OK, $SUCCESS, $FAIL, \@failmods, $errorlines );
+
+###rbi_@RESULT
+
+    return @RESULT;
 }
 
 # }}}
@@ -689,35 +738,35 @@ sub _complete_cmd() {
 
     while ( my $cmd = shift @$ref_cmds ) {
         foreach ($cmd) {
-            # List of targets 
+
+            # List of targets
 ###complete_ALLPROJS
             /^ALLPROJS$/ && do {
-                push(@comps,$self->PROJS);
+                push( @comps, $self->PROJS );
                 next;
             };
             /^MKTARGETS$/ && do {
-                push(@comps,$self->MKTARGETS);
+                push( @comps, $self->MKTARGETS );
                 next;
             };
 ###complete_sys
             /^sys$/ && do {
-                push(@comps,qw( clear ls  ));
+                push( @comps, qw( clear ls  ) );
                 next;
             };
 ###complete_git
             /^git$/ && do {
-                push(@comps,@$OP::Git::commands);
+                push( @comps, @$OP::Git::commands );
                 next;
             };
         }
     }
-    @comps=sort(uniq(@comps));
+    @comps = sort( uniq(@comps) );
 
     $ref = \@comps if @comps;
 
     return $ref;
 }
-
 
 # _complete_modules() {{{
 
@@ -758,24 +807,26 @@ sub _complete_modules() {
 sub init_vars() {
     my $self = shift;
 
-    $self->PERLMODDIR($ENV{PERLMODDIR} // catfile($ENV{HOME}, qw(wrk perlmod )));
+    $self->PERLMODDIR( $ENV{PERLMODDIR}
+          // catfile( $ENV{HOME}, qw(wrk perlmod ) ) );
 
-	$self->dirs( "mods"  => catfile($self->PERLMODDIR, qw(mods)) );
+    $self->dirs( "mods" => catfile( $self->PERLMODDIR, qw(mods) ) );
     $self->viewcmd("gvim -n -p --remote-tab-silent ");
 
-	$self->_term_get_commands();
+    $self->_term_get_commands();
 
-  $self->moddeps(
-    "Directory::Iterator" => "Directory::Iterator::PP"
-  );
-  $self->textcolor('blue');
-  $self->warncolor('red');
-  $self->usecolor(1);
+    $self->moddeps( "Directory::Iterator" => "Directory::Iterator::PP" );
+    $self->textcolor('blue');
+    $self->warncolor('red');
+    $self->usecolor(1);
+
+    $self->rbi_force(0);
+    $self->rbi_discard_loaddat(0);
 
 }
 
 sub _term_get_commands() {
-	my $self=shift;
+    my $self = shift;
 
     $self->{'shell_commands'} = {
 ###cmd_help
@@ -803,16 +854,16 @@ sub _term_get_commands() {
             proc    => sub { system('pwd'); },
         },
 ###cmd_choose
-		"choose" => {
+        "choose" => {
             desc    => "Choose a module",
             maxargs => 1,
             minargs => 1,
             proc    => sub { $self->choose_modules(shift); },
-            args    => sub { 
+            args    => sub {
                 my $s = shift;
                 $s->suppress_completion_append_character();
-				$self->_complete_modules(@_); 
-			}
+                $self->_complete_modules(@_);
+              }
         },
 ###cmd_nocolor
         "nocolor" => {
@@ -822,13 +873,13 @@ sub _term_get_commands() {
         },
 ###scmd_rbi
         "rbi" => {
-            desc    => "Run-build-install",
-            args    => sub { 
+            desc => "Run-build-install",
+            args => sub {
                 my $s = shift;
                 $s->suppress_completion_append_character();
-				        $self->_complete_modules(@_); 
-			        },
-            proc    => sub { $self->run_build_install(@_); },
+                $self->_complete_modules(@_);
+            },
+            proc => sub { $self->run_build_install(@_); },
         },
 ###scmd_eam
         "eam" => {
@@ -904,6 +955,7 @@ sub _term_get_commands() {
             proc    => sub { $self->edit_modules(shift); },
             args    => sub {
                 my $s = shift;
+
                 #$s->{debug_complete}=5;
                 $s->suppress_completion_append_character();
                 $self->_complete_modules(@_);
@@ -915,7 +967,6 @@ sub _term_get_commands() {
 }
 
 # }}}
-
 
 # main() {{{
 

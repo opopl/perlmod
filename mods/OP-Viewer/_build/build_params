@@ -34,7 +34,7 @@ do{ my $x = [
          'xs_files' => undef,
          'destdir' => undef,
          'metafile' => 'META.yml',
-         'mb_version' => '0.4003',
+         'mb_version' => '0.4',
          'use_tap_harness' => 0,
          'test_file_exts' => [
                                '.t'

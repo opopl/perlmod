@@ -1,3 +1,4 @@
+
 package OP::PackName;
 
 use strict;
@@ -216,10 +217,10 @@ sub getpackstr {
 			}
 		}
 	
-        if ($self->packnames){
+        if ($self->packnames_count){
 		    $str= $self->packnames_join(',');
         }else{
-            die "Could not identify the package name!"
+            $self->_die("Could not identify the package name!");
         }
         $self->moddef(join('/',split('::',$str)) . '.pm');
 

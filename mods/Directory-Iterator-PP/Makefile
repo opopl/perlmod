@@ -161,7 +161,9 @@ C_FILES  =
 O_FILES  = 
 H_FILES  = 
 MAN1PODS = 
-MAN3PODS = lib/Directory/Iterator/PP.pm
+MAN3PODS = -e.examples.pod \
+	-e.help.pod \
+	lib/Directory/Iterator/PP.pm
 
 # Where is the Config information that we are using/depend on
 CONFIGDEP = $(PERL_ARCHLIB)$(DFSEP)Config.pm $(PERL_INC)$(DFSEP)config.h
@@ -183,10 +185,16 @@ PERL_ARCHIVE       =
 PERL_ARCHIVE_AFTER = 
 
 
-TO_INST_PM = lib/Directory/Iterator/PP.pm
+TO_INST_PM = -e.examples.pod \
+	-e.help.pod \
+	lib/Directory/Iterator/PP.pm
 
 PM_TO_BLIB = lib/Directory/Iterator/PP.pm \
-	blib/lib/Directory/Iterator/PP.pm
+	blib/lib/Directory/Iterator/PP.pm \
+	-e.examples.pod \
+	$(INST_LIB)/Directory/Iterator/-e.examples.pod \
+	-e.help.pod \
+	$(INST_LIB)/Directory/Iterator/-e.help.pod
 
 
 # --- MakeMaker platform_constants section:
@@ -408,9 +416,13 @@ POD2MAN = $(POD2MAN_EXE)
 
 
 manifypods : pure_all  \
-	lib/Directory/Iterator/PP.pm
+	lib/Directory/Iterator/PP.pm \
+	-e.examples.pod \
+	-e.help.pod
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
-	  lib/Directory/Iterator/PP.pm $(INST_MAN3DIR)/Directory::Iterator::PP.$(MAN3EXT) 
+	  lib/Directory/Iterator/PP.pm $(INST_MAN3DIR)/Directory::Iterator::PP.$(MAN3EXT) \
+	  -e.examples.pod $(INST_MAN3DIR)/Directory::Iterator::-e.examples.$(MAN3EXT) \
+	  -e.help.pod $(INST_MAN3DIR)/Directory::Iterator::-e.help.$(MAN3EXT) 
 
 
 
@@ -845,7 +857,9 @@ ppd :
 
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
-	  lib/Directory/Iterator/PP.pm blib/lib/Directory/Iterator/PP.pm 
+	  lib/Directory/Iterator/PP.pm blib/lib/Directory/Iterator/PP.pm \
+	  -e.examples.pod $(INST_LIB)/Directory/Iterator/-e.examples.pod \
+	  -e.help.pod $(INST_LIB)/Directory/Iterator/-e.help.pod 
 	$(NOECHO) $(TOUCH) pm_to_blib
 
 

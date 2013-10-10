@@ -24,6 +24,10 @@ use Data::Dumper;
 use IPC::Cmd qw(can_run run);
 
 use OP::Base qw/:vars :funcs/;
+use OP::VIMPERL qw(
+    VimMsg 
+    $UnderVim
+);
 
 our $VERSION     = '0.01';
 
@@ -172,13 +176,10 @@ sub outtext(){
     if ($indent){
         $text=' ' x $indent . $text;
     }
-#
-#    if ( exists &VIM::Eval ) {
-#        require OP::VIMPERL;
-#
-#        OP::VIMPERL::init();
-#        OP::VIMPERL::VimMsg("$text");
-#    }
+
+   if ($UnderVim) {
+      VimMsg("$text",{color => $color});
+   }
 
     print "$text";
 
@@ -1201,7 +1202,7 @@ sub _f_readarr(){
 	my($ref)=@_;
 
 	my $fname=$self->_f_get($ref);
-	return &readarr($fname);
+	return readarr($fname);
 
 }
 

@@ -75,6 +75,7 @@ our %EXPORT_TAGS = (
 						read_TF
 						read_TF_cmd
 						read_line_vars
+                        remove_local_dirs_from_INC
 						skip_lines
 						read_line_char_array
 						sbvars 
@@ -187,6 +188,7 @@ sub read_line_char_array;
 # 
 sub read_TF;
 sub read_TF_cmd;
+sub remove_local_dirs_from_INC;
 sub sbvars;
 sub set_FILES;
 sub setsdata;
@@ -1027,6 +1029,18 @@ sub sbvars{
 
 }
 # }}}
+
+sub remove_local_dirs_from_INC {
+    my @inc;
+    foreach(@INC){
+        unless (/^\Q$DIRS{PERLMOD}/) {
+            push(@inc,shift @INC);
+        }
+    }
+    @INC=@inc;
+
+}
+
 # set_FILES() {{{
 sub set_FILES {
 	foreach my $podo (@allowed_pod_options) {

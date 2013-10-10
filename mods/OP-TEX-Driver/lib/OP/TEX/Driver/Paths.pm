@@ -30,7 +30,7 @@ use warnings;
 
 our %program_path;
 
-$program_path{latex}     = 'latex';
+$program_path{latex}     = 'gtsgtpiklk';
 $program_path{perltex}     = '/usr/bin/perltex';
 $program_path{xelatex}   = '/usr/bin/xelatex';
 $program_path{pdflatex}  = '/usr/bin/pdflatex';

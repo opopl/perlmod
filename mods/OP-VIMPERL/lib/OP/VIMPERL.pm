@@ -17,9 +17,6 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 
 use OP::Base qw( readarr _hash_add );
-use OP::Perl::Installer;
-use OP::PERL::PMINST;
-use OP::PackName;
 use Text::TabularDisplay;
 
 use Data::Dumper;
@@ -61,7 +58,7 @@ my @ex_vars_scalar = qw(
 );
 ###export_vars_hash
 my @ex_vars_hash = qw(
-  %DIRS
+  %VDIRS
 );
 ###export_vars_array
 my @ex_vars_array = qw(
@@ -86,6 +83,7 @@ my @ex_vars_array = qw(
           VimChooseFromPrompt
           VimCreatePrompt
           VimCurBuf_Basename
+          VimCurBuf_Name
           VimCmd
           VimEcho
           VimEditBufFiles
@@ -98,6 +96,7 @@ my @ex_vars_array = qw(
           VimJoin
           VimLen
           VimLet
+          VimLetEval
           VimSet
           VimMsg
           VimMsgDebug
@@ -114,6 +113,8 @@ my @ex_vars_array = qw(
           VimPerlGetModuleNameFromDialog
           VimPieceFullFile
           VimResetVars
+          VimQuickFixList_Add
+          VimQuickFixList_New
           VimSo
           VimSetTags
           VimVar
@@ -130,8 +131,11 @@ sub init_Args;
 sub init_PIECES;
 
 sub VimArg;
+# ----------- buffers -----------------------
 sub VimCurBuf_Basename;
+sub VimCurBuf_Name;
 sub VimBufFiles_Insert_SubName;
+
 sub VimCmd;
 sub VimChooseFromPrompt;
 sub VimCreatePrompt;
@@ -144,6 +148,7 @@ sub VimGrep;
 sub VimInput;
 sub VimJoin;
 sub VimLet;
+sub VimLetEval;
 sub VimSet;
 # -------------- messages --------------------
 sub VimMsg;
@@ -159,9 +164,12 @@ sub VimPerlViewModule;
 sub VimPerlModuleNameFromPath;
 sub VimPerlPathFromModuleName;
 sub VimPerlGetModuleNameFromDialog;
+
 # -------------- vimrc pieces ------------
 sub VimPieceFullFile;
 sub VimResetVars;
+sub VimQuickFixList_Add;
+sub VimQuickFixList_New;
 sub VimSo;
 sub VimSetTags;
 sub VimVar;
@@ -217,7 +225,7 @@ our @PIECES;
 our @LOCALMODULES;
 our ( @Args, @NamedArgs );
 ###our_hash
-our %DIRS;
+our %VDIRS;
 our (@INITIDS);
 
 =head1 SUBROUTINES
@@ -592,21 +600,44 @@ sub VimPerlGetModuleNameFromDialog {
 ##TODO todo_GetModuleName
 
 sub VimPerlGetModuleName {
+    my $module;
 
-    my $path = $CurBuf->{name} // '';
-    my $module = '';
+    while(1){
 
-    unless ($path) {
-        VimMsgE('Failed to get $CurBuf->{name} from OP::VIMPERL');
+        # 1. Check for command-line arguments
+        #
+        if ($NumArgs) {
+            $module=shift @Args;
+            last;
+        }
+	
+        # 2. If no command-line arguments have been supplied,
+        #   check for the current buffer's name
+        #
+        my $path=VimCurBuf_Name;
+	    $module = '';
+	
+	    if($path) {
+	        if ($path =~ /\.pm$/){
+	            $module = VimPerlModuleNameFromPath($path);
+	        }
+        }else{
+        # 3. If fail to get the current buffer's name, pop up a module chooser dialog
+        #
+	        VimMsgE('Failed to get $CurBuf->{name} from OP::VIMPERL');
+	
+	        $module = VimPerlGetModuleNameFromDialog;
+	    }
+	
+	    unless($module){
+	        VimMsg("Module name is zero");
+	    }else{
+	        VimMsg("Module name is set as: $module");
+	        $ModuleName = $module;
+	    }
 
-        $module = VimPerlGetModuleNameFromDialog;
+        last;
     }
-    else {
-        $module = VimPerlModuleNameFromPath($path);
-    }
-    VimMsg("Module name is set as: $module");
-
-    $ModuleName = $module if $module;
 
     return $module;
 
@@ -617,8 +648,11 @@ sub VimPerlPathFromModuleName {
 
     return '' unless $module;
 
+    require OP::PERL::PMINST;
     my $pmi = OP::PERL::PMINST->new;
 
+    require OP::Perl::Installer;
+    
     my $i = OP::Perl::Installer->new;
     $i->main;
 
@@ -631,6 +665,10 @@ sub VimPerlPathFromModuleName {
         searchdirs => $i->module_libdir($module),
     };
 
+    # loading OP::Perl::Installer invoked unshift(@INC)
+    #  for local perl module directories, so we need to exclude
+    #   them  
+    
     $pmi->main($opts);
 
     my @localpaths = $pmi->MPATHS;
@@ -649,6 +687,8 @@ sub VimPerlModuleNameFromPath {
 
     my $module;
 
+    require OP::PackName;
+
     VimMsgDebug('Going to create OP::PackName instance ');
 
     my $p = OP::PackName->new(
@@ -657,16 +697,13 @@ sub VimPerlModuleNameFromPath {
             ifile        => "$path",
         }
     );
+    $p->opts($p->optsnew);
+    $p->ifile($p->opts("ifile"));
 
-    VimMsgDebug( 'Have initialized OP::PackName instance to '
-          . Data::Dumper->Dump( [$p], [qw($p)] ) );
+    VimMsgDebug( Data::Dumper->Dump( [$p], [qw($p)] ) );
 
-    $p->init_vars;
-
-    VimMsgDebug( 'After OP::PackName::init_vars '
-          . Data::Dumper->Dump( [$p], [qw($p)] ) );
-
-    $p->run;
+    $p->notpod(1);
+    $p->getpackstr;
 
     VimMsgDebug(
         'After OP::PackName::run ' . Data::Dumper->Dump( [$p], [qw($p)] ) );
@@ -746,6 +783,26 @@ sub VimMsgNL {
     VimMsg( " ", { prefix => 'none' } );
 }
 
+=head3 VimMsg($text,$options)
+
+=head4 Input variables
+
+=item $text           (SCALAR) - input text to be displayed by Vim
+=item $options        (HASH)   - additional options (color, highlighting etc.)
+
+=over 4
+
+=item Structure of the $options parameter.
+
+=back
+
+=item 
+
+=back
+
+
+=cut
+
 sub VimMsg {
     my $text = shift // '';
 
@@ -779,15 +836,19 @@ sub VimMsg {
         /^subname$/ && do { $prefix = "$FullSubName()> "; next; };
     }
     $prefix = $MsgPrefix if $MsgPrefix;
+    $MsgPrefix=$prefix;
 
     $opts->{hl} = 'WarningMsg' if $opts->{warn};
     $opts->{hl} = 'ErrorMsg'   if $opts->{error};
 
     my $colors = {
-        yellow => 'CursorLineNr',
-        red    => 'WarningMsg',
-        green  => 'DiffChange',
+        yellow          => 'CursorLineNr',
+        'bold yellow'   => 'CursorLineNr',
+        'red'           => 'WarningMsg',
+        'bold red'      => 'WarningMsg',
+        'green'         => 'DiffChange',
     };
+
     my $color = $MsgColor // '';
     $color = $opts->{color} if $opts->{color};
 
@@ -880,6 +941,13 @@ sub VimLet {
 
 }
 
+sub VimLetEval {
+    my ($var,$expr)=@_;
+
+    my $val=VimEval($expr);
+    VimLet($var,$val);
+}
+
 sub VimSet {
     my $opt = shift;
     my $val = shift;
@@ -902,17 +970,74 @@ sub VimMsgDebug {
 ###imod
 
 sub VimPerlInstallModule {
+    my @imodules;
 
-    VimPerlGetModuleName;
+    if ($ArgString eq "_all_"){
+        push(@imodules,@LOCALMODULES);
+    }else{
+        push(@imodules,VimPerlGetModuleName);
+    }
 
-    my $module = $NumArgs ? $ArgString : $ModuleName;
-
+    require OP::Perl::Installer;
     my $i=OP::Perl::Installer->new;
     $i->main;
-    VimMsg("Running install for module $module");
-    $i->run_build_install($module);
+
+    foreach my $module (@imodules) {
+	    # Force to install module, even if the local vs installed versions are the same
+	    $i->rbi_force(1);
+	    # Discard the list of modules from the modules_to_install.i.dat
+	    $i->rbi_discard_loaddat(1);
+	    
+	    VimMsg("Running install for module $module");
+	    my ($ok,$success,$fail,$failmods,$errorlines)=$i->run_build_install($module);
+	    if ($ok){
+###imod_rbi
+	        VimMsg("SUCCESS");
+	    } else {
+	        VimMsg("FAIL");
+	        my $efmperl=catfile($VDIRS{VIMRUNTIME},qw(tools efm_perl.pl));
+	        my $efmfilter=catfile($VDIRS{VIMRUNTIME},qw(tools efm_filter.pl));
+            my $tmpfile=VimEval('tempname()');
+            my $elines=$errorlines->{module} // [];
+            write_file($tmpfile,join("\n",@$elines) . "\n");
+
+            my $qlist;
+            my ($linenumber,$pattern);
+            $qlist={
+                filename  => VimPerlPathFromModuleName($module),
+                lnum  => '20',
+			#text	description of the error
+                text  => '',
+			#type	single-character error type, 'E', 'W', etc.
+                type  => '',
+            };
+###imod_qlist
+			#filename	name of a file; only used when "bufnr" is not
+				#present or it is invalid.
+			#col		column number
+			#vcol	when non-zero: "col" is visual column
+				#when zero: "col" is byte index
+			#nr		error number
+            VimQuickFixList_Add($qlist);
+	    }
+    }
 
 }
+
+sub VimQuickFixList_New {
+
+}
+
+sub VimQuickFixList_Add {
+    my $qlist=shift;
+
+    VimCmd('setqflist(list)');
+
+    VimLet('qlist',$qlist);
+    VimCmd("call setqflist([ qlist ], 'a')");
+
+}
+
 
 sub VimPerlViewModule {
 
@@ -924,6 +1049,7 @@ sub VimPerlViewModule {
         $module = $ArgString;
     }
 
+    # get the local path of the module
     my $path = VimPerlPathFromModuleName($module);
 
     if ( -e $path ) {
@@ -935,7 +1061,7 @@ sub VimPerlViewModule {
 sub VimPieceFullFile {
     my $piece = shift;
 
-    my $path = catfile( $DIRS{MKVIMRC}, $piece . '.vim' );
+    my $path = catfile( $VDIRS{MKVIMRC}, $piece . '.vim' );
 
 }
 
@@ -989,12 +1115,18 @@ sub VimJoin {
 
 }
 
+sub VimCurBuf_Name {
+
+    return VimEval("bufname('%')");
+
+}
+
 sub VimCurBuf_Basename {
     my $opts = shift // '';
 
-    my $name=$CurBuf->{name} // '';
+    my $name=VimCurBuf_Name;
 
-		return $name unless $name;
+	return $name unless $name;
 
     $name = basename( $name );
 
@@ -1078,22 +1210,17 @@ sub init {
 
     my %opts = @_;
 
-    eval 'Vim::Eval("1")';
-    unless ($@) {
-        $UnderVim=1;
-    }else{
-        $UnderVim=0;
-        return;
-    }
-
     unless ( defined $SubName ) {
         $FullSubName = VimVar('g:SubName');
     }
 
     ( $SubName = $FullSubName ) =~ s/^VIMPERL_//g;
 
+    $MsgPrefix="$FullSubName>";
+
     @INITIDS = qw(
       Args
+      VDIRS
       CurBuf
       PIECES
       MODULES
@@ -1101,12 +1228,7 @@ sub init {
 
     @BUFLIST = VIM::Buffers();
 
-    %DIRS = (
-        'TAGS'    => catfile( $ENV{HOME}, 'tags' ),
-        'MKVIMRC' => catfile( $ENV{HOME}, qw( config mk vimrc ) ),
-    );
-
-    @BFILES = ();
+        @BFILES = ();
 
     foreach my $buf (@BUFLIST) {
         my $name = $buf->Name();
@@ -1186,12 +1308,29 @@ sub init_CurBuf {
 }
 
 sub init_PIECES {
-    @PIECES = readarr( catfile( $DIRS{MKVIMRC}, qw(files.i.dat) ) );
+    @PIECES = readarr( catfile( $VDIRS{MKVIMRC}, qw(files.i.dat) ) );
+}
+
+sub init_VDIRS {
+    %VDIRS = (
+        'TAGS'    => catfile( $ENV{HOME}, 'tags' ),
+        'MKVIMRC' => catfile( $ENV{HOME}, qw( config mk vimrc ) ),
+        'VIMRUNTIME'  => $ENV{VIMRUNTIME},
+    );
+
 }
 
 ###BEGIN
 BEGIN {
-    init;
+    eval 'VIM::Eval("1")';
+
+    unless ($@) {
+        $UnderVim=1;
+   		init;
+    }else{
+        $UnderVim=0;
+        return;
+    }
 }
 
 1;

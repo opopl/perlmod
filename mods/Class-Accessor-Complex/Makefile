@@ -45,7 +45,7 @@ LIBC =
 LIB_EXT = .a
 OBJ_EXT = .o
 OSNAME = linux
-OSVERS = 3.5.0-17-generic
+OSVERS = 2.6.38-15-generic-pae
 RANLIB = :
 SITELIBEXP = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/site_perl/5.16.2
 SITEARCHEXP = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/site_perl/5.16.2/i686-linux
@@ -164,8 +164,10 @@ C_FILES  =
 O_FILES  = 
 H_FILES  = 
 MAN1PODS = 
-MAN3PODS = PerlModScript.examples.pod \
-	PerlModScript.help.pod \
+MAN3PODS = -e.examples.pod \
+	-e.help.pod \
+	get_perl_package_name.examples.pod \
+	get_perl_package_name.help.pod \
 	lib/Class/Accessor/Complex.pm
 
 # Where is the Config information that we are using/depend on
@@ -188,16 +190,22 @@ PERL_ARCHIVE       =
 PERL_ARCHIVE_AFTER = 
 
 
-TO_INST_PM = PerlModScript.examples.pod \
-	PerlModScript.help.pod \
+TO_INST_PM = -e.examples.pod \
+	-e.help.pod \
+	get_perl_package_name.examples.pod \
+	get_perl_package_name.help.pod \
 	lib/Class/Accessor/Complex.pm
 
 PM_TO_BLIB = lib/Class/Accessor/Complex.pm \
 	blib/lib/Class/Accessor/Complex.pm \
-	PerlModScript.help.pod \
-	$(INST_LIB)/Class/Accessor/PerlModScript.help.pod \
-	PerlModScript.examples.pod \
-	$(INST_LIB)/Class/Accessor/PerlModScript.examples.pod
+	get_perl_package_name.examples.pod \
+	$(INST_LIB)/Class/Accessor/get_perl_package_name.examples.pod \
+	get_perl_package_name.help.pod \
+	$(INST_LIB)/Class/Accessor/get_perl_package_name.help.pod \
+	-e.examples.pod \
+	$(INST_LIB)/Class/Accessor/-e.examples.pod \
+	-e.help.pod \
+	$(INST_LIB)/Class/Accessor/-e.help.pod
 
 
 # --- MakeMaker platform_constants section:
@@ -420,12 +428,16 @@ POD2MAN = $(POD2MAN_EXE)
 
 manifypods : pure_all  \
 	lib/Class/Accessor/Complex.pm \
-	PerlModScript.help.pod \
-	PerlModScript.examples.pod
+	get_perl_package_name.examples.pod \
+	get_perl_package_name.help.pod \
+	-e.examples.pod \
+	-e.help.pod
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
 	  lib/Class/Accessor/Complex.pm $(INST_MAN3DIR)/Class::Accessor::Complex.$(MAN3EXT) \
-	  PerlModScript.help.pod $(INST_MAN3DIR)/Class::Accessor::PerlModScript.help.$(MAN3EXT) \
-	  PerlModScript.examples.pod $(INST_MAN3DIR)/Class::Accessor::PerlModScript.examples.$(MAN3EXT) 
+	  get_perl_package_name.examples.pod $(INST_MAN3DIR)/Class::Accessor::get_perl_package_name.examples.$(MAN3EXT) \
+	  get_perl_package_name.help.pod $(INST_MAN3DIR)/Class::Accessor::get_perl_package_name.help.$(MAN3EXT) \
+	  -e.examples.pod $(INST_MAN3DIR)/Class::Accessor::-e.examples.$(MAN3EXT) \
+	  -e.help.pod $(INST_MAN3DIR)/Class::Accessor::-e.help.$(MAN3EXT) 
 
 
 
@@ -895,8 +907,10 @@ ppd :
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
 	  lib/Class/Accessor/Complex.pm blib/lib/Class/Accessor/Complex.pm \
-	  PerlModScript.help.pod $(INST_LIB)/Class/Accessor/PerlModScript.help.pod \
-	  PerlModScript.examples.pod $(INST_LIB)/Class/Accessor/PerlModScript.examples.pod 
+	  get_perl_package_name.examples.pod $(INST_LIB)/Class/Accessor/get_perl_package_name.examples.pod \
+	  get_perl_package_name.help.pod $(INST_LIB)/Class/Accessor/get_perl_package_name.help.pod \
+	  -e.examples.pod $(INST_LIB)/Class/Accessor/-e.examples.pod \
+	  -e.help.pod $(INST_LIB)/Class/Accessor/-e.help.pod 
 	$(NOECHO) $(TOUCH) pm_to_blib
 
 
