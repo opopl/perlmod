@@ -98,6 +98,7 @@ my @ex_vars_array = qw(
           VimLet
           VimLetEval
           VimSet
+          VimStrToOpts
           VimMsg
           VimMsgDebug
           VimMsgE
@@ -113,8 +114,7 @@ my @ex_vars_array = qw(
           VimPerlGetModuleNameFromDialog
           VimPieceFullFile
           VimResetVars
-          VimQuickFixList_Add
-          VimQuickFixList_New
+          VimQuickFixList
           VimSo
           VimSetTags
           VimVar
@@ -168,9 +168,9 @@ sub VimPerlGetModuleNameFromDialog;
 # -------------- vimrc pieces ------------
 sub VimPieceFullFile;
 sub VimResetVars;
-sub VimQuickFixList_Add;
-sub VimQuickFixList_New;
+sub VimQuickFixList;
 sub VimSo;
+sub VimStrToOpts;
 sub VimSetTags;
 sub VimVar;
 sub VimVarType;
@@ -602,16 +602,29 @@ sub VimPerlGetModuleNameFromDialog {
 sub VimPerlGetModuleName {
     my $module;
 
-    while(1){
+    my $opts=shift // {};
 
-        # 1. Check for command-line arguments
+    LOOP: while(1){
+
+        # 1. Firstly, check for supplied input options
+        foreach my $k(keys %$opts){
+          for($k){
+            /^selectdialog$/ && do {
+	            $module = VimPerlGetModuleNameFromDialog;
+              last LOOP;
+            };
+          }
+        }
+
+        # 2. Check for command-line arguments
         #
-        if ($NumArgs) {
-            $module=shift @Args;
+        if ($NumArgs > 1) {
+            $module=$Args[1];
             last;
         }
+
 	
-        # 2. If no command-line arguments have been supplied,
+        # 3. If no command-line arguments have been supplied,
         #   check for the current buffer's name
         #
         my $path=VimCurBuf_Name;
@@ -622,7 +635,7 @@ sub VimPerlGetModuleName {
 	            $module = VimPerlModuleNameFromPath($path);
 	        }
         }else{
-        # 3. If fail to get the current buffer's name, pop up a module chooser dialog
+        # 4. If fail to get the current buffer's name, pop up a module chooser dialog
         #
 	        VimMsgE('Failed to get $CurBuf->{name} from OP::VIMPERL');
 	
@@ -941,6 +954,27 @@ sub VimLet {
 
 }
 
+=head3 VimLetEval($var,$expr)
+
+=over 4
+
+=item Assign to the variable $var the result of evaluation of expression $expr.
+
+=item Examples:
+
+=over 4
+
+=item VimLetEval('tempvar','tempname()') - equivalent in vimscript to
+let tempvar=tempname()
+
+=back
+
+=back
+
+
+
+=cut
+
 sub VimLetEval {
     my ($var,$expr)=@_;
 
@@ -966,29 +1000,74 @@ sub VimMsgDebug {
     }
 }
 
+sub VimStrToOpts {
+    my $str=shift;
+    my $sep=shift;
+
+    my $ropts={};
+
+    my @opts=split($sep,$str);
+
+    foreach my $o (@opts) {
+        $ropts->{$o}=1;
+    }
+
+    $ropts;
+
+}
+
 ##TODO todo_PerlInstallModule
 ###imod
+
+=head3 VimPerlInstallModule($opts) Install local Perl module(s)
+
+Input Perl module name is provided through @Args. Additional options are specified
+in the optional hash structure $opts
+
+=cut
 
 sub VimPerlInstallModule {
     my @imodules;
 
-    if ($ArgString eq "_all_"){
+    my $iopts=shift // {};
+    my $opts;
+
+    unless(ref $iopts){
+        $opts=VimStrToOpts($iopts,"|");
+    }elsif(ref $iopts eq "HASH"){
+        $opts=$iopts;
+    }
+
+    if (($NumArgs > 1 ) && ($Args[1] eq "_all_")){
         push(@imodules,@LOCALMODULES);
     }else{
-        push(@imodules,VimPerlGetModuleName);
+        push(@imodules,VimPerlGetModuleName($opts));
     }
 
     require OP::Perl::Installer;
     my $i=OP::Perl::Installer->new;
     $i->main;
 
+    foreach my $opt (keys %$opts) {
+      for($opt){
+        /^rbi_(force|discard_loaddat)$/ && do {
+          my $evs='$i->' . $opt . '(1);' ;
+          eval "$evs";
+          die $@ if $@;
+          next;
+        };
+      }
+    }
+
+	# rbi_force: 
+  #     Force to install module, even if the local vs installed versions are the same
+	# rbi_discard_loaddat: 
+  #     Discard the list of modules from the modules_to_install.i.dat
+
     foreach my $module (@imodules) {
-	    # Force to install module, even if the local vs installed versions are the same
-	    $i->rbi_force(1);
-	    # Discard the list of modules from the modules_to_install.i.dat
-	    $i->rbi_discard_loaddat(1);
-	    
+
 	    VimMsg("Running install for module $module");
+
 	    my ($ok,$success,$fail,$failmods,$errorlines)=$i->run_build_install($module);
 	    if ($ok){
 ###imod_rbi
@@ -1003,39 +1082,74 @@ sub VimPerlInstallModule {
 
             my $qlist;
             my ($linenumber,$pattern);
-            $qlist={
+            $qlist=[ {
                 filename  => VimPerlPathFromModuleName($module),
                 lnum  => '20',
 			#text	description of the error
                 text  => '',
 			#type	single-character error type, 'E', 'W', etc.
                 type  => '',
-            };
+            } ];
 ###imod_qlist
-			#filename	name of a file; only used when "bufnr" is not
-				#present or it is invalid.
-			#col		column number
-			#vcol	when non-zero: "col" is visual column
-				#when zero: "col" is byte index
-			#nr		error number
-            VimQuickFixList_Add($qlist);
+			      VimQuickFixList($qlist,'add');
 	    }
     }
 
 }
 
-sub VimQuickFixList_New {
+=head3 VimQuickFixList($qlist,$action) - apply an action to the quickfix list.
 
-}
+=over 4
 
-sub VimQuickFixList_Add {
+=item Input variables:
+
+=over 4
+
+=item $qlist    (ARRAY) array of hash items which will be added to the quickfix list.
+
+=item $action   (SCALAR) 
+
+=back
+
+=back
+
+=cut
+
+sub VimQuickFixList {
     my $qlist=shift;
+
+    my $action=shift;
+
+    my @arr;
 
     VimCmd('setqflist(list)');
 
-    VimLet('qlist',$qlist);
-    VimCmd("call setqflist([ qlist ], 'a')");
+    if (ref $qlist eq "ARRAY"){
+      @arr=@$qlist;
+    }elsif(ref $qlist eq "HASH"){
+      @arr=[ $qlist ] ;
+    }
 
+    my $i=0;
+    foreach my $a (@arr) {
+
+      VimLet('qlist',$a);
+	    for($action){
+	      /^add$/ && do {
+	        VimCmd("call setqflist(qlist, 'a')");
+	        next;
+	      };
+	      /^new$/ && do {
+          unless($i){
+	          VimCmd("call setqflist(qlist)");
+          }else{
+	          VimCmd("call setqflist(qlist,'a')");
+          }
+	        next;
+	      };
+	    }
+      $i++;
+    }
 }
 
 
