@@ -1,10 +1,10 @@
 OP::Perl::Installer
-OP::Script
-OP::PERL::PMINST
+#OP::Script
+#OP::PERL::PMINST
 OP::VIMPERL
-OP::VIMPERL::TEST
-OP::PackName
-OP::Base
+#OP::VIMPERL::TEST
+#OP::PackName
+#OP::Base
 #Class::Accessor::Complex
 #OP::BIBTEX
 #OP::Base

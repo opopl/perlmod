@@ -604,6 +604,8 @@ sub VimPerlGetModuleName {
 
     my $opts=shift // {};
 
+    VimMsg(Dumper($opts));
+
     LOOP: while(1){
 
         # 1. Firstly, check for supplied input options
@@ -623,7 +625,6 @@ sub VimPerlGetModuleName {
             last;
         }
 
-	
         # 3. If no command-line arguments have been supplied,
         #   check for the current buffer's name
         #
@@ -1000,13 +1001,31 @@ sub VimMsgDebug {
     }
 }
 
+=head3 VimStrToOpts($str,$sep)
+
+=head4 INPUT 
+
+=over 4
+
+=item $str (SCALAR) - input string to be converted.
+=item $sep (SCALAR) - separator between options in the input string.
+
+=back
+
+=head4 OUTPUT
+
+hash reference of the form: { OPTION1 => 1, OPTION2 => 0, etc. }
+
+=cut
+
 sub VimStrToOpts {
     my $str=shift;
     my $sep=shift;
 
     my $ropts={};
 
-    my @opts=split($sep,$str);
+    my @opts=split("$sep",$str);
+    VimMsg('Inside VimStrToOpts: sep=' . $sep . '; @opts=' . Dumper,\@opts);
 
     foreach my $o (@opts) {
         $ropts->{$o}=1;
@@ -1033,7 +1052,7 @@ sub VimPerlInstallModule {
     my $opts;
 
     unless(ref $iopts){
-        $opts=VimStrToOpts($iopts,"|");
+        $opts=VimStrToOpts($iopts,":");
     }elsif(ref $iopts eq "HASH"){
         $opts=$iopts;
     }
@@ -1091,7 +1110,7 @@ sub VimPerlInstallModule {
                 type  => '',
             } ];
 ###imod_qlist
-			      VimQuickFixList($qlist,'add');
+			VimQuickFixList($qlist,'add');
 	    }
     }
 
@@ -1122,8 +1141,6 @@ sub VimQuickFixList {
 
     my @arr;
 
-    VimCmd('setqflist(list)');
-
     if (ref $qlist eq "ARRAY"){
       @arr=@$qlist;
     }elsif(ref $qlist eq "HASH"){
@@ -1133,19 +1150,21 @@ sub VimQuickFixList {
     my $i=0;
     foreach my $a (@arr) {
 
-      VimLet('qlist',$a);
+        VimLet('qlist',$a);
+        VimVarDump('qlist');
+
 	    for($action){
 	      /^add$/ && do {
-	        VimCmd("call setqflist(qlist, 'a')");
-	        next;
+		        VimCmd("call setqflist([ qlist ], 'a')");
+		        next;
 	      };
 	      /^new$/ && do {
-          unless($i){
-	          VimCmd("call setqflist(qlist)");
-          }else{
-	          VimCmd("call setqflist(qlist,'a')");
-          }
-	        next;
+	          unless($i){
+		          VimCmd("call setqflist([ qlist ])");
+	          }else{
+		          VimCmd("call setqflist([ qlist ],'a')");
+	          }
+	          next;
 	      };
 	    }
       $i++;
