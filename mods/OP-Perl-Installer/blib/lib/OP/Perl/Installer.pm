@@ -101,8 +101,9 @@ sub module_to_path() {
     # input: My::Module::Base
     # output My/Module/Base.pm
     my $module = shift;
+
     $module =~ s/$/\.pm/g;
-    ( my $path = $module ) =~ s/::/-/g;
+    ( my $path = $module ) =~ s/::/\//g;
 
     return $path;
 }

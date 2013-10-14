@@ -1020,11 +1020,13 @@ hash reference of the form: { OPTION1 => 1, OPTION2 => 0, etc. }
 
 sub VimStrToOpts {
     my $str=shift;
+
     my $sep=shift;
 
     my $ropts={};
 
     my @opts=split("$sep",$str);
+
     VimMsg('Inside VimStrToOpts: sep=' . $sep . '; @opts=' . Dumper,\@opts);
 
     foreach my $o (@opts) {
@@ -1110,6 +1112,7 @@ sub VimPerlInstallModule {
                 type  => '',
             } ];
 ###imod_qlist
+            print Dumper($qlist);
 			VimQuickFixList($qlist,'add');
 	    }
     }
@@ -1149,9 +1152,8 @@ sub VimQuickFixList {
 
     my $i=0;
     foreach my $a (@arr) {
-
         VimLet('qlist',$a);
-        VimVarDump('qlist');
+        VimMsg("Processing QLIST: " . VimEval('qlist'));
 
 	    for($action){
 	      /^add$/ && do {

@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
 
 package OP::Perl::Installer;
-
 # use ... {{{
 
 use strict;
@@ -101,8 +100,9 @@ sub module_to_path() {
     # input: My::Module::Base
     # output My/Module/Base.pm
     my $module = shift;
+
     $module =~ s/$/\.pm/g;
-    ( my $path = $module ) =~ s/::/-/g;
+    ( my $path = $module ) =~ s/::/\//g;
 
     return $path;
 }
@@ -287,6 +287,7 @@ sub add_modules() {
 sub remove_modules() {
     my $self = shift;
     my ( @modules, %mods, @files );
+
     @modules = split( ',', $opt{rm} );
 
     foreach my $module (@modules) {
