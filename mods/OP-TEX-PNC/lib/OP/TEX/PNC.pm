@@ -74,8 +74,14 @@ sub process_perltex {
         for my $i((3..1)){
 	        if (/^$re{$i}$/) {
 	            my $expr;
+
+                my $argstr;
+                
+                $argstr='($+{a1})'                  if ($i==1);
+                $argstr='($+{a1},$+{a2})'           if ($i==2);
+                $argstr='($+{a1},$+{a2},$+{a3})'    if ($i==3);
 	
-	            my $evs = '$expr=_pnc_' . $pnc . '($+{a1},$+{a2})';
+	            my $evs = '$expr=_pnc_' . $pnc . $argstr;
 	            eval "$evs";
 	            die $@ if $@;
 	

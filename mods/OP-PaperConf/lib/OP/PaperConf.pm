@@ -128,6 +128,9 @@ sub psay {
 
 }
 
+=head3 tex_nice_base
+
+=cut
 
 sub tex_nice_base {
 
@@ -150,7 +153,6 @@ sub tex_nice_base {
                 my $sym = $greek_letters{$lett};
                 s/$lett/\\$sym/g;
             }
-
 
 ##TODO process_perltex
             #$_=process_perltex($_);
@@ -277,6 +279,7 @@ sub init_RE() {
 
 sub init_pfiles() {
 
+###init_pfiles
     # Base paper file
     push( @$pfiles, "p.$bkey.tex" );
     push( @$pfiles, glob("p.$bkey.sec.*.i.tex") );

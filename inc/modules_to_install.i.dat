@@ -13,6 +13,7 @@ OP::PaperConf
 OP::GOPS::MKDEP
 OP::RENAME::PMOD
 OP::Git
+OP::RE
 #OP::GOPS::RIF
 #OP::BIBTEX
 #OP::Base
