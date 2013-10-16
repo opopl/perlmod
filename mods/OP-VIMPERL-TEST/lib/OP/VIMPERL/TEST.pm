@@ -16,6 +16,7 @@ use File::Slurp qw(
 
 use OP::Base qw( ListModuleSubs );
 use OP::VIMPERL qw( :funcs :vars );
+use Data::Dumper;
 
 $VERSION = '0.01';
 @ISA     = qw(Exporter);
@@ -36,14 +37,19 @@ my @ex_vars_array = qw(
 my @tests=qw(
     ListModuleSubs
     VimInput
+    VimLet
     VimChooseFromPrompt
+    UnderVim
 );
 
 s/^/_vimtest_/g for(@tests);
 
 %EXPORT_TAGS = (
 ###export_funcs
-    'funcs' => [ @tests, qw() ],
+    'funcs' => [ @tests, 
+		    qw(
+                  run_vimtests
+		    ) ],
     'vars' => [ @ex_vars_scalar, @ex_vars_array, @ex_vars_hash ]
 );
 
@@ -52,6 +58,8 @@ our @EXPORT = qw( );
 our $VERSION = '0.01';
 
 ###subs
+sub run_vimtests;
+
 sub _vimtest_ListModuleSubs;
 sub _vimtest_VimInput;
 sub _vimtest_VimChoosePrompt;
@@ -64,6 +72,51 @@ sub new {
     my ( $class, %parameters ) = @_;
     my $self = bless( {}, ref($class) || $class );
     return $self;
+}
+
+sub run_vimtests {
+    my @tests=@_;
+
+    foreach my $test (@tests) {
+        my $evs='_vimtest_' . $test . ';' ;
+        eval "$evs";
+        die $@ if $@;
+    }
+}
+
+sub _vimtest_UnderVim {
+
+	if ($UnderVim){
+	    VimMsg("VIM MESSAGE");
+	}else{
+	    print "NON-VIM MESSAGE\n";
+	}
+	
+}
+
+##TODO vimlet
+
+sub _vimtest_VimLet  {
+
+    VimMsg("-----------------------------");
+    VimMsg("Will test VimLet...");
+
+    VimMsg("Testing for hashes.");
+    my $h={};
+
+    my $i=0;
+    foreach my $l (('a'..'z')) {
+        $h->{$i}="$l";
+        $i++;
+    }
+
+    VimLet('h',$h); # ok
+
+    VimMsg(Dumper(VimVar('h'))); #$ok
+
+    VimVarEcho('h');
+    VimVarDump('h');
+
 }
 
 sub _vimtest_VimInput {

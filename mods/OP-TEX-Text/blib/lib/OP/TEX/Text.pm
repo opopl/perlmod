@@ -966,6 +966,7 @@ sub hypsetup() {
       . "	pdfauthor={$ref->{author}},"
       . "	colorlinks=true,"
       . "	citecolor=blue,"
+      . "	citebordercolor=green,"
       . "	linkbordercolor=red,"
 
       #. "\n" ."	pdfsubject={},"

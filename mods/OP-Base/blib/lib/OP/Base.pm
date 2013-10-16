@@ -725,7 +725,7 @@ sub read_in_flist{
 			open(F,"<$FILES{flist}") || die $!;
 			@ifs=map { chomp($_); $_; } 
 					grep { (! ( /^\s*#/ || /^\s*$/  )) } <F>;
-			@ifs=sort(&uniq(@ifs));
+			@ifs=sort(uniq(@ifs));
 			close(F);
 			&eoolog("Number of flist-fortran files:\n");
 			&eoolog(" ". scalar(@ifs) . "\n"	);
@@ -879,6 +879,8 @@ sub readarr {
  	push(@vars,@F);
  }
  close(FILE);
+
+ @vars=uniq(@vars);
 
  wantarray ? @vars : \@vars;
 
@@ -1072,10 +1074,17 @@ sub toLower {
 # uniq() {{{
 
 sub uniq {
-   my(@words,%h);
-   %h  = map { $_ => 1 } @_;
-   @words=keys %h;
-   return @words;
+   my(%h,@W);
+
+   my @words=@_;
+
+   foreach my $w (@words) {
+       push(@W,$w) unless defined $h{$w};
+       $h{$w}=1;
+   }
+
+   wantarray ? @W : \@W ;
+
 }
 
 #}}}

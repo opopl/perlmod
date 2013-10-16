@@ -107,6 +107,7 @@ my @ex_vars_array = qw(
           Vim_MsgPrefix
           Vim_MsgDebug
           Vim_Files
+          Vim_Files_DAT
           VimPerlInstallModule
           VimPerlViewModule
           VimPerlModuleNameFromPath
@@ -118,6 +119,7 @@ my @ex_vars_array = qw(
           VimSo
           VimSetTags
           VimVar
+          VimVarEcho
           VimVarType
           VimVarDump
           )
@@ -173,12 +175,13 @@ sub VimSo;
 sub VimStrToOpts;
 sub VimSetTags;
 sub VimVar;
+sub VimVarEcho;
 sub VimVarType;
 sub VimVarDump;
 sub VimLen;
 
 sub Vim_Files;
-
+sub Vim_Files_DAT;
 sub Vim_MsgColor;
 sub Vim_MsgPrefix;
 sub Vim_MsgDebug;
@@ -320,7 +323,7 @@ sub VimVar {
             my @keys = VimVar( 'keys(' . $var . ')' );
 
             foreach my $k (@keys) {
-                $res->{$k} = VimVar( $var . '[' . $k . ']' );
+                $res->{$k} = VimVar( $var . "['" . $k . "']" );
             }
 
             next;
@@ -344,10 +347,34 @@ sub VimVarDump {
 
     my $ref = VimVar($var);
 
-    VIM::Msg("--------------------------------------");
-    VIM::Msg( "Type of Vim variable $var : " . VimVarType($var) );
-    VIM::Msg("Contents of Vim variable $var :");
-    VIM::Msg( Data::Dumper->Dump( [$ref], [$var] ) );
+    VimMsg("--------------------------------------");
+    VimMsg("Type of Vim variable $var : " . VimVarType($var) );
+    VimMsg("Contents of Vim variable $var :");
+    VimMsg( Data::Dumper->Dump( [ $ref ], [ $var ] ) );
+
+}
+
+sub VimVarEcho {
+    my $var = shift;
+
+    my $ref = VimVar($var);
+    my $str='';
+
+    unless(ref $ref){
+        $str=$ref;
+    }elsif(ref $ref eq "ARRAY"){
+        $str.="[ '";
+        $str.=join("', '",@$ref);
+        $str.="' ]";
+    }elsif(ref $ref eq "HASH"){
+        $str.="{ ";
+        while(my($k,$v)=each %{$ref}){
+            $str.="'" . $k . "': '" . $v . "',";
+        }
+        $str.=" }";
+    }
+
+    VimMsg($str);
 
 }
 
@@ -597,8 +624,6 @@ sub VimPerlGetModuleNameFromDialog {
 
 }
 
-##TODO todo_GetModuleName
-
 sub VimPerlGetModuleName {
     my $module;
 
@@ -757,6 +782,14 @@ sub Vim_Files {
     return $file;
 }
 
+sub Vim_Files_DAT {
+    my $id = shift;
+
+    my $file = VimVar("g:datfiles['$id']");
+
+    return $file;
+}
+
 sub VimResetVars {
     my $vars = shift // '';
 
@@ -847,8 +880,9 @@ sub VimMsg {
 
     for ( $opts->{prefix} ) {
         /^none$/ && do { $prefix = ''; next; };
-        /^subname$/ && do { $prefix = "$FullSubName()> "; next; };
+        /^subname$/ && do { $prefix = "$SubName()>> "; next; };
     }
+
     $prefix = $MsgPrefix if $MsgPrefix;
     $MsgPrefix=$prefix;
 
@@ -1037,7 +1071,6 @@ sub VimStrToOpts {
 
 }
 
-##TODO todo_PerlInstallModule
 ###imod
 
 =head3 VimPerlInstallModule($opts) Install local Perl module(s)
@@ -1114,6 +1147,7 @@ sub VimPerlInstallModule {
 ###imod_qlist
             print Dumper($qlist);
 			VimQuickFixList($qlist,'add');
+##TODO todo_quickfix
 	    }
     }
 
@@ -1147,7 +1181,7 @@ sub VimQuickFixList {
     if (ref $qlist eq "ARRAY"){
       @arr=@$qlist;
     }elsif(ref $qlist eq "HASH"){
-      @arr=[ $qlist ] ;
+      @arr=[ $qlist ];
     }
 
     my $i=0;
@@ -1345,13 +1379,11 @@ sub init {
 
     my %opts = @_;
 
-    unless ( defined $SubName ) {
-        $FullSubName = VimVar('g:SubName');
-    }
+    $FullSubName = VimVar('g:SubName');
 
-    ( $SubName = $FullSubName ) =~ s/^VIMPERL_//g;
+    ( $SubName = $FullSubName ) =~ s/^\s*_VIMPERL_//g;
 
-    $MsgPrefix="$FullSubName>";
+    $MsgPrefix="$SubName()>> ";
 
     @INITIDS = qw(
       Args
@@ -1377,9 +1409,9 @@ sub init {
         _die $@ if $@;
     }
 
-    $MsgColor  = VimVar("g:MsgColor");
-    $MsgPrefix = VimVar("g:MsgPrefix");
-    $MsgDebug  = VimVar("g:MsgDebug");
+    #$MsgColor  = VimVar("g:MsgColor");
+    #$MsgPrefix = VimVar("g:MsgPrefix");
+    #$MsgDebug  = VimVar("g:MsgDebug");
 
 }
 

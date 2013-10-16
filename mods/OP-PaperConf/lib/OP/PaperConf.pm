@@ -3,10 +3,19 @@ package OP::PaperConf;
 use strict;
 use warnings;
 
-use File::Slurp qw( edit_file edit_file_lines read_file );
+use File::Slurp qw(
+  append_file
+  edit_file
+  edit_file_lines
+  read_file
+  write_file
+  prepend_file
+);
 use File::Spec::Functions qw(catfile rel2abs curdir );
 use Term::ANSIColor;
 use Data::Dumper;
+
+use OP::TEX::PNC qw( :vars :funcs );
 
 use Exporter ();
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -52,6 +61,7 @@ my @ex_vars_array = qw(
           init_vars
           readdat
           main
+          process_perltex
           read_secorder
           read_seclabels
           update_config
@@ -81,6 +91,7 @@ our %FILES;
 our %COLORS;
 
 sub readdat;
+sub process_perltex;
 sub init_vars;
 sub Fcat;
 sub main;
@@ -117,6 +128,7 @@ sub psay {
 
 }
 
+
 sub tex_nice_base {
 
     &psay("Running tex_nice_base() for key $bkey");
@@ -128,17 +140,27 @@ sub tex_nice_base {
 
 ###loop_pfiles
     foreach my $file (@$pfiles) {
-        edit_file_lines {
+        my @lines = read_file $file;
+
+        foreach (@lines) {
+            chomp;
+            next if /^\s*#/;
 
             foreach my $lett ( keys %greek_letters ) {
                 my $sym = $greek_letters{$lett};
                 s/$lett/\\$sym/g;
             }
 
+
+##TODO process_perltex
+            #$_=process_perltex($_);
+
             foreach my $w ( keys %subsyms ) {
                 my $sym = $subsyms{$w};
                 s/$w/$sym/g;
             }
+
+            s/"(<words>[^"]*?)"/``$+{words}''/g;
 
             s/^(?<tagid>%%page)\s+(?<pagenum>\d+)$/$+{tagid} page_$+{pagenum}/g;
 s/^(?<tagid>%%page)\s+(?<pagetrash>[page_]*(?<pnum>\d+))\s*$/$+{tagid} page_$+{pnum}/g;
@@ -150,7 +172,7 @@ s/^(?<tagid>%%page)\s+(?<pagetrash>[page_]*(?<pnum>\d+))\s*$/$+{tagid} page_$+{p
 s/^(?<tagid>%%section)\s+(?<sectrash>[sec_]*(?<sname>\w+))$/$+{tagid} sec_$+{sname}/g;
 
         }
-        $file;
+        write_file($file,join("\n",@lines) . "\n");
     }
 
 }
@@ -314,6 +336,11 @@ sub init_vars() {
         "warn" => 'bold red',
     );
 
+    @PNC=qw(
+        ienv 
+        pbib
+    );
+
     $texroot = $ENV{'PSH_TEXROOT'} // catfile( "$ENV{hm}", qw(wrk p) )
       // catfile( "$ENV{HOME}", qw(wrk p) );
 
@@ -405,6 +432,8 @@ sub init_vars() {
     );
 
 }
+
+
 
 BEGIN {
     &init_vars();
