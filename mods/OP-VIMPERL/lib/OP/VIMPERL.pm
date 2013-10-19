@@ -84,6 +84,7 @@ my @ex_vars_array = qw(
           VimCreatePrompt
           VimCurBuf_Basename
           VimCurBuf_Name
+          VimCurBuf_Num
           VimCmd
           VimEcho
           VimEditBufFiles
@@ -136,6 +137,7 @@ sub VimArg;
 # ----------- buffers -----------------------
 sub VimCurBuf_Basename;
 sub VimCurBuf_Name;
+sub VimCurBuf_Num;
 sub VimBufFiles_Insert_SubName;
 
 sub VimCmd;
@@ -412,7 +414,6 @@ sub VimGrep {
     my @files;
 
     unless ( ref $ref ) {
-
     }
     elsif ( ref $ref eq "ARRAY" ) {
         @files = @$ref;
@@ -1285,9 +1286,11 @@ sub VimJoin {
 }
 
 sub VimCurBuf_Name {
-
     return VimEval("bufname('%')");
+}
 
+sub VimCurBuf_Num {
+    return VimEval("bufnr('%')");
 }
 
 sub VimCurBuf_Basename {
@@ -1395,7 +1398,7 @@ sub init {
 
     @BUFLIST = VIM::Buffers();
 
-        @BFILES = ();
+    @BFILES = ();
 
     foreach my $buf (@BUFLIST) {
         my $name = $buf->Name();

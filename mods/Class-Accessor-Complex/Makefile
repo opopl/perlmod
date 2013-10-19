@@ -164,11 +164,8 @@ C_FILES  =
 O_FILES  = 
 H_FILES  = 
 MAN1PODS = 
-MAN3PODS = -e.examples.pod \
-	-e.help.pod \
-	get_perl_package_name.examples.pod \
-	get_perl_package_name.help.pod \
-	lib/Class/Accessor/Complex.pm
+MAN3PODS = lib/Class/Accessor/Complex.pm \
+	tex_nice.pl
 
 # Where is the Config information that we are using/depend on
 CONFIGDEP = $(PERL_ARCHLIB)$(DFSEP)Config.pm $(PERL_INC)$(DFSEP)config.h
@@ -190,22 +187,13 @@ PERL_ARCHIVE       =
 PERL_ARCHIVE_AFTER = 
 
 
-TO_INST_PM = -e.examples.pod \
-	-e.help.pod \
-	get_perl_package_name.examples.pod \
-	get_perl_package_name.help.pod \
-	lib/Class/Accessor/Complex.pm
+TO_INST_PM = lib/Class/Accessor/Complex.pm \
+	tex_nice.pl
 
-PM_TO_BLIB = lib/Class/Accessor/Complex.pm \
-	blib/lib/Class/Accessor/Complex.pm \
-	get_perl_package_name.examples.pod \
-	$(INST_LIB)/Class/Accessor/get_perl_package_name.examples.pod \
-	get_perl_package_name.help.pod \
-	$(INST_LIB)/Class/Accessor/get_perl_package_name.help.pod \
-	-e.examples.pod \
-	$(INST_LIB)/Class/Accessor/-e.examples.pod \
-	-e.help.pod \
-	$(INST_LIB)/Class/Accessor/-e.help.pod
+PM_TO_BLIB = tex_nice.pl \
+	$(INST_LIB)/Class/Accessor/tex_nice.pl \
+	lib/Class/Accessor/Complex.pm \
+	blib/lib/Class/Accessor/Complex.pm
 
 
 # --- MakeMaker platform_constants section:
@@ -427,17 +415,11 @@ POD2MAN = $(POD2MAN_EXE)
 
 
 manifypods : pure_all  \
-	lib/Class/Accessor/Complex.pm \
-	get_perl_package_name.examples.pod \
-	get_perl_package_name.help.pod \
-	-e.examples.pod \
-	-e.help.pod
+	tex_nice.pl \
+	lib/Class/Accessor/Complex.pm
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
-	  lib/Class/Accessor/Complex.pm $(INST_MAN3DIR)/Class::Accessor::Complex.$(MAN3EXT) \
-	  get_perl_package_name.examples.pod $(INST_MAN3DIR)/Class::Accessor::get_perl_package_name.examples.$(MAN3EXT) \
-	  get_perl_package_name.help.pod $(INST_MAN3DIR)/Class::Accessor::get_perl_package_name.help.$(MAN3EXT) \
-	  -e.examples.pod $(INST_MAN3DIR)/Class::Accessor::-e.examples.$(MAN3EXT) \
-	  -e.help.pod $(INST_MAN3DIR)/Class::Accessor::-e.help.$(MAN3EXT) 
+	  tex_nice.pl $(INST_MAN3DIR)/Class::Accessor::tex_nice.$(MAN3EXT) \
+	  lib/Class/Accessor/Complex.pm $(INST_MAN3DIR)/Class::Accessor::Complex.$(MAN3EXT) 
 
 
 
@@ -906,11 +888,8 @@ ppd :
 
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
-	  lib/Class/Accessor/Complex.pm blib/lib/Class/Accessor/Complex.pm \
-	  get_perl_package_name.examples.pod $(INST_LIB)/Class/Accessor/get_perl_package_name.examples.pod \
-	  get_perl_package_name.help.pod $(INST_LIB)/Class/Accessor/get_perl_package_name.help.pod \
-	  -e.examples.pod $(INST_LIB)/Class/Accessor/-e.examples.pod \
-	  -e.help.pod $(INST_LIB)/Class/Accessor/-e.help.pod 
+	  tex_nice.pl $(INST_LIB)/Class/Accessor/tex_nice.pl \
+	  lib/Class/Accessor/Complex.pm blib/lib/Class/Accessor/Complex.pm 
 	$(NOECHO) $(TOUCH) pm_to_blib
 
 

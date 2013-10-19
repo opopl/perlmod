@@ -37,10 +37,10 @@ our $VERSION = '0.01';
 our %REX=(
 ###_figp
     figp  => qr/
-            \\figp{(?<size>\w+)}(%+\n*|)
-            {(?<num>\w+)}(%+\n*|)
+            \\figp\{(?<size>\w+)\}(%+\n*|)
+            \{(?<num>\w+)\}(%+\n*|)
             (\[(?<short>.*)\]|)(%+\n*|)
-            {(?<caption>.*)}
+            \{(?<caption>.*)\}
             /x
 );
 

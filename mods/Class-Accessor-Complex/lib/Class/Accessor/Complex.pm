@@ -194,6 +194,40 @@ EODOC
             examples   => ["\$obj->$print_methods[0];"],
             belongs_to => $field,
         );
+###scalar_apply_re
+    my @apply_re_methods = uniq "apply_re_${field}", "${field}_apply_re";
+        for my $name (@apply_re_methods) {
+            $self->install_accessor(
+                name => $name,
+                code => sub {
+                    local $DB::sub = local *__ANON__ = "${class}::${name}"
+                      if defined &DB::DB && !$Devel::DProf::VERSION;
+
+                    my $self=shift;
+
+                    my $re=shift;
+                    my $evs='$self->{$field} =~ ' . $re . ';' ;
+
+                    eval "$evs";
+
+                    if ($@){
+                        my $text=""
+                            . "(Class::Accessor::Complex) Failure at $field" . "_apply_re"  . "\n"
+                            . " \$re=$re" . "\n"
+                            . " Error message is" . "\n"
+                            . " $@";
+
+                        die $text;
+                    }
+                },
+            );
+        }
+        $self->document_accessor(
+            name       => \@apply_re_methods,
+            purpose    => 'Change the value by apply_reing smth.',
+            examples   => ["\$obj->$apply_re_methods[0];"],
+            belongs_to => $field,
+        );
 ###scalar_eq
     my @eq_methods = uniq "eq_${field}", "${field}_eq";
         for my $name (@eq_methods) {
@@ -219,6 +253,41 @@ EODOC
             belongs_to => $field,
         );
 
+###scalar_selfact
+    my @selfact_methods = uniq "selfact_${field}", "${field}_selfact";
+        for my $name (@selfact_methods) {
+            $self->install_accessor(
+                name => $name,
+                code => sub {
+                    local $DB::sub = local *__ANON__ = "${class}::${name}"
+                      if defined &DB::DB && !$Devel::DProf::VERSION;
+
+                    my $self=shift;
+                    my $action=shift;
+
+                    my $evs=$action . '($self->{$field});' ;
+                    eval "$evs";
+
+                    if ($@){
+                        my $text=""
+                            . "(Class::Accessor::Complex) Failure at $field" . "_selfact"  . "\n"
+                            . " \$action = $action" . "\n"
+                            . " Error message is" . "\n"
+                            . " $@";
+
+                        die $text;
+                    }
+
+                },
+            );
+        }
+        $self->document_accessor(
+            name       => \@selfact_methods,
+            purpose    => 'Change the value by selfacting smth.',
+            examples   => ["\$obj->$selfact_methods[0];"],
+            belongs_to => $field,
+        );
+###scalar_END
     }
     $self;    # for chaining
 }

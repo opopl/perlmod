@@ -268,7 +268,7 @@ sub end() {
 
 # documentclass () {{{
 
-=head3 documentclass () {{{
+=head3 documentclass()
 
 =cut
 
@@ -309,8 +309,6 @@ sub documentclass() {
     $self->_add_line($s);
 
 }
-
-# }}}
 
 sub date() {
     my $self = shift;
@@ -683,6 +681,14 @@ sub abstract () {
     $self->end('abstract');
 }
 
+sub anchor () {
+    my $self = shift;
+
+    my $anchor = shift;
+
+    $self->_add_line("%%%$anchor");
+}
+
 sub bibliography() {
     my $self = shift;
 
@@ -868,9 +874,12 @@ sub preamble() {
         #	Generate LaTeX code for the list of used packages
         if ($usedpacks) {
 
+            my @packifs;
+
             $self->_c_delim;
             $self->_c("List of used packages");
             $self->_c_delim;
+            $self->anchor("used_packages");
 
             foreach my $pack (@$usedpacks) {
                 my $opts = $packopts->{$pack} // '';
@@ -878,6 +887,11 @@ sub preamble() {
                 $s_opts = "[$opts]" if $opts;
                 my $text = "\\usepackage" . $s_opts . "{$pack}";
                 $self->_add_line("$text");
+                push(@packifs,"\\newif\\ifPACK$pack\\PACK$pack" . "true");
+            }
+            $self->_c_delim;
+            foreach my $pif  (@packifs) {
+                $self->_add_line("$pif");
             }
             $self->_c_delim;
         }
@@ -946,39 +960,55 @@ sub hypertarget() {
 sub hypsetup() {
     my $self = shift;
 
-    my $ref = shift // '';
+    my $iref = shift // '';
+    my $ref;
+
+    my @keys=qw(pdfauthor pdftitle);
+    foreach my $k (@keys) {
+        $ref->{$k}='';
+    }
+    $ref=_hash_add($ref,$iref);
 
     $self->_die("Author name was not specified in hypsetup()")
-      unless defined $ref->{author};
+      unless  $ref->{pdfauthor};
     $self->_die("Title was not specified in hypsetup()")
-      unless defined $ref->{title};
+      unless  $ref->{pdftitle};
 
     my $text;
 
-    $text =
-        "\\ifpdf" . "\n"
-      . "\\pdfinfo{" . "\n"
-      . "   /Author ($ref->{author})" . "\n"
-      . "   /Title  ($ref->{title})" . "\n" . "}" . "\n"
-      . "\\else" . "\n"
-      . "\\hypersetup{" . "\n"
-      . "	pdftitle={$ref->{title}}," . "\n"
-      . "	pdfauthor={$ref->{author}},"
-      . "	colorlinks=true,"
-      . "	citecolor=blue,"
-      . "	citebordercolor=green,"
-      . "	linkbordercolor=red,"
+##TODO hypsetup
+    $text='';
 
-      #. "\n" ."	pdfsubject={},"
-      #. "\n" ."	pdfkeywords={},"
-      #. "\n" ."	bookmarksnumbered,"
-      #. "\n" ."	hyperfigures=true,"
-      #. "\n" ."	bookmarksdepth=subparagraph"
-      . "\n" . "}" . "\n" . "\\fi";
+    my $pdfinfo='';
+    $pdfinfo.= '   /Author (' . $ref->{pdfauthor} . ')' .$endl ;
+    $pdfinfo.= '   /Title  (' . $ref->{pdftitle} .  ')' .$endl ;
+
+    $text.='\ifpdf'                               .$endl ;
+    $text.='\pdfinfo{'                            .$endl ;
+    $text.=$pdfinfo                                      ;
+    $text.='}'                                    .$endl ;
+    $text.='\else'                                .$endl ;
+    $text.='\hypersetup{'                         .$endl ;
+
+    my $indent=' ' x 5;
+
+    while(my($k,$v)=each %{$ref}){
+        if($v == 1){
+            $text.=$indent . $k  . ','                  .$endl ;
+        }elsif($k =~ /^pdf(title|author)$/){
+            $text.=$indent . $k . "={" . $v . "},"      .$endl ;
+
+        }else{
+            $text.=$indent . $k . '=' . $v . ','        .$endl ;
+        }
+    }
+    $text.='}'                                    .$endl ;
+    $text.='\fi'                                  .$endl ;
 
     $self->_c_delim;
     $self->_c("Hypersetup (for hyperlinked PDFs)");
     $self->_c_delim;
+    $self->anchor("hypersetup");
     $self->_add_line("$text");
     $self->_c_delim;
 

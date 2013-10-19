@@ -87,8 +87,10 @@ our %EXPORT_TAGS = (
 						) ],
 		# }}}
 		# 'vars' 		{{{
+###export_vars
 		'vars' 		=>  [ qw( 
 					$cmdline
+                    $endl
 					$ncmdopts
 					$pref_eoo 
 					$ts 
@@ -126,6 +128,7 @@ our $VERSION = '0.01';
 # }}}
 # vars{{{
 
+###our
 our($ts,$pref_eoo,@allowed_pod_options);
 our(%DATFILES,%FILES,%DIRS,%sdata,@cmdopts,$ncmdopts,@opthaspar);
 our(%opt,%opts,@optstr,@longopts);
@@ -135,6 +138,8 @@ our(@constvars);
 our(%shortlongopts);
 our(%vars,%lgvars);
 our(@true,@false);
+
+our $endl;
 
 our %eval_sw=(
 	true	=>	1,
@@ -1023,6 +1028,8 @@ sub sbvars{
 	 pod	 => "pod",
      PERLMOD  => $ENV{PERLMODDIR} // catfile($ENV{HOME}, qw(wrk perlmod)),
  );
+
+ $endl="\n";
 
 
  foreach my $k (keys %DIRS) {

@@ -154,6 +154,12 @@ sub tex_nice_base {
                 s/$lett/\\$sym/g;
             }
 
+            my $i=1;
+		    foreach my $sec (@secorder) {
+                s/refsec\{$i\}/refsec{$sec}/g;
+                $i++;
+		    }
+
 ##TODO process_perltex
             #$_=process_perltex($_);
 
@@ -161,14 +167,31 @@ sub tex_nice_base {
                 my $sym = $subsyms{$w};
                 s/$w/$sym/g;
             }
+            
+            /(?<before>.*)\\cite\{(?<cites>[\w\s,]+)\}(?<after>.*)/ && do {
+                my @keys=split(',',$+{cites});
+                my $newstr='';
+                foreach my $k (@keys) {
+                    $k='\cite{' . $k . '}';
+                }
+                $newstr.=join(',',@keys);
+                $_=$+{before} . $newstr . $+{after};
+            };
 
-            s/"(<words>[^"]*?)"/``$+{words}''/g;
+            s/[,]{2,}//g;
 
-            s/^(?<tagid>%%page)\s+(?<pagenum>\d+)$/$+{tagid} page_$+{pagenum}/g;
+            s/"(?<words>[\w\s,\-]+)"/``$+{words}''/g;
+
+            s/^(?<tagid>%%page)\s+(?<pagenum>.+)$/$+{tagid} page_$+{pagenum}/g;
 s/^(?<tagid>%%page)\s+(?<pagetrash>[page_]*(?<pnum>\d+))\s*$/$+{tagid} page_$+{pnum}/g;
+            s/page_page/page/g;
 
-            s/^(?<tagid>%%equation)\s+(?<eqnum>\d+)/$+{tagid} eq_$+{eqnum}/g;
-            s/^(?<tagid>%%figure)\s+(?<fignum>\d+)/$+{tagid} fig_$+{fignum}/g;
+            s/^(?<tagid>%%equation)\s+(?<eqnum>.+)/$+{tagid} eq_$+{eqnum}/g;
+            s/eq_eq_eq/eq/g;
+            s/eq_eq/eq/g;
+
+            s/^(?<tagid>%%figure)\s+(?<fignum>.+)/$+{tagid} fig_$+{fignum}/g;
+            s/fig_fig/fig/g;
 
             s/^(?<tagid>%%section)\s+(?<secname>.*)/$+{tagid} sec_$+{secname}/g;
 s/^(?<tagid>%%section)\s+(?<sectrash>[sec_]*(?<sname>\w+))$/$+{tagid} sec_$+{sname}/g;
@@ -286,6 +309,10 @@ sub init_pfiles() {
     push( @$pfiles, glob("p.$bkey.fig.*.tex") );
 
     foreach my $piece ( @{ $config->{include_tex_parts} } ) {
+        push( @$pfiles, "p.$bkey.$piece.tex" );
+    }
+
+    foreach my $piece ( qw(abs not) ) {
         push( @$pfiles, "p.$bkey.$piece.tex" );
     }
 
