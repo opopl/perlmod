@@ -161,11 +161,18 @@ foreach my $delegate (@tested_delegates) {
 }
 
 # defaults for LIBS & INC & CCFLAGS params that we later pass to Writemakefile
-my $INC_magick = '-I/usr/local/include/ImageMagick -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=16 -I/usr/include/libxml2 -I"' . $Config{'usrinc'} . '/ImageMagick"';
-my $LIBS_magick = '-L/usr/local/lib -lMagickCore-Q16 -lperl -lm';
+my $PREFIX=$ENV{HOME};
+my $LIBS="-L/usr/local/lib -L$PREFIX/lib -lMagickCore-Q16";
+my $INCL='-I/usr/local/include/ImageMagick';
+$INCL.=" -I$PREFIX/include/ImageMagick";
+
+my $INC_magick = $INCL . ' -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=16 -I/usr/include/libxml2 -I"' . $Config{'usrinc'} . '/ImageMagick"';
+
 my $CCFLAGS_magick = "$Config{'ccflags'} -I/usr/include/freetype2 -fopenmp -g -O2 -Wall -pthread -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=16";
-my $LDFLAGS_magick   = "-L/usr/local/lib -lMagickCore-Q16 $Config{'ldflags'} ";
-my $LDDLFLAGS_magick = "-L/usr/local/lib -lMagickCore-Q16 $Config{'lddlflags'} ";
+
+my $LIBS_magick = "$LIBS -lperl -lm";
+my $LDFLAGS_magick= "$LIBS $Config{'ldflags'} ";
+my $LDDLFLAGS_magick = "$LIBS $Config{'lddlflags'} ";
 
 if (($^O eq 'MSWin32') && ($Config{cc} =~ /gcc/)) {
   my($Ipaths, $Lpaths) = AutodetectWin32gcc();
@@ -182,6 +189,7 @@ if (($^O eq 'MSWin32') && ($Config{cc} =~ /gcc/)) {
 
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
+###WriteMakefile
 WriteMakefile
   (
    # Module description
@@ -238,7 +246,9 @@ WriteMakefile
    'LD' => '',
 
    # Set Perl installation prefix to ImageMagick installation prefix
-   # 'PREFIX'	=> '/usr/local',
+###WriteMakefile_PREFIX
+   #'PREFIX'	=> '/usr/local',
+   'PREFIX'	=> $ENV{HOME},
 
    # Include delegate directories in tests
    test	=> { TESTS	=>	$delegate_tests},

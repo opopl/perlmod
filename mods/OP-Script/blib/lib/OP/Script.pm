@@ -18,6 +18,7 @@ use File::Basename;
 use File::Util;
 use Getopt::Long;
 use Pod::Usage;
+use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 
 use Term::ANSIColor;
 use Data::Dumper;
@@ -562,6 +563,35 @@ sub set_these_cmdopts(){
 
 # }}}
 #=================================
+
+sub VARS_to_accessors {
+    my $self=shift;
+
+    my $vars=shift;
+
+    foreach my $var (@$vars) {
+        my $evs='$self->' . $var . '($self->VARS("' . $var . '"));' ; 
+        eval "$evs";
+        die $@ if $@;
+    }
+
+}
+
+sub init_docstyles {
+    my $self=shift;
+
+    opendir(D,catfile($self->texroot,qw(docstyles)));
+    $self->docstyles_clear;
+    while(my $f=readdir(D)){
+        next if (grep { /^$f$/ } qw( . .. ));
+
+        my $ds=$f;
+        $self->docstyles_push($ds);
+    }
+    closedir(D);
+}
+
+
 # opts_to_vars() {{{
 
 sub opts_to_scalar_vars(){

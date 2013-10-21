@@ -938,7 +938,9 @@ sub readhash{
 
 		if (@F){ 
 			$hash{$var}=join(" ",@F); 
-		}
+		}else{
+			$hash{$var}=''; 
+        }
 	
 	}else{
 		$hash{$var}.=$line; 

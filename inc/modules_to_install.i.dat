@@ -14,6 +14,10 @@ OP::GOPS::MKDEP
 OP::RENAME::PMOD
 OP::Git
 OP::RE
+OP::Script::Simple
+OP::PAPERS::PSH
+#OP::LATEXMK::VARS
+#PerlMagick
 #OP::GOPS::RIF
 #OP::BIBTEX
 #OP::Base

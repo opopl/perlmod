@@ -164,8 +164,7 @@ C_FILES  =
 O_FILES  = 
 H_FILES  = 
 MAN1PODS = 
-MAN3PODS = lib/Class/Accessor/Complex.pm \
-	tex_nice.pl
+MAN3PODS = lib/Class/Accessor/Complex.pm
 
 # Where is the Config information that we are using/depend on
 CONFIGDEP = $(PERL_ARCHLIB)$(DFSEP)Config.pm $(PERL_INC)$(DFSEP)config.h
@@ -187,12 +186,9 @@ PERL_ARCHIVE       =
 PERL_ARCHIVE_AFTER = 
 
 
-TO_INST_PM = lib/Class/Accessor/Complex.pm \
-	tex_nice.pl
+TO_INST_PM = lib/Class/Accessor/Complex.pm
 
-PM_TO_BLIB = tex_nice.pl \
-	$(INST_LIB)/Class/Accessor/tex_nice.pl \
-	lib/Class/Accessor/Complex.pm \
+PM_TO_BLIB = lib/Class/Accessor/Complex.pm \
 	blib/lib/Class/Accessor/Complex.pm
 
 
@@ -415,10 +411,8 @@ POD2MAN = $(POD2MAN_EXE)
 
 
 manifypods : pure_all  \
-	tex_nice.pl \
 	lib/Class/Accessor/Complex.pm
 	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
-	  tex_nice.pl $(INST_MAN3DIR)/Class::Accessor::tex_nice.$(MAN3EXT) \
 	  lib/Class/Accessor/Complex.pm $(INST_MAN3DIR)/Class::Accessor::Complex.$(MAN3EXT) 
 
 
@@ -888,7 +882,6 @@ ppd :
 
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
-	  tex_nice.pl $(INST_LIB)/Class/Accessor/tex_nice.pl \
 	  lib/Class/Accessor/Complex.pm blib/lib/Class/Accessor/Complex.pm 
 	$(NOECHO) $(TOUCH) pm_to_blib
 

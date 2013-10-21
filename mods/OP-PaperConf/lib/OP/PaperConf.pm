@@ -34,6 +34,8 @@ my @ex_vars_scalar = qw(
   $eqs_h_order
   $figs_h
   $figs_h_order
+  $tabs_h
+  $tabs_h_order
   $pfiles
   $refs_h
   $refs_h_order
@@ -80,8 +82,8 @@ our @EXPORT  = qw( );
 our $VERSION = '0.01';
 
 ###our
-our ( $refs_h, $eqs_h, $figs_h, $bkey, $config, $texroot );
-our ( $refs_h_order,  $eqs_h_order, $figs_h_order );
+our ( $refs_h, $eqs_h, $figs_h, $tabs_h, $bkey, $config, $texroot );
+our ( $refs_h_order,  $eqs_h_order, $figs_h_order, $tabs_h_order );
 our ( %greek_letters, %subsyms,     %RE );
 our $pfiles;
 our $viewfiles;
@@ -143,6 +145,8 @@ sub tex_nice_base {
 
 ###loop_pfiles
     foreach my $file (@$pfiles) {
+        next unless -e $file;
+
         my @lines = read_file $file;
 
         foreach (@lines) {
@@ -180,7 +184,9 @@ sub tex_nice_base {
 
             s/[,]{2,}//g;
 
-            s/"(?<words>[\w\s,\-]+)"/``$+{words}''/g;
+            unless(grep { /^$bkey$/ } qw( GoossensLATEXWEB )){
+                s/"(?<words>[\w\s,\-]+)"/``$+{words}''/g;
+            }
 
             s/^(?<tagid>%%page)\s+(?<pagenum>.+)$/$+{tagid} page_$+{pagenum}/g;
 s/^(?<tagid>%%page)\s+(?<pagetrash>[page_]*(?<pnum>\d+))\s*$/$+{tagid} page_$+{pnum}/g;
@@ -204,7 +210,7 @@ s/^(?<tagid>%%section)\s+(?<sectrash>[sec_]*(?<sname>\w+))$/$+{tagid} sec_$+{sna
 
 sub readdat() {
 
-    foreach my $id (qw( refs eqs figs )) {
+    foreach my $id (qw( refs eqs figs tabs )) {
         my $fdat = catfile( $texroot, "p." . $bkey . ".$id.i.dat" );
         my ( $H, $HORDER );
 

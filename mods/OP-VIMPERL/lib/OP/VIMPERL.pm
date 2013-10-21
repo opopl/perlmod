@@ -92,6 +92,9 @@ my @ex_vars_array = qw(
           VimExists
           VimPerlGetModuleName
           VimGetFromChooseDialog
+          VimGetLine
+          VimSetLine
+          VimAppend
           VimGrep
           VimInput
           VimJoin
@@ -148,6 +151,9 @@ sub VimEditBufFiles;
 sub VimEval;
 sub VimExists;
 sub VimGetFromChooseDialog;
+sub VimGetLine;
+sub VimSetLine;
+sub VimAppend;
 sub VimGrep;
 sub VimInput;
 sub VimJoin;
@@ -1234,6 +1240,35 @@ sub VimPieceFullFile {
     my $path = catfile( $VDIRS{MKVIMRC}, $piece . '.vim' );
 
 }
+
+sub VimGetLine {
+    my $num=shift;
+
+    VimLet('num',$num);
+
+    return VimEval('getline(num)');
+}
+
+sub VimSetLine {
+    my $num=shift;
+    my $text=shift;
+
+    VimLet('num',$num);
+    VimLet('text',$text);
+
+    VimCmd('call setline(num,text)');
+}
+
+sub VimAppend {
+    my $num=shift;
+    my $text=shift;
+
+    VimLet('text',$text);
+    VimLet('num',$num);
+
+    VimCmd('call append(num,text)');
+}
+
 
 sub VimSetTags {
     my $ref = shift;

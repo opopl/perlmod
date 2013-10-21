@@ -103,10 +103,8 @@ sub _cmd() {
             $self->_die("_cmd(): Did not specify the list of variables!")
               unless $cmd;
         }
-        elsif ( scalar @opts == 1 ) {
-
-            # Single variable
-            $text .= "{$opts[0]}";
+        else{
+            $text .= "{" . join("}{",map { length($_) ? $_ : ()  } @opts) . "}";
         }
     }
     elsif ( ref $ref eq "HASH" ) {
@@ -324,9 +322,11 @@ sub begin() {
     my $self = shift;
 
     my $x = shift // '';
+    my $opts = shift // '';
+
     return 1 unless $x;
 
-    $self->_cmd( "begin", $x );
+    $self->_cmd( "begin", $x, $opts );
 
 }
 
@@ -979,15 +979,6 @@ sub hypsetup() {
 ##TODO hypsetup
     $text='';
 
-    my $pdfinfo='';
-    $pdfinfo.= '   /Author (' . $ref->{pdfauthor} . ')' .$endl ;
-    $pdfinfo.= '   /Title  (' . $ref->{pdftitle} .  ')' .$endl ;
-
-    $text.='\ifpdf'                               .$endl ;
-    $text.='\pdfinfo{'                            .$endl ;
-    $text.=$pdfinfo                                      ;
-    $text.='}'                                    .$endl ;
-    $text.='\else'                                .$endl ;
     $text.='\hypersetup{'                         .$endl ;
 
     my $indent=' ' x 5;
@@ -995,7 +986,7 @@ sub hypsetup() {
     while(my($k,$v)=each %{$ref}){
         if($v == 1){
             $text.=$indent . $k  . ','                  .$endl ;
-        }elsif($k =~ /^pdf(title|author)$/){
+        }elsif($k =~ /^pdf(title|author|view)$/){
             $text.=$indent . $k . "={" . $v . "},"      .$endl ;
 
         }else{
@@ -1003,7 +994,6 @@ sub hypsetup() {
         }
     }
     $text.='}'                                    .$endl ;
-    $text.='\fi'                                  .$endl ;
 
     $self->_c_delim;
     $self->_c("Hypersetup (for hyperlinked PDFs)");

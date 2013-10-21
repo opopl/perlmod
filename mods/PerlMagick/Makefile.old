@@ -6,7 +6,7 @@
 #
 #       ANY CHANGES MADE HERE WILL BE LOST!
 #
-#   MakeMaker ARGV: (q[PREFIX=/home/op])
+#   MakeMaker ARGV: (q[PREFIX=/home/op], q[INSTALLBIN=/home/op/bin])
 #
 
 #   MakeMaker Parameters:
@@ -18,15 +18,16 @@
 #     CCFLAGS => q[-fno-strict-aliasing -pipe -fstack-protector -I/usr/local/include -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -I/usr/include/freetype2 -fopenmp -g -O2 -Wall -pthread -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=16]
 #     CONFIGURE_REQUIRES => {  }
 #     DEFINE => q[ -D_LARGE_FILES=1 -DHAVE_CONFIG_H]
-#     INC => q[-I/usr/local/include/ImageMagick -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=16 -I/usr/include/libxml2 -I"/usr/include/ImageMagick"]
+#     INC => q[-I/usr/local/include/ImageMagick -I/home/op/include/ImageMagick -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=16 -I/usr/include/libxml2 -I"/usr/include/ImageMagick"]
 #     INSTALLBIN => q[/usr/local/bin]
 #     LD => q[]
-#     LDDLFLAGS => q[-L/usr/local/lib -lMagickCore-Q16 -shared -O2 -L/usr/local/lib -fstack-protector ]
-#     LDFLAGS => q[-L/usr/local/lib -lMagickCore-Q16  -fstack-protector -L/usr/local/lib ]
-#     LIBS => [q[-L/usr/local/lib -lMagickCore-Q16 -lperl -lm]]
+#     LDDLFLAGS => q[-L/usr/local/lib -L/home/op/lib -lMagickCore-Q16 -shared -O2 -L/usr/local/lib -fstack-protector ]
+#     LDFLAGS => q[-L/usr/local/lib -L/home/op/lib -lMagickCore-Q16  -fstack-protector -L/usr/local/lib ]
+#     LIBS => [q[-L/usr/local/lib -L/home/op/lib -lMagickCore-Q16 -lperl -lm]]
 #     MAP_TARGET => q[PerlMagick]
 #     NAME => q[Image::Magick]
 #     PERLMAINCC => q[ -fopenmp]
+#     PREFIX => q[/home/op]
 #     PREREQ_PM => {  }
 #     VERSION => q[6.82]
 #     test => { TESTS=>q[t/*.t t/bzlib/*.t t/jpeg/*.t t/jng/*.t t/jp2/*.t t/mpeg/*.t t/png/*.t t/tiff/*.t t/x11/*.t t/zlib/*.t] }
@@ -47,8 +48,8 @@ DLSRC = dl_dlopen.xs
 EXE_EXT = 
 FULL_AR = /usr/bin/ar
 LD = cc
-LDDLFLAGS = -L/usr/local/lib -lMagickCore-Q16 -shared -O2 -L/usr/local/lib -fstack-protector 
-LDFLAGS = -L/usr/local/lib -lMagickCore-Q16  -fstack-protector -L/usr/local/lib 
+LDDLFLAGS = -L/usr/local/lib -L/home/op/lib -lMagickCore-Q16 -shared -O2 -L/usr/local/lib -fstack-protector 
+LDFLAGS = -L/usr/local/lib -L/home/op/lib -lMagickCore-Q16  -fstack-protector -L/usr/local/lib 
 LIBC = 
 LIB_EXT = .a
 OBJ_EXT = .o
@@ -101,7 +102,7 @@ INSTALLSITEARCH = $(SITEPREFIX)/lib/site_perl/5.16.2/i686-linux
 DESTINSTALLSITEARCH = $(DESTDIR)$(INSTALLSITEARCH)
 INSTALLVENDORARCH = $(VENDORPREFIX)/lib/5.16.2/i686-linux
 DESTINSTALLVENDORARCH = $(DESTDIR)$(INSTALLVENDORARCH)
-INSTALLBIN = /usr/local/bin
+INSTALLBIN = /home/op/bin
 DESTINSTALLBIN = $(DESTDIR)$(INSTALLBIN)
 INSTALLSITEBIN = $(SITEPREFIX)/bin
 DESTINSTALLSITEBIN = $(DESTDIR)$(INSTALLSITEBIN)
@@ -161,7 +162,7 @@ BASEEXT = Magick
 PARENT_NAME = Image
 DLBASE = $(BASEEXT)
 VERSION_FROM = 
-INC = -I/usr/local/include/ImageMagick -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=16 -I/usr/include/libxml2 -I"/usr/include/ImageMagick"
+INC = -I/usr/local/include/ImageMagick -I/home/op/include/ImageMagick -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=16 -I/usr/include/libxml2 -I"/usr/include/ImageMagick"
 DEFINE =  -D_LARGE_FILES=1 -DHAVE_CONFIG_H
 OBJECT = $(BASEEXT)$(OBJ_EXT)
 LDFROM = $(OBJECT)
@@ -298,10 +299,10 @@ MPOLLUTE =
 # Image::Magick might depend on some other libraries:
 # See ExtUtils::Liblist for details
 #
-EXTRALIBS = -L/usr/local/lib -lperl
-LDLOADLIBS = -L/usr/local/lib -lperl -lm
+EXTRALIBS = -L/usr/local/lib -L/home/op/lib -lMagickCore-Q16 -lperl
+LDLOADLIBS = -L/usr/local/lib -L/home/op/lib -lMagickCore-Q16 -lperl -lm
 BSLOADLIBS = 
-LD_RUN_PATH = /usr/lib
+LD_RUN_PATH = /home/op/lib:/usr/lib
 
 
 # --- MakeMaker const_cccmd section:
@@ -719,7 +720,7 @@ distdir : create_distdir distmeta
 
 # --- MakeMaker dist_test section:
 disttest : distdir
-	cd $(DISTVNAME) && $(ABSPERLRUN) Makefile.PL "PREFIX=/home/op"
+	cd $(DISTVNAME) && $(ABSPERLRUN) Makefile.PL "PREFIX=/home/op" "INSTALLBIN=/home/op/bin"
 	cd $(DISTVNAME) && $(MAKE) $(PASTHRU)
 	cd $(DISTVNAME) && $(MAKE) test $(PASTHRU)
 
@@ -932,7 +933,7 @@ $(FIRST_MAKEFILE) : Makefile.PL $(CONFIGDEP)
 	-$(NOECHO) $(RM_F) $(MAKEFILE_OLD)
 	-$(NOECHO) $(MV)   $(FIRST_MAKEFILE) $(MAKEFILE_OLD)
 	- $(MAKE) $(USEMAKEFILE) $(MAKEFILE_OLD) clean $(DEV_NULL)
-	$(PERLRUN) Makefile.PL "PREFIX=/home/op"
+	$(PERLRUN) Makefile.PL "PREFIX=/home/op" "INSTALLBIN=/home/op/bin"
 	$(NOECHO) $(ECHO) "==> Your Makefile has been rebuilt. <=="
 	$(NOECHO) $(ECHO) "==> Please rerun the $(MAKE) command.  <=="
 	$(FALSE)
@@ -954,7 +955,8 @@ $(MAKE_APERL_FILE) : $(FIRST_MAKEFILE) pm_to_blib
 		Makefile.PL DIR= \
 		MAKEFILE=$(MAKE_APERL_FILE) LINKTYPE=static \
 		MAKEAPERL=1 NORECURS=1 CCCDLFLAGS= \
-		PREFIX=/home/op
+		PREFIX=/home/op \
+		INSTALLBIN=/home/op/bin
 
 
 # --- MakeMaker test section:

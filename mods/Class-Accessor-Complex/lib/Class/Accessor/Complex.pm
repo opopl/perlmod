@@ -117,7 +117,9 @@ sub mk_scalar_accessors {
             code => sub {
                 local $DB::sub = local *__ANON__ = "${class}::${field}"
                   if defined &DB::DB && !$Devel::DProf::VERSION;
+
                 return $_[0]->{$field} if @_ == 1;
+
                 $_[0]->{$field} = $_[1];
             },
         );
@@ -172,7 +174,30 @@ EODOC
             examples   => ["\$obj->$append_methods[0];"],
             belongs_to => $field,
         );
+###scalar_split
+    my @split_methods = uniq "split_${field}", "${field}_split";
+        for my $name (@split_methods) {
+            $self->install_accessor(
+                name => $name,
+                code => sub {
+                    local $DB::sub = local *__ANON__ = "${class}::${name}"
+                      if defined &DB::DB && !$Devel::DProf::VERSION;
 
+                    my $self=shift;
+                    my $sep=shift;
+
+                    my @a=split($sep,$self->{$field});
+
+                    wantarray ? @a : \@a;
+                },
+            );
+        }
+        $self->document_accessor(
+            name       => \@split_methods,
+            purpose    => 'Change the value by printing smth.',
+            examples   => ["\$obj->$split_methods[0];"],
+            belongs_to => $field,
+        );
 ###scalar_print
     my @print_methods = uniq "print_${field}", "${field}_print";
         for my $name (@print_methods) {
@@ -1342,6 +1367,41 @@ EODOC
             examples   => [""],
             belongs_to => $field,
         );
+###hash_split
+        my @split_methods = uniq "split_${field}", "${field}_split";
+
+        for my $name (@split_methods) {
+            $self->install_accessor(
+                name => $name,
+                code => sub {
+                    local $DB::sub = local *__ANON__ = "${class}::${name}"
+                      if defined &DB::DB && !$Devel::DProf::VERSION;
+
+                    my $self=shift;
+                    
+                    my $sep=shift // '';
+                    my $key=shift // '';
+
+                    my @a=();
+
+                    my $hash=$self->{$field} // {};
+                    my $val=$hash->{$key} // '';
+
+                    @a=split($sep,$val);
+
+                    wantarray ? @a : \@a;
+
+                },
+            );
+        }
+        $self->document_accessor(
+            name    => \@split_methods,
+            purpose => <<'EODOC',
+            Split the given hash key contents
+EODOC
+            examples   => [""],
+            belongs_to => $field,
+        );
 ###hash_exists
         my @exists_methods = uniq "exists_${field}", "${field}_exists";
 
@@ -1363,6 +1423,36 @@ Takes a key and returns a true value if the key exists in the hash, and a
 false value otherwise.
 EODOC
             examples   => ["if (\$obj->$exists_methods[0](\$key)) { ... }"],
+            belongs_to => $field,
+        );
+###hash_eq
+        my @eq_methods = uniq "eq_${field}", "${field}_eq";
+
+        for my $name (@eq_methods) {
+            $self->install_accessor(
+                name => $name,
+                code => sub {
+                    local $DB::sub = local *__ANON__ = "${class}::${name}"
+                      if defined &DB::DB && !$Devel::DProf::VERSION;
+
+                    my ($self, $key, $val) = @_;
+
+                    my $fval=$self->{$field}{$key};
+
+                    return 0 unless (exists $self->{$field} && exists $self->{$field}{$key});
+
+                    ($fval eq $val) ? 1 : 0;
+
+                },
+            );
+        }
+        $self->document_accessor(
+            name    => \@eq_methods,
+            purpose => <<'EODOC',
+Takes a key and returns a true value if the key exists in the hash, and a
+false value otherwise.
+EODOC
+            examples   => ["if (\$obj->$eq_methods[0](\$key)) { ... }"],
             belongs_to => $field,
         );
 ###hash_delete
