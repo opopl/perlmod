@@ -21,6 +21,8 @@ our @scalar_accessors = qw(
   dims
   docstyle
   doctitle
+  indent
+  indentstr
   makeindex
   ncfiles
   packopts
@@ -94,7 +96,7 @@ sub _cmd() {
 
     return 1 unless $ref;
 
-    my ( $text, $vars, $cmd );
+    my ( $text, $vars, $cmd, $optvars );
 
     unless ( ref $ref ) {
         $text = "\\" . $ref;
@@ -115,13 +117,28 @@ sub _cmd() {
           unless $cmd;
 
         $text = "\\$cmd";
+
+        # arguments enclosed as {...}
         $vars = $ref->{vars} // '';
+
+        # optional arguments enclosed as [...]
+        $optvars = $ref->{optvars} // '';
 
         $self->_die("_cmd(): Did not specify the list of variables!")
           unless $cmd;
 
-        $text .= "{$vars}";
+        unless(ref $vars){
+              $text.='{' . $vars . '}' ;
+        }elsif(ref $vars eq "ARRAY"){
 
+            $text.='{' . shift(@$vars) . '}' ;
+            if($optvars){
+                $text.='[' . $optvars . ']' ;
+            }
+            if (@$vars){
+                $text .= "{" . join("}{",map { length($_) ? $_ : ()  } @$vars) . "}";
+            }
+        }
     }
 
     $self->_add_line("$text");
@@ -194,6 +211,7 @@ sub _add_line() {
         my $x = shift @$ref;
         $addtext = "\\" . $c . '{' . $x . '}';
     }
+    $addtext=' ' x $self->indent . $addtext;
 
     $text = $oldtext . $addtext . "\n";
     $self->text( $text );
@@ -260,7 +278,10 @@ sub end() {
     my $x = shift // '';
     return 1 unless $x;
 
+    $self->minus('indent',2);
+
     $self->_cmd( "end", $x );
+
 
 }
 
@@ -321,12 +342,33 @@ sub date() {
 sub begin() {
     my $self = shift;
 
-    my $x = shift // '';
-    my $opts = shift // '';
+    my $what = shift // '';
+    my $ref = shift // '';
+    my @rest=@_;
 
-    return 1 unless $x;
+    return 1 unless $what;
+    
+    my($vars,$optvars);
 
-    $self->_cmd( "begin", $x, $opts );
+    push(@$vars,$what);
+
+    if ($ref){
+	    unless(ref $ref){
+	        push(@$vars,$ref);
+	        push(@$vars,@rest) if @rest;
+	    }elsif(ref $ref eq "HASH"){
+	        push(@$vars,@{$ref->{vars}}) if defined $ref->{vars};
+	        $optvars=$ref->{optvars} // '';
+	    }
+    }
+
+    $self->_cmd( { 
+            cmd         => "begin", 
+            vars        => $vars,
+            optvars     => $optvars,
+        } );
+
+    $self->plus('indent',2);
 
 }
 
@@ -1004,6 +1046,34 @@ sub hypsetup() {
 
 }
 
+sub plus {
+    my $self=shift;
+
+    my $id=shift;
+    my $val=shift // 1;
+
+    for($id){
+        /^indent$/ && do {
+            $self->indent($self->indent+$val);
+            next;
+        };
+    }
+}
+
+sub minus {
+    my $self=shift;
+
+    my $id=shift;
+    my $val=shift // 1;
+
+    for($id){
+        /^indent$/ && do {
+            $self->indent($self->indent-$val);
+            next;
+        };
+    }
+}
+
 sub new() {
     my ( $class, %parameters ) = @_;
     my $self = bless( {}, ref($class) || $class );
@@ -1011,6 +1081,7 @@ sub new() {
     $self->_init();
 
     $self->text('');
+    $self->indent(0);
 
     return $self;
 }
@@ -1020,7 +1091,7 @@ sub _init() {
 
     $self->{package_name} = __PACKAGE__ unless defined $self->{package_name};
 
-    my $dopts = { print_file_mode => "a" };
+    my $dopts = { print_file_mode => "w" };
 
     $self->_h_set( "default_options", $dopts );
 

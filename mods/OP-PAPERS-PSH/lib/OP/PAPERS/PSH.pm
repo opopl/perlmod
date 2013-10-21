@@ -1679,26 +1679,40 @@ sub _tex_paper_gen_file() {
                         my $figfile = catfile( $self->texroot,
                             join( '.', qw(p), $pkey, $sstype, $n, qw(tex) ) );
 
-                        unless ( -e $figfile ) {
-                            open( F, ">$figfile" ) || die $!;
-                            my $sz = "12cm";
 
-                            if ($sstype eq "fig"){
-	                            print F "\\figp{$sz}{$n}[$sectitle]{%\n";
-	                            print F " $sectitle\n";
-	                            print F "}%\n";
-                            }  elsif ($sstype eq "fig"){
-                                my $s=OP::TEX::Text->new;
-                                $s->begin('center');
-                                  $s->begin('tabular','ccc');
-                                  $s->end('tabular');
-                                $s->end('center');
+                        if (($sstype eq "fig")){
+                              my $s=OP::TEX::Text->new;
+
+                              if(! -e $figfile ){
+		                            my $sz = "12cm";
+
+                                $s->_add_line("\\figp{$sz}{$n}[$sectitle]{%");
+                                $s->_add_line(" $sectitle");
+                                $s->_add_line("}%");
 
                                 $s->_print({ file  => $figfile });
-                            }
+		
+                              } 
+                        } elsif ($sstype eq "tab"){
+                                my $s=OP::TEX::Text->new;
+                                use LaTeX::Table;
 
-                            close(F);
-                        }
+                                # file with tabular data
+                                ( my $datafile = $figfile ) =~ s/\.tex/i.dat/g; 
+
+                                $s->begin('table', { optvars => 'ht' });
+                                $s->begin('center');
+                                $s->begin('tabular',{ vars => [qw(ccc)] } );
+                                $s->end('tabular');
+                                $s->end('center');
+                                $s->_add_line('\caption{' . $sectitle . '}');
+                                $s->_add_line('\labeltab{' . $n . '}');
+                                $s->end('table');
+
+                                unless (-e $figfile){
+                                  $s->_print({ file  => $figfile });
+                                }
+                         }
 
                         next;
                     };
