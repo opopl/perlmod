@@ -211,7 +211,8 @@ sub _hash_add {
     while(my($k,$v)=each %{$ih}){
         $h->{$k}=$ih->{$k};
     }
-    return $h;
+    wantarray ? %$h : $h;
+
 }
 
 # _join() {{{
@@ -900,6 +901,10 @@ sub readarr {
 sub readhash{
  my $if=shift;
 
+ my $opts=shift // {};
+
+ my $sep=$opts->{sep} // ' ';
+
  unless(-e $if){
      if (wantarray) {
          return ();
@@ -932,12 +937,12 @@ sub readhash{
 
 	if ($mainline){
 
-	 	@F=split(' ',$line);
+	 	@F=split($sep,$line);
 	
 		$var=shift @F;
 
 		if (@F){ 
-			$hash{$var}=join(" ",@F); 
+			$hash{$var}=join($sep,@F); 
 		}else{
 			$hash{$var}=''; 
         }

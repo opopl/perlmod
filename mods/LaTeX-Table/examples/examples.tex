@@ -1,0 +1,1120 @@
+\documentclass[11pt]{article}
+\usepackage{layouts}
+
+\setlength{\textheight}{8.0in}
+\setlength{\textwidth}{6.0in}
+\setlength{\oddsidemargin}{0.25in}
+\setlength{\evensidemargin}{0.25in}
+\setlength{\marginparwidth}{0.6in}
+\setlength{\parskip}{5pt}
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{4}
+
+\setlength{\columnsep}{30pt}
+
+\setcounter{topnumber}{2}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.6}
+\renewcommand{\textfraction}{0.1}
+
+
+%\newlength{\figrulesep}
+%\setlength{\figrulesep}{0.5\textfloatsep}
+%
+%\newcommand{\topfigrule}{\vspace*{-1pt}%
+%  \noindent\rule[-\figrulesep]{\columnwidth}{1pt}}
+%
+%\newcommand{\botfigrule}{\vspace*{-2pt}%
+%  \noindent\rule[\figrulesep]{\columnwidth}{2pt}}
+
+\makeatletter
+
+\renewcommand{\subsubsection}{\@startsection%
+  {subsubsection}%
+  {3}%
+  {0mm}%
+  {-\baselineskip}%
+  {0.5\baselineskip}%
+  {\large\itshape}}
+
+
+\newcommand{\fref}[1]{Figure~\ref{#1}}
+\newcommand{\tref}[1]{Table~\ref{#1}}
+\newcommand{\T}{\texttt{true}}
+\newcommand{\F}{\texttt{false}}
+\newcommand{\TF}{\textit{true/false}}
+
+
+%%%% the \meta command
+\begingroup
+\obeyspaces%
+\catcode`\^^M\active%
+\gdef\meta{\begingroup\obeyspaces\catcode`\^^M\active%
+\let^^M\do@space\let \do@space%
+\def\-{\egroup\discretionary{-}{}{}\hbox\bgroup\it}%
+\m@ta}%
+\endgroup
+\def\m@ta#1{\leavevmode\hbox\bgroup$\langle$\it#1\/$\rangle$\egroup
+  \endgroup}
+\def\do@space{\egroup\space
+    \hbox\bgroup\it\futurelet\next\sp@ce}
+\def\sp@ce{\ifx\next\do@space\expandafter\sp@@ce\fi}
+\def\sp@@ce#1{\futurelet\next\sp@ce}
+
+\newcommand{\marg}[1]{\texttt{\{}\meta{#1}\texttt{\}}}
+
+\newcommand{\file}[1]{\textsf{#1}}
+\newcommand{\ltoption}[1]{\texttt{#1}}
+\newcommand{\ctanpackage}[1]{\file{#1}}
+\newcommand{\cpanmodule}[1]{\file{#1}}
+
+\providecommand{\indexfill}{}
+\providecommand{\sindexfill}{}
+\providecommand{\ssindexfill}{}
+\providecommand{\otherindexspace}[1]{}
+\providecommand{\alphaindexspace}[1]{\indexspace{\bfseries #1}}
+
+%%% \setlength{\parindent}{-4em}
+\makeatother
+\usepackage{url}
+\usepackage{ctable}
+\usepackage{graphics, graphicx}
+\usepackage{xtab}
+\usepackage{lscape}
+\usepackage{booktabs}
+\usepackage{rotating}
+\usepackage{tabularx}
+\usepackage{tabulary}
+\usepackage{listings}
+\usepackage{longtable}
+%\usepackage{color}
+\usepackage{colortbl}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{ltxtable}
+\usepackage{multicol}
+\usepackage{array}% in the preamble
+%\usepackage[tableposition=top]{caption}
+\title{LaTeX::Table}
+\date{\today}
+ \makeindex
+\begin{document}
+\bibliographystyle{alpha}
+\pagenumbering{roman}
+\maketitle
+\begin{abstract}
+
+\file{LaTeX::Table} is a Perl module that provides functionality for an
+intuitive and easy generation of LaTeX tables. It ships with some predefined
+good looking table styles. This module supports multipage tables via the
+\texttt{xtab} and the \texttt{longtable} package and publication quality
+tables with the \texttt{booktabs} package. It also supports the
+\texttt{tabularx} and \texttt{tabulary} packages for nicer fixed-width tables.
+Furthermore, it supports the \texttt{colortbl} package for colored tables
+optimized for presentations.
+
+\end{abstract}
+\tableofcontents
+\listoftables
+\clearpage
+\pagenumbering{arabic}
+
+\section{Installation}
+You can install this software with the \texttt{cpan} command.
+    
+\begin{verbatim}
+  $ cpan LaTeX::Table
+\end{verbatim}
+Alternatively, download \cpanmodule{LaTeX::Table} directly from
+\url{http://search.cpan.org/dist/LaTeX-Table/} and install in manually:
+\begin{verbatim}
+  $ tar xvfz LaTeX-Table-VERSION.tar.gz
+  $ perl Build.PL
+  $ ./Build test
+  $ ./Build install
+\end{verbatim}
+
+\section{Examples}
+
+\subsection{Table width, tabular* environment}
+\tref{tbl:width} demonstrates a fixed-width table in the \texttt{tabular*}
+environment. Here, the space between the columns is filled with spaces.
+\begin{verbatim}
+$table = LaTeX::Table->new(
+    {   header  => $header,
+        data    => $data,
+        width   => '0.7\textwidth',
+        label   => 'tbl:width',
+        caption => '\texttt{width}',
+    }
+);
+\end{verbatim}
+\begin{table}
+\centering
+\begin{tabular*}{0.7\textwidth}{l@{\extracolsep{\fill}}lr}
+\toprule
+Animal & Description & Price \\
+\midrule
+Gnat      & per gram & 13.651 \\
+          & each     & 0.012  \\
+Gnu       & stuffed  & 92.59  \\
+Emu       & stuffed  & 33.33  \\
+Armadillo & frozen   & 8.99   \\
+\bottomrule
+\end{tabular*}
+\caption{\texttt{width}}
+\label{tbl:width}
+\end{table}
+\subsection{Large Columns}
+The next example is a small table with two larger columns.
+\cpanmodule{LaTeX::Table} automatically sets the column to \texttt{p\{5cm\}} when a
+cell in a column has more than 30 characters. \LaTeX~generates 
+\tref{tbl:paragraph}.
+
+\begin{verbatim}
+$table = LaTeX::Table->new(
+    {   header    => $header,
+        data      => $data,
+        label     => 'tbl:paragraph',
+        caption   => 'LaTeX paragraph column attribute.',
+    }
+);
+\end{verbatim}
+\begin{table}
+\centering
+\begin{tabular}{lp{5cm}p{5cm}}
+\toprule
+Character & Fullname & Voice \\
+\midrule
+Homer  & Homer Jay Simpson              & Dan Castellaneta                                                                   \\
+Marge  & Marjorie Simpson (née Bouvier) & Julie Kavner                                                                       \\
+Bart   & Bartholomew Jojo Simpson       & Nancy Cartwright                                                                   \\
+Lisa   & Elizabeth Marie Simpson        & Yeardley Smith                                                                     \\
+Maggie & Margaret Simpson               & Elizabeth Taylor, Nancy Cartwright, James Earl Jones,Yeardley Smith, Harry Shearer \\
+\bottomrule
+\end{tabular}
+\caption{LaTeX paragraph column attribute.}
+\label{tbl:paragraph}
+\end{table}
+\subsubsection{\texttt{tabularx}}
+We can use the \ctanpackage{tabularx} package to find better column widths than the
+default 5cm. See \tref{tbl:tabularx} for the results.
+\begin{verbatim}
+$table = LaTeX::Table->new(
+    {   header            => $header,
+        data              => $data,
+        width             => '0.9\textwidth',
+        width_environment => 'tabularx',
+        label             => 'tbl:tabularx',
+        caption           => '\texttt{width\_environment=tabularx}.',
+    }
+);
+\end{verbatim}
+\begin{table}
+\centering
+\begin{tabularx}{0.9\textwidth}{lXX}
+\toprule
+Character & Fullname & Voice \\
+\midrule
+Homer  & Homer Jay Simpson              & Dan Castellaneta                                                                   \\
+Marge  & Marjorie Simpson (née Bouvier) & Julie Kavner                                                                       \\
+Bart   & Bartholomew Jojo Simpson       & Nancy Cartwright                                                                   \\
+Lisa   & Elizabeth Marie Simpson        & Yeardley Smith                                                                     \\
+Maggie & Margaret Simpson               & Elizabeth Taylor, Nancy Cartwright, James Earl Jones,Yeardley Smith, Harry Shearer \\
+\bottomrule
+\end{tabularx}
+\caption{\texttt{width\_environment=tabularx}.}
+\label{tbl:tabularx}
+\end{table}
+\subsubsection{\texttt{tabulary}}
+A third option is to use the \ctanpackage{tabulary} package. See \tref{tbl:tabulary}.
+\begin{verbatim}
+$table = LaTeX::Table->new(
+    {   header            => $header,
+        data              => $data,
+        width             => '0.9\textwidth',
+        width_environment => 'tabulary',
+        label             => 'tbl:tabulary',
+        caption           => '\texttt{width\_environment=tabulary}.',
+    }
+);
+\end{verbatim}
+\begin{table}
+\centering
+\begin{tabulary}{0.9\textwidth}{lLL}
+\toprule
+Character & Fullname & Voice \\
+\midrule
+Homer  & Homer Jay Simpson              & Dan Castellaneta                                                                   \\
+Marge  & Marjorie Simpson (née Bouvier) & Julie Kavner                                                                       \\
+Bart   & Bartholomew Jojo Simpson       & Nancy Cartwright                                                                   \\
+Lisa   & Elizabeth Marie Simpson        & Yeardley Smith                                                                     \\
+Maggie & Margaret Simpson               & Elizabeth Taylor, Nancy Cartwright, James Earl Jones,Yeardley Smith, Harry Shearer \\
+\bottomrule
+\end{tabulary}
+\caption{\texttt{width\_environment=tabulary}.}
+\label{tbl:tabulary}
+\end{table}
+\subsection{Rotate tables}
+\tref{tbl:sideways} demonstrates the \ltoption{sideways} option. Requires the
+\ctanpackage{rotating} package.
+\begin{verbatim}
+$table = LaTeX::Table->new(
+    {   header   => $header,
+        data     => $data,
+        width    => '0.9\textwidth',
+        width_environment 
+                 => 'tabularx',
+        sideways => 1,
+        label    => 'tbl:sideways',
+        caption  => '\texttt{width\_environment=tabularx, sideways}.',
+    }
+);
+\end{verbatim}
+\begin{sidewaystable}
+\centering
+\begin{tabulary}{0.9\textwidth}{lLL}
+\toprule
+Character & Fullname & Voice \\
+\midrule
+Homer  & Homer Jay Simpson              & Dan Castellaneta                                                                   \\
+Marge  & Marjorie Simpson (née Bouvier) & Julie Kavner                                                                       \\
+Bart   & Bartholomew Jojo Simpson       & Nancy Cartwright                                                                   \\
+Lisa   & Elizabeth Marie Simpson        & Yeardley Smith                                                                     \\
+Maggie & Margaret Simpson               & Elizabeth Taylor, Nancy Cartwright, James Earl Jones,Yeardley Smith, Harry Shearer \\
+\bottomrule
+\end{tabulary}
+\caption{\texttt{width\_environment=tabularx, sideways}.}
+\label{tbl:sideways}
+\end{sidewaystable}
+\subsection{Resize tables}
+In Tables \ref{tbl:resizebox1} and \ref{tbl:resizebox2}, the
+\ltoption{resizebox} option was used to get the desired width (and height in
+the second example). Requires the \ctanpackage{graphicx} package.
+\begin{verbatim}
+$table = LaTeX::Table->new(
+    {   header    => $header,
+        data      => $data,
+        resizebox => [ '0.6\textwidth' ],
+        label     => 'tbl:resizebox1',
+        caption   => '\texttt{resizebox}, Example 1',
+    }
+);
+
+$table->set_resizebox([ '300pt', '120pt' ]);
+\end{verbatim}
+\begin{table}
+\centering
+\resizebox{0.6\textwidth}{!}{
+\begin{tabulary}{0.9\textwidth}{lLL}
+\toprule
+Character & Fullname & Voice \\
+\midrule
+Homer  & Homer Jay Simpson              & Dan Castellaneta                                                                   \\
+Marge  & Marjorie Simpson (née Bouvier) & Julie Kavner                                                                       \\
+Bart   & Bartholomew Jojo Simpson       & Nancy Cartwright                                                                   \\
+Lisa   & Elizabeth Marie Simpson        & Yeardley Smith                                                                     \\
+Maggie & Margaret Simpson               & Elizabeth Taylor, Nancy Cartwright, James Earl Jones,Yeardley Smith, Harry Shearer \\
+\bottomrule
+\end{tabulary}}
+
+\caption{\texttt{resizebox}, Example 1}
+\label{tbl:resizebox1}
+\end{table}
+\begin{table}
+\centering
+\resizebox{300pt}{120pt}{
+\begin{tabulary}{0.9\textwidth}{lLL}
+\toprule
+Character & Fullname & Voice \\
+\midrule
+Homer  & Homer Jay Simpson              & Dan Castellaneta                                                                   \\
+Marge  & Marjorie Simpson (née Bouvier) & Julie Kavner                                                                       \\
+Bart   & Bartholomew Jojo Simpson       & Nancy Cartwright                                                                   \\
+Lisa   & Elizabeth Marie Simpson        & Yeardley Smith                                                                     \\
+Maggie & Margaret Simpson               & Elizabeth Taylor, Nancy Cartwright, James Earl Jones,Yeardley Smith, Harry Shearer \\
+\bottomrule
+\end{tabulary}}
+
+\caption{\texttt{resizebox}, Example 2}
+\label{tbl:resizebox2}
+\end{table}
+\subsection{Callback functions}
+Callback functions are an easy way of formatting the cells. Note that the
+prices for Gnat are rounded in the following tables.
+\begin{verbatim}
+my $table = LaTeX::Table->new(
+      {
+      filename    => 'prices.tex',
+      maincaption => 'Price List',
+      caption     => 'Try our special offer today!',
+      label       => 'tbl:prices',
+      header      => $header,
+      data        => $data,
+      callback    => sub {
+           my ($row, $col, $value, $is_header ) = @_;
+           if ($col == 2 && $!is_header) {
+               $value = format_price($value, 2, '');
+           }
+           return $value;
+     },
+});
+\end{verbatim}
+\subsection{Captions}
+\subsubsection{Placement}
+Tables can be placed on top of the tables with \ltoption{caption\_top => 1}. See
+\tref{table:pricestop}. Note that the standard \LaTeX~macros are optimized for
+bottom captions. Use something like 
+\begin{verbatim}
+\usepackage[tableposition=top]{caption} 
+\end{verbatim}
+to fix the spacing. Alternatively, you could fix the spacing by yourself by
+providing your own command(s) (\tref{table:pricestop2}):
+\begin{verbatim}
+$table->set_caption_top(
+  '\setlength{\abovecaptionskip}{0pt}' .
+  '\setlength{\belowcaptionskip}{10pt}' . 
+  \caption'
+);
+\end{verbatim}
+\begin{table}
+\centering
+\caption{\texttt{caption\_top}, Example 1}
+\begin{tabular}{llr}
+\toprule
+\multicolumn{2}{c}{ITEM} &             \\
+\cmidrule(r){1-2}
+ANIMAL                   & DESCRIPTION & PRICE \\
+\midrule
+Gnat      & per gram & 13.65 \\
+          & each     & 0.01  \\
+Gnu       & stuffed  & 92.59 \\
+Emu       & stuffed  & 33.33 \\
+Armadillo & frozen   & 8.99  \\
+\bottomrule
+\end{tabular}
+\label{table:pricestop}
+\end{table}
+\begin{table}
+\centering
+\setlength{\abovecaptionskip}{0pt}\setlength{\belowcaptionskip}{10pt}\caption{\texttt{caption\_top}, Example 2}
+\begin{tabular}{llr}
+\toprule
+\multicolumn{2}{c}{ITEM} &             \\
+\cmidrule(r){1-2}
+ANIMAL                   & DESCRIPTION & PRICE \\
+\midrule
+Gnat      & per gram & 13.65 \\
+          & each     & 0.01  \\
+Gnu       & stuffed  & 92.59 \\
+Emu       & stuffed  & 33.33 \\
+Armadillo & frozen   & 8.99  \\
+\bottomrule
+\end{tabular}
+\label{table:pricestop2}
+\end{table}
+\subsection{Multicolumns}
+If you want tables with vertical lines (are you sure?) you should use our
+shortcut to generate multicolumns. These shortcuts are not only much less
+typing work, but they also automatically add the vertical lines, see
+\tref{tbl:mc}.
+\begin{verbatim}
+$header = [ [ 'A:3c'        ], 
+            [ 'A:2c',  'B'  ], 
+            ['A', 'B', 'C'  ], ];
+
+$data   = [ [ '1', 'w', 'x' ], 
+            [ '2', 'c:2c'   ], ];
+
+$table = LaTeX::Table->new(
+    {   header   => $header,
+        data     => $data,
+        theme    => 'Dresden',
+        label    => 'tbl:mc',
+        caption  => 'Multicolumns.',
+    }
+);
+\end{verbatim}
+\begin{table}
+\centering
+\begin{tabular}{|r||l|l|}
+\hline
+\multicolumn{3}{|c|}{\textbf{A}}  \\
+\multicolumn{2}{|c|}{\textbf{A}}  & \multicolumn{1}{c|}{\textbf{B}} \\
+\multicolumn{1}{|c||}{\textbf{A}} & \multicolumn{1}{c|}{\textbf{B}} & \multicolumn{1}{c|}{\textbf{C}} \\
+\hline
+\hline
+1 & w                      & x \\
+2 & \multicolumn{2}{c|}{c} \\
+\hline
+\end{tabular}
+\caption{Multicolumns.}
+\label{tbl:mc}
+\end{table}
+\subsection{Headers}
+If you don't need headers, just leave them undefined (see
+\tref{tbl:noheader}). If you want that the first column looks like a header,
+you can define this with the \ltoption{columns\_like\_header} option
+(\tref{table:collikeheader} and \tref{table:collikeheader2}).  If you want
+to rotate some header columns by 90 degrees, you can easily do that with a
+callback function (\tref{table:headersideways2}).
+\begin{verbatim}
+$table = LaTeX::Table->new(
+    {
+    data        => $data,
+    label       => 'tbl:noheader',
+    caption     => 'Table without header.',
+});
+
+$table = LaTeX::Table->new(
+    {   header          => $header,
+        data            => $data,
+        callback        => sub {
+            my ( $row, $col, $value, $is_header ) = @_;
+            if ( $col != 0 && $is_header ) {
+                $value = '\begin{sideways}' . $value . '\end{sideways}';
+            }
+            return $value;
+        },
+        ...
+    }
+);
+\end{verbatim}
+\begin{table}
+\centering
+\begin{tabular}{llr}
+\toprule
+Gnat      & per gram & 13.651 \\
+          & each     & 0.012  \\
+Gnu       & stuffed  & 92.59  \\
+Emu       & stuffed  & 33.33  \\
+Armadillo & frozen   & 8.99   \\
+\bottomrule
+\end{tabular}
+\caption{Table without header.}
+\label{tbl:noheader}
+\end{table}
+\definecolor{latextbl}{RGB}{78,130,190}
+\begin{table}
+\centering
+\setlength{\extrarowheight}{1pt}
+\begin{tabular}{|llr|}
+\hline
+\rowcolor{latextbl!25}\multicolumn{1}{|>{\columncolor{latextbl}}l}{\color{white}\textbf{Gnat}}      & per gram & 13.651 \\
+\rowcolor{latextbl!10}\multicolumn{1}{|>{\columncolor{latextbl}}l}{}                                & each     & 0.012  \\
+\rowcolor{latextbl!25}\multicolumn{1}{|>{\columncolor{latextbl}}l}{\color{white}\textbf{Gnu}}       & stuffed  & 92.59  \\
+\rowcolor{latextbl!10}\multicolumn{1}{|>{\columncolor{latextbl}}l}{\color{white}\textbf{Emu}}       & stuffed  & 33.33  \\
+\rowcolor{latextbl!25}\multicolumn{1}{|>{\columncolor{latextbl}}l}{\color{white}\textbf{Armadillo}} & frozen   & 8.99   \\
+\hline
+\end{tabular}
+\caption{\texttt{columns\_like\_header}, Example 1: A transposed table.}
+\label{table:collikeheader}
+\end{table}
+\definecolor{latextbl}{RGB}{78,130,190}
+\begin{table}
+\centering
+\setlength{\extrarowheight}{1pt}
+\begin{tabular}{|llr|}
+\hline
+\rowcolor{latextbl}\multicolumn{3}{|>{\columncolor{latextbl}}c|}{\color{white}\textbf{A}} \\
+\rowcolor{latextbl}\multicolumn{2}{|>{\columncolor{latextbl}}c}{\color{white}\textbf{A}}  & \multicolumn{1}{>{\columncolor{latextbl}}c|}{\color{white}\textbf{B}} \\
+\rowcolor{latextbl}\multicolumn{1}{|>{\columncolor{latextbl}}c}{\color{white}\textbf{A}}  & \multicolumn{1}{>{\columncolor{latextbl}}c}{\color{white}\textbf{B}}  & \multicolumn{1}{>{\columncolor{latextbl}}c|}{\color{white}\textbf{C}} \\
+\rowcolor{latextbl!25}\multicolumn{1}{|>{\columncolor{latextbl}}l}{\color{white}\textbf{Gnat}}      & per gram & 13.651 \\
+\rowcolor{latextbl!10}\multicolumn{1}{|>{\columncolor{latextbl}}l}{}                                & each     & 0.012  \\
+\rowcolor{latextbl!25}\multicolumn{1}{|>{\columncolor{latextbl}}l}{\color{white}\textbf{Gnu}}       & stuffed  & 92.59  \\
+\rowcolor{latextbl!10}\multicolumn{1}{|>{\columncolor{latextbl}}l}{\color{white}\textbf{Emu}}       & stuffed  & 33.33  \\
+\rowcolor{latextbl!25}\multicolumn{1}{|>{\columncolor{latextbl}}l}{\color{white}\textbf{Armadillo}} & frozen   & 8.99   \\
+\hline
+\end{tabular}
+\caption{\texttt{columns\_like\_header}, Example 2.}
+\label{table:collikeheader2}
+\end{table}
+\definecolor{latextbl}{RGB}{78,130,190}
+\begin{table}
+\raggedleft
+\setlength{\extrarowheight}{1pt}
+\begin{tabular}{|rlllll|}
+\hline
+\rowcolor{latextbl}\multicolumn{1}{|>{\columncolor{latextbl}}c}{\color{white}\textbf{Time}} & \multicolumn{1}{>{\columncolor{latextbl}}c}{\color{white}\textbf{\begin{sideways}Monday\end{sideways}}} & \multicolumn{1}{>{\columncolor{latextbl}}c}{\color{white}\textbf{\begin{sideways}Tuesday\end{sideways}}} & \multicolumn{1}{>{\columncolor{latextbl}}c}{\color{white}\textbf{\begin{sideways}Wednesday\end{sideways}}} & \multicolumn{1}{>{\columncolor{latextbl}}c}{\color{white}\textbf{\begin{sideways}Thursday\end{sideways}}} & \multicolumn{1}{>{\columncolor{latextbl}}c|}{\color{white}\textbf{\begin{sideways}Friday\end{sideways}}} \\
+\hline
+\rowcolor{latextbl!25}9.00  &  &  &  &  &  \\
+\rowcolor{latextbl!10}10.00 &  &  &  &  &  \\
+\rowcolor{latextbl!25}11.00 &  &  &  &  &  \\
+\rowcolor{latextbl!10}12.00 &  &  &  &  &  \\
+\hline
+\end{tabular}
+\caption{\texttt{callback, right}}
+\label{table:headersideways2}
+\end{table}
+\subsection{CSV Files}
+For importing CSV files, we can use the CPAN module \cpanmodule{Text::CSV}:
+\begin{verbatim}
+my $csv = Text::CSV->new(
+    {   binary           => 1,
+        sep_char         => q{,},
+        allow_whitespace => 1
+    }
+);
+
+open my $IN, '<', 'imdbtop40.dat';
+
+my $line_number = 0;
+while ( my $line = <$IN> ) {
+    chomp $line;
+    my $status = $csv->parse($line);
+    if ( $line_number == 0 ) {
+       $header = [ [ $csv->fields() ] ];
+    }
+    else {
+        push @{$data}, [ $csv->fields() ];
+    }
+    $line_number++;
+}
+close $IN;
+
+$table = LaTeX::Table->new(
+    {   header        => $header,
+        data          => $data,
+        type          => 'xtab',
+        sideways      => 1,
+        tabletail     => q{},
+        label         => 'tbl:xtab',
+        caption       => '\texttt{type=xtab}',
+        tablelasttail => '\tiny{www.imdb.com}',
+        caption_top   => 1,
+    }
+);
+\end{verbatim}
+See \tref{tbl:xtab}, which uses the \ctanpackage{xtab} package for spanning across
+multiple pages. You can also use the \ctanpackage{longtable} package here.
+This package can be used together with the \ctanpackage{ltxtable} package to
+define a table width. Here, you have to generate a \textit{file} and then load the
+file with the \texttt{LTXtable} command. See \tref{tbl:longtable}.
+\begin{verbatim}
+$table = LaTeX::Table->new(
+    {   header        => $header,
+        data          => $data,
+        type          => 'longtable',
+        tabletail     => q{},
+        label         => 'tbl:longtable',
+        caption       => '\texttt{type=longtable}',
+        tablelasttail => '\tiny{www.imdb.com}',
+        caption_top   => 1,
+        # we don't define a width here!
+        width_environment => 'tabularx', 
+        filename       => 'longtable.tex'
+    }
+);
+
+%now in LaTeX:
+\LTXtable{0.8\textwidth}{longtable}
+
+\end{verbatim}
+{
+\begin{landscape}\topcaption{\texttt{type=xtab}}
+\label{tbl:xtab}
+
+\tablefirsthead{\toprule
+Rank & Rating & Title & Year & Votes \\
+\midrule
+}
+\tablehead{\multicolumn{5}{c}{{ \normalsize \tablename\ \thetable: Continued from previous page}}\\[\abovecaptionskip]
+\toprule
+Rank & Rating & Title & Year & Votes \\
+\midrule
+}
+\tabletail{ \bottomrule
+}
+\tablelasttail{\tiny{www.imdb.com}}
+\begin{center}
+\begin{xtabular}{lrp{5cm}rr}
+1.  & 9.1 & The Shawshank Redemption                                             & 1994 & 403610 \\
+2.  & 9.1 & The Godfather                                                        & 1972 & 338496 \\
+3.  & 9.0 & The Godfather: Part II                                               & 1974 & 195253 \\
+4.  & 8.9 & Buono, il brutto, il cattivo., Il                                    & 1966 & 117494 \\
+5.  & 8.9 & The Dark Knight                                                      & 2008 & 340243 \\
+6.  & 8.9 & Pulp Fiction                                                         & 1994 & 333085 \\
+7.  & 8.8 & Schindler's List                                                     & 1993 & 220503 \\
+8.  & 8.8 & One Flew Over the Cuckoo's Nest                                      & 1975 & 168842 \\
+9.  & 8.8 & 12 Angry Men                                                         & 1957 & 84726  \\
+10. & 8.8 & Star Wars: Episode V - The Empire Strikes Back                       & 1980 & 229894 \\
+11. & 8.8 & Casablanca                                                           & 1942 & 139763 \\
+12. & 8.8 & Star Wars                                                            & 1977 & 271586 \\
+13. & 8.8 & Shichinin no samurai                                                 & 1954 & 79374  \\
+14. & 8.8 & The Lord of the Rings: The Return of the King                        & 2003 & 294259 \\
+15. & 8.7 & Goodfellas                                                           & 1990 & 182825 \\
+16. & 8.7 & Rear Window                                                          & 1954 & 95538  \\
+17. & 8.7 & Cidade de Deus                                                       & 2002 & 124546 \\
+18. & 8.7 & Raiders of the Lost Ark                                              & 1981 & 205298 \\
+19. & 8.7 & C'era una volta il West                                              & 1968 & 56185  \\
+20. & 8.7 & The Lord of the Rings: The Fellowship of the Ring                    & 2001 & 322699 \\
+21. & 8.7 & The Usual Suspects                                                   & 1994 & 221641 \\
+22. & 8.7 & Fight Club                                                           & 1999 & 301078 \\
+23. & 8.7 & Psycho                                                               & 1960 & 115936 \\
+24. & 8.6 & The Silence of the Lambs                                             & 1991 & 198677 \\
+25. & 8.6 & Sunset Blvd.                                                         & 1950 & 42280  \\
+26. & 8.6 & Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb & 1964 & 131289 \\
+27. & 8.6 & Memento                                                              & 2000 & 217339 \\
+28. & 8.6 & North by Northwest                                                   & 1959 & 76221  \\
+29. & 8.6 & Citizen Kane                                                         & 1941 & 117600 \\
+30. & 8.6 & The Matrix                                                           & 1999 & 310491 \\
+31. & 8.6 & It's a Wonderful Life                                                & 1946 & 84643  \\
+32. & 8.6 & The Lord of the Rings: The Two Towers                                & 2002 & 269196 \\
+33. & 8.6 & Se7en                                                                & 1995 & 220400 \\
+34. & 8.6 & Slumdog Millionaire                                                  & 2008 & 50475  \\
+35. & 8.5 & Leon                                                                 & 1994 & 154149 \\
+36. & 8.5 & Apocalypse Now                                                       & 1979 & 142659 \\
+37. & 8.5 & American Beauty                                                      & 1999 & 241532 \\
+38. & 8.5 & Taxi Driver                                                          & 1976 & 122785 \\
+39. & 8.5 & WALL-E                                                               & 2008 & 114271 \\
+40. & 8.5 & Lawrence of Arabia                                                   & 1962 & 66188  \\
+\bottomrule
+\end{xtabular}
+\end{center}\end{landscape}
+} 
+\LTXtable{0.8\textwidth}{longtable}
+
+\subsection{Automatic column definitions}
+We can easily provide regular expressions that define the alignment of
+columns. See \tref{tbl:coldef_strategy}.
+\begin{verbatim}
+$table = LaTeX::Table->new(
+    {   header  => [ [ 'Website', 'URL' ] ],
+        data    => [
+            [ 'Slashdot',  'http://www.slashdot.org'  ],
+            [ 'Perlmonks', 'http://www.perlmonks.org' ],
+            [ 'Google',    'http://www.google.com'    ],
+        ],
+        coldef_strategy => {
+            URL     => qr{ \A \s* http }xms,
+            URL_COL => '>{\ttfamily}l',
+        },
+        label   => 'tbl:coldef_strategy',
+        caption => '\texttt{coldef\_strategy}',
+    }
+);
+\end{verbatim}
+\begin{table}
+\centering
+\begin{tabular}{l>{\ttfamily}l}
+\toprule
+Website & URL \\
+\midrule
+Slashdot  & http://www.slashdot.org  \\
+Perlmonks & http://www.perlmonks.org \\
+Google    & http://www.google.com    \\
+\bottomrule
+\end{tabular}
+\caption{\texttt{coldef\_strategy}}
+\label{tbl:coldef_strategy}
+\end{table}
+\subsection{Continued Tables}
+As alternative to multi-page tables, we can also split tables. The
+\ltoption{continued} option then decrements the table counter and adds the
+\ltoption{continuedmsg} (default is `(continued)') to the caption. See
+\tref{tbl:coldef_strategy}. That even works with \ltoption{xtab} tables.
+\begin{verbatim}
+$table = LaTeX::Table->new(
+    {   header  => [ [ 'Website', 'URL' ] ],
+        data    => [
+            [ 'CPAN',  'http://www.cpan.org'  ],
+            [ 'Amazon', 'http://www.amazon.com' ],
+        ],
+        coldef_strategy => {
+            URL     => qr{ \A \s* http }xms,
+            URL_COL => '>{\ttfamily}l',
+        },
+        continued => 1,
+        label     => 'tbl:continued',
+        caption   => '\texttt{continued}',
+    }
+);
+\end{verbatim}
+\addtocounter{table}{-1}\begin{table}
+\centering
+\begin{tabular}{l>{\ttfamily}l}
+\toprule
+Website & URL \\
+\midrule
+CPAN   & http://www.cpan.org   \\
+Amazon & http://www.amazon.com \\
+\bottomrule
+\end{tabular}
+\caption{\texttt{continued} (continued)}
+\label{tbl:continued}
+\end{table}
+\subsection{Ctable Package}
+The \ctanpackage{ctable} package makes it easy to add footnotes. See
+\tref{tbl:websitectable}. 
+\begin{verbatim}
+$table->set_type('ctable');
+$table->set_foottable('\tnote{footnotes are placed under the table}');
+\end{verbatim}
+{
+\ctable[caption = {\texttt{coldef\_strategy, type=ctable, foottable, continued}.},
+botcap,
+label = {tbl:websitectable},
+center,
+continued = {(continued)},
+]{l>{\ttfamily}l}{\tnote{footnotes are placed under the table}}{
+\toprule
+Website & URL \\
+\midrule
+Slashdot\tmark & http://www.slashdot.org  \\
+Perlmonks      & http://www.perlmonks.org \\
+Google         & http://www.google.com    \\
+\bottomrule
+}
+}
+\subsection{Multicols}
+In a twocolumn or multicols document, we use this starred version for
+\tref{table:websitectablestar}:
+
+\begin{multicols}{2}
+\begin{verbatim}
+$table->set_star(1);
+\end{verbatim}
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla
+
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla
+
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla
+{
+\ctable[caption = {\texttt{coldef\_strategy, type=ctable, foottable, star}.},
+botcap,
+pos = htbp,
+label = {table:websitectablestar},
+center,
+star,
+]{l>{\ttfamily}l}{\tnote{footnotes are placed under the table}}{
+\toprule
+Website & URL \\
+\midrule
+Slashdot\tmark & http://www.slashdot.org  \\
+Perlmonks      & http://www.perlmonks.org \\
+Google         & http://www.google.com    \\
+\bottomrule
+}
+}
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla
+
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla
+
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla
+
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla
+
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla
+
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla
+
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla
+
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla
+
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla bla
+bla bla bla bla bla bla
+
+\end{multicols}
+\section{Customize \cpanmodule{LaTeX::Table}}
+
+This module tries hard to produce perfect results with as less provided
+options as possible. However, typesetting tables is a complex topic and
+therefore almost everything in \cpanmodule{LaTeX::Table} is configurable.
+
+\subsection{Custom Themes}\label{sec:customthemes}
+
+\tref{table:customtheme1} displays our example table with the \textit{NYC}
+theme, which is meant for presentations (with LaTeX Beamer for example). You
+can change the theme by copying it, changing it and then storing it in
+\ltoption{custom\_themes} (\tref{table:customtheme2}).  You can also add the
+theme to the predfined themes by creating a themes module.  See
+\cpanmodule{LaTeX::Table::Themes::ThemeI} how to do that.
+\begin{verbatim}
+my $nyc_theme = $table->get_available_themes->{'NYC'};
+$nyc_theme->{'DEFINE_COLORS'}       = 
+          '\definecolor{latextablegreen}{RGB}{93,127,114}';
+$nyc_theme->{'HEADER_BG_COLOR'}     = 'latextablegreen';
+$nyc_theme->{'DATA_BG_COLOR_ODD'}   = 'latextablegreen!25';
+$nyc_theme->{'DATA_BG_COLOR_EVEN'}  = 'latextablegreen!10';
+
+$table->set_custom_themes({ CENTRALPARK => $nyc_theme });
+$table->set_theme('CENTRALPARK');
+\end{verbatim}
+\definecolor{latextbl}{RGB}{78,130,190}
+\begin{table}
+\centering
+\setlength{\extrarowheight}{1pt}
+\begin{tabular}{|llr|}
+\hline
+\rowcolor{latextbl}\multicolumn{2}{|>{\columncolor{latextbl}}c}{\color{white}\textbf{Item}}   & \multicolumn{1}{>{\columncolor{latextbl}}c|}{\color{white}\textbf{}}           \\
+\rowcolor{latextbl}\multicolumn{1}{|>{\columncolor{latextbl}}c}{\color{white}\textbf{Animal}} & \multicolumn{1}{>{\columncolor{latextbl}}c}{\color{white}\textbf{Description}} & \multicolumn{1}{>{\columncolor{latextbl}}c|}{\color{white}\textbf{Price}} \\
+\hline
+\rowcolor{latextbl!25}Gnat      & per gram & 13.65 \\
+\rowcolor{latextbl!10}          & each     & 0.01  \\
+\rowcolor{latextbl!25}Gnu       & stuffed  & 92.59 \\
+\rowcolor{latextbl!10}Emu       & stuffed  & 33.33 \\
+\rowcolor{latextbl!25}Armadillo & frozen   & 8.99  \\
+\hline
+\end{tabular}
+\caption{\texttt{custom\_themes}, Example 1}
+\label{table:customtheme1}
+\end{table}
+\definecolor{latextablegreen}{RGB}{93,127,114}
+\begin{table}
+\centering
+\setlength{\extrarowheight}{1pt}
+\begin{tabular}{|llr|}
+\hline
+\rowcolor{latextablegreen}\multicolumn{2}{|>{\columncolor{latextablegreen}}c}{\color{white}\textbf{Item}}   & \multicolumn{1}{>{\columncolor{latextablegreen}}c|}{\color{white}\textbf{}}           \\
+\rowcolor{latextablegreen}\multicolumn{1}{|>{\columncolor{latextablegreen}}c}{\color{white}\textbf{Animal}} & \multicolumn{1}{>{\columncolor{latextablegreen}}c}{\color{white}\textbf{Description}} & \multicolumn{1}{>{\columncolor{latextablegreen}}c|}{\color{white}\textbf{Price}} \\
+\hline
+\rowcolor{latextablegreen!25}Gnat      & per gram & 13.65 \\
+\rowcolor{latextablegreen!10}          & each     & 0.01  \\
+\rowcolor{latextablegreen!25}Gnu       & stuffed  & 92.59 \\
+\rowcolor{latextablegreen!10}Emu       & stuffed  & 33.33 \\
+\rowcolor{latextablegreen!25}Armadillo & frozen   & 8.99  \\
+\hline
+\end{tabular}
+\caption{\texttt{custom\_themes}, Example 2}
+\label{table:customtheme2}
+\end{table}
+\subsection{Custom Templates}\label{sec:customtemplates}
+
+\cpanmodule{LaTeX::Table} ships with some very flexible and powerful
+templates. Templates are a convenient way of generating the LaTeX code out of
+the user options and data. Internally, the \cpanmodule{Template} Toolkit
+available from CPAN is used. It is possible to change the standard templates
+(each table \ltoption{type} has its own template) with the
+\ltoption{custom\_template} option. For example, the \LaTeX~styles of some
+scientific journals provide their own table commands, here the one from the
+Bioinformatics journal:
+
+\begin{verbatim}
+\begin{table}[!t]
+\processtable{This is table caption\label{Tab:01}}
+{\begin{tabular}{llll}
+\toprule
+head1 & head2 & head3 & head4 \\
+\midrule
+row1 & row1 & row1 & row1 \\
+row2 & row2 & row2 & row2 \\
+row3 & row3 & row3 & row3 \\
+row4 & row4 & row4 & row4 \\
+\botrule
+\end{tabular}}{This is a footnote}
+\end{table}
+\end{verbatim}
+A very basic template for this would be:
+{\footnotesize
+\begin{verbatim}
+[% IF ENVIRONMENT %]
+\begin{[% ENVIRONMENT %][% IF STAR %]*[% END %]}[% IF POSITION %][[% POSITION %]]
+[% END %][% END %]
+\processtable{[% IF CAPTION %][% CAPTION %][% END %][% IF LABEL %]\label{[% LABEL %]}[% END %]}
+{\begin{[% TABULAR_ENVIRONMENT %]}{[% COLDEF %]}
+[% HEADER_CODE %][% DATA_CODE %]\end{[% TABULAR_ENVIRONMENT %]}}{[% FOOTTABLE %]}
+[% IF ENVIRONMENT %]\end{table}[% END %]
+\end{verbatim}}
+\noindent Now we have to define a the theme that is responsible for the rules (see
+\ref{sec:customthemes}):
+\begin{verbatim}
+  'Oxford' => {
+      'STUB_ALIGN'        => q{l},
+      'VERTICAL_RULES'    => [ 0, 0, 0 ],
+      'HORIZONTAL_RULES'  => [ 1, 1, 0 ],
+      'RULES_CMD' => [ '\toprule', '\midrule', '\midrule', '\botrule' ],
+  }
+\end{verbatim}
+Finally we can typeset tables for the Bioinformatics journal:
+\begin{verbatim}
+$table = LaTeX::Table->new(
+    {   
+        caption           => 'This is table caption',
+        label             => 'Tab:01',
+        foottable         => 'This is a footnote',
+        position          => '!t',
+        header            => $test_header,
+        data              => $test_data,
+        theme             => 'Oxford',
+        custom_template   => $custom_template,
+    }
+);
+\end{verbatim}
+If you think your custom template might be useful for others, please
+contribute it!
+\section{Version}\small{Generated with LaTeX::Table Version
+    $1.0.6$}
+\clearpage\begin{appendix}
+\section{Header/Data}
+\subsection{Simpsons Table}
+\begin{verbatim}
+my $header = [ [ 'Character', 'Fullname', 'Voice' ], ];
+my $data = [
+    [ 'Homer',  'Homer Jay Simpson',        'Dan Castellaneta'   ],
+    [ 'Marge',  'Marjorie Simpson',         'Julie Kavner'       ],
+    [ 'Bart',   'Bartholomew Jojo Simpson', 'Nancy Cartwright'   ],
+    [ 'Lisa',   'Elizabeth Marie Simpson',  'Yeardley Smith'     ],
+    [ 'Maggie', 'Margaret Simpson',
+        'Elizabeth Taylor, Nancy Cartwright, James Earl Jones,'
+     .  'Yeardley Smith, Harry Shearer'                          ],
+];
+\end{verbatim}
+
+\subsection{Animal Table}
+
+\begin{verbatim}
+my $header = [
+    [ 'Item:2c', '' ],
+    [ '\cmidrule(r){1-2}'],
+    [ 'Animal', 'Description',  'Price' ]
+];
+
+my $data = [
+    [ 'Gnat',      'per gram', '13.651' ],
+    [ '',          'each',      '0.012' ],
+    [ 'Gnu',       'stuffed',  '92.59'  ],
+    [ 'Emu',       'stuffed',  '33.33'  ],
+    [ 'Armadillo', 'frozen',    '8.99'  ],
+];
+\end{verbatim}
+
+\section{Themes}
+\subsection{Type std}
+\input{Berlin.tex}
+\input{Dresden.tex}
+\input{Evanston.tex}
+\input{Houston.tex}
+\input{Meyrin.tex}
+\input{Miami.tex}
+\input{Muenchen.tex}
+\input{NYC.tex}
+\input{NYC2.tex}
+\input{NYC3.tex}
+\input{NYC4.tex}
+\input{Paris.tex}
+\input{Redmond.tex}
+\input{Redmond2.tex}
+\input{Zurich.tex}
+\input{plain.tex}
+\clearpage 
+\subsection{Type ctable}
+\input{Berlinctable.tex}
+\input{Dresdenctable.tex}
+\input{Evanstonctable.tex}
+\input{Houstonctable.tex}
+\input{Meyrinctable.tex}
+\input{Miamictable.tex}
+\input{Muenchenctable.tex}
+\input{NYCctable.tex}
+\input{NYC2ctable.tex}
+\input{NYC3ctable.tex}
+\input{NYC4ctable.tex}
+\input{Parisctable.tex}
+\input{Redmondctable.tex}
+\input{Redmond2ctable.tex}
+\input{Zurichctable.tex}
+\input{plainctable.tex}
+\clearpage 
+\subsection{Type xtab}
+\input{Berlinmultipage.tex}
+\clearpage 
+\input{Dresdenmultipage.tex}
+\clearpage 
+\input{Evanstonmultipage.tex}
+\clearpage 
+\input{Houstonmultipage.tex}
+\clearpage 
+\input{Meyrinmultipage.tex}
+\clearpage 
+\input{Miamimultipage.tex}
+\clearpage 
+\input{Muenchenmultipage.tex}
+\clearpage 
+\input{NYCmultipage.tex}
+\clearpage 
+\input{NYC2multipage.tex}
+\clearpage 
+\input{NYC3multipage.tex}
+\clearpage 
+\input{NYC4multipage.tex}
+\clearpage 
+\input{Parismultipage.tex}
+\clearpage 
+\input{Redmondmultipage.tex}
+\clearpage 
+\input{Redmond2multipage.tex}
+\clearpage 
+\input{Zurichmultipage.tex}
+\clearpage 
+\input{plainmultipage.tex}
+\clearpage 
+\clearpage 
+\subsection{Type longtable}
+\input{Berlinmultipage2.tex}
+\input{Dresdenmultipage2.tex}
+\input{Evanstonmultipage2.tex}
+\input{Houstonmultipage2.tex}
+\input{Meyrinmultipage2.tex}
+\input{Miamimultipage2.tex}
+\input{Muenchenmultipage2.tex}
+\input{NYCmultipage2.tex}
+\input{NYC2multipage2.tex}
+\input{NYC3multipage2.tex}
+\input{NYC4multipage2.tex}
+\input{Parismultipage2.tex}
+\input{Redmondmultipage2.tex}
+\input{Redmond2multipage2.tex}
+\input{Zurichmultipage2.tex}
+\input{plainmultipage2.tex}
+\clearpage 
+\end{appendix}\end{document}

@@ -803,6 +803,46 @@ sub bibliography() {
 
 }
 
+sub _write_fancyhdr_style {
+    my $self=shift;
+
+    my $ref=shift // {};
+
+    while(my($k,$v)=each %{$ref}){
+        if(grep { /^$k$/ } qw( 
+						lhead
+						chead
+						rhead
+						lfoot
+						cfoot
+						rfoot
+                ))
+        {
+            $self->_add_line("\\$k\{$v\}");
+        } elsif(grep { /^$k$/ } qw( 
+	        			headrulewidth
+			        	footrulewidth
+                ))
+        {
+            $self->_add_line("\\renewcommand\{\\$k\}\{$v\}");
+        
+        }
+    }
+
+
+}
+
+
+sub setcounter {
+    my $self=shift;
+
+    my $counter=shift;
+    my $val=shift;
+
+    $self->_add_line('\setcounter{' . $counter . '}{' . $val . '}');
+
+}
+
 sub clearpage() {
     my $self = shift;
 

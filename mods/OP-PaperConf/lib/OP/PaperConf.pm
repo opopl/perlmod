@@ -16,6 +16,11 @@ use Term::ANSIColor;
 use Data::Dumper;
 
 use OP::TEX::PNC qw( :vars :funcs );
+use OP::Base qw(
+  %DIRS
+  readhash
+  _hash_add
+  );
 
 use Exporter ();
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -45,7 +50,7 @@ my @ex_vars_scalar = qw(
 ###export_vars_hash
 my @ex_vars_hash = qw(
   %greek_letters
-  %subsyms
+  %SUBSYMS
   %RE
   %FILES
   %COLORS
@@ -84,7 +89,8 @@ our $VERSION = '0.01';
 ###our
 our ( $refs_h, $eqs_h, $figs_h, $tabs_h, $bkey, $config, $texroot );
 our ( $refs_h_order,  $eqs_h_order, $figs_h_order, $tabs_h_order );
-our ( %greek_letters, %subsyms,     %RE );
+our ( %greek_letters, %SUBSYMS,     %RE );
+
 our $pfiles;
 our $viewfiles;
 our %seclabels;
@@ -153,22 +159,26 @@ sub tex_nice_base {
             chomp;
             next if /^\s*#/;
 
+	        s///g;
+	        s///g;
+	        s///g;
+
             foreach my $lett ( keys %greek_letters ) {
                 my $sym = $greek_letters{$lett};
                 s/$lett/\\$sym/g;
             }
 
             my $i=1;
-		    foreach my $sec (@secorder) {
+		        foreach my $sec (@secorder) {
                 s/refsec\{$i\}/refsec{$sec}/g;
                 $i++;
-		    }
+		        }
 
 ##TODO process_perltex
             #$_=process_perltex($_);
 
-            foreach my $w ( keys %subsyms ) {
-                my $sym = $subsyms{$w};
+            foreach my $w ( keys %SUBSYMS ) {
+                my $sym = $SUBSYMS{$w};
                 s/$w/$sym/g;
             }
             
@@ -277,6 +287,35 @@ sub read_seclabels () {
     }
 }
 
+sub read_SUBSYMS {
+
+###def_SUBSYMS
+    %SUBSYMS = (
+        "×"  => "\\times ",
+        "≡" => "\\equiv ",
+        "±"  => "\\pm ",
+        "–" => "-",
+        "−" => "-",
+        "ô"  => "o",
+    );
+
+    my $datfile=catfile($DIRS{PERLMOD},qw( mods OP-PaperConf PaperConf_subsyms )) . '.i.dat';
+
+    unless (-e $datfile){
+      die "subsyms.i.dat file not found."
+    }
+
+    my $ss;
+
+    $ss=readhash($datfile,{ sep  => '__' }); 
+    if(keys(%$ss)){
+      %SUBSYMS=_hash_add(\%SUBSYMS,$ss);
+    }else{
+      die "Empty subsyms read."
+    }
+
+}
+
 sub read_secorder () {
 
     my @lines;
@@ -318,7 +357,11 @@ sub init_pfiles() {
         push( @$pfiles, "p.$bkey.$piece.tex" );
     }
 
-    foreach my $piece ( qw(abs not) ) {
+    foreach my $piece ( qw( abs not ) ) {
+        push( @$pfiles, "p.$bkey.$piece.tex" );
+    }
+
+    foreach my $piece ( qw( djvu txt ) ) {
         push( @$pfiles, "p.$bkey.$piece.tex" );
     }
 
@@ -392,6 +435,9 @@ sub init_vars() {
     # fill in %seclabels
     &read_seclabels();
 
+    # fill in %SUBSYMS
+    &read_SUBSYMS();
+
 ###def_config
     $config = {
         include_tex_parts   => [qw( not figs eqs  )],
@@ -455,16 +501,6 @@ sub init_vars() {
         "Φ" => "Varphi",
         "Ψ" => "Psi",
         "Μ" => "Mu",
-    );
-
-###def_subsyms
-    %subsyms = (
-        "×"  => "\\times ",
-        "≡" => "\\equiv ",
-        "±"  => "\\pm ",
-        "–" => "-",
-        "−" => "-",
-        "ô"  => "o",
     );
 
 }

@@ -21,10 +21,12 @@ use File::Copy;
 use File::Basename;
 use IO::File;
 use Directory::Iterator;
+use Text::Table;
 
 use Text::TabularDisplay;
 
 use LaTeX::BibTeX;
+use LaTeX::Table;
 use LaTeX::TOM;
 use OP::TEX::Driver;
 
@@ -105,6 +107,7 @@ our @array_accessors = qw(
   all_parts
   bib_papers
   biblines
+  builds
   compiled_parts
   compiled_tex_papers
   dirs
@@ -113,6 +116,7 @@ our @array_accessors = qw(
   mistyles
   nltm_cleanfiles
   nltm_clobberfiles
+  pap_allfiles
   paperconfs
   papsecfiles
   papeqfiles
@@ -128,6 +132,7 @@ our @array_accessors = qw(
   xcommands
 );
 
+
 # papsecfiles -> files like p.PKEY.sec.*.i.tex
 
 ###__ACCESSORS_HASH
@@ -140,6 +145,7 @@ our @hash_accessors = qw(
   journaldefs
   listof_exts
   nltm_opts
+  makedata
   pap_packopts
   pap_usedpacks
   paperconfig
@@ -265,20 +271,26 @@ sub init_vars() {
     $self->files(
         "done_cbib2cite" => catfile($self->texroot,'keys.done_cbib2cite.i.dat'),
         "vars"  => catfile($self->texroot,$ENV{PVARSDAT} // 'vars.i.dat'),
+        "keys"  => catfile($self->texroot,'keys.i.dat'),
+        "parts"  => catfile($self->texroot,'pap.parts.i.dat'),
     );
+
+    $self->LATEXMK( $ENV{LATEXMK} // "LATEXMK" );
 
     $self->read_VARS;
     my $pname=$self->pname;
     
     $self->init_docstyle();
 
+    $self->builds(
+        map { ( m/psh_build_(.*)\.pl$/ ) ? $1 : () }
+            glob($self->texroot . "/psh_build_*.pl")
+    );
+
     $self->viewtexcmd("gvim -n -p --remote-tab-silent ");
 
     # Program used to view PDF files
 
-    $self->LATEXMK( $ENV{LATEXMK} // "latexmk" );
-    $self->texcmd("perltex --nosafe ");
-    $self->latexcmd("latex");
 
     my $bibdefs = catfile( $self->texroot, "jnames.tex" );
     $self->bibdefsfile($bibdefs);
@@ -322,12 +334,14 @@ sub init_vars() {
     $self->debugout( "Setting texroot to: " . $self->texroot . "\n" );
 
     # List of TeX-papers
-    $self->tex_papers(
-        [ map { chomp; s/\s*$//g; s/^\s*//g; $_; } `mktex.pl --listpapers` ] );
+    $self->tex_papers( 
+        map { ( basename($_) =~ /^p\.(\w+)\.tex$/) ? $1 : () } glob(catfile($self->texroot,"p.*.tex"))
+    );
+
 
     # List of short keys of TeX-papers
     my $sphash;
-    $sphash = &readhash("keys.i.dat");
+    $sphash = readhash($self->files('keys'));
     foreach my $val ( values %$sphash ) { $val = lc($val); }
     $self->short_tex_papers( [ map { (lc) } values %{$sphash} ] );
 
@@ -335,10 +349,10 @@ sub init_vars() {
     $self->plongkeys( reverse $self->pshortkeys );
 
     # List of all parts
-    $self->all_parts_push( sort keys %{ &readhash("pap.parts.i.dat") } );
+    $self->all_parts_push( sort keys %{ readhash($self->files('parts')) } );
 
     # Parts with their descriptions
-    $self->_h_set( "parts_desc", &readhash("pap.parts.i.dat") );
+    $self->_h_set( "parts_desc", readhash($self->files('parts')) );
 
     # List of PDF-papers
     opendir DIR, $self->papdir;
@@ -433,6 +447,8 @@ sub read_VARS {
         nlatexruns
         pname 
         texdriver
+        texcmd
+        latexcmd
         view_cmd_pdf_compiled
         view_cmd_pdf_original
     )]);
@@ -710,7 +726,6 @@ sub _tex_paper_splitpiece {
 
     }
 
-##TODO splitpiece
     if (@NUMS){
 	    my $pdat=catfile( $self->texroot, join(".","p",$self->pkey,$piece . "s","i.dat"  ));
 	
@@ -1091,13 +1106,45 @@ sub _tex_paper_run_tex_short {
 }
 
 # }}}
+
+
+sub _tex_paper_set() {
+    my $self=shift;
+
+    my $pkey=shift;
+
+    my $done="set_paper_$pkey";
+
+    return if $self->done_exists($done); 
+
+    $self->pkey($pkey);
+
+    $self->pap_allfiles_clear;
+
+    $self->pap_allfiles(
+        glob(catfile($self->texroot,"p.$pkey.*.tex"))
+    );
+
+    $self->pap_allfiles_push(catfile($self->texroot,"p.$pkey.tex"));
+
+    # make sure other papers' data is removed
+    foreach my $k ($self->done_keys) {
+        next unless ($k =~ /^set_paper_/);
+        
+        $self->done($k  => 0 );
+    }
+    $self->done($done => 1);
+
+}
+
 # _tex_paper_make() {{{
 
 sub _tex_paper_make() {
     my $self = shift;
 
     my $pkey = shift;
-    $self->pkey($pkey);
+
+    $self->_tex_paper_set($pkey);
 
     my $cmd = '';
     
@@ -1187,7 +1234,8 @@ sub _tex_paper_cbib2cite() {
 sub _tex_paper_tex_nice() {
     my $self = shift;
 
-    my $pkey = shift;
+    my $pkey = shift // $self->pkey;
+    $self->pkey($pkey);
 
     $self->_tex_paper_load_conf($pkey);
 
@@ -1665,7 +1713,6 @@ sub _tex_paper_gen_file() {
                         print R '\bmkeq{' . $n . '}{' . $sectitle . '}' . "\n";
                         next;
                     };
-###papgentabs
                     /^(figs|tabs)$/ && do {
 
                         # figs => fig, tabs => tab 
@@ -1698,19 +1745,49 @@ sub _tex_paper_gen_file() {
                                 use LaTeX::Table;
 
                                 # file with tabular data
-                                ( my $datafile = $figfile ) =~ s/\.tex/i.dat/g; 
+                                ( my $datfile = $figfile ) =~ s/\.tex/.i.dat/g; 
 
-                                $s->begin('table', { optvars => 'ht' });
-                                $s->begin('center');
-                                $s->begin('tabular',{ vars => [qw(ccc)] } );
-                                $s->end('tabular');
-                                $s->end('center');
-                                $s->_add_line('\caption{' . $sectitle . '}');
-                                $s->_add_line('\labeltab{' . $n . '}');
-                                $s->end('table');
+                                print "$datfile\n";
 
-                                unless (-e $figfile){
+                                if (-e $datfile){
+                                    my $ref={
+                                        datfile  => $datfile,
+                                        caption  => $sectitle,
+                                        label  => $n,
+                                    };
+
+                                    my $theme='';
+                                    #eval '$theme=$self->VARS("LaTeX_Table_theme") // ""';
+
+                                    $ref->{table_theme}=$theme if $theme;
+
+                                    my $tabtex=$self->_tex_paper_tabdat2tex($ref);
+
+                                    $s->_c_delim;
+                                    $s->_c('Generated by LaTeX::Table');
+                                    $s->_c('Table theme: ' . $theme );
+                                    $s->_c_delim;
+                                    $s->clearpage;
+                                    $s->_add_line("$tabtex");
+                                    $s->_c_delim;
+
+                                    $s->_print({ file  => $figfile });
+
+                                    edit_file_lines {
+                                          s/\\label/\\labeltab/g;
+                                    } $figfile;
+##TODO papgentabs
+                                }elsif(! -e $figfile){
+
+                                  $s->begin('table',{ optvars  => 'ht' });
+                                  $s->begin('center');
+                                  $s->begin('tabular',{ vars  => [qw(ccc)] });
+                                  $s->end('tabular');
+                                  $s->end('center');
+                                  $s->end('table');
+
                                   $s->_print({ file  => $figfile });
+###papgentabs
                                 }
                          }
 
@@ -1728,6 +1805,255 @@ sub _tex_paper_gen_file() {
 }
 
 # }}}
+
+###gen_secdata
+sub _tex_paper_gen_secdata {
+  my $self=shift;
+
+  my $allfiles=shift // $self->pap_allfiles;
+  my $isecs;
+  my %secnums;
+
+  foreach my $file (@$allfiles) {
+    my @lines=read_file $file;
+    foreach (@lines){
+      chomp;
+      next if /^\s*%/;
+
+      /^\\i(par|sec|subsec|subsubsec)\{(?<isec>\w+)\}/ && do {
+        my $isec=$+{isec};
+        push(@$isecs,$isec);
+        if ($isec =~ /^([\d_]+)/){
+          my $secn=$1;
+          $secn =~ s/_/\./g;
+          $secn =~ s/\.$//g;
+          $secnums{$secn}=$isec;
+        }
+      };
+    }
+
+  }
+  my $t=Text::Table->new;
+  my @d;
+  while(my($k,$v)=each %{secnums}){
+    push(@d,[$k,$v]);
+  }
+  $t->load(@d);
+  my $secdat=catfile($self->texroot,'secdata.' . $self->pkey);
+  write_file($secdat,$t . "\n");
+
+
+}
+
+sub _tex_paper_tabdat2tex {
+  my $self=shift;
+
+  my $ref=shift // {} ;
+
+  my ($CAPTION,$LABEL);
+  my ($caption,$label);
+
+  my $datfile=$ref->{datfile};
+
+  $caption=$ref->{caption} // '';
+  $label=$ref->{label} // '';
+  
+  my @lines=read_file $datfile;
+
+  my $lnum = 0;
+  my ($header,$data);
+
+  my $SEP='';
+  my $FW;
+
+  my($NCOLS,$NROWS);
+
+  my ($firstrow);
+
+  $LABEL=$label;
+  $CAPTION=$caption;
+
+  $firstrow=1;
+
+  # separator positions for each row
+  my @STARTPOS;
+
+  my @d=();
+
+  my $ROW=0;
+  my @COLWIDTH=qw( );
+
+  foreach my $line (@lines){
+    chomp($line);
+    next if ($line =~ /^\s*#/);
+
+    #VimMsg($line, {prefix => 'none '}); 
+
+    if ( $line =~ /^(?<FW>\w+)\s*$/ ){
+      $FW=$+{FW};
+      
+      if($FW eq "ROW"){
+          $firstrow=1;
+          for (@d){
+              s/\s*$//g;
+              s/^\s*//g;
+          }
+          push(@$data,[ @d ]);
+          @d=();
+          $ROW++;
+      }else{
+          for($FW){
+              /^(CAPTION|LABEL)$/ && do {
+                  my @evs;
+                  push(@evs,'$' . $FW . "=''");
+
+                  eval(join(";\n",@evs));
+                  die $@ if $@;
+                  
+                  next;
+              };
+          }
+      }
+
+      next;
+    };
+
+    $line =~ s/\s*$//g;
+
+    for($FW){
+###tabdat2tex_SEP
+        /^SEP$/ && do {
+          $SEP.=$line;
+          $SEP =~ s/\s*//g;
+          next;
+        };
+###tabdat2tex_HEADER
+        /^HEADER$/ && do {
+          my @h= split(/\s*$SEP\s*/,$line);
+          $NCOLS=scalar(@h);
+          $header=[ [ @h ] ] ;
+          next;
+        };
+###tabdat2tex_CAPTION
+        /^CAPTION$/ && do {
+          $line =~ s/^\s*//g;
+          $CAPTION.=' ' . $line;
+          next;
+        };
+###tabdat2tex_LABEL
+        /^LABEL$/ && do {
+          $line =~ s/^\s*//g;
+          $LABEL.=$line; 
+          next;
+        };
+###tabdat2tex_COLWIDTH
+        /^COLWIDTH$/ && do {
+          $line =~ s/^\s*//g;
+          @COLWIDTH=split(' ',$line); 
+          next;
+        };
+
+###tabdat2tex_ROW
+        /^ROW$/ && do {
+
+          # find column numbers for each column separator
+          if ($firstrow){
+            #VimMsg("LINE: $line");
+
+            @STARTPOS=(0);
+
+            while($line =~ m/($SEP)/g){
+              push(@STARTPOS,pos $line);
+            }
+            @d= split(/\s*$SEP\s*/,$line);
+            $firstrow=0;
+          }else{
+            my $i=0;
+
+            my @startpos=@STARTPOS;
+
+            while(@startpos){
+              my $spos=shift @startpos;
+              my ($epos,$lencol,$cell);
+
+              if (@startpos){
+
+	              $epos=$startpos[0]-length($SEP);
+	              $lencol=$epos-$spos+1;
+	
+              }else{
+
+                $lencol=length($line);
+              }
+
+              $cell=substr($line,$spos,$lencol);
+	            $d[$i].=$cell;
+
+              #VimMsg("i: $i; spos: $spos; lencol: $lencol; cell: $cell " );
+
+              $i++;
+            }
+          }
+          next;
+        };
+    }
+    
+    $lnum++;
+  }
+  push(@$data,[ @d ]);
+  $ROW++;
+
+  #return#;
+  #open(F,">>aa") || die $!;
+      
+  #print F '=========' . "\n";
+  #print F $LABEL . "\n";
+  #print F '=========' . "\n";
+  #print F Dumper($data);
+  #close(F);
+
+  my $table=LaTeX::Table->new(
+    caption =>  "$CAPTION",
+    caption_top => 'topcaption',
+    label   =>  "$LABEL",
+    data            => $data,
+    header          => $header,
+    type            => 'xtab',
+    callback        => sub {
+        my ( $row, $col, $value, $is_header ) = @_;
+
+        unless($is_header){
+            if ($label eq "2-2"){
+                if ($col == 0){
+                    $value='\verb|' . $value . '|' ; 
+                }
+            } elsif ($label eq "2-3"){
+                $value =~ s/->/\$\\rightarrow\$/g;
+            }
+        }
+
+        return $value;
+    }
+  );
+
+  my $theme=$ref->{table_theme} // '';
+
+  $table->set_theme($theme) if $theme; 
+
+  #$table->set_width('0.75\textwidth');
+  $NCOLS--;
+
+  if (@COLWIDTH) {
+    $table->set_coldef('|p{' . join('}|p{',@COLWIDTH) . '}|');
+  }
+
+  my $string=$table->generate_string();
+
+  return $string;
+
+}
+
+
 # _tex_paper_latex_parse() {{{
 
 sub _tex_paper_latex_parse() {
@@ -1837,6 +2163,8 @@ sub _tex_paper_load_conf_short() {
 # }}}
 # _tex_paper_load_conf() {{{
 
+###load_conf
+
 sub _tex_paper_load_conf() {
     my $self = shift;
 
@@ -1849,7 +2177,7 @@ sub _tex_paper_load_conf() {
     $self->pkey($pkey) if $pkey;
     $self->say( "Paper key reset to: " . $pkey );
 
-    my $cnf  = "p.$pkey.conf.pl";
+    my $cnf  = catfile($self->texroot, "p.$pkey.conf.pl");
     my $pack = "Config::$pkey";
 
     $pack =~ s/-/_/g;
@@ -3574,7 +3902,8 @@ sub list_fig_tex() {
 sub list_partpaps() {
     my $self = shift;
 
-    my $part = shift // '';
+    my $part = shift // $self->part;
+    $self->part($part);
 
     $self->_part_read_paps($part);
     print "$_" . "\n" for ( @{ $self->part_paps($part) } );
@@ -3659,25 +3988,34 @@ sub sysrun() {
 
     return 0 unless $cmd;
 
-    if ( $self->termcmdreset && !$self->LOGFILE_PRINTED_TERMCMD ) {
-        $self->LOGFILE->print( "\\section{command: " . $self->termcmd . "}\n" );
-        $self->LOGFILE_PRINTED_TERMCMD(1);
-    }
+    #if ( $self->termcmdreset && !$self->LOGFILE_PRINTED_TERMCMD ) {
+        #$self->LOGFILE->print( "\\section{command: " . $self->termcmd . "}\n" );
+        #$self->LOGFILE_PRINTED_TERMCMD(1);
+    #}
 
     foreach ( $opts{driver} ) {
         /^IPC::Cmd$/ && do {
             my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf )
               = IPC::Cmd::run( command => $cmd, verbose => $opts{verbose} );
 
-            if ($success) {
-                $self->LOGFILE->print("% $cmd \n");
-                $self->LOGFILE->print("\\begin{verbatim}\n");
-                $self->LOGFILE->print( join "", @$full_buf );
-                $self->LOGFILE->print("\\end{verbatim}\n");
-                $self->LOGFILE->print("%%% \n");
-            }
-            else {
-            }
+            $self->makedata(
+                success  => $success,
+                error_message  => $error_message,
+                full_buf  => $full_buf,
+                stdout_buf  => $stdout_buf,
+                stderr_buf  => $stderr_buf,
+            );
+
+
+           # if ($success) {
+                #$self->LOGFILE->print("% $cmd \n");
+                #$self->LOGFILE->print("\\begin{verbatim}\n");
+                #$self->LOGFILE->print( join "", @$full_buf );
+                #$self->LOGFILE->print("\\end{verbatim}\n");
+                #$self->LOGFILE->print("%%% \n");
+            #}
+            #else {
+            #}
             next;
         };
         /^system$/ && do {
@@ -3904,6 +4242,10 @@ sub _complete_cmd() {
                         push( @comps, $self->tex_papers );
                         next;
                     };
+                    /^part$/ && do {
+                        push( @comps, $self->all_parts );
+                        next;
+                    };
                     /^docstyle$/ && do {
                         my @s=$self->docstyles;
                         push( @comps, @s );
@@ -3932,6 +4274,12 @@ sub _complete_cmd() {
             # List of parts
             /^lparts$/ && do {
                 push( @comps, $self->all_parts );
+                next;
+            };
+
+            # List of builds
+            /^builds$/ && do {
+                push( @comps, $self->builds );
                 next;
             };
 
@@ -4213,6 +4561,15 @@ sub _term_get_commands() {
             }
         },
 
+        # }}}
+        #########################
+        # Builds {{{
+        build => {
+            desc    => "Perform a build",
+            minargs => 1,
+            args => sub { shift; $self->_complete_cmd( [qw(builds)], @_ ); },
+            proc => sub { $self->_build(  @_ ); },
+        },
         # }}}
         #########################
         # View ... {{{
@@ -4575,7 +4932,6 @@ sub _term_get_commands() {
         },
         "texnice" => {
             desc    => "Make TeX files nicer",
-            minargs => 1,
             args    => sub { shift; $self->_complete_papers( "tex", @_ ); },
             proc => sub { $self->_tex_paper_tex_nice(@_); }
         },
@@ -5107,6 +5463,15 @@ sub _bibtex_rmfields() {
 # }}}
 
 # }}}
+sub _build() {
+    my $self = shift;
+
+    my $build=shift;
+
+    my $cmd = "perl psh_build_$build" . ".pl";
+    system("$cmd");
+
+}
 #=================================
 # Bash scripts _bt _cnp _nwp _vepist {{{
 

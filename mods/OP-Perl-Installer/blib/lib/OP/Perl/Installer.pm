@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
 
 package OP::Perl::Installer;
-
 # use ... {{{
 
 use strict;
@@ -288,6 +287,7 @@ sub add_modules() {
 sub remove_modules() {
     my $self = shift;
     my ( @modules, %mods, @files );
+
     @modules = split( ',', $opt{rm} );
 
     foreach my $module (@modules) {
@@ -535,7 +535,9 @@ sub run_build_install() {
                 $stat = stat($ipath);
                 my $isize = stat($ipath)->size // '';
 
-                $different = ( $lsize == $isize ) ? 0 : 1;
+                system("diff -q $lpath $ipath > /dev/null");
+                $different = ( $? ) ? 1 : 0; 
+###rbi_check_different
             }
             else {
                 $different = 1;
@@ -684,6 +686,7 @@ sub run_build_install() {
 ###rbi_@RESULT
 
     return @RESULT;
+
 }
 
 # }}}
@@ -973,6 +976,10 @@ sub _term_get_commands() {
 sub main() {
     my $self = shift;
 
+    my $iopts = shift // {};
+    my $opts={};
+    $opts=_hash_add($opts,$iopts);
+
     $self->init();
 
     $self->get_opt();
@@ -993,7 +1000,6 @@ sub main() {
 
     if ( $opt{shcmds} ) {
         $self->run_shell( $opt{shcmds} );
-        exit 0;
     }
 
 }

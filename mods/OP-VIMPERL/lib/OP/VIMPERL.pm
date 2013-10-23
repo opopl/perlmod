@@ -55,10 +55,12 @@ my @ex_vars_scalar = qw(
   $FullSubName
   $CurBuf
   $UnderVim
+  $PAPINFO
 );
 ###export_vars_hash
 my @ex_vars_hash = qw(
   %VDIRS
+  %VFILES
 );
 ###export_vars_array
 my @ex_vars_array = qw(
@@ -235,9 +237,13 @@ our @BFILES;
 our @PIECES;
 our @LOCALMODULES;
 our ( @Args, @NamedArgs );
+our (@INITIDS);
 ###our_hash
 our %VDIRS;
-our (@INITIDS);
+our %VFILES;
+###our_ref
+# stores current paper's information
+our $PAPINFO;
 
 =head1 SUBROUTINES
 
@@ -328,10 +334,10 @@ sub VimVar {
         };
         /^Dictionary$/ && do {
             $res = {};
-            my @keys = VimVar( 'keys(' . $var . ')' );
+            my @keys = VimEval( 'keys(' . $var . ')' );
 
             foreach my $k (@keys) {
-                $res->{$k} = VimVar( $var . "['" . $k . "']" );
+                $res->{$k} = VimEval( $var . "['" . $k . "']" );
             }
 
             next;
@@ -1188,13 +1194,13 @@ sub VimQuickFixList {
     if (ref $qlist eq "ARRAY"){
       @arr=@$qlist;
     }elsif(ref $qlist eq "HASH"){
-      @arr=[ $qlist ];
+      @arr=( $qlist );
+
     }
 
     my $i=0;
     foreach my $a (@arr) {
         VimLet('qlist',$a);
-        VimMsg("Processing QLIST: " . VimEval('qlist'));
 
 	    for($action){
 	      /^add$/ && do {
@@ -1210,6 +1216,7 @@ sub VimQuickFixList {
 	          next;
 	      };
 	    }
+          VimMsg("Processed QLIST: " . VimEval('getqflist()'));
       $i++;
     }
 }
