@@ -22,6 +22,7 @@ use File::Basename;
 use IO::File;
 use Directory::Iterator;
 use Text::Table;
+use OP::PROJSHELL;
 
 use Text::TabularDisplay;
 
@@ -104,6 +105,7 @@ our @scalar_accessors = qw(
 
 ###__ACCESSORS_ARRAY
 our @array_accessors = qw(
+  MAKETARGETS
   all_parts
   bib_papers
   biblines
@@ -223,6 +225,31 @@ sub get_opt() {
 }
 
 # }}}
+
+sub init_MAKETARGETS {
+  my $self=shift;
+
+  my $pshell=OP::PROJSHELL->new;
+
+  $pshell->_read_MKTARGETS($self->files('makefile'));
+
+  $self->MAKETARGETS($pshell->MKTARGETS);
+
+}
+
+sub init_files {
+  my $self=shift;
+
+	$self->files(
+	        "done_cbib2cite" =>
+	          catfile( $self->texroot, 'keys.done_cbib2cite.i.dat' ),
+	        "vars" => catfile( $self->texroot, $ENV{PVARSDAT} // 'vars.i.dat' ),
+	        "keys" => catfile( $self->texroot, 'keys.i.dat' ),
+	        "parts" => catfile( $self->texroot, 'pap.parts.i.dat' ),
+	        "makefile" => catfile( $self->texroot, 'makefile' ),
+	    );
+}
+
 # init_vars() {{{
 
 =head3 init_vars()
@@ -268,13 +295,8 @@ sub init_vars() {
     $self->texroot( $ENV{'PSH_TEXROOT'} // catfile( "$ENV{hm}", qw(wrk p) )
           // catfile( "$ENV{HOME}", qw(wrk p) ) );
 
-    $self->files(
-        "done_cbib2cite" =>
-          catfile( $self->texroot, 'keys.done_cbib2cite.i.dat' ),
-        "vars" => catfile( $self->texroot, $ENV{PVARSDAT} // 'vars.i.dat' ),
-        "keys" => catfile( $self->texroot, 'keys.i.dat' ),
-        "parts" => catfile( $self->texroot, 'pap.parts.i.dat' ),
-    );
+    $self->init_files;
+    $self->init_MAKETARGETS;
 
     $self->LATEXMK( $ENV{LATEXMK} // "LATEXMK" );
 
@@ -1142,6 +1164,21 @@ sub _tex_paper_set() {
         $self->done( $k => 0 );
     }
     $self->done( $done => 1 );
+
+}
+
+sub _make() {
+  my $self=shift;
+
+  my $t=shift;
+
+  if (grep { /^$t$/ } $self->tex_papers) {
+    $self->_tex_paper("$t");
+  } elsif ($self->_part_exists("$t")) {
+    $self->_part_make("$t");
+  } else {
+    system("make $t");
+  }
 
 }
 
@@ -2088,25 +2125,84 @@ sub _gen_make_pdf_tex_mk {
 
     my @flines;
     my @mkopts;
+    my @prereq_gen;
+
+    my @pl=();
+
+    my $varsdat=$self->files('vars');
 
     push( @mkopts, '--skip_run_tex' );
     push( @mkopts, '--skip_tex_nice' );
     push( @mkopts, '--skip_make_bibt' );
     push( @mkopts, '--skip_make_cbib' );
 
+    push( @prereq_gen, @pl );
+    #push( @prereq_gen, $varsdat );
+
     foreach my $p ( $self->tex_papers ) {
+        next unless ($p =~ /^Lamport/);
+
         my @prereq = ();
+        my @prereq_pdf_tex = ();
+        my @prereq_pdf = ();
 
-        push( @prereq, glob( $self->catroot("p.$p.*.tex") ) );
-        push( @prereq, $self->catroot("p.$p.tex") );
+        my $pdftex="p.$p.pdf.tex";
+        my $pdfname="p.$p.pdf.tex";
+        my $pdf="p.$p.pdf.pdf";
 
-        ### write the
-        push( @flines, "p.$p.pdf.tex: " . join( " ", @prereq ) );
+        push( @prereq, @prereq_gen  );
+        push( @prereq_pdf_tex, @prereq_gen  );
+        push( @prereq_pdf, @prereq_gen  );
+
+        push( @prereq, glob( $self->catroot("p.$p.*.i.dat") ) );
+        push( @prereq, glob( $self->catroot("p.$p.*.pl") ) );
+
+        push( @prereq_pdf_tex, @prereq );
+        push( @prereq_pdf, @prereq );
+        
+        my @d=map { /\.pdf(|\.(\w*))\.tex$/ ? () : $_ } glob( $self->catroot("p.$p.*.tex") );
+        @d=map { /\.cbib\.tex$/ ? () : $_ } @d;
+        @d=map { /p\.$p\.tex$/ ? () : $_ } @d;
+
+        @d=map { /\.sec\.(\w+)\.i\.tex$/ ? $_ : () } @d;
+
+        push( @prereq_pdf_tex, @d );
+        push( @prereq_pdf_tex, @prereq_gen  );
+        push( @prereq_pdf_tex, $self->catroot("$pdftex") );
+        push( @prereq_pdf, glob( $self->catroot("p.$p.*.tex") ) );
+
+        @prereq_pdf_tex=uniq(sort(@prereq_pdf_tex));
+        @prereq_pdf=uniq(sort(@prereq_pdf));
+
+###make_p_PKEY_pdf_tex 
+        push( @flines, "p.$p.pdf.tex: " . shift(@prereq_pdf_tex) . " \\"  );
+        my $sp=" " x 10;
+        s/^/\t/g for(@prereq_pdf_tex);
+        my $depss=join("  " . "\\\n",@prereq_pdf_tex);
+        push( @flines, $depss );
 
         push( @flines, "\t" . '$(eval pkey := $(patsubst p.%.pdf.tex,%,$@))' );
         push( @flines, "\t" . '@echo_green "make> Paper key: $(pkey)"' );
-        push( @flines,
-            "\t" . '@mk_pap_pdf.pl --pkey $(pkey) ' . join( ' ', @mkopts ) );
+        push( @flines, "\t" . '@mk_pap_pdf.pl --pkey  ' . $p . ' ' . join( ' ', @mkopts ) );
+
+        push( @flines, ' ' );
+
+### target: PKEY 
+        push(@prereq,@pl);
+
+        push( @flines, "$p: $pdf"  );
+        push( @flines, ' ' );
+        push( @flines, "$pdf: $pdftex" );
+        #push( @flines, "\t" . '@mk_pap_pdf.pl --pkey ' . $p . ' --nonstop ');
+        push( @flines, "\t" . '@LATEXMK -f -pdf ' . $pdfname );
+
+        push( @flines, ' ' );
+
+###make_bibt_PKEY_tex 
+        push( @flines, "bibt.$p.tex: $varsdat "  );
+        push( @flines, "\t" . '@mk_pap_pdf.pl --pkey ' . $p . ' --only_make_bibt --mbibt');
+
+        push( @flines, ' ' );
 
         push( @flines, ' ' );
 
@@ -2472,14 +2568,16 @@ sub _tex_paper_get_secfiles() {
         next if /^\s*$/;
         push( @secorder, $+{sec} ) if /^\s*\\iii{(?<sec>\w+)}/;
     }
-    if (@secorder) {
-        $self->say("Secorder array is non-zero, writing it to file...");
-        write_file( $sofile, join( "\n", @secorder ) );
-        $self->secorder(@secorder);
-    }
-    else {
-        $self->warn("No secorder file was generated");
-    }
+    unless ( -e $sofile ){
+	    if (@secorder) {
+	        $self->say("Secorder array is non-zero, writing it to file...");
+	        write_file( $sofile, join( "\n", @secorder ) );
+	        $self->secorder(@secorder);
+	    }
+	    else {
+	        $self->warn("No secorder file was generated");
+	    }
+    } 
 
     $self->done_exists( $done => 1 );
 
@@ -4355,8 +4453,10 @@ sub _complete_cmd() {
             # make (compile a PDF from LaTeX sources)
             # - both list of TeX papers and list of parts
             # need to be completed
+###_complete_cmd_make
             /^make$/ && do {
-                push( @comps, $self->tex_papers );
+                #push( @comps, $self->tex_papers );
+                push( @comps, $self->MAKETARGETS );
                 next;
             };
 
@@ -5059,12 +5159,14 @@ sub _term_get_commands() {
                 $self->_compiled_tex_paper_view_short(@_);
               }
         },
+##cmd_make
+###cmd_make
         "make" => {
             desc => "Compile the LaTeX file for the"
               . " given paper key into a PDF document ",
             minargs => 1,
             args    => sub { shift; $self->_complete_cmd( [qw(make)], @_ ); },
-            proc => sub { $self->_tex_paper_make(@_); }
+            proc => sub { $self->_make(@_); }
         },
 ##cmd_mpa
         "mpa" => {

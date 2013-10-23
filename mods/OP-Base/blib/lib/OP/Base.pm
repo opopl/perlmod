@@ -963,6 +963,7 @@ sub readhash{
  close(FILE);
 
  wantarray ? %hash : \%hash;
+
 }
 # }}}
 

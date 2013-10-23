@@ -1066,7 +1066,7 @@ sub hypsetup() {
     my $indent=' ' x 5;
 
     while(my($k,$v)=each %{$ref}){
-        if($v == 1){
+        if($v eq "1"){
             $text.=$indent . $k  . ','                  .$endl ;
         }elsif($k =~ /^pdf(title|author|view)$/){
             $text.=$indent . $k . "={" . $v . "},"      .$endl ;

@@ -95,6 +95,7 @@ our $pfiles;
 our $viewfiles;
 our %seclabels;
 our @SECORDER;
+our %VERB;
 our %FILES;
 our %COLORS;
 
@@ -154,7 +155,17 @@ sub tex_nice_base {
     foreach my $file (@$pfiles) {
         next unless -e $file;
 
-        &psay("Processing file: $file");
+        my $isec='';
+
+        if($file  =~ /\.sec\.(\w+)\.i\.tex$/g){
+          $isec=$1;
+        }
+
+        if ($isec){
+          &psay("Processing section: $isec");
+        }else{
+          &psay("Processing file: $file");
+        }
 
         my @lines = read_file $file;
 
@@ -174,6 +185,16 @@ sub tex_nice_base {
             foreach my $sec (@SECORDER) {
                 s/refsec\{$i\}/refsec{$sec}/g;
                 $i++;
+            }
+
+            if ($isec){
+	            my $verbslist=$VERB{$isec} // '';
+
+              my @verbs=split(' ',$verbslist);
+
+	            foreach my $v (@verbs) {
+	              s/\\$v\b/\\verb|\\$v|/g;
+	            }
             }
 
 ##TODO process_perltex
@@ -302,26 +323,45 @@ sub read_SUBSYMS {
     );
 
     my $datfile =
-      catfile( $DIRS{PERLMOD}, qw( mods OP-PaperConf PaperConf_subsyms ) )
-      . '.i.dat';
 
-    unless ( -e $datfile ) {
-        die "subsyms.i.dat file not found.";
+    my @subsymfiles=();
+
+    push(@subsymfiles,  catfile( $DIRS{PERLMOD}, qw( mods OP-PaperConf PaperConf_subsyms ) )
+      . '.i.dat');
+
+    push(@subsymfiles,catfile($texroot,'p.' . $bkey . '.subsyms.i.dat'));
+
+    foreach my $datfile (@subsymfiles) {
+	    next unless ( -e $datfile );
+	
+	    my $ss={};
+	
+	    $ss = readhash( $datfile, { sep => '__' } );
+	
+	    if ( keys(%$ss) ) {
+	        $ss= _hash_add( \%SUBSYMS, $ss );
+	        %SUBSYMS = %$ss;
+	    }
+	
     }
 
-    my $ss={};
+}
 
-    $ss = readhash( $datfile, { sep => '__' } );
+sub read_VERB () {
+    my @lines;
 
-    if ( keys(%$ss) ) {
-        $ss= _hash_add( \%SUBSYMS, $ss );
-        %SUBSYMS = %$ss;
+    %VERB=();
+
+    if ( -e $FILES{verb} ) {
+
+        &psay("reading verb.i.dat file for key $bkey");
+
+        %VERB = readhash($FILES{verb},{ sep  => " "});
+
     }
     else {
-        die "Empty subsyms read.";
+        &pwarn( "verb.i.dat file not found: " . $FILES{secorder} );
     }
-
-
 }
 
 sub read_SECORDER () {
@@ -369,15 +409,16 @@ sub init_pfiles() {
         push( @$pfiles, "p.$bkey.$piece.tex" );
     }
 
-    foreach my $piece (qw( djvu txt )) {
-        push( @$pfiles, "p.$bkey.$piece.tex" );
-    }
+    #foreach my $piece (qw( djvu txt )) {
+        #push( @$pfiles, "p.$bkey.$piece.tex" );
+    #}
 
 }
 
 sub init_FILES() {
 
     $FILES{secorder} = &Fcat( 'p.' . $bkey . '.secorder.i.dat' );
+    $FILES{verb} = &Fcat( 'p.' . $bkey . '.verb.i.dat' );
 
 }
 
@@ -439,6 +480,8 @@ sub init_vars() {
 
     # fill in @SECORDER
     &read_SECORDER();
+
+    &read_VERB();
 
     # fill in %seclabels
     &read_seclabels();
