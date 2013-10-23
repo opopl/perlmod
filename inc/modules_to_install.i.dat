@@ -16,6 +16,7 @@ OP::Git
 OP::RE
 OP::Script::Simple
 OP::PAPERS::PSH
+OP::PAPERS::MKPDF
 OP::BIBTEX
 #OP::LATEXMK::VARS
 #PerlMagick

@@ -1,4 +1,4 @@
-pod2text OP::PAPS::MKPAPPDF.pm > README
+pod2text OP::PAPERS::MKPDF.pm > README
 
 If this is still here it means the programmer was too lazy to create the readme file.
 

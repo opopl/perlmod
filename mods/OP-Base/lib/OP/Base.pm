@@ -938,6 +938,11 @@ sub readhash{
 	if ($mainline){
 
 	 	@F=split($sep,$line);
+
+        for(@F){
+            s/^\s*//g;
+            s/\s*$//g;
+        }
 	
 		$var=shift @F;
 

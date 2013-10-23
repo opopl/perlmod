@@ -20,7 +20,7 @@ use OP::Base qw(
   %DIRS
   readhash
   _hash_add
-  );
+);
 
 use Exporter ();
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
@@ -58,7 +58,7 @@ my @ex_vars_hash = qw(
 );
 ###export_vars_array
 my @ex_vars_array = qw(
-  @secorder
+  @SECORDER
 );
 
 %EXPORT_TAGS = (
@@ -69,7 +69,7 @@ my @ex_vars_array = qw(
           readdat
           main
           process_perltex
-          read_secorder
+          read_SECORDER
           read_seclabels
           update_config
           Fcat
@@ -88,13 +88,13 @@ our $VERSION = '0.01';
 
 ###our
 our ( $refs_h, $eqs_h, $figs_h, $tabs_h, $bkey, $config, $texroot );
-our ( $refs_h_order,  $eqs_h_order, $figs_h_order, $tabs_h_order );
-our ( %greek_letters, %SUBSYMS,     %RE );
+our ( $refs_h_order, $eqs_h_order, $figs_h_order, $tabs_h_order );
+our ( %greek_letters, %SUBSYMS, %RE );
 
 our $pfiles;
 our $viewfiles;
 our %seclabels;
-our @secorder;
+our @SECORDER;
 our %FILES;
 our %COLORS;
 
@@ -143,9 +143,10 @@ sub psay {
 sub tex_nice_base {
 
     &psay("Running tex_nice_base() for key $bkey");
+    &psay("Current directory is " . rel2abs(curdir()) );
 
 ###loop_secorder
-    foreach my $sec (@secorder) {
+    foreach my $sec (@SECORDER) {
         my $file = "p.$bkey.sec.$sec.i.tex";
     }
 
@@ -153,26 +154,27 @@ sub tex_nice_base {
     foreach my $file (@$pfiles) {
         next unless -e $file;
 
+        &psay("Processing file: $file");
+
         my @lines = read_file $file;
 
         foreach (@lines) {
             chomp;
-            next if /^\s*#/;
 
-	        s///g;
-	        s///g;
-	        s///g;
+            s///g;
+            s///g;
+            s///g;
 
             foreach my $lett ( keys %greek_letters ) {
                 my $sym = $greek_letters{$lett};
                 s/$lett/\\$sym/g;
             }
 
-            my $i=1;
-		        foreach my $sec (@secorder) {
+            my $i = 1;
+            foreach my $sec (@SECORDER) {
                 s/refsec\{$i\}/refsec{$sec}/g;
                 $i++;
-		        }
+            }
 
 ##TODO process_perltex
             #$_=process_perltex($_);
@@ -181,20 +183,20 @@ sub tex_nice_base {
                 my $sym = $SUBSYMS{$w};
                 s/$w/$sym/g;
             }
-            
+
             /(?<before>.*)\\cite\{(?<cites>[\w\s,]+)\}(?<after>.*)/ && do {
-                my @keys=split(',',$+{cites});
-                my $newstr='';
+                my @keys = split( ',', $+{cites} );
+                my $newstr = '';
                 foreach my $k (@keys) {
-                    $k='\cite{' . $k . '}';
+                    $k = '\cite{' . $k . '}';
                 }
-                $newstr.=join(',',@keys);
-                $_=$+{before} . $newstr . $+{after};
+                $newstr .= join( ',', @keys );
+                $_ = $+{before} . $newstr . $+{after};
             };
 
             s/[,]{2,}//g;
 
-            unless(grep { /^$bkey$/ } qw( GoossensLATEXWEB )){
+            unless ( grep { /^$bkey$/ } qw( GoossensLATEXWEB ) ) {
                 s/"(?<words>[\w\s,\-]+)"/``$+{words}''/g;
             }
 
@@ -213,7 +215,7 @@ s/^(?<tagid>%%page)\s+(?<pagetrash>[page_]*(?<pnum>\d+))\s*$/$+{tagid} page_$+{p
 s/^(?<tagid>%%section)\s+(?<sectrash>[sec_]*(?<sname>\w+))$/$+{tagid} sec_$+{sname}/g;
 
         }
-        write_file($file,join("\n",@lines) . "\n");
+        write_file( $file, join( "\n", @lines ) . "\n" );
     }
 
 }
@@ -281,7 +283,7 @@ sub read_seclabels () {
 
     my $i = 1;
 
-    for (@secorder) {
+    for (@SECORDER) {
         $seclabels{$i} = $_;
         $i++;
     }
@@ -299,24 +301,30 @@ sub read_SUBSYMS {
         "ô"  => "o",
     );
 
-    my $datfile=catfile($DIRS{PERLMOD},qw( mods OP-PaperConf PaperConf_subsyms )) . '.i.dat';
+    my $datfile =
+      catfile( $DIRS{PERLMOD}, qw( mods OP-PaperConf PaperConf_subsyms ) )
+      . '.i.dat';
 
-    unless (-e $datfile){
-      die "subsyms.i.dat file not found."
+    unless ( -e $datfile ) {
+        die "subsyms.i.dat file not found.";
     }
 
-    my $ss;
+    my $ss={};
 
-    $ss=readhash($datfile,{ sep  => '__' }); 
-    if(keys(%$ss)){
-      %SUBSYMS=_hash_add(\%SUBSYMS,$ss);
-    }else{
-      die "Empty subsyms read."
+    $ss = readhash( $datfile, { sep => '__' } );
+
+    if ( keys(%$ss) ) {
+        $ss= _hash_add( \%SUBSYMS, $ss );
+        %SUBSYMS = %$ss;
     }
+    else {
+        die "Empty subsyms read.";
+    }
+
 
 }
 
-sub read_secorder () {
+sub read_SECORDER () {
 
     my @lines;
 
@@ -325,7 +333,7 @@ sub read_secorder () {
         &psay("reading secorder.i.dat file for key $bkey");
 
         @lines = read_file $FILES{secorder};
-        @secorder = map { chomp; /^\s*#/ ? () : $_ } @lines;
+        @SECORDER = map { chomp; /^\s*#/ ? () : $_ } @lines;
 
     }
     else {
@@ -357,11 +365,11 @@ sub init_pfiles() {
         push( @$pfiles, "p.$bkey.$piece.tex" );
     }
 
-    foreach my $piece ( qw( abs not ) ) {
+    foreach my $piece (qw( abs not )) {
         push( @$pfiles, "p.$bkey.$piece.tex" );
     }
 
-    foreach my $piece ( qw( djvu txt ) ) {
+    foreach my $piece (qw( djvu txt )) {
         push( @$pfiles, "p.$bkey.$piece.tex" );
     }
 
@@ -415,9 +423,9 @@ sub init_vars() {
         "warn" => 'bold red',
     );
 
-    @PNC=qw(
-        ienv 
-        pbib
+    @PNC = qw(
+      ienv
+      pbib
     );
 
     $texroot = $ENV{'PSH_TEXROOT'} // catfile( "$ENV{hm}", qw(wrk p) )
@@ -429,8 +437,8 @@ sub init_vars() {
     &init_RE();
     &init_pfiles();
 
-    # fill in @secorder
-    &read_secorder();
+    # fill in @SECORDER
+    &read_SECORDER();
 
     # fill in %seclabels
     &read_seclabels();
@@ -504,8 +512,6 @@ sub init_vars() {
     );
 
 }
-
-
 
 BEGIN {
     &init_vars();
