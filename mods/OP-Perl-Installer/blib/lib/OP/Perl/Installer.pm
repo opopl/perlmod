@@ -117,8 +117,33 @@ sub _sys() {
     system("$cmd");
 }
 
-sub module_installed_path {
+sub module_full_local_path_relative {
     my $self = shift;
+
+    my $module = shift;
+
+    return shift $self->module_full_local_paths($module);
+
+}
+
+sub module_full_installed_paths {
+    my $self=shift;
+
+    my $module = shift;
+
+    my $pminst = OP::PERL::PMINST->new;
+        ( my $mdef = $module ) =~ s/::/-/g;
+        $pminst->main(
+            {
+                PATTERN     => '^' . "$module" . '$',
+                mode        => 'fullpath',
+                excludedirs => catfile( $self->dirs("mods"), $mdef, qw(lib) ),
+            }
+        );
+    my @p=$pminst->MPATHS;
+
+    wantarray ? @p : \@p;
+
 }
 
 sub module_full_local_path {
@@ -126,7 +151,10 @@ sub module_full_local_path {
 
     my $module = shift;
 
-    return shift $self->module_full_local_paths($module);
+    return catfile(
+        $self->dirs("mods"),
+        $self->module_full_local_path_relative($module)
+    );
 
 }
 
@@ -457,6 +485,7 @@ sub list_modules() {
 =cut
 
 ###rbi_
+
 sub run_build_install() {
     my $self = shift;
 
@@ -476,6 +505,8 @@ sub run_build_install() {
     @only    = $self->modules_to_install;
     @exclude = $self->modules_to_exclude;
 
+    my $pminst = OP::PERL::PMINST->new;
+
     foreach my $module (@imodules) {
 ###rbi_loop_imodules
         next if grep { /^$module$/ } @processed;
@@ -483,25 +514,14 @@ sub run_build_install() {
         push( @processed, $module );
 
         # Local path to the module
-        my $lpath = catfile( $self->dirs("mods"),
-            $self->module_full_local_path($module) );
+        my $lpath = $self->module_full_local_path($module) ;
 
         unless ( -e $lpath ) {
             $self->warn("Local path points to non-existing file: $lpath");
         }
 
         # Locations of the installed module
-        my $pminst = OP::PERL::PMINST->new;
-        ( my $mdef = $module ) =~ s/::/-/g;
-        $pminst->main(
-            {
-                PATTERN     => '^' . "$module" . '$',
-                mode        => 'fullpath',
-                excludedirs => catfile( $self->dirs("mods"), $mdef, qw(lib) ),
-            }
-        );
-
-        my @ipaths = $pminst->MPATHS;
+        my @ipaths = $self->module_full_installed_paths($module);
 
         use File::stat;
 
@@ -972,6 +992,15 @@ sub _term_get_commands() {
 # }}}
 
 # main() {{{
+
+sub main_no_getopt(){
+    my $self=shift;
+
+    $self->init();
+    $self->init_vars();
+    $self->load_modules();
+
+}
 
 sub main() {
     my $self = shift;

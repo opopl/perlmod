@@ -240,14 +240,14 @@ sub init_MAKETARGETS {
 sub init_files {
   my $self=shift;
 
-	$self->files(
-	        "done_cbib2cite" =>
-	          catfile( $self->texroot, 'keys.done_cbib2cite.i.dat' ),
-	        "vars" => catfile( $self->texroot, $ENV{PVARSDAT} // 'vars.i.dat' ),
-	        "keys" => catfile( $self->texroot, 'keys.i.dat' ),
-	        "parts" => catfile( $self->texroot, 'pap.parts.i.dat' ),
-	        "makefile" => catfile( $self->texroot, 'makefile' ),
-	    );
+    $self->files(
+            "done_cbib2cite" =>
+              catfile( $self->texroot, 'keys.done_cbib2cite.i.dat' ),
+            "vars" => catfile( $self->texroot, $ENV{PVARSDAT} // 'vars.i.dat' ),
+            "keys" => catfile( $self->texroot, 'keys.i.dat' ),
+            "parts" => catfile( $self->texroot, 'pap.parts.i.dat' ),
+            "makefile" => catfile( $self->texroot, 'makefile' ),
+        );
 }
 
 # init_vars() {{{
@@ -1173,7 +1173,7 @@ sub _make() {
   my $t=shift;
 
   if (grep { /^$t$/ } $self->tex_papers) {
-    $self->_tex_paper("$t");
+    $self->_tex_paper_make("$t");
   } elsif ($self->_part_exists("$t")) {
     $self->_part_make("$t");
   } else {
@@ -2129,6 +2129,38 @@ sub _gen_make_pdf_tex_mk {
 
     my @pl=();
 
+    require OP::Perl::Installer;
+    require OP::PERL::PMINST;
+
+    my $i=OP::Perl::Installer->new;
+    $i->main_no_getopt;
+
+    my $pminst = OP::PERL::PMINST->new;
+        
+###gen_make_perlmods
+    my @needed_mods=qw( OP::PaperConf OP::PAPERS::MKPDF );
+    my %modpaths_installed;
+    my %modpaths_local;
+
+    foreach my $module (@needed_mods) {
+        my @ipaths=$i->module_full_installed_paths($module);
+        my $lpath=$i->module_full_local_path($module);
+
+        $modpaths_local{$module}=$lpath;
+        $modpaths_installed{$module}=\@ipaths;
+
+        foreach my $mpath (@ipaths) {
+            push( @flines, "$mpath : $lpath" );
+            push( @flines, "\t" . '@local_module_install.pl "' . "$module" . '"');
+            push( @flines, ' ' );
+        }
+    }
+    my @req_imods;
+
+    for my $ipaths (@modpaths_installed{@needed_mods}){
+        push(@req_imods,@$ipaths);
+    }
+
     my $varsdat=$self->files('vars');
 
     push( @mkopts, '--skip_run_tex' );
@@ -2139,8 +2171,9 @@ sub _gen_make_pdf_tex_mk {
     push( @prereq_gen, @pl );
     #push( @prereq_gen, $varsdat );
 
+    my $rbi='@local_module_install.pl ';
+
     foreach my $p ( $self->tex_papers ) {
-        next unless ($p =~ /^Lamport/);
 
         my @prereq = ();
         my @prereq_pdf_tex = ();
@@ -2149,6 +2182,10 @@ sub _gen_make_pdf_tex_mk {
         my $pdftex="p.$p.pdf.tex";
         my $pdfname="p.$p.pdf.tex";
         my $pdf="p.$p.pdf.pdf";
+
+        my $p_refs="p.$p.refs.i.dat p.$p.refs.tex";
+        my $p_cbib="p.$p.cbib.tex";
+        my $p_bibt="bibt.$p.tex";
 
         push( @prereq, @prereq_gen  );
         push( @prereq_pdf_tex, @prereq_gen  );
@@ -2170,12 +2207,14 @@ sub _gen_make_pdf_tex_mk {
         push( @prereq_pdf_tex, @prereq_gen  );
         push( @prereq_pdf_tex, $self->catroot("$pdftex") );
         push( @prereq_pdf, glob( $self->catroot("p.$p.*.tex") ) );
+        
 
         @prereq_pdf_tex=uniq(sort(@prereq_pdf_tex));
         @prereq_pdf=uniq(sort(@prereq_pdf));
 
 ###make_p_PKEY_pdf_tex 
         push( @flines, "p.$p.pdf.tex: " . shift(@prereq_pdf_tex) . " \\"  );
+        push( @flines, " " . join(' ',@req_imods) . "\\"  );
         my $sp=" " x 10;
         s/^/\t/g for(@prereq_pdf_tex);
         my $depss=join("  " . "\\\n",@prereq_pdf_tex);
@@ -2188,23 +2227,36 @@ sub _gen_make_pdf_tex_mk {
         push( @flines, ' ' );
 
 ### target: PKEY 
+###make_p_PKEY_pdf_pdf
         push(@prereq,@pl);
 
         push( @flines, "$p: $pdf"  );
         push( @flines, ' ' );
-        push( @flines, "$pdf: $pdftex" );
+        push( @flines, "$pdf : $p_cbib $pdftex \\" );
+        push( @flines, " " . join(" \\\n",glob("pdf.*.tex"))   );
         #push( @flines, "\t" . '@mk_pap_pdf.pl --pkey ' . $p . ' --nonstop ');
         push( @flines, "\t" . '@LATEXMK -f -pdf ' . $pdfname );
 
         push( @flines, ' ' );
 
 ###make_bibt_PKEY_tex 
-        push( @flines, "bibt.$p.tex: $varsdat "  );
-        push( @flines, "\t" . '@mk_pap_pdf.pl --pkey ' . $p . ' --only_make_bibt --mbibt');
+        push( @flines, "$p_bibt : $varsdat \\"  );
+        push( @flines, " " . join(" \\\n",@req_imods)  );
+        push( @flines, "\t" . '@mk_pap_pdf.pl --pkey ' . $p . ' --only_make_bibt');
 
         push( @flines, ' ' );
 
         push( @flines, ' ' );
+
+###make_p_PKEY_cbib_tex 
+        push( @flines, "$p_cbib : $p_refs \\"  );
+        push( @flines, " " . join(" \\\n",@req_imods)   );
+        push( @flines, "\t" . '@mk_pap_pdf.pl --pkey ' . $p . ' --only_make_cbib');
+
+        push( @flines, ' ' );
+
+        push( @flines, ' ' );
+
 
     }
 
@@ -2569,14 +2621,14 @@ sub _tex_paper_get_secfiles() {
         push( @secorder, $+{sec} ) if /^\s*\\iii{(?<sec>\w+)}/;
     }
     unless ( -e $sofile ){
-	    if (@secorder) {
-	        $self->say("Secorder array is non-zero, writing it to file...");
-	        write_file( $sofile, join( "\n", @secorder ) );
-	        $self->secorder(@secorder);
-	    }
-	    else {
-	        $self->warn("No secorder file was generated");
-	    }
+        if (@secorder) {
+            $self->say("Secorder array is non-zero, writing it to file...");
+            write_file( $sofile, join( "\n", @secorder ) );
+            $self->secorder(@secorder);
+        }
+        else {
+            $self->warn("No secorder file was generated");
+        }
     } 
 
     $self->done_exists( $done => 1 );

@@ -117,6 +117,7 @@ sub set_these_cmdopts() {
             { name => "mbibt",   desc => "" },
             { name => "nonstop", desc => "" },
             { name => "only_make_bibt", desc => "" },
+            { name => "only_make_cbib", desc => "" },
             {
                 name => "docstyle",
                 desc =>
@@ -219,6 +220,7 @@ sub init_vars() {
       skip_make_bibt
       skip_make_cbib
       only_make_bibt
+      only_make_cbib
       );
 
     $self->optids(@optids);
@@ -638,6 +640,13 @@ sub run_only {
             
             next;
         };
+        /^make_cbib$/ && do {
+
+            $self->make_cbib();
+            
+            next;
+        };
+
     }
 }
 
@@ -1339,7 +1348,7 @@ sub write_tex_preamble() {
 
     $pa->input("nc.perltex") if $self->_package_is_used('perltex');
 
-    $pa->input("p.$fpkey.cbib");
+    $pa->input("p.$fpkey.cbib", { check_exists  => 1 });
 
     $self->write_tex_preamble_fancyhdr() if $self->_package_is_used('fancyhdr');
 

@@ -144,7 +144,7 @@ sub psay {
 sub tex_nice_base {
 
     &psay("Running tex_nice_base() for key $bkey");
-    &psay("Current directory is " . rel2abs(curdir()) );
+    &psay( "Current directory is " . rel2abs( curdir() ) );
 
 ###loop_secorder
     foreach my $sec (@SECORDER) {
@@ -155,19 +155,25 @@ sub tex_nice_base {
     foreach my $file (@$pfiles) {
         next unless -e $file;
 
-        my $isec='';
+        my $isec = '';
 
-        if($file  =~ /\.sec\.(\w+)\.i\.tex$/g){
-          $isec=$1;
+        if ( $file =~ /\.sec\.(\w+)\.i\.tex$/g ) {
+            $isec = $1;
         }
 
-        if ($isec){
-          &psay("Processing section: $isec");
-        }else{
-          &psay("Processing file: $file");
+        if ($isec) {
+            &psay("Processing section: $isec");
+        }
+        else {
+            &psay("Processing file: $file");
         }
 
         my @lines = read_file $file;
+
+        my %lineflags;
+        foreach my $k (qw(in_verbatim)) {
+            $lineflags{$k}=0;
+        }
 
         foreach (@lines) {
             chomp;
@@ -187,14 +193,26 @@ sub tex_nice_base {
                 $i++;
             }
 
-            if ($isec){
-	            my $verbslist=$VERB{$isec} // '';
+            if(/^\\begin{verbatim}$/){
+                $lineflags{in_verbatim}=1;
+            }
+            elsif(/^\\end{verbatim}$/){
+                $lineflags{in_verbatim}=0;
+            }
 
-              my @verbs=split(' ',$verbslist);
+            if ($isec) {
 
-	            foreach my $v (@verbs) {
-	              s/\\$v\b/\\verb|\\$v|/g;
-	            }
+                ### verb substitutions
+                next if $lineflags{in_verbatim};
+                my $verbslist = $VERB{$isec} // '';
+
+                my @verbs = split( ' ', $verbslist );
+
+                foreach my $v (@verbs) {
+                    s/\\$v\b/\\verb|\\$v|/g;
+
+                    s/\\verb|\\verb|\\$v||/\\verb|\\$v|/g;
+                }
             }
 
 ##TODO process_perltex
@@ -231,6 +249,9 @@ s/^(?<tagid>%%page)\s+(?<pagetrash>[page_]*(?<pnum>\d+))\s*$/$+{tagid} page_$+{p
 
             s/^(?<tagid>%%figure)\s+(?<fignum>.+)/$+{tagid} fig_$+{fignum}/g;
             s/fig_fig/fig/g;
+
+            next
+              if /^(?<tagid>%%section)\s+(sec|ipar|isec|isubsec|isubsubsec)_/g;
 
             s/^(?<tagid>%%section)\s+(?<secname>.*)/$+{tagid} sec_$+{secname}/g;
 s/^(?<tagid>%%section)\s+(?<sectrash>[sec_]*(?<sname>\w+))$/$+{tagid} sec_$+{sname}/g;
@@ -324,25 +345,26 @@ sub read_SUBSYMS {
 
     my $datfile =
 
-    my @subsymfiles=();
+      my @subsymfiles = ();
 
-    push(@subsymfiles,  catfile( $DIRS{PERLMOD}, qw( mods OP-PaperConf PaperConf_subsyms ) )
-      . '.i.dat');
+    push( @subsymfiles,
+        catfile( $DIRS{PERLMOD}, qw( mods OP-PaperConf PaperConf_subsyms ) )
+          . '.i.dat' );
 
-    push(@subsymfiles,catfile($texroot,'p.' . $bkey . '.subsyms.i.dat'));
+    push( @subsymfiles, catfile( $texroot, 'p.' . $bkey . '.subsyms.i.dat' ) );
 
     foreach my $datfile (@subsymfiles) {
-	    next unless ( -e $datfile );
-	
-	    my $ss={};
-	
-	    $ss = readhash( $datfile, { sep => '__' } );
-	
-	    if ( keys(%$ss) ) {
-	        $ss= _hash_add( \%SUBSYMS, $ss );
-	        %SUBSYMS = %$ss;
-	    }
-	
+        next unless ( -e $datfile );
+
+        my $ss = {};
+
+        $ss = readhash( $datfile, { sep => '__' } );
+
+        if ( keys(%$ss) ) {
+            $ss = _hash_add( \%SUBSYMS, $ss );
+            %SUBSYMS = %$ss;
+        }
+
     }
 
 }
@@ -350,13 +372,13 @@ sub read_SUBSYMS {
 sub read_VERB () {
     my @lines;
 
-    %VERB=();
+    %VERB = ();
 
     if ( -e $FILES{verb} ) {
 
         &psay("reading verb.i.dat file for key $bkey");
 
-        %VERB = readhash($FILES{verb},{ sep  => " "});
+        %VERB = readhash( $FILES{verb}, { sep => " " } );
 
     }
     else {
@@ -410,7 +432,7 @@ sub init_pfiles() {
     }
 
     #foreach my $piece (qw( djvu txt )) {
-        #push( @$pfiles, "p.$bkey.$piece.tex" );
+    #push( @$pfiles, "p.$bkey.$piece.tex" );
     #}
 
 }
@@ -418,7 +440,7 @@ sub init_pfiles() {
 sub init_FILES() {
 
     $FILES{secorder} = &Fcat( 'p.' . $bkey . '.secorder.i.dat' );
-    $FILES{verb} = &Fcat( 'p.' . $bkey . '.verb.i.dat' );
+    $FILES{verb}     = &Fcat( 'p.' . $bkey . '.verb.i.dat' );
 
 }
 

@@ -248,6 +248,27 @@ sub _insert_file() {
     }
 }
 
+=head3 input()
+
+=head4 USAGE 
+
+=over 4
+
+=item input($filename,{ %OPTIONS });
+
+=back
+
+=head4 EXAMPLES
+
+=over 4
+
+=item input('a',{ check_exists  => 1 } );
+=item input('a');
+
+=back
+
+=cut
+
 sub input() {
     my $self = shift;
 
