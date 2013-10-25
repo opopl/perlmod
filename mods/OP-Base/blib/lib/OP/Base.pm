@@ -64,6 +64,7 @@ our %EXPORT_TAGS = (
           gettime
           ListModuleSubs
           open_files
+          op_write_file
           printpod
           printhelp
           printman
@@ -182,6 +183,7 @@ sub getopt_init;
 sub getopt_after;
 sub gettime;
 sub ListModuleSubs;
+sub op_write_file;
 sub open_files;
 sub printpod;
 sub printhelp;
@@ -973,6 +975,28 @@ sub readarr {
 }
 
 # }}}
+
+sub op_write_file {
+
+    my $file=shift // '';
+    my $ref=shift // '';
+
+    return unless $file;
+    return unless $ref;
+
+    open(F,">$file") || die $!;
+        
+    my $text;
+    unless(ref $ref){
+        $text=$ref;
+    }elsif(ref $ref eq "ARRAY"){
+        $text=join("\n",@$ref);
+    }
+    print F $text;
+
+    close(F);
+}
+
 # readhash(){{{
 
 =head3 readhash()

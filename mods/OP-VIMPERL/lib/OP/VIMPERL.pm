@@ -414,8 +414,7 @@ sub VimVarType {
 EOV
     VimCmd("$vimcode");
 
-    my $vartype = VimEval('type');
-    return $vartype;
+    return VimEval('type');
 
 }
 
@@ -818,12 +817,12 @@ sub VimResetVars {
 }
 
 sub Vim_MsgPrefix {
-    my $prefix = shift;
+    my $prefix = shift // '';
 
-    if ( defined $prefix ) {
-        $MsgPrefix = $prefix;
-        VimLet( "g:MsgPrefix", "$prefix" );
-    }
+    return unless $prefix;
+
+    $MsgPrefix = $prefix;
+    VimLet( "g:MsgPrefix", "$prefix" );
 
 }
 

@@ -733,6 +733,16 @@ sub _read_MKTARGETS() {
 
     my $tmk=shift // $self->files("maketex_mk");
 
+    my $makefile_dir=dirname($tmk);
+    my $old_dir=rel2abs(curdir());
+
+    chdir $makefile_dir;
+
+    unless (-e $tmk) {
+        $self->warn('_read_MKTARGETS(): input makefile not found!');
+        return;
+    }
+
     my @lines=read_file $tmk;
 
     foreach (@lines) {
@@ -753,6 +763,8 @@ sub _read_MKTARGETS() {
 
     $self->MKTARGETS_sort();
     $self->MKTARGETS_uniq();
+
+    chdir $old_dir;
 
 }
 # }}}

@@ -3,6 +3,9 @@ package OP::PAPERS::MKPDF;
 use strict;
 use warnings;
 
+use feature qw(switch);
+use 5.010;
+
 #---------------------------------
 # intro {{{
 # use ... {{{
@@ -14,7 +17,7 @@ use Getopt::Long;
 use File::Cat;
 use File::Path qw(make_path remove_tree);
 use File::Copy;
-use File::Slurp qw(edit_file edit_file_lines read_file);
+use File::Slurp qw(edit_file edit_file_lines read_file write_file );
 use Getopt::Long;
 use Pod::Usage;
 use IPC::Cmd;
@@ -47,6 +50,7 @@ our @scalar_accessors = qw(
   fpkey
   ltmopts
   makeindexstyle
+  pap_mainfile
   pdflatex
   ofname
   orientation
@@ -64,12 +68,14 @@ our @scalar_accessors = qw(
 
 ###__ACCESSORS_ARRAY
 our @array_accessors = qw(
-  cmdline
   PDFOUTDIRS
-  usedpacks
-  ncfiles
+  SECORDER
+  cmdline
   docstyles
+  ncfiles
   optids
+  write_tex_only
+  usedpacks
 );
 
 ###__ACCESSORS_HASH
@@ -80,7 +86,9 @@ our @hash_accessors = qw(
   packopts
   pdf_offsets
   papsecs
+  runopts
   VARS
+  SECORDER_CMDS
 );
 
 __PACKAGE__->mk_scalar_accessors(@scalar_accessors)
@@ -116,8 +124,6 @@ sub set_these_cmdopts() {
             { name => "list",    desc => "", type => "s" },
             { name => "mbibt",   desc => "" },
             { name => "nonstop", desc => "" },
-            { name => "only_make_bibt", desc => "" },
-            { name => "only_make_cbib", desc => "" },
             {
                 name => "docstyle",
                 desc =>
@@ -214,16 +220,26 @@ sub init_vars() {
     my $packopts;
 
 ###set_optids
-    my @optids=qw(
-      skip_run_tex
-      skip_tex_nice
-      skip_make_bibt
-      skip_make_cbib
-      only_make_bibt
-      only_make_cbib
+    my @skip=qw(
+      make_bibt
+      make_cbib
+      run_tex
+      tex_nice
       );
 
-    $self->optids(@optids);
+    my @write_tex_only=qw(main preamble titpage start );
+
+    $self->write_tex_only( @write_tex_only );
+
+    my @only=qw(
+      make_bibt
+      make_cbib
+    );
+    push(@only,map { "write_tex_" . $_ } @write_tex_only);
+
+    $self->optids_clear();
+    $self->optids_push( map { "skip_" . $_  } @skip );
+    $self->optids_push( map { "only_" . $_  } @only );
 
     # root directory for the LaTeX files
     $self->texroot( $ENV{'PSH_TEXROOT'} // catfile( "$ENV{hm}", qw(wrk p) )
@@ -632,48 +648,46 @@ sub run_only {
 
     return unless $only;
 
-    for($only){
-        /^make_bibt$/ && do {
-
-            $self->make_bibt();
+    given($only){
+      when(/^make_bibt$/) { 
+          $self->make_bibt();
 	        $self->make_bibt_this();
-            
-            next;
-        };
-        /^make_cbib$/ && do {
-
+      }
+      when(/^make_cbib$/) { 
             $self->make_cbib();
-            
-            next;
-        };
-
+      }
+      when(/^write_tex_(?<opt>.*)$/) { 
+        my $opt=$+{opt};
+        if($opt ~~ $self->write_tex_only ){
+            my $evs='$self->write_tex_' . $opt . '()';
+            eval $evs;
+        }
+      }
+      default { }
     }
+
 }
 
 # run() {{{
 
-=head3 run()
-
-=cut
-
-sub run() {
-    my $self = shift;
+sub run_switch {
+    my $self=shift;
 
     my $iopts=shift // {};
+
     my $runopts;
     
     foreach my $id ($self->optids) {
-      $runopts->{$id}=0;
+      $self->runopts( $id  => 0 );
       if ($self->_opt_true($id)){
-        $runopts->{$id}=1;
+        $self->runopts( $id  => 1 );
       }
     }
-
-    $runopts=_hash_add($runopts,$iopts);
+    $self->runopts($iopts);
 
     my $only='';
 
-    while(my($k,$v)=each %{$runopts}){
+    while(my($k,$v)=each $self->runopts){
         next unless $v;
 	    if ($k =~ /^only_(\w+)/){
           $only=$1;
@@ -683,25 +697,44 @@ sub run() {
 
     if ($only) {
         $self->run_only($only);
-        return ;
+        return 'run_only';
     }
 
-    die "fpkey was not defined\n" unless $self->fpkey;
+}
+
+
+=head3 run()
+
+=cut
+
+sub run() {
+    my $self = shift;
+
+    my $iopts=shift // {};
+
+    # load paper configuration from p.PKEY.conf.pl
+    $self->load_paper_conf();
+    $self->set_lang();
+
+    my $rsw=$self->run_switch($iopts);
+    given($rsw){
+        when('run_only') { return; }
+        default { }
+    }
+
+        die "fpkey was not defined\n" unless $self->fpkey;
     my $fpkey = $self->fpkey;
 
     if ( $self->_opt_true("list") ) {
         $self->usedpacks_print if $self->_opt_eq( "list", "usedpacks" );
     }
 
-    # load paper configuration from p.PKEY.conf.pl
-    $self->load_paper_conf();
-
     # generate p.PKEY.cbib.tex
-    unless ($runopts->{skip_make_cbib}){
+    unless ($self->runopts("skip_make_cbib")){
         $self->make_cbib();
     }
 
-    unless ($runopts->{skip_make_bibt}){
+    unless ($self->runopts("skip_make_bibt")){
 	    # make bibt.*.tex files for all referenced papers,
 	    #   if necessary
 	    $self->make_bibt();
@@ -714,11 +747,11 @@ sub run() {
     $self->write_tex();
 
     # apply various tex_nice methods
-    unless ($runopts->{skip_tex_nice}){
+    unless ($self->runopts("skip_tex_nice")){
         $self->make_tex_nicer();
     }
 
-    if ($runopts->{skip_run_tex}){
+    if ($self->runopts("skip_run_tex")){
       return;
     }
 
@@ -793,6 +826,8 @@ sub load_paper_conf() {
     my $fpkey = $self->fpkey;
     my $f     = catfile($self->texroot,"p.$fpkey.conf.pl");
 
+    my $cpack='Config::' . $fpkey;
+
     return 1 unless -e $f;
 
     $self->say("Loading configuration for paper: $fpkey");
@@ -801,13 +836,68 @@ sub load_paper_conf() {
     # $Config::PKEY::config => $self->config
     $self->apply_vars( 'Config::' . $fpkey, qw(config) );
 
-    $self->pshcmd("geneqs $fpkey");
+    my @evs;
+    
+    push(@evs,'$self->SECORDER(@' . $cpack . '::SECORDER)');
+    push(@evs,'$self->SECORDER_CMDS(%' . $cpack . '::SECORDER_CMDS)');
+
+    eval(join(";\n",@evs));
+    die $@ if $@;
+
+    #$self->pshcmd("geneqs $fpkey");
 
 }
 
 # }}}
 #=================================
+
+sub catroot {
+    my $self=shift;
+
+    return catfile($self->texroot,@_);
+}
+
 # write_tex*  {{{
+
+=head3 write_tex_main()
+
+=head4 USAGE
+
+=head4 PURPOSE 
+
+Write p.PKEY.tex by using the secorder.i.dat file
+
+=head4 SEE ALSO
+
+PAP_GenMain() in papers.vim 
+
+=cut
+
+sub write_tex_main {
+    my $self=shift;
+
+    my $pkey=shift // $self->fpkey;
+    my $mainfile=$self->catroot('p.' . $pkey . '.tex');
+
+    my @outlines=();
+
+    push(@outlines,'%');
+    push(@outlines,'% Generated via Perl package: ' . __PACKAGE__ );
+    push(@outlines,'%');
+    push(@outlines,' ');
+    push(@outlines,'\ssec{' . $pkey . '}');
+    push(@outlines,' ');
+
+    foreach my $sec ($self->SECORDER) {
+      my $cmds=$self->SECORDER_CMDS("$sec") // [];
+      if (@$cmds){
+        push(@outlines,@$cmds);
+      }
+      push(@outlines,'\iii{' . $sec . '}');
+    }
+    write_file($mainfile,join("\n",@outlines) . "\n");
+
+}
 
 # write_tex() {{{
 
@@ -823,20 +913,15 @@ sub write_tex() {
     my $pname = $self->pname;
     my $fpkey = $self->fpkey;
 
-    $self->set_lang();
-
     $outfile = "p.$fpkey.pdf.tex";
 
     my $date = localtime;
-
-    $self->get_ptitle();
-    $self->get_pauthors();
 
     $self->write_tex_preamble();
     $self->write_tex_start();
     $self->write_tex_figs();
     $self->write_tex_tabs();
-    $self->write_tex_title_page();
+    $self->write_tex_titpage();
 
     my $t=OP::TEX::Text->new;
 
@@ -929,24 +1014,24 @@ sub write_tex_figs() {
 }
 
 # }}}
-# write_tex_title_page() {{{
+# write_tex_titpage() {{{
 
-sub write_tex_title_page() {
+sub write_tex_titpage() {
     my $self = shift;
 
-    eval '$self->write_tex_title_page_' . $self->docstyle . '();';
+    eval '$self->write_tex_titpage_' . $self->docstyle . '();';
     die $@ if $@;
 }
 
-sub write_tex_title_page_texht() {
+sub write_tex_titpage_texht() {
     my $self = shift;
 
-    $self->write_tex_title_page_report;
+    $self->write_tex_titpage_report;
 
 }
 
 
-sub write_tex_title_page_revtex() {
+sub write_tex_titpage_revtex() {
     my $self = shift;
 
     my $fpkey   = $self->fpkey;
@@ -987,7 +1072,7 @@ sub write_tex_title_page_revtex() {
 
 }
 
-sub write_tex_title_page_report() {
+sub write_tex_titpage_report() {
     my $self = shift;
 
     my $fpkey   = $self->fpkey;
@@ -1240,6 +1325,9 @@ sub write_tex_preamble() {
     my $pkey     = $self->pkey;
     my $pname    = $self->pname;
     my $preamble = "p.$fpkey.pdf.preamble.tex";
+
+    $self->get_ptitle();
+    $self->get_pauthors();
 
     my $pa = OP::TEX::Text->new;
     $self->stex($pa);

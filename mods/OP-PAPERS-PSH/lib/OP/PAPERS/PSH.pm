@@ -295,6 +295,7 @@ sub init_vars() {
     $self->texroot( $ENV{'PSH_TEXROOT'} // catfile( "$ENV{hm}", qw(wrk p) )
           // catfile( "$ENV{HOME}", qw(wrk p) ) );
 
+
     $self->init_files;
     $self->init_MAKETARGETS;
 
@@ -354,8 +355,9 @@ sub init_vars() {
     $self->debugout( "Setting texroot to: " . $self->texroot . "\n" );
 
     # List of TeX-papers
-    $self->tex_papers( map { ( basename($_) =~ /^p\.(\w+)\.tex$/ ) ? $1 : () }
+    $self->tex_papers( map { ( basename($_) =~ /^p\.(\w+)\./ ) ? $1 : () }
           glob( catfile( $self->texroot, "p.*.tex" ) ) );
+    $self->tex_papers_uniq;
 
     # List of short keys of TeX-papers
     my $sphash;
@@ -395,9 +397,8 @@ sub init_vars() {
     );
 
     # List of BibTeX keys
-    $self->bib_papers(
-        [ map { chomp; s/\s*$//g; s/^\s*//g; $_; } `bash bt lk` ] );
-
+    $self->bib_papers( $self->bibtex->pkeys);
+       
 ###_COMPILETEX_OPTS
 
     # Which way of LaTeX compiling to use?
@@ -1277,28 +1278,47 @@ sub _tex_paper_cbib2cite() {
 
 =cut
 
+##TODO texnice
 sub _tex_paper_tex_nice() {
     my $self = shift;
 
     my $pkey = shift // $self->pkey;
+
+    my $iopts=shift // {
+        TEXNICE_OPTS  => '',
+        NICE_ISECS_ONLY  => [],
+        NICE_FILE  => '',
+    };
+
+    my $cpack='Config::' . $pkey;
+
     $self->pkey($pkey);
 
     $self->_tex_paper_load_conf($pkey);
 
+    my @evs;
+
+    push(@evs, '$' . $cpack . '::TEXNICE_OPTS=$iopts->{TEXNICE_OPTS}');
+    push(@evs, '$' . $cpack . '::NICE_FILE=$iopts->{NICE_FILE}');
+    push(@evs, '@' . $cpack . '::NICE_ISECS_ONLY=@{$iopts->{NICE_ISECS_ONLY}}');
+
+    push(@evs, $cpack . '::init_vars;');
+
+    eval(join(";\n",@evs));
+    die $@ if $@;
+
     $self->out("Trying to run tex_nice_local()... \n");
-    my $subname = '&Config::' . $pkey . '::tex_nice_local';
+    my $subname = '&' . $cpack . '::tex_nice_local' ;
 
     my $SubExists;
     eval '$SubExists=exists ' . $subname;
+
     die $@ if $@;
 
-    if ($SubExists) {
+        if ($SubExists) {
         eval( $subname . '()' );
         die $@ if $@;
     }
-
-    $self->out("Running tex_nice.pl...\n");
-    $self->sysrun("tex_nice.pl --pkey $pkey");
 
 }
 
@@ -1825,7 +1845,6 @@ sub _tex_paper_gen_file() {
                                     s/\\label/\\labeltab/g;
                                 }
                                 $figfile;
-##TODO papgentabs
                             }
                             elsif ( !-e $figfile ) {
 
@@ -2118,6 +2137,7 @@ sub catroot {
 
 }
 
+###_gen_make_pdf_tex_
 sub _gen_make_pdf_tex_mk {
     my $self = shift;
 
@@ -2125,9 +2145,6 @@ sub _gen_make_pdf_tex_mk {
 
     my @flines;
     my @mkopts;
-    my @prereq_gen;
-
-    my @pl=();
 
     require OP::Perl::Installer;
     require OP::PERL::PMINST;
@@ -2168,52 +2185,133 @@ sub _gen_make_pdf_tex_mk {
     push( @mkopts, '--skip_make_bibt' );
     push( @mkopts, '--skip_make_cbib' );
 
-    push( @prereq_gen, @pl );
-    #push( @prereq_gen, $varsdat );
-
     my $rbi='@local_module_install.pl ';
 
-    foreach my $p ( $self->tex_papers ) {
+    my @write_tex_ids=qw(preamble titpage start);
 
-        my @prereq = ();
-        my @prereq_pdf_tex = ();
+###_gen_make_pdf_tex_LOOP
+    foreach my $p ( $self->tex_papers ) {
+        my $first_prereq;
+        my @prereq;
+
         my @prereq_pdf = ();
 
         my $pdftex="p.$p.pdf.tex";
         my $pdfname="p.$p.pdf.tex";
         my $pdf="p.$p.pdf.pdf";
 
-        my $p_refs="p.$p.refs.i.dat p.$p.refs.tex";
+        my $p_figsdat="p.$p.figs.i.dat";
+        my $p_figstex="p.$p.figs.tex";
+
+        my $p_tabsdat="p.$p.tabs.i.dat";
+        my $p_tabstex="p.$p.tabs.tex";
+
+        my $p_refsdat="p.$p.refs.i.dat";
+        my $p_refstex="p.$p.refs.tex";
+        my $p_refs="$p_refsdat $p_refstex";
+
         my $p_cbib="p.$p.cbib.tex";
         my $p_bibt="bibt.$p.tex";
 
-        push( @prereq, @prereq_gen  );
-        push( @prereq_pdf_tex, @prereq_gen  );
-        push( @prereq_pdf, @prereq_gen  );
+###make_p_PKEY_refs_dat
+        push( @flines, "$p_refsdat : ");
+        push( @flines, "\t" . '@if [ ! -e $@ ]; then ' . "\\");
+        push( @flines, "\t" . ' touch $@; ' . "\\");
+        push( @flines, "\t" . 'fi; ');
 
-        push( @prereq, glob( $self->catroot("p.$p.*.i.dat") ) );
-        push( @prereq, glob( $self->catroot("p.$p.*.pl") ) );
+        push( @flines, ' ' );
+###make_p_PKEY_refs_tex
+        push( @flines, "$p_refstex : $p_refsdat ");
+        push( @flines, "\t" . 'pshcmd genrefs ' . $p);
 
-        push( @prereq_pdf_tex, @prereq );
-        push( @prereq_pdf, @prereq );
+        push( @flines, ' ' );
+
+###make_p_PKEY_figs_dat
+        push( @flines, "$p_figsdat : ");
+        push( @flines, "\t" . '@if [ ! -e $@ ]; then ' . "\\");
+        push( @flines, "\t" . ' touch $@; ' . "\\");
+        push( @flines, "\t" . 'fi; ');
+
+        push( @flines, ' ' );
+
+###make_p_PKEY_figs_tex
+        push( @flines, "$p_figstex : $p_figsdat ");
+        push( @flines, "\t" . 'pshcmd genfigs ' . $p);
+
+        push( @flines, ' ' );
+###make_p_PKEY_tabs_dat
+        push( @flines, "$p_tabsdat : ");
+        push( @flines, "\t" . '@if [ ! -e $@ ]; then ' . "\\");
+        push( @flines, "\t" . ' touch $@; ' . "\\");
+        push( @flines, "\t" . 'fi; ');
+
+        push( @flines, ' ' );
+###make_p_PKEY_tabs_tex
+        push( @flines, "$p_tabstex : $p_tabsdat ");
+        push( @flines, "\t" . 'pshcmd gentabs ' . $p);
+
+        push( @flines, ' ' );
+
+###make_p_PKEY_tex 
+        my @prereq_p_tex;
+        push(@prereq_p_tex,"p.$p.secorder.i.dat");
+
+        push( @flines, "p.$p.tex: " . shift(@prereq_p_tex) . " \\");
+        push( @flines, " " . join(" \\\n",@req_imods)  );
+
+        push( @flines, "\t" . '@mk_pap_pdf.pl --pkey  ' . $p . ' --only_write_tex_main');
         
-        my @d=map { /\.pdf(|\.(\w*))\.tex$/ ? () : $_ } glob( $self->catroot("p.$p.*.tex") );
-        @d=map { /\.cbib\.tex$/ ? () : $_ } @d;
-        @d=map { /p\.$p\.tex$/ ? () : $_ } @d;
+        push( @flines, ' ' );
 
-        @d=map { /\.sec\.(\w+)\.i\.tex$/ ? $_ : () } @d;
+###make_p_PKEY_pdf_preamble_tex 
+        foreach my $id (@write_tex_ids) {
 
-        push( @prereq_pdf_tex, @d );
-        push( @prereq_pdf_tex, @prereq_gen  );
-        push( @prereq_pdf_tex, $self->catroot("$pdftex") );
-        push( @prereq_pdf, glob( $self->catroot("p.$p.*.tex") ) );
-        
-
-        @prereq_pdf_tex=uniq(sort(@prereq_pdf_tex));
-        @prereq_pdf=uniq(sort(@prereq_pdf));
+	        my @prereq_pdf_preamble=();
+	        my $dir_docstyle=$self->catroot(qw(docstyles),$self->docstyle);
+	
+	        push(@prereq_pdf_preamble,@req_imods);
+	        push(@prereq_pdf_preamble,catfile($dir_docstyle,'usedpacks.i.dat'));
+	        push(@prereq_pdf_preamble,catfile($dir_docstyle,'packopts.i.dat'));
+	        push(@prereq_pdf_preamble,catfile($dir_docstyle,'dclass.i.dat'));
+	        push(@prereq_pdf_preamble,'vars.i.dat');
+	
+	        push( @flines, "p.$p.pdf.$id.tex: " . " \\"  );
+	        push( @flines, " " . join(" \\\n",@prereq_pdf_preamble)  );
+	
+	        push( @flines, "\t" . '@mk_pap_pdf.pl --pkey  ' . $p . ' --only_write_tex_' . $id );
+	
+	        push( @flines, ' ' );
+        }
 
 ###make_p_PKEY_pdf_tex 
-        push( @flines, "p.$p.pdf.tex: " . shift(@prereq_pdf_tex) . " \\"  );
+        my @prereq_pdf_tex = ();
+        my @d;
+
+        @d=glob( $self->catroot("p.$p.*.tex") );
+
+        # do not include PKEY.pdf.*.tex files
+        @d=map { /\.pdf(|\.(\w*))\.tex$/ ? () : $_ } @d;
+
+        # do not include PKEY.cbib.tex files
+        @d=map { /\.cbib\.tex$/ ? () : $_ } @d;
+
+        # do not include p.PKEY.tex file
+        @d=map { /p\.$p\.tex$/ ? () : $_ } @d;
+
+        # leave only section files
+        @d=map { /\.sec\.(\w+)\.i\.tex$/ ? $_ : () } @d;
+
+        # include the conf.pl file
+        push( @prereq_pdf_tex, "p.$p.conf.pl" );
+
+        push( @prereq_pdf_tex, @d );
+        
+        @prereq_pdf_tex=uniq(sort(@prereq_pdf_tex));
+
+        $first_prereq=shift(@prereq_pdf_tex) // '' ;
+
+        push( @flines, "p.$p.pdf.tex: " . $first_prereq . " \\"  );
+
         push( @flines, " " . join(' ',@req_imods) . "\\"  );
         my $sp=" " x 10;
         s/^/\t/g for(@prereq_pdf_tex);
@@ -2228,20 +2326,32 @@ sub _gen_make_pdf_tex_mk {
 
 ### target: PKEY 
 ###make_p_PKEY_pdf_pdf
-        push(@prereq,@pl);
+        push( @prereq_pdf, glob( $self->catroot("p.$p.*.tex") ) );
+        push(@prereq_pdf,glob("pdf.*.tex"));
+
+        foreach my $id (@write_tex_ids) {
+            push(@prereq_pdf,$self->catroot("p.$p.pdf.$id.tex"));
+        }
+
+        @prereq_pdf=uniq(sort(@prereq_pdf));
 
         push( @flines, "$p: $pdf"  );
         push( @flines, ' ' );
         push( @flines, "$pdf : $p_cbib $pdftex \\" );
-        push( @flines, " " . join(" \\\n",glob("pdf.*.tex"))   );
+        push( @flines, " " . join(" \\\n",@prereq_pdf)  );
         #push( @flines, "\t" . '@mk_pap_pdf.pl --pkey ' . $p . ' --nonstop ');
         push( @flines, "\t" . '@LATEXMK -f -pdf ' . $pdfname );
 
         push( @flines, ' ' );
 
 ###make_bibt_PKEY_tex 
-        push( @flines, "$p_bibt : $varsdat \\"  );
-        push( @flines, " " . join(" \\\n",@req_imods)  );
+        my @prereq_bibt;
+
+        push(@prereq_bibt,@req_imods);
+        push(@prereq_bibt,"$varsdat");
+
+        push( @flines, "$p_bibt : \\"  );
+        push( @flines, " " . join(" \\\n",@prereq_bibt)  );
         push( @flines, "\t" . '@mk_pap_pdf.pl --pkey ' . $p . ' --only_make_bibt');
 
         push( @flines, ' ' );
@@ -2249,8 +2359,14 @@ sub _gen_make_pdf_tex_mk {
         push( @flines, ' ' );
 
 ###make_p_PKEY_cbib_tex 
-        push( @flines, "$p_cbib : $p_refs \\"  );
-        push( @flines, " " . join(" \\\n",@req_imods)   );
+        my @prereq_cbib_tex;
+
+        push(@prereq_cbib_tex,$varsdat);
+        push(@prereq_cbib_tex,$p_refs);
+        push(@prereq_cbib_tex,@req_imods);
+
+        push( @flines, "$p_cbib : \\"  );
+        push( @flines, " " . join(" \\\n",@prereq_cbib_tex) );
         push( @flines, "\t" . '@mk_pap_pdf.pl --pkey ' . $p . ' --only_make_cbib');
 
         push( @flines, ' ' );
