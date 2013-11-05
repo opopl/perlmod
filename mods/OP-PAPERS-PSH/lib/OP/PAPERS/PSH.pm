@@ -231,7 +231,7 @@ sub init_MAKETARGETS {
 
     my $pshell = OP::PROJSHELL->new;
 
-    $pshell->_read_MKTARGETS( $self->files('makefile') );
+    $pshell->_read_MKTARGETS( $self->files('targets.mk') );
 
     $self->MAKETARGETS( $pshell->MKTARGETS );
 
@@ -247,6 +247,7 @@ sub init_files {
         "keys" => catfile( $self->texroot, 'keys.i.dat' ),
         "parts"    => catfile( $self->texroot, 'pap.parts.i.dat' ),
         "makefile" => catfile( $self->texroot, 'makefile' ),
+        "targets.mk" => catfile( $self->texroot, qw(targets.mk) ),
     );
 }
 
