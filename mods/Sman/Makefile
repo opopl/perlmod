@@ -1,4 +1,4 @@
-# This Makefile is for the Class::Accessor::Complex extension to perl.
+# This Makefile is for the Sman extension to perl.
 #
 # It was generated automatically by MakeMaker version
 # 6.6302 (Revision: 66302) from the contents of
@@ -11,17 +11,14 @@
 
 #   MakeMaker Parameters:
 
-#     ABSTRACT => q[Arrays, hashes, booleans, integers, sets and more]
-#     AUTHOR => [q[Marcel Gruenauer <marcel@cpan.org>]]
+#     ABSTRACT_FROM => q[Sman.pm]
+#     AUTHOR => [q[Josh Rabinowitz]]
 #     BUILD_REQUIRES => {  }
-#     CONFIGURE_REQUIRES => { ExtUtils::MakeMaker=>q[6.11] }
-#     DISTNAME => q[Class-Accessor-Complex]
-#     EXE_FILES => []
-#     LICENSE => q[perl]
-#     NAME => q[Class::Accessor::Complex]
-#     PREREQ_PM => { Scalar::Util=>q[0], parent=>q[0], Data::Miscellany=>q[0], English=>q[0], Class::Accessor=>q[0], constant=>q[0], Class::Accessor::Installer=>q[0], Carp=>q[0], Test::More=>q[0.88], File::Find=>q[0], File::Temp=>q[0], List::MoreUtils=>q[0] }
-#     VERSION => q[1.100880]
-#     test => { TESTS=>q[t/*.t] }
+#     CONFIGURE_REQUIRES => {  }
+#     EXE_FILES => [q[script/sman], q[script/sman-update]]
+#     NAME => q[Sman]
+#     PREREQ_PM => { Compress::Zlib=>q[0], FindBin=>q[0], FreezeThaw=>q[0], Cache::FileCache=>q[0], Storable=>q[0], Cache::Cache=>q[0], Term::Size=>q[0], File::Find=>q[0], POSIX=>q[0], Digest::MD5=>q[0], File::Temp=>q[0] }
+#     VERSION_FROM => q[Sman.pm]
 
 # --- MakeMaker post_initialize section:
 
@@ -58,13 +55,13 @@ VENDORLIBEXP =
 AR_STATIC_ARGS = cr
 DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
-NAME = Class::Accessor::Complex
-NAME_SYM = Class_Accessor_Complex
-VERSION = 1.100880
+NAME = Sman
+NAME_SYM = Sman
+VERSION = 1.03
 VERSION_MACRO = VERSION
-VERSION_SYM = 1_100880
+VERSION_SYM = 1_03
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 1.100880
+XS_VERSION = 1.03
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -148,11 +145,11 @@ MM_REVISION = 66302
 # PARENT_NAME = NAME without BASEEXT and no trailing :: (eg Foo::Bar)
 # DLBASE  = Basename part of dynamic library. May be just equal BASEEXT.
 MAKE = make
-FULLEXT = Class/Accessor/Complex
-BASEEXT = Complex
-PARENT_NAME = Class::Accessor
+FULLEXT = Sman
+BASEEXT = Sman
+PARENT_NAME = 
 DLBASE = $(BASEEXT)
-VERSION_FROM = 
+VERSION_FROM = Sman.pm
 OBJECT = 
 LDFROM = $(OBJECT)
 LINKTYPE = dynamic
@@ -170,8 +167,8 @@ MAN3PODS =
 CONFIGDEP = $(PERL_ARCHLIB)$(DFSEP)Config.pm $(PERL_INC)$(DFSEP)config.h
 
 # Where to build things
-INST_LIBDIR      = $(INST_LIB)/Class/Accessor
-INST_ARCHLIBDIR  = $(INST_ARCHLIB)/Class/Accessor
+INST_LIBDIR      = $(INST_LIB)
+INST_ARCHLIBDIR  = $(INST_ARCHLIB)
 
 INST_AUTODIR     = $(INST_LIB)/auto/$(FULLEXT)
 INST_ARCHAUTODIR = $(INST_ARCHLIB)/auto/$(FULLEXT)
@@ -186,10 +183,43 @@ PERL_ARCHIVE       =
 PERL_ARCHIVE_AFTER = 
 
 
-TO_INST_PM = lib/Class/Accessor/Complex.pm
+TO_INST_PM = Sman.pm \
+	Sman/Autoconfig.pm \
+	Sman/Config.pm \
+	Sman/IndexVersion.pm \
+	Sman/Man/Cache.pm \
+	Sman/Man/Cache/DB_File.pm \
+	Sman/Man/Cache/FileCache.pm \
+	Sman/Man/Convert.pm \
+	Sman/Man/Find.pm \
+	Sman/Swishe.pm \
+	Sman/Util.pm \
+	Sman/sman.conf.pm
 
-PM_TO_BLIB = lib/Class/Accessor/Complex.pm \
-	blib/lib/Class/Accessor/Complex.pm
+PM_TO_BLIB = Sman/Autoconfig.pm \
+	$(INST_LIB)/Sman/Autoconfig.pm \
+	Sman/Config.pm \
+	$(INST_LIB)/Sman/Config.pm \
+	Sman/Swishe.pm \
+	$(INST_LIB)/Sman/Swishe.pm \
+	Sman.pm \
+	$(INST_LIB)/Sman.pm \
+	Sman/Man/Cache/FileCache.pm \
+	$(INST_LIB)/Sman/Man/Cache/FileCache.pm \
+	Sman/sman.conf.pm \
+	$(INST_LIB)/Sman/sman.conf.pm \
+	Sman/Man/Cache.pm \
+	$(INST_LIB)/Sman/Man/Cache.pm \
+	Sman/Man/Find.pm \
+	$(INST_LIB)/Sman/Man/Find.pm \
+	Sman/IndexVersion.pm \
+	$(INST_LIB)/Sman/IndexVersion.pm \
+	Sman/Man/Cache/DB_File.pm \
+	$(INST_LIB)/Sman/Man/Cache/DB_File.pm \
+	Sman/Util.pm \
+	$(INST_LIB)/Sman/Util.pm \
+	Sman/Man/Convert.pm \
+	$(INST_LIB)/Sman/Man/Convert.pm
 
 
 # --- MakeMaker platform_constants section:
@@ -257,8 +287,8 @@ CI = ci -u
 RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
-DISTNAME = Class-Accessor-Complex
-DISTVNAME = Class-Accessor-Complex-1.100880
+DISTNAME = Sman
+DISTVNAME = Sman-1.03
 
 
 # --- MakeMaker macro section:
@@ -421,6 +451,28 @@ manifypods : pure_all
 
 # --- MakeMaker installbin section:
 
+EXE_FILES = script/sman script/sman-update
+
+pure_all :: $(INST_SCRIPT)/sman $(INST_SCRIPT)/sman-update
+	$(NOECHO) $(NOOP)
+
+realclean ::
+	$(RM_F) \
+	  $(INST_SCRIPT)/sman $(INST_SCRIPT)/sman-update 
+
+$(INST_SCRIPT)/sman : script/sman $(FIRST_MAKEFILE) $(INST_SCRIPT)$(DFSEP).exists $(INST_BIN)$(DFSEP).exists
+	$(NOECHO) $(RM_F) $(INST_SCRIPT)/sman
+	$(CP) script/sman $(INST_SCRIPT)/sman
+	$(FIXIN) $(INST_SCRIPT)/sman
+	-$(NOECHO) $(CHMOD) $(PERM_RWX) $(INST_SCRIPT)/sman
+
+$(INST_SCRIPT)/sman-update : script/sman-update $(FIRST_MAKEFILE) $(INST_SCRIPT)$(DFSEP).exists $(INST_BIN)$(DFSEP).exists
+	$(NOECHO) $(RM_F) $(INST_SCRIPT)/sman-update
+	$(CP) script/sman-update $(INST_SCRIPT)/sman-update
+	$(FIXIN) $(INST_SCRIPT)/sman-update
+	-$(NOECHO) $(CHMOD) $(PERM_RWX) $(INST_SCRIPT)/sman-update
+
+
 
 # --- MakeMaker subdirs section:
 
@@ -477,54 +529,54 @@ realclean purge ::  clean realclean_subdirs
 metafile : create_distdir
 	$(NOECHO) $(ECHO) Generating META.yml
 	$(NOECHO) $(ECHO) '---' > META_new.yml
-	$(NOECHO) $(ECHO) 'abstract: '\''Arrays, hashes, booleans, integers, sets and more'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'abstract: '\''Tool for searching and indexing man pages'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'author:' >> META_new.yml
-	$(NOECHO) $(ECHO) '  - '\''Marcel Gruenauer <marcel@cpan.org>'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'build_requires: {}' >> META_new.yml
+	$(NOECHO) $(ECHO) '  - '\''Josh Rabinowitz'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'build_requires:' >> META_new.yml
+	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) 'configure_requires:' >> META_new.yml
-	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 6.11' >> META_new.yml
+	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) 'dynamic_config: 1' >> META_new.yml
-	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120630'\''' >> META_new.yml
-	$(NOECHO) $(ECHO) 'license: perl' >> META_new.yml
+	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.132830'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'license: unknown' >> META_new.yml
 	$(NOECHO) $(ECHO) 'meta-spec:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  url: http://module-build.sourceforge.net/META-spec-v1.4.html' >> META_new.yml
 	$(NOECHO) $(ECHO) '  version: 1.4' >> META_new.yml
-	$(NOECHO) $(ECHO) 'name: Class-Accessor-Complex' >> META_new.yml
+	$(NOECHO) $(ECHO) 'name: Sman' >> META_new.yml
 	$(NOECHO) $(ECHO) 'no_index:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  directory:' >> META_new.yml
 	$(NOECHO) $(ECHO) '    - t' >> META_new.yml
 	$(NOECHO) $(ECHO) '    - inc' >> META_new.yml
 	$(NOECHO) $(ECHO) 'requires:' >> META_new.yml
-	$(NOECHO) $(ECHO) '  Carp: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  Class::Accessor: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  Class::Accessor::Installer: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  Data::Miscellany: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  English: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Cache::Cache: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Cache::FileCache: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Compress::Zlib: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Digest::MD5: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) '  File::Find: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) '  File::Temp: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  List::MoreUtils: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  Scalar::Util: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  Test::More: 0.88' >> META_new.yml
-	$(NOECHO) $(ECHO) '  constant: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) '  parent: 0' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: 1.100880' >> META_new.yml
+	$(NOECHO) $(ECHO) '  FindBin: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  FreezeThaw: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  POSIX: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Storable: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Term::Size: 0' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: 1.03' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
-	$(NOECHO) $(ECHO) '   "abstract" : "Arrays, hashes, booleans, integers, sets and more",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "abstract" : "Tool for searching and indexing man pages",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "author" : [' >> META_new.json
-	$(NOECHO) $(ECHO) '      "Marcel Gruenauer <marcel@cpan.org>"' >> META_new.json
+	$(NOECHO) $(ECHO) '      "Josh Rabinowitz"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
 	$(NOECHO) $(ECHO) '   "dynamic_config" : 1,' >> META_new.json
-	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120630",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.132830",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "license" : [' >> META_new.json
-	$(NOECHO) $(ECHO) '      "perl_5"' >> META_new.json
+	$(NOECHO) $(ECHO) '      "unknown"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
 	$(NOECHO) $(ECHO) '   "meta-spec" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",' >> META_new.json
 	$(NOECHO) $(ECHO) '      "version" : "2"' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
-	$(NOECHO) $(ECHO) '   "name" : "Class-Accessor-Complex",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "name" : "Sman",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "no_index" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '      "directory" : [' >> META_new.json
 	$(NOECHO) $(ECHO) '         "t",' >> META_new.json
@@ -533,32 +585,33 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "prereqs" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '      "build" : {' >> META_new.json
-	$(NOECHO) $(ECHO) '         "requires" : {}' >> META_new.json
+	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
+	$(NOECHO) $(ECHO) '            "ExtUtils::MakeMaker" : "0"' >> META_new.json
+	$(NOECHO) $(ECHO) '         }' >> META_new.json
 	$(NOECHO) $(ECHO) '      },' >> META_new.json
 	$(NOECHO) $(ECHO) '      "configure" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
-	$(NOECHO) $(ECHO) '            "ExtUtils::MakeMaker" : "6.11"' >> META_new.json
+	$(NOECHO) $(ECHO) '            "ExtUtils::MakeMaker" : "0"' >> META_new.json
 	$(NOECHO) $(ECHO) '         }' >> META_new.json
 	$(NOECHO) $(ECHO) '      },' >> META_new.json
 	$(NOECHO) $(ECHO) '      "runtime" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '         "requires" : {' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Carp" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Class::Accessor" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Class::Accessor::Installer" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Data::Miscellany" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "English" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Cache::Cache" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Cache::FileCache" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Compress::Zlib" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Digest::MD5" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "File::Find" : "0",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "File::Temp" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "List::MoreUtils" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Scalar::Util" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "Test::More" : "0.88",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "constant" : "0",' >> META_new.json
-	$(NOECHO) $(ECHO) '            "parent" : "0"' >> META_new.json
+	$(NOECHO) $(ECHO) '            "FindBin" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "FreezeThaw" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "POSIX" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Storable" : "0",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Term::Size" : "0"' >> META_new.json
 	$(NOECHO) $(ECHO) '         }' >> META_new.json
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "release_status" : "stable",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "1.100880"' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "1.03"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
 
@@ -855,21 +908,20 @@ testdb_static :: testdb_dynamic
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
 	$(NOECHO) $(ECHO) '<SOFTPKG NAME="$(DISTNAME)" VERSION="$(VERSION)">' > $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '    <ABSTRACT>Arrays, hashes, booleans, integers, sets and more</ABSTRACT>' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '    <AUTHOR>Marcel Gruenauer &lt;marcel@cpan.org&gt;</AUTHOR>' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '    <ABSTRACT>Tool for searching and indexing man pages</ABSTRACT>' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '    <AUTHOR>Josh Rabinowitz</AUTHOR>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Carp::" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Class::Accessor" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Class::Accessor::Installer" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Data::Miscellany" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="English::" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Cache::Cache" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Cache::FileCache" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Compress::Zlib" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Digest::MD5" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="File::Find" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="File::Temp" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="List::MoreUtils" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Scalar::Util" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Test::More" VERSION="0.88" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="constant::" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <REQUIRE NAME="parent::" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="FindBin::" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="FreezeThaw::" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="POSIX::" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Storable::" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Term::Size" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="i686-linux-5.16" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <CODEBASE HREF="" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    </IMPLEMENTATION>' >> $(DISTNAME).ppd
@@ -880,7 +932,18 @@ ppd :
 
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
-	  lib/Class/Accessor/Complex.pm blib/lib/Class/Accessor/Complex.pm 
+	  Sman/Autoconfig.pm $(INST_LIB)/Sman/Autoconfig.pm \
+	  Sman/Config.pm $(INST_LIB)/Sman/Config.pm \
+	  Sman/Swishe.pm $(INST_LIB)/Sman/Swishe.pm \
+	  Sman.pm $(INST_LIB)/Sman.pm \
+	  Sman/Man/Cache/FileCache.pm $(INST_LIB)/Sman/Man/Cache/FileCache.pm \
+	  Sman/sman.conf.pm $(INST_LIB)/Sman/sman.conf.pm \
+	  Sman/Man/Cache.pm $(INST_LIB)/Sman/Man/Cache.pm \
+	  Sman/Man/Find.pm $(INST_LIB)/Sman/Man/Find.pm \
+	  Sman/IndexVersion.pm $(INST_LIB)/Sman/IndexVersion.pm \
+	  Sman/Man/Cache/DB_File.pm $(INST_LIB)/Sman/Man/Cache/DB_File.pm \
+	  Sman/Util.pm $(INST_LIB)/Sman/Util.pm \
+	  Sman/Man/Convert.pm $(INST_LIB)/Sman/Man/Convert.pm 
 	$(NOECHO) $(TOUCH) pm_to_blib
 
 
@@ -888,6 +951,22 @@ pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 
 
 # --- MakeMaker postamble section:
+install ::
+	mkdir -p /usr/local/etc
+	mkdir -p /var/lib/sman
+	cp sman-defaults.conf /usr/local/etc/
+	@echo "NOTE: sman and sman-update have been installed in $(INSTALLBIN)"
+	@echo "NOTE: the default sman configuration file is /usr/local/etc/sman-defaults.conf."
+	@echo "NOTE: sman-update should be run periodically to keep the sman index up to date."
+
+
+
+hello ::
+	@echo "sman and sman-update have been installed in $(INSTALLBIN)"
+	@$(PERL) -e "print qq{hello, world.\n};"
+
+
+
 
 
 # End.

@@ -45,7 +45,7 @@ sub init_vars(){
 	my $self=shift;
 
 	# 
-	$self->bibfname("/home/op/wrk/p/repdoc.bib");
+	$self->bibfname("$ENV{hm}/wrk/p/repdoc.bib");
 
 	# Initialize LaTeX::BibTeX stuff
 	$self->bibfile(LaTeX::BibTeX::File->new());

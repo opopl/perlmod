@@ -834,7 +834,7 @@ sub init_vars() {
           // catfile( $ENV{HOME}, qw(wrk perlmod ) ) );
 
     $self->dirs( "mods" => catfile( $self->PERLMODDIR, qw(mods) ) );
-    $self->viewcmd("gvim -n -p --remote-tab-silent ");
+		$self->viewcmd($ENV{EDITOR} . " " // "gvim -n -p --remote-tab-silent ");
 
     $self->_term_get_commands();
 

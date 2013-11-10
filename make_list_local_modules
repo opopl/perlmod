@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+
+module_list:= $(PERLMODDIR)/inc/modules_all.i.dat
+script:=$(PERLMODDIR)/PerlModScript.pl
+
+all: module_list
+
+.PHONY: module_list
+
+module_list: $(module_list)
+
+$(module_list): 
+	perl $(PERLMODDIR)/gen_modules_all_dat.pl

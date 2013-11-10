@@ -2,6 +2,7 @@ package OP::PAPERS::PSH;
 
 use strict;
 use warnings;
+use feature qw(switch);
 
 #---------------------------------
 # main()
@@ -11,7 +12,6 @@ use warnings;
 # use ... {{{
 
 use Term::ShellUI;
-use File::Spec::Functions qw(catfile rel2abs curdir );
 use OP::Base qw/:funcs :vars/;
 use OP::BIBTEX;
 use OP::TEX::Text;
@@ -31,6 +31,7 @@ use LaTeX::Table;
 use LaTeX::TOM;
 use OP::TEX::Driver;
 
+use File::Spec::Functions qw(catfile rel2abs curdir );
 use File::Slurp qw(
   edit_file
   edit_file_lines
@@ -2197,6 +2198,19 @@ sub _gen_make_pdf_tex_mk {
     my $rbi = '@local_module_install.pl ';
 
     my @write_tex_ids = qw(preamble titpage start);
+
+###make_dat
+		my @prereq;
+		foreach my $id (qw(list_tex_papers list_bibkeys)) {
+				given($id){
+					when('list_bibkeys') { push(@prereq,qw( repdoc.bib )); }
+					default { }
+				}
+        push( @flines, "$id.i.dat: " . join(' ',@prereq) );
+        push( @flines, "\t" . 'perl _gendat_' . $id . '.pl' );
+
+        push( @flines, ' ' );
+		}
 
 ###_gen_make_pdf_tex_LOOP
     foreach my $p ( $self->tex_papers ) {

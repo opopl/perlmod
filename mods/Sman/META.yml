@@ -1,0 +1,24 @@
+--- #YAML:1.0
+name:                Sman
+version:             1.03
+abstract:            Tool for searching and indexing man pages
+license:             ~
+author:              
+    - Josh Rabinowitz
+generated_by:        ExtUtils::MakeMaker version 6.44
+distribution_type:   module
+requires:     
+    Cache::Cache:                  0
+    Cache::FileCache:              0
+    Compress::Zlib:                0
+    Digest::MD5:                   0
+    File::Find:                    0
+    File::Temp:                    0
+    FindBin:                       0
+    FreezeThaw:                    0
+    POSIX:                         0
+    Storable:                      0
+    Term::Size:                    0
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
+    version: 1.3

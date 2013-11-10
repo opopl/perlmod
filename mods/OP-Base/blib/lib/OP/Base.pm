@@ -532,7 +532,7 @@ sub getopt_after {
 
 sub printpodoptions {
     foreach my $pod_option (@allowed_pod_options) {
-        &printpod("$pod_option");
+        #&printpod("$pod_option");
     }
 }
 
@@ -591,7 +591,7 @@ sub is_const {
 =cut
 
 sub printpod {
-    my $topic = shift;
+    my $topic = shift // 'help';
     my $o;
     open( POD, ">$FILES{pod}{$topic}" ) || die $!;
 

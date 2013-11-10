@@ -30,14 +30,14 @@ use warnings;
 
 our %program_path;
 
-$program_path{latex}     = 'gtsgtpiklk';
+$program_path{latex}     = 'latex';
 $program_path{perltex}     = '/usr/bin/perltex';
 $program_path{xelatex}   = '/usr/bin/xelatex';
-$program_path{pdflatex}  = '/usr/bin/pdflatex';
-$program_path{bibtex}    = '/usr/bin/bibtex';
-$program_path{makeindex} = '/usr/bin/makeindex';
-$program_path{dvips}     = '/usr/bin/dvips';
-$program_path{dvipdfm}   = '/usr/bin/dvipdfm';
+$program_path{pdflatex}  = '/usr/local/texlive/2013/bin/i386-linux/pdflatex';
+$program_path{bibtex}    = '/usr/local/texlive/2013/bin/i386-linux/bibtex';
+$program_path{makeindex} = '/usr/local/texlive/2013/bin/i386-linux/makeindex';
+$program_path{dvips}     = '/usr/local/texlive/2013/bin/i386-linux/dvips';
+$program_path{dvipdfm}   = '/usr/local/texlive/2013/bin/i386-linux/dvipdfm';
 $program_path{pdf2ps}    = '/usr/bin/pdf2ps';
 $program_path{ps2pdf}    = '/usr/bin/ps2pdf';
 
