@@ -26,6 +26,32 @@ use Pod::Usage;
 use Data::Dumper;
 use FindBin qw($Bin $Script);
 use File::Spec::Functions qw(catfile rel2abs curdir catdir );
+use List::Compare;
+ 
+=head1 DEPENDENCIES
+ 
+=over 4
+ 
+=item L<Data::Dumper>
+ 
+=item L<File::Basename>
+ 
+=item L<File::Spec::Functions>
+ 
+=item L<FindBin>
+ 
+=item L<Getopt::Long>
+ 
+=item L<Pod::Usage>
+ 
+=item L<strict>
+ 
+=item L<warnings>
+ 
+=back
+ 
+=cut
+ 
 use File::Slurp qw(
   append_file
   edit_file
@@ -49,6 +75,7 @@ our %EXPORT_TAGS = (
         qw(
           _join
           _hash_add
+          _arrays_equal
           cmd_opt_add
           is_const
           is_log
@@ -166,7 +193,16 @@ our %ftype;
 # }}}
 # subroutine declarations {{{
 
-sub _join($$);
+###subs
+sub eoo ;
+sub _arrays_equal;
+sub eoo ;
+sub eoo ;
+sub set_DATFILES;
+sub printpodoptions;
+sub is_log;
+sub is_const;
+sub _join;
 
 sub _hash_add;
 
@@ -186,6 +222,103 @@ sub ListModuleSubs;
 sub op_write_file;
 sub open_files;
 sub printpod;
+ 
+=head1 METHODS
+ 
+=over 4
+ 
+=item L<ListModuleSubs()>
+ 
+=item L<_hash_add()>
+ 
+=item L<_join()>
+ 
+=item L<cmd_opt_add()>
+ 
+=item L<edelim()>
+ 
+=item L<eoo()>
+ 
+=item L<eoo_arr()>
+ 
+=item L<eoo_vars()>
+ 
+=item L<eoolog()>
+ 
+=item L<eval_fortran()>
+ 
+=item L<evali()>
+ 
+=item L<getopt()>
+ 
+=item L<getopt_after()>
+ 
+=item L<getopt_init()>
+ 
+=item L<gettime()>
+ 
+=item L<is_const()>
+ 
+=item L<is_log()>
+ 
+=item L<op_write_file()>
+ 
+=item L<open_files()>
+ 
+=item L<printexamples()>
+ 
+=item L<printhelp()>
+ 
+=item L<printman()>
+ 
+=item L<printpod()>
+ 
+=item L<printpodoptions()>
+ 
+=item L<read_TF()>
+ 
+=item L<read_TF_cmd()>
+ 
+=item L<read_all_vars()>
+ 
+=item L<read_const()>
+ 
+=item L<read_in_flist()>
+ 
+=item L<read_init_vars()>
+ 
+=item L<read_kw_file()>
+ 
+=item L<read_line_char_array()>
+ 
+=item L<read_line_vars()>
+ 
+=item L<readarr()>
+ 
+=item L<readhash()>
+ 
+=item L<remove_local_dirs_from_INC()>
+ 
+=item L<sbvars()>
+ 
+=item L<set_DATFILES()>
+ 
+=item L<set_FILES()>
+ 
+=item L<setcmdopts()>
+ 
+=item L<setsdata()>
+ 
+=item L<skip_lines()>
+ 
+=item L<toLower()>
+ 
+=item L<uniq()>
+ 
+=back
+ 
+=cut
+ 
 sub printhelp;
 sub printexamples;
 sub printman;
@@ -215,6 +348,10 @@ sub toLower;
 
 # }}}
 # subs {{{
+=head3 _hash_add()
+
+=cut
+
 
 sub _hash_add {
     my ( $h, $ih ) = @_;
@@ -232,7 +369,7 @@ sub _hash_add {
 
 =cut
 
-sub _join($$) {
+sub _join {
 
     # separator
     my $sep = shift;
@@ -247,6 +384,16 @@ sub _join($$) {
 }
 
 # }}}
+
+sub _arrays_equal {
+    my ($a,$b)=@_;
+
+    my $lc=List::Compare->new($a,$b);
+    my @d=$lc->get_symdiff;
+
+    return @d == 0 ? 1 : 0 ;
+}
+
 # cmd_opt_add() {{{
 
 =head3 cmd_opt_add()
@@ -295,7 +442,9 @@ sub edelim {
 
 =cut
 
-sub eoo { print "$pref_eoo $_[0]"; }
+sub eoo { 
+    print "$pref_eoo $_[0]"; 
+}
 
 # }}}
 # eoolog() {{{
@@ -361,6 +510,10 @@ sub eoolog {
 
 # }}}
 # eoo_arr(){{{
+=head3 eoo_arr()
+
+=cut
+
 
 sub eoo_arr {
     my $msg = shift;
@@ -375,6 +528,10 @@ sub eoo_arr {
 
 # }}}
 # eoo_vars(){{{
+=head3 eoo_vars()
+
+=cut
+
 
 sub eoo_vars {
     my $msg = shift;
@@ -388,6 +545,10 @@ sub eoo_vars {
 }
 
 # }}}
+=head3 eval_fortran()
+
+=cut
+
 # eval_fortran(){{{
 sub eval_fortran {
 
@@ -435,6 +596,10 @@ sub evali {
 }
 
 # }}}
+=head3 open_files()
+
+=cut
+
 # open_files(){{{
 sub open_files {
     my %argopts = @_;
@@ -520,6 +685,10 @@ sub getopt {
 
 #}}}
 # getopt_after() {{{
+=head3 getopt_after()
+
+=cut
+
 
 sub getopt_after {
 
@@ -529,28 +698,58 @@ sub getopt_after {
     &printexamples() if $opt{examples};
 
 }
+=head3 printpodoptions()
+
+=cut
+
 
 sub printpodoptions {
     foreach my $pod_option (@allowed_pod_options) {
-        #&printpod("$pod_option");
+        &printpod("$pod_option");
     }
 }
+=head3 printhelp()
+
+=cut
 
 sub printhelp {
-    pod2usage( -input => $FILES{pod}{help}, -verbose => 1 ) if $opt{help};
+    my $podfile=$FILES{pod}{help};
+
+    pod2usage( -input => $podfile, -verbose => 1 ) if $opt{help};
+
+    remove_tree($podfile);
 }
+=head3 printman()
+
+=cut
+
 
 sub printman {
-    pod2usage( -input => $FILES{pod}{help}, -verbose => 2 ) if $opt{man};
+    my $podfile=$FILES{pod}{help};
+
+    pod2usage( -input => $podfile, -verbose => 2 ) if $opt{man};
+
+    remove_tree($podfile);
 }
+=head3 printexamples()
+
+=cut
+
 
 sub printexamples {
-    pod2usage( -input => $FILES{pod}{examples}, -verbose => 2 )
-      if $opt{examples};
+    my $podfile=$FILES{pod}{examples};
+
+    pod2usage( -input => $podfile, -verbose => 2 ) if $opt{examples};
+
+    remove_tree($podfile);
 }
 
 # }}}
 # gettime () {{{
+=head3 gettime()
+
+=cut
+
 
 sub gettime {
     my @months   = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
@@ -568,6 +767,10 @@ sub gettime {
 
 #}}}
 # is_log() is_const (){{{
+=head3 is_log()
+
+=cut
+
 
 sub is_log {
     my $var = shift;
@@ -576,6 +779,10 @@ sub is_log {
     }
     return 0;
 }
+=head3 is_const()
+
+=cut
+
 
 sub is_const {
     my $var = shift;
@@ -650,6 +857,10 @@ sub printpod {
 # R {{{
 
 # read_*  {{{
+=head3 read_const()
+
+=cut
+
 # read_const(){{{
 sub read_const {
 
@@ -675,6 +886,10 @@ sub read_const {
 }
 
 # }}}
+=head3 read_TF()
+
+=cut
+
 # read_TF(){{{
 sub read_TF {
 
@@ -709,6 +924,10 @@ sub read_TF {
 }
 
 # }}}
+=head3 read_all_vars()
+
+=cut
+
 # read_all_vars() {{{
 sub read_all_vars {
 
@@ -759,6 +978,10 @@ sub read_all_vars {
 }
 
 # }}}
+=head3 read_init_vars()
+
+=cut
+
 # read_init_vars(){{{
 sub read_init_vars {
 
@@ -784,6 +1007,10 @@ sub read_init_vars {
 
 #}}}
 # read_in_flist() - read in flist {{{
+=head3 read_in_flist()
+
+=cut
+
 
 sub read_in_flist {
     my @ifs = qw();
@@ -812,6 +1039,10 @@ sub read_in_flist {
 }
 
 # }}}
+=head3 read_line_char_array()
+
+=cut
+
 # read_line_char_array(){{{
 sub read_line_char_array {
     local *A = shift;
@@ -821,6 +1052,10 @@ sub read_line_char_array {
 }
 
 # }}}
+=head3 read_line_vars()
+
+=cut
+
 # read_line_vars(){{{
 sub read_line_vars {
     local *A = shift;
@@ -833,6 +1068,10 @@ sub read_line_vars {
 }
 
 # }}}
+=head3 read_TF_cmd()
+
+=cut
+
 # read_TF_cmd() - read in true/false from command line {{{
 sub read_TF_cmd {
     foreach my $switch (qw(false true)) {
@@ -899,6 +1138,10 @@ sub read_kw_file {
 
 # }}}
 # }}}
+=head3 ListModuleSubs()
+
+=cut
+
 
 sub ListModuleSubs {
     my $module = shift;
@@ -975,6 +1218,10 @@ sub readarr {
 }
 
 # }}}
+=head3 op_write_file()
+
+=cut
+
 
 sub op_write_file {
 
@@ -1127,6 +1374,10 @@ sub setcmdopts {
 }
 
 # }}}
+=head3 skip_lines()
+
+=cut
+
 # skip_lines(){{{
 sub skip_lines {
     local *A = shift;
@@ -1161,6 +1412,10 @@ sub sbvars {
 }
 
 # }}}
+=head3 remove_local_dirs_from_INC()
+
+=cut
+
 
 sub remove_local_dirs_from_INC {
     my @inc;
@@ -1173,6 +1428,10 @@ sub remove_local_dirs_from_INC {
 
 }
 
+=head3 set_FILES()
+
+=cut
+
 # set_FILES() {{{
 sub set_FILES {
     foreach my $podo (@allowed_pod_options) {
@@ -1181,6 +1440,10 @@ sub set_FILES {
     $FILES{tkw} = "$ts.kw.i.dat";
     $FILES{ifs} = "$ts.ifs.i.dat";
 }
+=head3 set_DATFILES()
+
+=cut
+
 
 sub set_DATFILES {
     %DATFILES = ( modules_to_install => catfile( $DIRS{PERLMOD}, qw(inc) ), );
@@ -1193,6 +1456,10 @@ sub set_DATFILES {
 
 # }}}
 # toLower() {{{
+=head3 toLower()
+
+=cut
+
 
 sub toLower {
     my ($string) = $_[0];
@@ -1202,6 +1469,10 @@ sub toLower {
 
 # }}}
 # uniq() {{{
+=head3 uniq()
+
+=cut
+
 
 sub uniq {
     my ( %h, @W );

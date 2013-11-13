@@ -4,7 +4,7 @@
       "Marcel Gruenauer <marcel@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Zilla version 4.200004, CPAN::Meta::Converter version 2.110580, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Dist::Zilla version 4.200004, CPAN::Meta::Converter version 2.110580, CPAN::Meta::Converter version 2.132830",
    "license" : [
       "perl_5"
    ],
@@ -12,7 +12,7 @@
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
       "version" : "2"
    },
-   "name" : "Vim-Tag",
+   "name" : "OP-VimTag",
    "prereqs" : {
       "build" : {
          "requires" : {
@@ -42,24 +42,16 @@
       }
    },
    "provides" : {
-      "Vim::Tag" : {
-         "file" : "lib/Vim/Tag.pm",
+      "OP::VimTag" : {
+         "file" : "lib/OP/VimTag.pm",
          "version" : "1.110690"
       },
-      "Vim::Tag::Null" : {
-         "file" : "lib/Vim/Tag/Null.pm",
+      "OP::VimTag::Null" : {
+         "file" : "lib/OP/VimTag/Null.pm",
          "version" : "1.110690"
       }
    },
    "release_status" : "stable",
-   "resources" : {
-      "bugtracker" : {
-         "web" : "http://rt.cpan.org/Public/Dist/Display.html?Name=Vim-Tag"
-      },
-      "homepage" : "http://search.cpan.org/dist/Vim-Tag/",
-      "repository" : {
-         "url" : "git://github.com/hanekomu/Vim-Tag.git"
-      }
-   },
+   "resources" : {},
    "version" : "1.110690"
 }

@@ -21,7 +21,7 @@ my %WriteMakefileArgs = (
   'CONFIGURE_REQUIRES' => {
     'ExtUtils::MakeMaker' => '6.31'
   },
-  'DISTNAME' => 'Vim-Tag',
+  'DISTNAME' => 'OP-VimTag',
   'EXE_FILES' => [
     'bin/ptagdir',
     'bin/ptags'

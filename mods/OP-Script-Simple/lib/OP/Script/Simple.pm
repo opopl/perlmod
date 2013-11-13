@@ -73,6 +73,7 @@ sub _say;
 sub pre_init;
 sub _debug;
 ###subs
+
 sub _say {
     my $text=shift;
 
@@ -110,6 +111,10 @@ sub pre_init {
     $WARNCOLOR='red';
     $ERRORCOLOR='bold red';
     $TEXTCOLOR='bold green';
+}
+
+BEGIN{
+    pre_init;
 }
 
 

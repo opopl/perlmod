@@ -16,13 +16,13 @@ license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
   version: 1.4
-name: Vim-Tag
+name: OP-VimTag
 provides:
-  Vim::Tag:
-    file: lib/Vim/Tag.pm
+  OP::VimTag:
+    file: lib/OP/VimTag.pm
     version: 1.110690
-  Vim::Tag::Null:
-    file: lib/Vim/Tag/Null.pm
+  OP::VimTag::Null:
+    file: lib/OP/VimTag/Null.pm
     version: 1.110690
 requires:
   Class::Accessor::Constructor: 0
@@ -35,7 +35,4 @@ requires:
   parent: 0
   perl: 5.010
 resources:
-  bugtracker: http://rt.cpan.org/Public/Dist/Display.html?Name=Vim-Tag
-  homepage: http://search.cpan.org/dist/Vim-Tag/
-  repository: git://github.com/hanekomu/Vim-Tag.git
 version: 1.110690

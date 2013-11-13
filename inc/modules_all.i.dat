@@ -50,3 +50,5 @@ PDL::Graphics::PLplot
 PerlMagick
 Sman
 Term::ShellUI
+OP::Writer
+OP::HTML

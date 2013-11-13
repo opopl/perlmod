@@ -6,14 +6,172 @@ package OP::TEX::Text;
 use strict;
 use warnings;
 
-use OP::Base qw/:vars :funcs/;
+use OP::Base qw($endl);
 use Data::Dumper;
 use File::Slurp qw(read_file);
-use File::Spec::Functions qw(catfile rel2abs curdir catdir );
+use File::Spec::Functions qw(catfile );
 
-use parent qw(OP::Script Class::Accessor::Complex);
+use parent qw( OP::Writer );
 
-use parent qw( OP::Script Class::Accessor::Complex );
+=head1 NAME
+
+OP::TEX::Text - Perl package for writing TeX documents
+
+=head1 SYNOPSIS
+
+use OP::TEX::Text;
+
+my $t=OP::TEX::Text->new;
+
+=head1 INHERITANCE
+
+=over 4
+
+=item L<OP::Writer>
+
+=back
+ 
+=head1 DEPENDENCIES
+ 
+=over 4
+ 
+=item L<Data::Dumper>
+ 
+=item L<File::Slurp>
+ 
+=item L<File::Spec::Functions>
+ 
+=item L<OP::Base>
+ 
+=item L<parent>
+ 
+=item L<strict>
+ 
+=item L<warnings>
+ 
+=back
+ 
+=cut
+ 
+
+###subs
+sub usepackage;
+sub true;
+sub toc;
+sub subsubsection;
+sub subsection;
+sub setcounter;
+sub section;
+sub printindex;
+sub preamble;
+sub part;
+sub paragraph;
+sub newnc;
+sub nc;
+ 
+=head1 METHODS
+ 
+=over 4
+ 
+=item L<_cmd()>
+ 
+=item L<_init()>
+ 
+=item L<_insert_file()>
+ 
+=item L<_write_fancyhdr_style()>
+ 
+=item L<_write_hash()>
+ 
+=item L<abstract()>
+ 
+=item L<anchor()>
+ 
+=item L<begin()>
+ 
+=item L<bibliography()>
+ 
+=item L<bookmark()>
+ 
+=item L<chapter()>
+ 
+=item L<clearpage()>
+ 
+=item L<date()>
+ 
+=item L<def()>
+ 
+=item L<documentclass()>
+ 
+=item L<end()>
+ 
+=item L<figure()>
+ 
+=item L<hypertarget()>
+ 
+=item L<hypsetup()>
+ 
+=item L<idef()>
+ 
+=item L<input()>
+ 
+=item L<lof()>
+ 
+=item L<lot()>
+ 
+=item L<nc()>
+ 
+=item L<newnc()>
+ 
+=item L<paragraph()>
+ 
+=item L<part()>
+ 
+=item L<preamble()>
+ 
+=item L<printindex()>
+ 
+=item L<section()>
+ 
+=item L<setcounter()>
+ 
+=item L<subsection()>
+ 
+=item L<subsubsection()>
+ 
+=item L<toc()>
+ 
+=item L<true()>
+ 
+=item L<usepackage()>
+ 
+=back
+ 
+=cut
+ 
+sub lot;
+sub lof;
+sub input;
+sub idef;
+sub hypsetup;
+sub hypertarget;
+sub figure;
+sub end;
+sub documentclass;
+sub def;
+sub date;
+sub clearpage;
+sub chapter;
+sub bookmark;
+sub bibliography;
+sub begin;
+sub anchor;
+sub abstract;
+sub _write_hash;
+sub _write_fancyhdr_style;
+sub _insert_file;
+sub _init;
+sub _cmd;
 
 ###__ACCESSORS_SCALAR
 our @scalar_accessors = qw(
@@ -21,22 +179,17 @@ our @scalar_accessors = qw(
   dims
   docstyle
   doctitle
-  indent
-  indentstr
   makeindex
   ncfiles
   packopts
   put_today_date
   shift_parname
-  text
   texroot
-  textcolor
   usedpacks
 );
 
 ###__ACCESSORS_HASH
 our @hash_accessors = qw(
-  accessors
 );
 
 ###__ACCESSORS_ARRAY
@@ -51,7 +204,11 @@ __PACKAGE__->mk_scalar_accessors(@scalar_accessors)
 # }}}
 # Methods {{{
 
-sub _write_hash() {
+=head3 _write_hash()
+
+=cut
+
+sub _write_hash {
     my $self = shift;
 
     my $ncname = shift // '';
@@ -82,13 +239,23 @@ sub _write_hash() {
 
 }
 
-sub _flush() {
-    my $self = shift;
+=head3 _cmd()
 
-    $self->_v_set( "text", "" );
-}
+=head4 USAGE
 
-sub _cmd() {
+=over 4
+
+=item $TEX->_cmd('maketitle');
+
+=item $TEX->_cmd('begin','document');
+
+=item $TEX->_cmd('begin','section');
+
+=back
+
+=cut
+
+sub _cmd {
     my $self = shift;
 
     my $ref = shift // '';
@@ -98,12 +265,12 @@ sub _cmd() {
 
     my ( $text, $vars, $cmd, $optvars );
 
+    $text='';
+
     unless ( ref $ref ) {
         $text = "\\" . $ref;
 
         unless (@opts) {
-            $self->_die("_cmd(): Did not specify the list of variables!")
-              unless $cmd;
         }
         else{
             $text .= "{" . join("}{",map { length($_) ? $_ : ()  } @opts) . "}";
@@ -131,54 +298,30 @@ sub _cmd() {
               $text.='{' . $vars . '}' ;
         }elsif(ref $vars eq "ARRAY"){
 
+            ###first argument
             $text.='{' . shift(@$vars) . '}' ;
-            if($optvars){
-                $text.='[' . $optvars . ']' ;
-            }
+
             if (@$vars){
                 $text .= "{" . join("}{",map { length($_) ? $_ : ()  } @$vars) . "}";
             }
         }
+
+        if($optvars){
+               $text.='[' . $optvars . ']' ;
+        }
     }
 
-    $self->_add_line("$text");
-
-}
-
-sub _c_delim() {
-    my $self = shift;
-
-    my $text = "%" x 50;
-    $self->_c("$text");
-}
-
-sub _c() {
-    my $self = shift;
-
-    my $ref = shift // '';
-
-    my $text = $ref;
-
-    $self->_add_line("%$text");
-}
-
-sub _clear() {
-    my $self = shift;
-
-    $self->_v_set( 'text', '' );
-}
-
-sub _empty_lines() {
-    my $self = shift;
-
-    my $num = shift // 1;
-
-    for ( 1 .. $num ) {
-        $self->_add_line(" ");
+    if ($text){
+        $self->_add_line("$text");
     }
+
 }
 
-sub def() {
+=head3 def()
+
+=cut
+
+sub def {
     my $self = shift;
 
     my $def   = shift;
@@ -186,54 +329,39 @@ sub def() {
     my $nargs = shift;
 
     $self->_add_line( "\\def" . "$def" . "{$src}" );
+
 }
 
-sub _add_line() {
-    my $self = shift;
+=head3 section()
 
-    my $ref = shift // '';
-    my ( $addtext, $oldtext, $text );
+=cut
 
-    return 1 unless $ref;
-
-    $oldtext = $self->text // '';
-
-    # In case a string is supplied, this
-    #	string is passed as the value of the
-    #	internal "text" variable
-    unless ( ref $ref ) {
-        $addtext = $ref;
-    }
-    elsif ( ref $ref eq "HASH" ) {
-    }
-    elsif ( ref $ref eq "ARRAY" ) {
-        my $c = shift @$ref;
-        my $x = shift @$ref;
-        $addtext = "\\" . $c . '{' . $x . '}';
-    }
-    $addtext=' ' x $self->indent . $addtext;
-
-    $text = $oldtext . $addtext . "\n";
-    $self->text( $text );
-}
-
-sub section() {
+sub section {
     my $self = shift;
 
     my $title = shift // '';
 
-    $self->_add_line("\\section{$title}");
+    $self->_cmd('section',"$title");
+
 }
 
-sub part() {
+=head3 part()
+
+=cut
+
+sub part {
     my $self = shift;
 
     my $title = shift // '';
 
-    $self->_add_line("\\part{$title}");
+    $self->_cmd('part',"$title");
 }
 
-sub _insert_file() {
+=head3 _insert_file()
+
+=cut
+
+sub _insert_file {
     my $self = shift;
 
     my $file = shift // '';
@@ -269,7 +397,7 @@ sub _insert_file() {
 
 =cut
 
-sub input() {
+sub input {
     my $self = shift;
 
     my $file = shift // '';
@@ -284,7 +412,7 @@ sub input() {
         while ( my ( $k, $v ) = each %{$ref} ) {
             foreach ($k) {
                 /^check_exists$/ && do {
-                    $self->_add_line("\\input{$file}")
+                    $self->_cmd('input',$file)
                       if ( -e $file );
                     next;
                 };
@@ -292,6 +420,10 @@ sub input() {
         }
     }
 }
+
+=head3 end()
+
+=cut
 
 sub end() {
     my $self = shift;
@@ -350,6 +482,10 @@ sub documentclass() {
 
 }
 
+=head3 date()
+
+=cut
+
 sub date() {
     my $self = shift;
 
@@ -359,6 +495,10 @@ sub date() {
     $self->_cmd( "date", $x );
 
 }
+
+=head3 begin()
+
+=cut
 
 sub begin() {
     my $self = shift;
@@ -393,6 +533,10 @@ sub begin() {
 
 }
 
+=head3 usepackage()
+
+=cut
+
 sub usepackage() {
     my $self = shift;
 
@@ -422,6 +566,10 @@ sub usepackage() {
 
 }
 
+=head3 newnc()
+
+=cut
+
 sub newnc() {
     my $self = shift;
 
@@ -438,6 +586,10 @@ sub newnc() {
     }
 }
 
+=head3 nc()
+
+=cut
+
 sub nc() {
     my $self = shift;
 
@@ -451,6 +603,10 @@ sub nc() {
     }
 }
 
+=head3 idef()
+
+=cut
+
 sub idef() {
     my $self = shift;
 
@@ -459,6 +615,10 @@ sub idef() {
     $self->_add_line("\\idef{$name}");
 
 }
+
+=head3 figure()
+
+=cut
 
 sub figure() {
     my $self = shift;
@@ -524,6 +684,10 @@ sub figure() {
 
 }
 
+=head3 bookmark()
+
+=cut
+
 sub bookmark() {
     my $self = shift;
 
@@ -553,6 +717,10 @@ sub bookmark() {
 
 }
 
+=head3 subsubsection()
+
+=cut
+
 sub subsubsection() {
     my $self = shift;
 
@@ -560,6 +728,10 @@ sub subsubsection() {
 
     $self->_add_line("\\subsubsection{$title}");
 }
+
+=head3 subsection()
+
+=cut
 
 sub subsection() {
     my $self = shift;
@@ -569,6 +741,10 @@ sub subsection() {
     $self->_add_line("\\subsection{$title}");
 }
 
+=head3 chapter()
+
+=cut
+
 sub chapter() {
     my $self = shift;
 
@@ -576,6 +752,10 @@ sub chapter() {
 
     $self->_add_line("\\chapter{$title}");
 }
+
+=head3 paragraph()
+
+=cut
 
 sub paragraph() {
     my $self = shift;
@@ -586,6 +766,10 @@ sub paragraph() {
 }
 
 # lof() {{{
+
+=head3 lof()
+
+=cut
 
 sub lof() {
     my $self = shift;
@@ -634,7 +818,11 @@ sub lof() {
 # }}}
 # lot() {{{
 
-sub lot() {
+=head3 lot()
+
+=cut
+
+sub lot {
     my $self = shift;
 
     my $ref = shift // '';
@@ -680,6 +868,10 @@ sub lot() {
 
 # }}}
 
+=head3 true()
+
+=cut
+
 sub true {
     my $self = shift;
 
@@ -689,6 +881,10 @@ sub true {
         $self->_add_line( "\\" . $cmd . 'true' );
     }
 }
+
+=head3 toc()
+
+=cut
 
 sub toc() {
     my $self = shift;
@@ -734,6 +930,10 @@ sub toc() {
 
 }
 
+=head3 abstract()
+
+=cut
+
 sub abstract () {
     my $self = shift;
 
@@ -744,6 +944,10 @@ sub abstract () {
     $self->end('abstract');
 }
 
+=head3 anchor()
+
+=cut
+
 sub anchor () {
     my $self = shift;
 
@@ -751,6 +955,10 @@ sub anchor () {
 
     $self->_add_line("%%%$anchor");
 }
+
+=head3 bibliography()
+
+=cut
 
 sub bibliography() {
     my $self = shift;
@@ -824,6 +1032,10 @@ sub bibliography() {
 
 }
 
+=head3 _write_fancyhdr_style()
+
+=cut
+
 sub _write_fancyhdr_style {
     my $self=shift;
 
@@ -854,6 +1066,10 @@ sub _write_fancyhdr_style {
 }
 
 
+=head3 setcounter()
+
+=cut
+
 sub setcounter {
     my $self=shift;
 
@@ -864,11 +1080,19 @@ sub setcounter {
 
 }
 
+=head3 clearpage()
+
+=cut
+
 sub clearpage() {
     my $self = shift;
 
     $self->_add_line('\clearpage');
 }
+
+=head3 printindex()
+
+=cut
 
 sub printindex() {
     my $self = shift;
@@ -1052,6 +1276,10 @@ EOF
     }
 }
 
+=head3 hypertarget()
+
+=cut
+
 sub hypertarget() {
     my $self = shift;
 
@@ -1059,6 +1287,10 @@ sub hypertarget() {
 
     $self->_add_line( '\hypertarget{' . $ref . '}{}' );
 }
+
+=head3 hypsetup()
+
+=cut
 
 sub hypsetup() {
     my $self = shift;
@@ -1107,54 +1339,16 @@ sub hypsetup() {
 
 }
 
-sub plus {
-    my $self=shift;
+=head3 _init()
 
-    my $id=shift;
-    my $val=shift // 1;
+=cut
 
-    for($id){
-        /^indent$/ && do {
-            $self->indent($self->indent+$val);
-            next;
-        };
-    }
-}
-
-sub minus {
-    my $self=shift;
-
-    my $id=shift;
-    my $val=shift // 1;
-
-    for($id){
-        /^indent$/ && do {
-            $self->indent($self->indent-$val);
-            next;
-        };
-    }
-}
-
-sub new() {
-    my ( $class, %parameters ) = @_;
-    my $self = bless( {}, ref($class) || $class );
-
-    $self->_init();
-
-    $self->text('');
-    $self->indent(0);
-
-    return $self;
-}
-
-sub _init() {
+sub _init {
     my $self = shift;
 
+    $self->OP::Writer::_init;
+
     $self->{package_name} = __PACKAGE__ unless defined $self->{package_name};
-
-    my $dopts = { print_file_mode => "w" };
-
-    $self->_h_set( "default_options", $dopts );
 
     $self->preamble_input_opts(qw(
           dclass
@@ -1173,63 +1367,6 @@ sub _init() {
       hypertarget title bibstyle inputs bibfiles sec
     ));
 
-}
-
-sub _defaults() {
-    my $self = shift;
-
-    my $opt = shift // '';
-
-    return undef unless $opt;
-
-    return $self->_h_get_value( "default_options", $opt );
-
-}
-
-sub _print() {
-    my $self = shift;
-
-    my $opts;
-
-    $opts = shift // '';
-
-    unless ($opts) {
-        print $self->text;
-        return 1;
-    }
-
-    $opts->{fmode} = $self->_defaults("print_file_mode")
-      unless defined $opts->{fmode};
-
-    if ( ref $opts eq "HASH" ) {
-        if ( defined $opts->{file} ) {
-
-            my $file = $opts->{file};
-
-            foreach ( $opts->{fmode} ) {
-                /^w$/ && do { open( F, ">$file" ) || die $!; next; };
-                /^a$/ && do {
-                    open( F, ">>$file" ) || die $!;
-                    next;
-                };
-            }
-
-            print F $self->text;
-
-            close F;
-
-        }
-        elsif ( defined $opts{fh} ) {
-
-            my $fh = $opts{fh};
-
-            print $fh { $self->text };
-
-        }
-        else {
-            print $self->text;
-        }
-    }
 }
 
 # }}}

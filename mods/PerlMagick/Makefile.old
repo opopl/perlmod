@@ -6,7 +6,7 @@
 #
 #       ANY CHANGES MADE HERE WILL BE LOST!
 #
-#   MakeMaker ARGV: (q[PREFIX=/home/op], q[INSTALLBIN=/home/op/bin])
+#   MakeMaker ARGV: (q[PREFIX=/home/opopl], q[INSTALLBIN=/home/opopl/bin])
 #
 
 #   MakeMaker Parameters:
@@ -18,26 +18,26 @@
 #     CCFLAGS => q[-fno-strict-aliasing -pipe -fstack-protector -I/usr/local/include -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -I/usr/include/freetype2 -fopenmp -g -O2 -Wall -pthread -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=16]
 #     CONFIGURE_REQUIRES => {  }
 #     DEFINE => q[ -D_LARGE_FILES=1 -DHAVE_CONFIG_H]
-#     INC => q[-I/usr/local/include/ImageMagick -I/home/op/include/ImageMagick -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=16 -I/usr/include/libxml2 -I"/usr/include/ImageMagick"]
+#     INC => q[-I/usr/local/include/ImageMagick -I/home/opopl/include/ImageMagick -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=16 -I/usr/include/libxml2 -I"/usr/include/ImageMagick"]
 #     INSTALLBIN => q[/usr/local/bin]
 #     LD => q[]
-#     LDDLFLAGS => q[-L/usr/local/lib -L/home/op/lib -lMagickCore-Q16 -shared -O2 -L/usr/local/lib -fstack-protector ]
-#     LDFLAGS => q[-L/usr/local/lib -L/home/op/lib -lMagickCore-Q16  -fstack-protector -L/usr/local/lib ]
-#     LIBS => [q[-L/usr/local/lib -L/home/op/lib -lMagickCore-Q16 -lperl -lm]]
+#     LDDLFLAGS => q[-L/usr/local/lib -L/home/opopl/lib -lMagickCore-Q16 -shared -O2 -L/usr/local/lib -fstack-protector ]
+#     LDFLAGS => q[-L/usr/local/lib -L/home/opopl/lib -lMagickCore-Q16  -fstack-protector -L/usr/local/lib ]
+#     LIBS => [q[-L/usr/local/lib -L/home/opopl/lib -lMagickCore-Q16 -lperl -lm]]
 #     MAP_TARGET => q[PerlMagick]
 #     NAME => q[Image::Magick]
 #     PERLMAINCC => q[ -fopenmp]
-#     PREFIX => q[/home/op]
+#     PREFIX => q[/home/opopl]
 #     PREREQ_PM => {  }
 #     VERSION => q[6.82]
-#     test => { TESTS=>q[t/*.t t/bzlib/*.t t/jpeg/*.t t/jng/*.t t/jp2/*.t t/mpeg/*.t t/png/*.t t/tiff/*.t t/x11/*.t t/zlib/*.t] }
+#     test => { TESTS=>q[t/*.t t/bzlib/*.t t/jpeg/*.t t/jng/*.t t/mpeg/*.t t/png/*.t t/tiff/*.t t/zlib/*.t] }
 
 # --- MakeMaker post_initialize section:
 
 
 # --- MakeMaker const_config section:
 
-# These definitions are from config.sh (via /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2/i686-linux/Config.pm).
+# These definitions are from config.sh (via /home/opopl/perldist/5.16.2/lib/5.16.2/i686-linux/Config.pm).
 # They may have been overridden via Makefile.PL or on the command line.
 AR = ar
 CC = cc
@@ -48,16 +48,16 @@ DLSRC = dl_dlopen.xs
 EXE_EXT = 
 FULL_AR = /usr/bin/ar
 LD = cc
-LDDLFLAGS = -L/usr/local/lib -L/home/op/lib -lMagickCore-Q16 -shared -O2 -L/usr/local/lib -fstack-protector 
-LDFLAGS = -L/usr/local/lib -L/home/op/lib -lMagickCore-Q16  -fstack-protector -L/usr/local/lib 
-LIBC = 
+LDDLFLAGS = -L/usr/local/lib -L/home/opopl/lib -lMagickCore-Q16 -shared -O2 -L/usr/local/lib -fstack-protector 
+LDFLAGS = -L/usr/local/lib -L/home/opopl/lib -lMagickCore-Q16  -fstack-protector -L/usr/local/lib 
+LIBC = /lib/libc-2.13.so
 LIB_EXT = .a
 OBJ_EXT = .o
 OSNAME = linux
-OSVERS = 2.6.38-15-generic-pae
+OSVERS = 2.6.37-slitaz
 RANLIB = :
-SITELIBEXP = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/site_perl/5.16.2
-SITEARCHEXP = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/site_perl/5.16.2/i686-linux
+SITELIBEXP = /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2
+SITEARCHEXP = /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/i686-linux
 SO = so
 VENDORARCHEXP = $(VENDORPREFIX)/lib/5.16.2/i686-linux
 VENDORLIBEXP = $(VENDORPREFIX)/lib
@@ -82,11 +82,11 @@ INST_BIN = blib/bin
 INST_LIB = blib/lib
 INST_MAN1DIR = blib/man1
 INST_MAN3DIR = blib/man3
-MAN1EXT = 1
-MAN3EXT = 3
+MAN1EXT = 0
+MAN3EXT = 0
 INSTALLDIRS = site
 DESTDIR = 
-PREFIX = /home/op
+PREFIX = /home/opopl
 PERLPREFIX = $(PREFIX)
 SITEPREFIX = $(PREFIX)
 VENDORPREFIX = $(PREFIX)
@@ -102,7 +102,7 @@ INSTALLSITEARCH = $(SITEPREFIX)/lib/site_perl/5.16.2/i686-linux
 DESTINSTALLSITEARCH = $(DESTDIR)$(INSTALLSITEARCH)
 INSTALLVENDORARCH = $(VENDORPREFIX)/lib/5.16.2/i686-linux
 DESTINSTALLVENDORARCH = $(DESTDIR)$(INSTALLVENDORARCH)
-INSTALLBIN = /home/op/bin
+INSTALLBIN = /home/opopl/bin
 DESTINSTALLBIN = $(DESTDIR)$(INSTALLBIN)
 INSTALLSITEBIN = $(SITEPREFIX)/bin
 DESTINSTALLSITEBIN = $(DESTDIR)$(INSTALLSITEBIN)
@@ -114,28 +114,28 @@ INSTALLSITESCRIPT = $(SITEPREFIX)/bin
 DESTINSTALLSITESCRIPT = $(DESTDIR)$(INSTALLSITESCRIPT)
 INSTALLVENDORSCRIPT = $(VENDORPREFIX)/bin
 DESTINSTALLVENDORSCRIPT = $(DESTDIR)$(INSTALLVENDORSCRIPT)
-INSTALLMAN1DIR = $(PERLPREFIX)/man/man1
+INSTALLMAN1DIR = none
 DESTINSTALLMAN1DIR = $(DESTDIR)$(INSTALLMAN1DIR)
-INSTALLSITEMAN1DIR = $(SITEPREFIX)/man/man1
+INSTALLSITEMAN1DIR = $(INSTALLMAN1DIR)
 DESTINSTALLSITEMAN1DIR = $(DESTDIR)$(INSTALLSITEMAN1DIR)
 INSTALLVENDORMAN1DIR = $(VENDORPREFIX)/man/man1
 DESTINSTALLVENDORMAN1DIR = $(DESTDIR)$(INSTALLVENDORMAN1DIR)
-INSTALLMAN3DIR = $(PERLPREFIX)/man/man3
+INSTALLMAN3DIR = none
 DESTINSTALLMAN3DIR = $(DESTDIR)$(INSTALLMAN3DIR)
-INSTALLSITEMAN3DIR = $(SITEPREFIX)/man/man3
+INSTALLSITEMAN3DIR = $(INSTALLMAN3DIR)
 DESTINSTALLSITEMAN3DIR = $(DESTDIR)$(INSTALLSITEMAN3DIR)
 INSTALLVENDORMAN3DIR = $(VENDORPREFIX)/man/man3
 DESTINSTALLVENDORMAN3DIR = $(DESTDIR)$(INSTALLVENDORMAN3DIR)
-PERL_LIB = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2
-PERL_ARCHLIB = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2/i686-linux
+PERL_LIB = /home/opopl/perldist/5.16.2/lib/5.16.2
+PERL_ARCHLIB = /home/opopl/perldist/5.16.2/lib/5.16.2/i686-linux
 LIBPERL_A = libperl.a
 FIRST_MAKEFILE = Makefile
 MAKEFILE_OLD = Makefile.old
 MAKE_APERL_FILE = Makefile.aperl
 PERLMAINCC =  -fopenmp
-PERL_INC = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2/i686-linux/CORE
-PERL = /home/op/perl5/perlbrew/perls/perl-5.16.2/bin/perl
-FULLPERL = /home/op/perl5/perlbrew/perls/perl-5.16.2/bin/perl
+PERL_INC = /home/opopl/perldist/5.16.2/lib/5.16.2/i686-linux/CORE
+PERL = /home/opopl/perldist/5.16.2/bin/perl
+FULLPERL = /home/opopl/perldist/5.16.2/bin/perl
 ABSPERL = $(PERL)
 PERLRUN = $(PERL)
 FULLPERLRUN = $(FULLPERL)
@@ -148,7 +148,7 @@ PERM_DIR = 755
 PERM_RW = 644
 PERM_RWX = 755
 
-MAKEMAKER   = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2/ExtUtils/MakeMaker.pm
+MAKEMAKER   = /home/opopl/perldist/5.16.2/lib/5.16.2/ExtUtils/MakeMaker.pm
 MM_VERSION  = 6.6302
 MM_REVISION = 66302
 
@@ -162,7 +162,7 @@ BASEEXT = Magick
 PARENT_NAME = Image
 DLBASE = $(BASEEXT)
 VERSION_FROM = 
-INC = -I/usr/local/include/ImageMagick -I/home/op/include/ImageMagick -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=16 -I/usr/include/libxml2 -I"/usr/include/ImageMagick"
+INC = -I/usr/local/include/ImageMagick -I/home/opopl/include/ImageMagick -DMAGICKCORE_HDRI_ENABLE=0 -DMAGICKCORE_QUANTUM_DEPTH=16 -I/usr/include/libxml2 -I"/usr/include/ImageMagick"
 DEFINE =  -D_LARGE_FILES=1 -DHAVE_CONFIG_H
 OBJECT = $(BASEEXT)$(OBJ_EXT)
 LDFROM = $(OBJECT)
@@ -175,7 +175,7 @@ C_FILES  = Magick.c
 O_FILES  = Magick.o
 H_FILES  = 
 MAN1PODS = 
-MAN3PODS = Magick.pm
+MAN3PODS = 
 
 # Where is the Config information that we are using/depend on
 CONFIGDEP = $(PERL_ARCHLIB)$(DFSEP)Config.pm $(PERL_INC)$(DFSEP)config.h
@@ -216,12 +216,12 @@ AUTOSPLITFILE = $(ABSPERLRUN)  -e 'use AutoSplit;  autosplit($$$$ARGV[0], $$$$AR
 
 # --- MakeMaker tool_xsubpp section:
 
-XSUBPPDIR = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2/ExtUtils
+XSUBPPDIR = /home/opopl/perldist/5.16.2/lib/5.16.2/ExtUtils
 XSUBPP = $(XSUBPPDIR)$(DFSEP)xsubpp
 XSUBPPRUN = $(PERLRUN) $(XSUBPP)
 XSPROTOARG = 
-XSUBPPDEPS = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2/ExtUtils/typemap typemap $(XSUBPP)
-XSUBPPARGS = -typemap /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2/ExtUtils/typemap -typemap typemap
+XSUBPPDEPS = /home/opopl/perldist/5.16.2/lib/5.16.2/ExtUtils/typemap typemap $(XSUBPP)
+XSUBPPARGS = -typemap /home/opopl/perldist/5.16.2/lib/5.16.2/ExtUtils/typemap -typemap typemap
 XSUBPP_EXTRA_ARGS = 
 
 
@@ -299,10 +299,9 @@ MPOLLUTE =
 # Image::Magick might depend on some other libraries:
 # See ExtUtils::Liblist for details
 #
-EXTRALIBS = -L/usr/local/lib -L/home/op/lib -lMagickCore-Q16 -lperl
-LDLOADLIBS = -L/usr/local/lib -L/home/op/lib -lMagickCore-Q16 -lperl -lm
+EXTRALIBS = -L/usr/local/lib -L/home/opopl/lib
+LDLOADLIBS = -L/usr/local/lib -L/home/opopl/lib -lm
 BSLOADLIBS = 
-LD_RUN_PATH = /home/op/lib:/usr/lib
 
 
 # --- MakeMaker const_cccmd section:
@@ -485,7 +484,7 @@ INST_DYNAMIC_FIX =
 
 $(INST_DYNAMIC): $(OBJECT) $(MYEXTLIB) $(BOOTSTRAP) $(INST_ARCHAUTODIR)$(DFSEP).exists $(EXPORT_LIST) $(PERL_ARCHIVE) $(PERL_ARCHIVE_AFTER) $(INST_DYNAMIC_DEP)
 	$(RM_F) $@
-	LD_RUN_PATH="$(LD_RUN_PATH)" $(LD)  $(LDDLFLAGS) $(LDFROM) $(OTHERLDFLAGS) -o $@ $(MYEXTLIB)	\
+	$(LD)  $(LDDLFLAGS) $(LDFROM) $(OTHERLDFLAGS) -o $@ $(MYEXTLIB)	\
 	  $(PERL_ARCHIVE) $(LDLOADLIBS) $(PERL_ARCHIVE_AFTER) $(EXPORT_LIST)	\
 	  $(INST_DYNAMIC_FIX)
 	$(CHMOD) $(PERM_RWX) $@
@@ -514,10 +513,8 @@ POD2MAN_EXE = $(PERLRUN) "-MExtUtils::Command::MM" -e pod2man "--"
 POD2MAN = $(POD2MAN_EXE)
 
 
-manifypods : pure_all  \
-	Magick.pm
-	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
-	  Magick.pm $(INST_MAN3DIR)/Image::Magick.$(MAN3EXT) 
+manifypods : pure_all 
+	$(NOECHO) $(NOOP)
 
 
 
@@ -592,7 +589,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) 'configure_requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) 'dynamic_config: 1' >> META_new.yml
-	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120921'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.132830'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'license: unknown' >> META_new.yml
 	$(NOECHO) $(ECHO) 'meta-spec:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  url: http://module-build.sourceforge.net/META-spec-v1.4.html' >> META_new.yml
@@ -612,7 +609,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      "ImageMagick Studio LLC"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
 	$(NOECHO) $(ECHO) '   "dynamic_config" : 1,' >> META_new.json
-	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120921",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.132830",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "license" : [' >> META_new.json
 	$(NOECHO) $(ECHO) '      "unknown"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
@@ -720,7 +717,7 @@ distdir : create_distdir distmeta
 
 # --- MakeMaker dist_test section:
 disttest : distdir
-	cd $(DISTVNAME) && $(ABSPERLRUN) Makefile.PL "PREFIX=/home/op" "INSTALLBIN=/home/op/bin"
+	cd $(DISTVNAME) && $(ABSPERLRUN) Makefile.PL "PREFIX=/home/opopl" "INSTALLBIN=/home/opopl/bin"
 	cd $(DISTVNAME) && $(MAKE) $(PASTHRU)
 	cd $(DISTVNAME) && $(MAKE) test $(PASTHRU)
 
@@ -933,7 +930,7 @@ $(FIRST_MAKEFILE) : Makefile.PL $(CONFIGDEP)
 	-$(NOECHO) $(RM_F) $(MAKEFILE_OLD)
 	-$(NOECHO) $(MV)   $(FIRST_MAKEFILE) $(MAKEFILE_OLD)
 	- $(MAKE) $(USEMAKEFILE) $(MAKEFILE_OLD) clean $(DEV_NULL)
-	$(PERLRUN) Makefile.PL "PREFIX=/home/op" "INSTALLBIN=/home/op/bin"
+	$(PERLRUN) Makefile.PL "PREFIX=/home/opopl" "INSTALLBIN=/home/opopl/bin"
 	$(NOECHO) $(ECHO) "==> Your Makefile has been rebuilt. <=="
 	$(NOECHO) $(ECHO) "==> Please rerun the $(MAKE) command.  <=="
 	$(FALSE)
@@ -944,7 +941,7 @@ $(FIRST_MAKEFILE) : Makefile.PL $(CONFIGDEP)
 
 # --- MakeMaker makeaperl section ---
 MAP_TARGET    = PerlMagick
-FULLPERL      = /home/op/perl5/perlbrew/perls/perl-5.16.2/bin/perl
+FULLPERL      = /home/opopl/perldist/5.16.2/bin/perl
 
 $(MAP_TARGET) :: static $(MAKE_APERL_FILE)
 	$(MAKE) $(USEMAKEFILE) $(MAKE_APERL_FILE) $@
@@ -955,8 +952,8 @@ $(MAKE_APERL_FILE) : $(FIRST_MAKEFILE) pm_to_blib
 		Makefile.PL DIR= \
 		MAKEFILE=$(MAKE_APERL_FILE) LINKTYPE=static \
 		MAKEAPERL=1 NORECURS=1 CCCDLFLAGS= \
-		PREFIX=/home/op \
-		INSTALLBIN=/home/op/bin
+		PREFIX=/home/opopl \
+		INSTALLBIN=/home/opopl/bin
 
 
 # --- MakeMaker test section:
@@ -964,7 +961,7 @@ $(MAKE_APERL_FILE) : $(FIRST_MAKEFILE) pm_to_blib
 TEST_VERBOSE=0
 TEST_TYPE=test_$(LINKTYPE)
 TEST_FILE = test.pl
-TEST_FILES = t/*.t t/bzlib/*.t t/jpeg/*.t t/jng/*.t t/jp2/*.t t/mpeg/*.t t/png/*.t t/tiff/*.t t/x11/*.t t/zlib/*.t
+TEST_FILES = t/*.t t/bzlib/*.t t/jpeg/*.t t/jng/*.t t/mpeg/*.t t/png/*.t t/tiff/*.t t/zlib/*.t
 TESTDB_SW = -d
 
 testdb :: testdb_$(LINKTYPE)
