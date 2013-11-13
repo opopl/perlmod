@@ -1,0 +1,7 @@
+File::Slurp
+File::Spec::Functions
+Term::ANSIColor
+Data::Dumper
+File::Basename
+OP::TEX::PNC
+OP::Base

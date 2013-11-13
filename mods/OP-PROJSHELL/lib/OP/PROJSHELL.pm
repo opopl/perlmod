@@ -6,6 +6,8 @@ use warnings;
 #------------------------------
 # intro               {{{
 
+use Env qw($HOME $HTMLOUT);
+
 use Term::ShellUI;
 use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 use OP::Base qw/:funcs :vars/;
@@ -419,7 +421,7 @@ sub init_vars() {
 
     $self->HOME($ENV{HOME});
 
-    $self->HTMLOUT($ENV{HTMLOUT} // catfile( $self->HOME,qw(html PROJS)));
+    $self->HTMLOUT(catfile($HTMLOUT,qw(PROJS)) // catfile( $self->HOME,qw(html PROJS)));
 
     $self->PROJSDIR( $ENV{PROJSDIR},catfile($self->HOME, qw( wrk texdocs )) );
 
