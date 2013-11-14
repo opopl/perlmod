@@ -1,4 +1,6 @@
-#!/bin/bash - 
+#!/bin/bash
 
-perl Makefile.PL && make && make test && make install
+source ../../sh/funcs.sh
+
+install_module $1
 

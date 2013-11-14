@@ -99,7 +99,7 @@ sub ok_lines {
 
 sub test_printing {
 
-    $testdir=catfile($Bin,$Script);
+    $testdir=catfile($Bin,qw(testdirs), $Script);
     remove_tree($testdir);
     make_path($testdir);
 

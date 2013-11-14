@@ -1,4 +1,6 @@
-#!/bin/bash - 
+#!/bin/bash
 
-perl Build.PL && Build && Build test && Build install
+source ../../sh/funcs.sh
+
+install_module $1
 

@@ -1,11 +1,6 @@
-#!/bin/bash - 
+#!/bin/bash
 
-LIBS="-L$HOME/lib -L/usr/local/lib -lMagickCore-Q16 -lperl -lm"
-opts="PREFIX=$HOME INSTALLBIN=$HOME/bin"
+source ../../sh/funcs.sh
 
-if [ -f ./Makefile ]; then 
-  make clean
-fi
+install_module $1
 
-#perl Makefile.PL $opts 
-perl Makefile.PL $opts && make && make test && make install   

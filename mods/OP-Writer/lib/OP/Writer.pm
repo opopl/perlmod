@@ -9,6 +9,7 @@ use OP::Base qw( %opts %fh );
 our @scalar_accessors=qw(
     textcolor
     text
+    ofile
     commentchar
     delimchar
     delimchars_num
@@ -31,6 +32,20 @@ __PACKAGE__
     ->mk_scalar_accessors(@scalar_accessors)
     ->mk_array_accessors(@array_accessors)
     ->mk_hash_accessors(@hash_accessors);
+
+sub _writefile {
+    my $self=shift;
+
+    $self->_print({file => $self->ofile, fmode => 'w' });
+
+}
+
+sub _appendfile {
+    my $self=shift;
+
+    $self->_print({file => $self->ofile, fmode => 'a' });
+
+}
 
 sub _print {
     my $self = shift;
@@ -131,6 +146,7 @@ sub _clear {
     my $self = shift;
 
     $self->text('');
+    $self->indent(0);
     $self->textlines_clear;
 
 }

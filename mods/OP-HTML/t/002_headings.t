@@ -3,77 +3,35 @@
 use strict;
 use warnings;
 
-use Test::More;
 use FindBin qw( $Bin $Script );
+use Test::More;
 
-use OP::HTML;
-
-use OP::Base qw( _arrays_equal );
-use File::Spec::Functions qw( catfile );
-use File::Path qw( make_path remove_tree );
-
-our @TESTS;
-our $testdir;
-our $H;
+use lib("$Bin/../lib");
+use OP::HTML::Tests qw(do_tests ok_lines @TESTS $H);
 
 ###subs
-sub test_commands;
-sub ok_lines;
-sub test_headings;
 sub main;
 sub init_vars;
+sub test_headings;
+
 
 main;
 
-sub init_vars {
-
- $H=OP::HTML->new;
-
- @TESTS=qw(
-      headings
-      tags
- );
-
-}
-
 sub main {
 
-  init_vars;
-
-  foreach my $test (@TESTS) {
-      eval 'test_' . $test;
-      warn $@ if $@;
-  }
-
-  done_testing;
+	init_vars;
+	do_tests;
 
 }
 
-sub ok_lines {
-  my $a=shift;
-  my $msg=shift;
+sub init_vars {
 
-  ok( _arrays_equal($H->textlines_ref,$a ), $msg);
+ @TESTS=qw( headings );
 
-}
-
-sub test_tags {
-  my $refh;
-  my $reflines;
-  
-  $reflines=[ qw( <html> <body> ) ];
-	
-  $H->_clear;
-  $H->open_tags([qw(html body)]);
-
-  ok_lines( $reflines , "tags> ". join(" ",@$reflines) );
-
-  $reflines=[ qw( </html> </body> ) ];
-	
-  $H->_clear;
-  $H->close_tags([qw(html body)]);
-
-  ok_lines( $reflines , "tags> ". join(" ",@$reflines) );
+ foreach my $test (@TESTS) {
+    eval '*OP::HTML::Tests::test_' . $test . '=*test_' . $test;
+    warn $@ if $@;
+ }
 
 }
 
