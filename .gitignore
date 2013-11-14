@@ -2,8 +2,12 @@
 *.log
 *.o
 *.mk
+blib
 mods/*/blib/libdoc/
 mods/**/blib/
+mods/**/Makefile
+mods/**/Build
+pm_to_blib
 mods/**/blib/
 mods/**/_build/
 i.examples.pod  

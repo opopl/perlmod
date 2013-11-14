@@ -1,4 +1,41 @@
-#!/bin/bash - 
+
+
+
+module_install_paths(){
+
+    module=$1
+    modslash=`echo $module | sed 's/::/\//g'`
+
+    PerlLibDirs=( `echo $PERLLIB | sed 's/:/ /g'` )
+
+    paths=()
+
+    for dir in ${PerlLibDirs[@]}; do 
+       if [[ -d $dir ]]; then
+        paths=( ${paths[@]} `find $dir -path "*/$modslash.pm" ` )
+       fi
+    done
+
+    if (( ! ${#paths} )); then 
+        paths=( $PERL_INSTALL_PREFIX/$modslash.pm )    
+    fi
+    for path in ${paths[@]}; do 
+             echo $path
+    done
+
+}
+
+module_local_path(){
+  module=$1
+
+  modslash=`echo $module | sed 's/::/\//g'`
+  moddef=`echo $module | sed 's/::/-/g'`
+
+  LocalPath="$PERLMODDIR/mods/$moddef/lib/$modslash.pm"
+
+  echo $LocalPath
+
+}
 
 install_deps(){ 
 
@@ -21,40 +58,14 @@ install_deps(){
 
 }
 
-module_install_paths(){
-
-    module=$1
-    modslash=`echo $module | sed 's/::/\//g'`
-
-    PerlLibDirs=( `echo $PERLLIB | sed 's/:/ /g'` )
-
-    for dir in ${PerlLibDirs[@]}; do 
-       if [[ -d $dir ]]; then
-        find $dir -path "*/$modslash.pm"
-       fi
-    done
-}
-
-module_local_path(){
-  module=$1
-
-  modslash=`echo $module | sed 's/::/\//g'`
-  moddef=`echo $module | sed 's/::/-/g'`
-
-  LocalPath="$PERLMODDIR/mods/$moddef/lib/$modslash.pm"
-
-  echo $LocalPath
-
-}
-
 install_this_module(){
 
   install_deps
 
   ThisModule=`basename $PWD | sed 's/-/::/g'`
 
-  x1=`echo $ThisModule | sed 's/::/\//g'`
-  ThisModuleLocalPath="./lib/$x1.pm"
+  modslash=`echo $ThisModule | sed 's/::/\//g'`
+  ThisModuleLocalPath="./lib/$modslash.pm"
 
   ThisModuleInstalledPaths=( `module_install_paths $ThisModule` )
 
@@ -69,14 +80,7 @@ cat > $mk << EOF
 LocalPath:= $ThisModuleLocalPath
 InstalledPaths:= ${ThisModuleInstalledPaths[@]}
 
-all: \$(InstalledPaths)
-
-\$(InstalledPaths): \$(LocalPath)
-	@if [[ -f ./Makefile.PL ]]; then \\
-		perl ./Makefile.PL && make && make test && make install ;\\
-	elif [[ -f ./Build.PL ]]; then \\
-		perl ./Build.PL && perl ./Build && perl ./Build test && perl ./Build install ;\\
-	fi ;
+include \$(PERLMODDIR)/mk/install_module.mk
 
 EOF
 
@@ -120,8 +124,9 @@ install_module(){
 install_install(){
 
 	for dir in `find $PERLMODDIR/mods/ -maxdepth 1 -type d` ; do
-	    cp ./install.sh $dir
-	    git add $dir/install.sh
+	    cp ./install.zsh $dir
+	    git add $dir/install.zsh
+	    git rm $dir/install.sh -f
 	done
 
 }
