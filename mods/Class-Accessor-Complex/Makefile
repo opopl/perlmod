@@ -139,7 +139,7 @@ PERM_DIR = 755
 PERM_RW = 644
 PERM_RWX = 755
 
-MAKEMAKER   = /home/opopl/perldist/5.16.2/lib/5.16.2/ExtUtils/MakeMaker.pm
+MAKEMAKER   = /home/opopl/perldist/5.16.2/lib/5.16.2//ExtUtils/MakeMaker.pm
 MM_VERSION  = 6.6302
 MM_REVISION = 66302
 

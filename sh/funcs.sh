@@ -14,7 +14,7 @@ install_deps(){
 
 }
 
-get_installed_paths(){
+module_install_paths(){
 
     module=$1
     modslash=`echo $module | sed 's/::/\//g'`
@@ -28,6 +28,18 @@ get_installed_paths(){
     done
 }
 
+module_local_path(){
+  module=$1
+
+  modslash=`echo $module | sed 's/::/\//g'`
+  moddef=`echo $module | sed 's/::/-/g'`
+
+  LocalPath="$PERLMODDIR/mods/$moddef/lib/$modslash.pm"
+
+  echo $LocalPath
+
+}
+
 install_this_module(){
 
   install_deps
@@ -37,18 +49,22 @@ install_this_module(){
   x1=`echo $ThisModule | sed 's/::/\//g'`
   ThisModuleLocalPath="./lib/$x1.pm"
 
-  ThisModuleInstalledPaths=( `get_installed_paths $ThisModule` )
+  ThisModuleInstalledPaths=( `module_install_paths $ThisModule` )
 
   mk='./imod.mk'
 
+  rm -rf $mk
   if [[ ! -f $mk ]]; then
 
 cat > $mk << EOF
 #!/usr/bin/make -f
 
-all: ${ThisModuleInstalledPaths[@]}
+LocalPath:= $ThisModuleLocalPath
+InstalledPaths:= ${ThisModuleInstalledPaths[@]}
 
-${ThisModuleInstalledPaths[@]}: $ThisModuleLocalPath
+all: \$(InstalledPaths)
+
+\$(InstalledPaths): \$(LocalPath)
 	@if [[ -f ./Makefile.PL ]]; then \\
 		perl ./Makefile.PL && make && make test && make install ;\\
 	elif [[ -f ./Build.PL ]]; then \\
