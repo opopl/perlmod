@@ -5,11 +5,18 @@ install_deps(){
   depsdat="./deps.i.dat"
 
   if [[ -f "$depsdat" ]]; then
-    deps=`cat $depsdat | sed '/^\s*#/d'`
+    deps=( `cat $depsdat | sed '/^\s*#/d'` )
 
-	  for dep in ${deps[@]}; do  
-	    install_module $dep
-	  done
+    if (( ${#deps} )); then
+	    echo_blue "FOUND DEPENDENCIES:"
+		  for dep in ${deps[@]}; do  
+	        echo "  $dep"
+		  done
+	
+		  for dep in ${deps[@]}; do  
+		    install_module $dep
+		  done
+    fi
   fi
 
 }
@@ -89,14 +96,13 @@ cpan_install(){
 
 install_module(){
 
-  echo_red "Installing module: $module"
-
   ThisModuleDir=`pwd`
 
   if [[ -z $1 ]]; then
     install_this_module
   else
     module=$1
+    echo_red "Installing module: $module"
     moddef=`echo $module | sed 's/::/-/g'`
     moddir=$PERLMODDIR/mods/$moddef/
     if [[ -d "$moddir" ]]; then
