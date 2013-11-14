@@ -80,7 +80,16 @@ EOF
 
 }
 
+cpan_install(){
+  module=$1 
+
+  perl -MCPAN -e "install(\"$module\");"
+
+}
+
 install_module(){
+
+  echo_red "Installing module: $module"
 
   ThisModuleDir=`pwd`
 
@@ -89,8 +98,13 @@ install_module(){
   else
     module=$1
     moddef=`echo $module | sed 's/::/-/g'`
-    cd ../$moddef/
-    install_this_module
+    moddir=$PERLMODDIR/mods/$moddef/
+    if [[ -d "$moddir" ]]; then
+        cd $moddir
+        install_this_module
+    else
+        cpan_install $module
+    fi
   fi
 
   cd $ThisModuleDir
