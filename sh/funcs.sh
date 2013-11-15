@@ -1,5 +1,21 @@
 
 
+
+
+module_install_paths(){
+
+    module=$1
+    modslash=`echo $module | sed 's/::/\//g'`
+
+    PerlLibDirs=( `echo $PERLLIB | sed 's/:/ /g'` )
+
+    for dir in ${PerlLibDirs[@]}; do 
+       if [[ -d $dir ]]; then
+        find $dir -path "*/$modslash.pm"
+       fi
+    done
+}    
+
 module_all_install_paths(){
 
     module=$1
@@ -15,20 +31,6 @@ module_all_install_paths(){
     done
 
 }
-
-module_install_paths(){
-
-    module=$1
-    modslash=`echo $module | sed 's/::/\//g'`
-
-    PerlLibDirs=( `echo $PERLLIB | sed 's/:/ /g'` )
-
-    for dir in ${PerlLibDirs[@]}; do 
-       if [[ -d $dir ]]; then
-        find $dir -path "*/$modslash.pm"
-       fi
-    done
-}    
 
 module_is_installed(){
     paths=( `module_install_paths $module` )

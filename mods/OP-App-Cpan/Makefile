@@ -28,7 +28,7 @@
 
 # --- MakeMaker const_config section:
 
-# These definitions are from config.sh (via /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2/i686-linux/Config.pm).
+# These definitions are from config.sh (via /home/opopl/perldist/5.16.2/lib/5.16.2/i686-linux/Config.pm).
 # They may have been overridden via Makefile.PL or on the command line.
 AR = ar
 CC = cc
@@ -41,14 +41,14 @@ FULL_AR = /usr/bin/ar
 LD = cc
 LDDLFLAGS = -shared -O2 -L/usr/local/lib -fstack-protector
 LDFLAGS =  -fstack-protector -L/usr/local/lib
-LIBC = 
+LIBC = /lib/libc-2.13.so
 LIB_EXT = .a
 OBJ_EXT = .o
 OSNAME = linux
-OSVERS = 3.5.0-17-generic
+OSVERS = 2.6.37-slitaz
 RANLIB = :
-SITELIBEXP = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/site_perl/5.16.2
-SITEARCHEXP = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/site_perl/5.16.2/i686-linux
+SITELIBEXP = /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2
+SITEARCHEXP = /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/i686-linux
 SO = so
 VENDORARCHEXP = 
 VENDORLIBEXP = 
@@ -73,60 +73,60 @@ INST_BIN = blib/bin
 INST_LIB = blib/lib
 INST_MAN1DIR = blib/man1
 INST_MAN3DIR = blib/man3
-MAN1EXT = 1
-MAN3EXT = 3
+MAN1EXT = 0
+MAN3EXT = 0
 INSTALLDIRS = site
 DESTDIR = 
 PREFIX = $(SITEPREFIX)
-PERLPREFIX = /home/op/perl5/perlbrew/perls/perl-5.16.2
-SITEPREFIX = /home/op/perl5/perlbrew/perls/perl-5.16.2
+PERLPREFIX = /home/opopl/perldist/5.16.2
+SITEPREFIX = /home/opopl/perldist/5.16.2
 VENDORPREFIX = 
-INSTALLPRIVLIB = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2
+INSTALLPRIVLIB = /home/opopl/perldist/5.16.2/lib/5.16.2
 DESTINSTALLPRIVLIB = $(DESTDIR)$(INSTALLPRIVLIB)
-INSTALLSITELIB = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/site_perl/5.16.2
+INSTALLSITELIB = /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2
 DESTINSTALLSITELIB = $(DESTDIR)$(INSTALLSITELIB)
 INSTALLVENDORLIB = 
 DESTINSTALLVENDORLIB = $(DESTDIR)$(INSTALLVENDORLIB)
-INSTALLARCHLIB = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2/i686-linux
+INSTALLARCHLIB = /home/opopl/perldist/5.16.2/lib/5.16.2/i686-linux
 DESTINSTALLARCHLIB = $(DESTDIR)$(INSTALLARCHLIB)
-INSTALLSITEARCH = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/site_perl/5.16.2/i686-linux
+INSTALLSITEARCH = /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/i686-linux
 DESTINSTALLSITEARCH = $(DESTDIR)$(INSTALLSITEARCH)
 INSTALLVENDORARCH = 
 DESTINSTALLVENDORARCH = $(DESTDIR)$(INSTALLVENDORARCH)
-INSTALLBIN = /home/op/perl5/perlbrew/perls/perl-5.16.2/bin
+INSTALLBIN = /home/opopl/perldist/5.16.2/bin
 DESTINSTALLBIN = $(DESTDIR)$(INSTALLBIN)
-INSTALLSITEBIN = /home/op/perl5/perlbrew/perls/perl-5.16.2/bin
+INSTALLSITEBIN = /home/opopl/perldist/5.16.2/bin
 DESTINSTALLSITEBIN = $(DESTDIR)$(INSTALLSITEBIN)
 INSTALLVENDORBIN = 
 DESTINSTALLVENDORBIN = $(DESTDIR)$(INSTALLVENDORBIN)
-INSTALLSCRIPT = /home/op/perl5/perlbrew/perls/perl-5.16.2/bin
+INSTALLSCRIPT = /home/opopl/perldist/5.16.2/bin
 DESTINSTALLSCRIPT = $(DESTDIR)$(INSTALLSCRIPT)
-INSTALLSITESCRIPT = /home/op/perl5/perlbrew/perls/perl-5.16.2/bin
+INSTALLSITESCRIPT = /home/opopl/perldist/5.16.2/bin
 DESTINSTALLSITESCRIPT = $(DESTDIR)$(INSTALLSITESCRIPT)
 INSTALLVENDORSCRIPT = 
 DESTINSTALLVENDORSCRIPT = $(DESTDIR)$(INSTALLVENDORSCRIPT)
-INSTALLMAN1DIR = /home/op/perl5/perlbrew/perls/perl-5.16.2/man/man1
+INSTALLMAN1DIR = none
 DESTINSTALLMAN1DIR = $(DESTDIR)$(INSTALLMAN1DIR)
-INSTALLSITEMAN1DIR = /home/op/perl5/perlbrew/perls/perl-5.16.2/man/man1
+INSTALLSITEMAN1DIR = $(INSTALLMAN1DIR)
 DESTINSTALLSITEMAN1DIR = $(DESTDIR)$(INSTALLSITEMAN1DIR)
 INSTALLVENDORMAN1DIR = 
 DESTINSTALLVENDORMAN1DIR = $(DESTDIR)$(INSTALLVENDORMAN1DIR)
-INSTALLMAN3DIR = /home/op/perl5/perlbrew/perls/perl-5.16.2/man/man3
+INSTALLMAN3DIR = none
 DESTINSTALLMAN3DIR = $(DESTDIR)$(INSTALLMAN3DIR)
-INSTALLSITEMAN3DIR = /home/op/perl5/perlbrew/perls/perl-5.16.2/man/man3
+INSTALLSITEMAN3DIR = $(INSTALLMAN3DIR)
 DESTINSTALLSITEMAN3DIR = $(DESTDIR)$(INSTALLSITEMAN3DIR)
 INSTALLVENDORMAN3DIR = 
 DESTINSTALLVENDORMAN3DIR = $(DESTDIR)$(INSTALLVENDORMAN3DIR)
-PERL_LIB = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2
-PERL_ARCHLIB = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2/i686-linux
+PERL_LIB = /home/opopl/perldist/5.16.2/lib/5.16.2
+PERL_ARCHLIB = /home/opopl/perldist/5.16.2/lib/5.16.2/i686-linux
 LIBPERL_A = libperl.a
 FIRST_MAKEFILE = Makefile
 MAKEFILE_OLD = Makefile.old
 MAKE_APERL_FILE = Makefile.aperl
 PERLMAINCC = $(CC)
-PERL_INC = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2/i686-linux/CORE
-PERL = /home/op/perl5/perlbrew/perls/perl-5.16.2/bin/perl
-FULLPERL = /home/op/perl5/perlbrew/perls/perl-5.16.2/bin/perl
+PERL_INC = /home/opopl/perldist/5.16.2/lib/5.16.2/i686-linux/CORE
+PERL = /home/opopl/perldist/5.16.2/bin/perl
+FULLPERL = /home/opopl/perldist/5.16.2/bin/perl
 ABSPERL = $(PERL)
 PERLRUN = $(PERL)
 FULLPERLRUN = $(FULLPERL)
@@ -139,7 +139,7 @@ PERM_DIR = 755
 PERM_RW = 644
 PERM_RWX = 755
 
-MAKEMAKER   = /home/op/perl5/perlbrew/perls/perl-5.16.2/lib/5.16.2/ExtUtils/MakeMaker.pm
+MAKEMAKER   = /home/opopl/perldist/5.16.2/lib/5.16.2//ExtUtils/MakeMaker.pm
 MM_VERSION  = 6.6302
 MM_REVISION = 66302
 
@@ -163,8 +163,8 @@ XS_FILES =
 C_FILES  = 
 O_FILES  = 
 H_FILES  = 
-MAN1PODS = script/opcpan
-MAN3PODS = lib/OP/App/Cpan.pm
+MAN1PODS = 
+MAN3PODS = 
 
 # Where is the Config information that we are using/depend on
 CONFIGDEP = $(PERL_ARCHLIB)$(DFSEP)Config.pm $(PERL_INC)$(DFSEP)config.h
@@ -410,13 +410,8 @@ POD2MAN_EXE = $(PERLRUN) "-MExtUtils::Command::MM" -e pod2man "--"
 POD2MAN = $(POD2MAN_EXE)
 
 
-manifypods : pure_all  \
-	script/opcpan \
-	lib/OP/App/Cpan.pm
-	$(NOECHO) $(POD2MAN) --section=1 --perm_rw=$(PERM_RW) \
-	  script/opcpan $(INST_MAN1DIR)/opcpan.$(MAN1EXT) 
-	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
-	  lib/OP/App/Cpan.pm $(INST_MAN3DIR)/OP::App::Cpan.$(MAN3EXT) 
+manifypods : pure_all 
+	$(NOECHO) $(NOOP)
 
 
 
@@ -508,7 +503,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) 'configure_requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 0' >> META_new.yml
 	$(NOECHO) $(ECHO) 'dynamic_config: 1' >> META_new.yml
-	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120921'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.132830'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'license: perl' >> META_new.yml
 	$(NOECHO) $(ECHO) 'meta-spec:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  url: http://module-build.sourceforge.net/META-spec-v1.4.html' >> META_new.yml
@@ -533,7 +528,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      "(OP) brian d foy <bdfoy@cpan.org>"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
 	$(NOECHO) $(ECHO) '   "dynamic_config" : 1,' >> META_new.json
-	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120921",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.132830",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "license" : [' >> META_new.json
 	$(NOECHO) $(ECHO) '      "perl_5"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
@@ -822,7 +817,7 @@ $(FIRST_MAKEFILE) : Makefile.PL $(CONFIGDEP)
 
 # --- MakeMaker makeaperl section ---
 MAP_TARGET    = perl
-FULLPERL      = /home/op/perl5/perlbrew/perls/perl-5.16.2/bin/perl
+FULLPERL      = /home/opopl/perldist/5.16.2/bin/perl
 
 $(MAP_TARGET) :: static $(MAKE_APERL_FILE)
 	$(MAKE) $(USEMAKEFILE) $(MAKE_APERL_FILE) $@
@@ -852,7 +847,7 @@ subdirs-test ::
 
 
 test_dynamic :: pure_all
-	$(FULLPERLRUN) "-MTest::Manifest" "-e" "run_t_manifest($(TEST_VERBOSE), '$(INST_LIB)', '$(INST_ARCHLIB)', $(TEST_LEVEL) )"
+	PERL_DL_NONLAZY=1 $(FULLPERLRUN) "-MExtUtils::Command::MM" "-e" "test_harness($(TEST_VERBOSE), '$(INST_LIB)', '$(INST_ARCHLIB)')" $(TEST_FILES)
 
 testdb_dynamic :: pure_all
 	PERL_DL_NONLAZY=1 $(FULLPERLRUN) $(TESTDB_SW) "-I$(INST_LIB)" "-I$(INST_ARCHLIB)" $(TEST_FILE)

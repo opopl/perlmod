@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+
+mkdir:=./mk/iall/
+
+install_modules_mk:=$(mkdir)/install_modules.mk
+
+all: install_modules_mk
+
+install_modules_mk: $(install_modules_mk)
+$(install_modules_mk):  ./iall_gen_install_modules_mk.pl
+	perl ./iall_gen_install_modules_mk.pl
+

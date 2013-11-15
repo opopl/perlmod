@@ -4,6 +4,9 @@ InstalledPaths:= $(shell module_install_paths.zsh $(Module))
 
 define MODULE_MAKE_TEST_INSTALL
 @if [[ -f ./Makefile.PL ]]; then \
+	if [[ -f ./Makefile ]]; then \
+		make realclean	 ; \
+	fi ; \
 	perl ./Makefile.PL && make && make test && make install ;\
 elif [[ -f ./Build.PL ]]; then \
 	perl ./Build.PL && perl ./Build && perl ./Build test && perl ./Build install ;\
@@ -12,6 +15,9 @@ endef
 
 define MODULE_MAKE_NOTEST_INSTALL
 @if [[ -f ./Makefile.PL ]]; then \
+	if [[ -f ./Makefile ]]; then \
+		make realclean	 ; \
+	fi ; \
 	perl ./Makefile.PL && make && make install ;\
 elif [[ -f ./Build.PL ]]; then \
 	perl ./Build.PL && perl ./Build && perl ./Build install ;\
@@ -33,6 +39,7 @@ install: $(InstalledPaths)
 
 $(InstalledPaths): $(LocalPath)
 	$(call MODULE_MAKE_TEST_INSTALL)
+	touch $@
 
 install_deps:
 	@if [[ -f ./deps.i.dat ]]; then \

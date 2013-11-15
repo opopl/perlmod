@@ -1,115 +1,100 @@
  
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/Perl/Installer.pm: /home/opopl/wrk/perlmod/mods/OP-Perl-Installer/lib/OP/Perl/Installer.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-Perl-Installer; ./imod.mk install
+.PHONY: Bib2HTML Class-Accessor-Complex Data-Dumper Directory-Iterator Directory-Iterator-PP File-Basename File-Copy File-Path File-Slurp File-Spec-Functions File-Util Getopt-Long IO-File IPC-Cmd LaTeX-BibTeX LaTeX-TOM LaTeX-Table OP-App-Cpan OP-BIBTEX OP-Base OP-ConvBib OP-GOPS OP-GOPS-BBH OP-GOPS-KW OP-GOPS-MKDEP OP-GOPS-RIF OP-GOPS-TEST OP-Git OP-HTML OP-MOD OP-ManViewer OP-Module-Build OP-PAPERS-MKPDF OP-PAPERS-PSH OP-PERL-PMINST OP-POD OP-PROJSHELL OP-PSH-PEF OP-PackName OP-PaperConf OP-Parse-BL OP-Perl-Edit OP-Perl-Installer OP-RE OP-RENAME OP-RENAME-PMOD OP-Script OP-Script-Simple OP-TEX-Driver OP-TEX-LATEX2HTML OP-TEX-NICE OP-TEX-PERLTEX OP-TEX-PNC OP-TEX-Text OP-Time OP-UTIL-APACK OP-VIMPERL OP-VIMPERL-TEST OP-Viewer OP-VimTag OP-Writer PDL-Graphics-PLplot PerlMagick Pod-Usage Sman Term-ANSIColor Term-ShellUI Text-Table Text-TabularDisplay
  
-OP-Perl-Installer: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/Perl/Installer.pm
+install_modules:  \
+     Class-Accessor-Complex \
+     OP-BIBTEX \
+     OP-Base \
+     OP-GOPS-MKDEP \
+     OP-Git \
+     OP-HTML \
+     OP-ManViewer \
+     OP-PAPERS-MKPDF \
+     OP-PAPERS-PSH \
+     OP-PERL-PMINST \
+     OP-PROJSHELL \
+     OP-PackName \
+     OP-PaperConf \
+     OP-Perl-Installer \
+     OP-RE \
+     OP-RENAME-PMOD \
+     OP-Script \
+     OP-Script-Simple \
+     OP-TEX-NICE \
+     OP-TEX-PNC \
+     OP-TEX-Text \
+     OP-VIMPERL \
+     OP-VIMPERL-TEST
  
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/Script.pm: /home/opopl/wrk/perlmod/mods/OP-Script/lib/OP/Script.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-Script; ./imod.mk install
+remove_dat_installed_cpan:
+	@rm -rf /home/opopl/wrk/perlmod/inc/installed_cpan.i.dat
  
-OP-Script: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/Script.pm
+Bib2HTML: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/Bib2HTML.pm
  
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/PERL/PMINST.pm: /home/opopl/wrk/perlmod/mods/OP-PERL-PMINST/lib/OP/PERL/PMINST.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-PERL-PMINST; ./imod.mk install
- 
-OP-PERL-PMINST: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/PERL/PMINST.pm
- 
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/VIMPERL.pm: /home/opopl/wrk/perlmod/mods/OP-VIMPERL/lib/OP/VIMPERL.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-VIMPERL; ./imod.mk install
- 
-OP-VIMPERL: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/VIMPERL.pm
- 
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/VIMPERL/TEST.pm: /home/opopl/wrk/perlmod/mods/OP-VIMPERL-TEST/lib/OP/VIMPERL/TEST.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-VIMPERL-TEST; ./imod.mk install
- 
-OP-VIMPERL-TEST: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/VIMPERL/TEST.pm
- 
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/PackName.pm: /home/opopl/wrk/perlmod/mods/OP-PackName/lib/OP/PackName.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-PackName; ./imod.mk install
- 
-OP-PackName: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/PackName.pm
- 
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/Base.pm: /home/opopl/wrk/perlmod/mods/OP-Base/lib/OP/Base.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-Base; ./imod.mk install
- 
-OP-Base: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/Base.pm
- 
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/TEX/NICE.pm: /home/opopl/wrk/perlmod/mods/OP-TEX-NICE/lib/OP/TEX/NICE.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-TEX-NICE; ./imod.mk install
- 
-OP-TEX-NICE: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/TEX/NICE.pm
- 
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/TEX/PNC.pm: /home/opopl/wrk/perlmod/mods/OP-TEX-PNC/lib/OP/TEX/PNC.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-TEX-PNC; ./imod.mk install
- 
-OP-TEX-PNC: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/TEX/PNC.pm
- 
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/TEX/Text.pm: /home/opopl/wrk/perlmod/mods/OP-TEX-Text/lib/OP/TEX/Text.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-TEX-Text; ./imod.mk install
- 
-OP-TEX-Text: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/TEX/Text.pm
- 
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/Class/Accessor/Complex.pm: /home/opopl/wrk/perlmod/mods/Class-Accessor-Complex/lib/Class/Accessor/Complex.pm
-	@cd /home/opopl/wrk/perlmod/mods/Class-Accessor-Complex; ./imod.mk install
+/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/Bib2HTML.pm:  \
+     /home/opopl/wrk/perlmod/mods/Bib2HTML/lib/Bib2HTML.pm
+	@cd /home/opopl/wrk/perlmod/mods/Bib2HTML; ./imod.mk install
+	@touch /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/Bib2HTML.pm
  
 Class-Accessor-Complex: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/Class/Accessor/Complex.pm
  
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/PaperConf.pm: /home/opopl/wrk/perlmod/mods/OP-PaperConf/lib/OP/PaperConf.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-PaperConf; ./imod.mk install
+/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/Class/Accessor/Complex.pm:  \
+     /home/opopl/wrk/perlmod/mods/Class-Accessor-Complex/lib/Class/Accessor/Complex.pm
+	@cd /home/opopl/wrk/perlmod/mods/Class-Accessor-Complex; ./imod.mk install
+	@touch /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/Class/Accessor/Complex.pm
  
-OP-PaperConf: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/PaperConf.pm
+Directory-Iterator: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/Directory/Iterator.pm
  
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/GOPS/MKDEP.pm: /home/opopl/wrk/perlmod/mods/OP-GOPS-MKDEP/lib/OP/GOPS/MKDEP.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-GOPS-MKDEP; ./imod.mk install
+/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/Directory/Iterator.pm:  \
+     /home/opopl/wrk/perlmod/mods/Directory-Iterator/lib/Directory/Iterator.pm
+	@cd /home/opopl/wrk/perlmod/mods/Directory-Iterator; ./imod.mk install
+	@touch /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/Directory/Iterator.pm
  
-OP-GOPS-MKDEP: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/GOPS/MKDEP.pm
+Directory-Iterator-PP: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/Directory/Iterator/PP.pm
  
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/RENAME/PMOD.pm: /home/opopl/wrk/perlmod/mods/OP-RENAME-PMOD/lib/OP/RENAME/PMOD.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-RENAME-PMOD; ./imod.mk install
+/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/Directory/Iterator/PP.pm:  \
+     /home/opopl/wrk/perlmod/mods/Directory-Iterator-PP/lib/Directory/Iterator/PP.pm
+	@cd /home/opopl/wrk/perlmod/mods/Directory-Iterator-PP; ./imod.mk install
+	@touch /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/Directory/Iterator/PP.pm
  
-OP-RENAME-PMOD: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/RENAME/PMOD.pm
+File-Slurp: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/File/Slurp.pm
  
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/Git.pm: /home/opopl/wrk/perlmod/mods/OP-Git/lib/OP/Git.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-Git; ./imod.mk install
+/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/File/Slurp.pm:  \
+     /home/opopl/wrk/perlmod/mods/File-Slurp/lib/File/Slurp.pm
+	@cd /home/opopl/wrk/perlmod/mods/File-Slurp; ./imod.mk install
+	@touch /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/File/Slurp.pm
  
-OP-Git: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/Git.pm
+LaTeX-BibTeX: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/i686-linux/LaTeX/BibTeX.pm
  
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/RE.pm: /home/opopl/wrk/perlmod/mods/OP-RE/lib/OP/RE.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-RE; ./imod.mk install
+/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/i686-linux/LaTeX/BibTeX.pm:  \
+     /home/opopl/wrk/perlmod/mods/LaTeX-BibTeX/lib/LaTeX/BibTeX.pm
+	@cd /home/opopl/wrk/perlmod/mods/LaTeX-BibTeX; ./imod.mk install
+	@touch /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/i686-linux/LaTeX/BibTeX.pm
  
-OP-RE: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/RE.pm
+LaTeX-Table: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/LaTeX/Table.pm
  
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/Script/Simple.pm: /home/opopl/wrk/perlmod/mods/OP-Script-Simple/lib/OP/Script/Simple.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-Script-Simple; ./imod.mk install
+/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/LaTeX/Table.pm:  \
+     /home/opopl/wrk/perlmod/mods/LaTeX-Table/lib/LaTeX/Table.pm
+	@cd /home/opopl/wrk/perlmod/mods/LaTeX-Table; ./imod.mk install
+	@touch /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/LaTeX/Table.pm
  
-OP-Script-Simple: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/Script/Simple.pm
+OP-App-Cpan: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/App/Cpan.pm
  
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/PAPERS/PSH.pm: /home/opopl/wrk/perlmod/mods/OP-PAPERS-PSH/lib/OP/PAPERS/PSH.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-PAPERS-PSH; ./imod.mk install
- 
-OP-PAPERS-PSH: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/PAPERS/PSH.pm
- 
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/PAPERS/MKPDF.pm: /home/opopl/wrk/perlmod/mods/OP-PAPERS-MKPDF/lib/OP/PAPERS/MKPDF.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-PAPERS-MKPDF; ./imod.mk install
- 
-OP-PAPERS-MKPDF: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/PAPERS/MKPDF.pm
- 
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/BIBTEX.pm: /home/opopl/wrk/perlmod/mods/OP-BIBTEX/lib/OP/BIBTEX.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-BIBTEX; ./imod.mk install
+/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/App/Cpan.pm:  \
+     /home/opopl/wrk/perlmod/mods/OP-App-Cpan/lib/OP/App/Cpan.pm
+	@cd /home/opopl/wrk/perlmod/mods/OP-App-Cpan; ./imod.mk install
+	@touch /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/App/Cpan.pm
  
 OP-BIBTEX: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/BIBTEX.pm
  
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/PROJSHELL.pm: /home/opopl/wrk/perlmod/mods/OP-PROJSHELL/lib/OP/PROJSHELL.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-PROJSHELL; ./imod.mk install
+/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/BIBTEX.pm:  \
+     /home/opopl/wrk/perlmod/mods/OP-BIBTEX/lib/OP/BIBTEX.pm
+	@cd /home/opopl/wrk/perlmod/mods/OP-BIBTEX; ./imod.mk install
+	@touch /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/BIBTEX.pm
  
-OP-PROJSHELL: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/PROJSHELL.pm
+OP-Base: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/Base.pm
  
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/ManViewer.pm: /home/opopl/wrk/perlmod/mods/OP-ManViewer/lib/OP/ManViewer.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-ManViewer; ./imod.mk install
- 
-OP-ManViewer: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/ManViewer.pm
- 
-/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/HTML.pm: /home/opopl/wrk/perlmod/mods/OP-HTML/lib/OP/HTML.pm
-	@cd /home/opopl/wrk/perlmod/mods/OP-HTML; ./imod.mk install
- 
-OP-HTML: /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/HTML.pm
+/home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/Base.pm:  \
+     /home/opopl/wrk/perlmod/mods/OP-Base/lib/OP/Base.pm
+	@cd /home/opopl/wrk/perlmod/mods/OP-Base; ./imod.mk install
+	@touch /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/OP/Base.pm
