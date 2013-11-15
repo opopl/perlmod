@@ -40,7 +40,7 @@ our $M;
 our $M_is_installed;
 our @M_ipaths;
 our @M_paths_exclude;
-our $IMAX=-1;
+our $IMAX=10;
 
 ###subs
 sub end;
@@ -366,6 +366,12 @@ sub write_mk {
 	open(F,">$mk") || die $!;
 
     print F ' ' . "\n";
+    print F '# ---------------- DEFINITIONS ----------------- ' . "\n";
+    print F ' ' . "\n";
+    print F 'PERLMODDIR:=' . $PERLMODDIR . "\n";
+    print F ' ' . "\n";
+    print F '# ---------------- TARGETS ----------------- ' . "\n";
+    print F ' ' . "\n";
 	print F '.PHONY: ' . join(' ',@modules_esc) .  "\n";
     print F ' ' . "\n";
     print F 'install_modules: ' . print_prereq(@modules_to_install_esc) . "\n";
@@ -408,10 +414,11 @@ sub write_mk {
         if ($module ~~ @cpan_modules){
 		    print F "\t\@perl -MCPAN -e \"install('$module');\"" . "\n";
             print F "\t\@echo '$module' >> $dat_installed_cpan" . "\n";
+
         }elsif($module ~~ @all_local_modules){
         
-		    print F "\t\@cd $moddir; ./imod.mk install" . "\n";
-		    print F "\t\@touch $targets" . "\n";
+		    print F "\t\@cd \$(PERLMODDIR)/mods/$module/; ./imod.mk install" . "\n";
+		    print F "\t\@touch " . '$@' .  "\n";
 
         }   
 	
