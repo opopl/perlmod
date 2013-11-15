@@ -39,7 +39,8 @@ our @modules;
 our $M;
 our $M_is_installed;
 our @M_ipaths;
-our $IMAX=10;
+our @M_paths_exclude;
+our $IMAX=-1;
 
 ###subs
 sub end;
@@ -97,10 +98,25 @@ sub wanted_ipath {
     my $modname=pop(@m);
     my $fname=$File::Find::name;
 
-    if ($fname =~ /$modslash\.pm$/){
-        push(@M_ipaths,$fname);
+    ( my $dir = $File::Find::dir ) =~ s/\/$//g;
+
+    foreach my $path (@M_paths_exclude) {
+        return if $dir =~ /$path/;
     }
 
+    if ($fname =~ /$modslash\.pm$/){
+        push(@M_ipaths,$fname);
+    }elsif($fname =~ /\.pm$/){
+        my @lines=read_file($fname);
+        foreach (@lines){
+            chomp;
+            next if /^\s*#/;
+            if(/^\s*package\s+$M\s*;/){
+                push(@M_ipaths,$fname);
+                last;
+            }
+        }
+    }
 }
 
 sub module_is_installed {
@@ -114,6 +130,27 @@ sub module_is_installed {
     $M_is_installed;
 
 }
+
+sub module_local_paths {
+    my $module=shift;
+
+    ( my $modslash=$module )  =~ s/::/\//g;
+    ( my $moddef=$module  ) =~ s/::/-/g;
+
+    my $moddir=module_dir($module);
+    my $blibdir=catfile($moddir,qw(blib));
+
+    @M_ipaths=();
+    @M_paths_exclude=();
+
+    push(@M_paths_exclude,$blibdir);
+
+    File::Find::find({ wanted  => \&wanted_ipath },$moddir);
+
+    @M_ipaths;
+
+}
+
 
 sub module_install_paths {
     my $module=shift;
@@ -164,20 +201,6 @@ sub module_deps_esc {
     my @deps=map { s/::/-/g; $_ } module_deps($module);
 
     @deps;
-
-}
-
-sub module_local_paths {
-    my $module=shift;
-
-    ( my $modslash=$module )  =~ s/::/\//g;
-    ( my $moddef=$module  ) =~ s/::/-/g;
-
-    my @paths=();
-
-    push(@paths, catfile($PERLMODDIR, qw(mods),$moddef,qw(lib),"$modslash.pm" ));    
-
-    @paths;
 
 }
 
@@ -354,7 +377,7 @@ sub write_mk {
 
     my $imod=0;
 	foreach my $module (@modules) {
-        last if $imod == $IMAX;
+        last if ($imod == $IMAX);
         _debug "Processing: $module";
 
         if (($module ~~ @cpan_modules) && (module_is_installed($module))){
