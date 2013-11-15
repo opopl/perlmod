@@ -1,5 +1,20 @@
 
 
+module_all_install_paths(){
+
+    module=$1
+    
+    paths=`module_install_paths $module`
+    modslash=`echo $module | sed 's/::/\//g'`
+
+    if (( ! ${#paths} )); then 
+        paths=( $PERL_INSTALL_PREFIX/$modslash.pm )    
+    fi
+    for path in ${paths[@]}; do 
+        echo $path
+    done
+
+}
 
 module_install_paths(){
 
@@ -8,21 +23,21 @@ module_install_paths(){
 
     PerlLibDirs=( `echo $PERLLIB | sed 's/:/ /g'` )
 
-    paths=()
-
     for dir in ${PerlLibDirs[@]}; do 
        if [[ -d $dir ]]; then
-        paths=( ${paths[@]} `find $dir -path "*/$modslash.pm" ` )
+        find $dir -path "*/$modslash.pm"
        fi
     done
+}    
 
-    if (( ! ${#paths} )); then 
-        paths=( $PERL_INSTALL_PREFIX/$modslash.pm )    
+module_is_installed(){
+    paths=( `module_install_paths $module` )
+
+    if (( ${#paths} )); then
+      return true
     fi
-    for path in ${paths[@]}; do 
-             echo $path
-    done
 
+    return false
 }
 
 module_local_path(){
@@ -60,14 +75,12 @@ install_deps(){
 
 install_this_module(){
 
-  install_deps
-
   ThisModule=`basename $PWD | sed 's/-/::/g'`
 
   modslash=`echo $ThisModule | sed 's/::/\//g'`
   ThisModuleLocalPath="./lib/$modslash.pm"
 
-  ThisModuleInstalledPaths=( `module_install_paths $ThisModule` )
+  ThisModuleInstalledPaths=( `module_all_install_paths $ThisModule` )
 
   mk='./imod.mk'
 
@@ -77,8 +90,7 @@ install_this_module(){
 cat > $mk << EOF
 #!/usr/bin/make -f
 
-LocalPath:= $ThisModuleLocalPath
-InstalledPaths:= ${ThisModuleInstalledPaths[@]}
+Module:=$ThisModule
 
 include \$(PERLMODDIR)/mk/install_module.mk
 
@@ -94,6 +106,8 @@ EOF
 cpan_install(){
   module=$1 
 
+  echo_red "CPAN Installing module: $module"
+
   perl -MCPAN -e "install(\"$module\");"
 
 }
@@ -106,14 +120,15 @@ install_module(){
     install_this_module
   else
     module=$1
-    echo_red "Installing module: $module"
     moddef=`echo $module | sed 's/::/-/g'`
     moddir=$PERLMODDIR/mods/$moddef/
     if [[ -d "$moddir" ]]; then
         cd $moddir
         install_this_module
     else
-        cpan_install $module
+        if [[ -z `module_install_paths $module` ]]; then 
+            cpan_install $module
+        fi
     fi
   fi
 
@@ -128,5 +143,19 @@ install_install(){
 	    git add $dir/install.zsh
 	    git rm $dir/install.sh -f
 	done
+
+}
+
+install_imod_mk(){
+
+    ThisDir=`pwd`
+
+	for dir in `find $PERLMODDIR/mods/ -maxdepth 1 -type d` ; do
+	    cp ./imod.mk $dir
+        Module=`basename $dir | sed 's/-/::/g'`
+        perl -p -i -e "s/^Module:=.*/Module:=$Module/g" $dir/imod.mk
+	done
+
+    cd $ThisDir
 
 }

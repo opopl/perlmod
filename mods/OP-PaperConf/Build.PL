@@ -4,4 +4,5 @@ use Module::Build;
 Module::Build->new
     ( module_name     => 'OP::PaperConf',
       license         => 'perl',
+      dist_abstract         => 'perl package for individual paper configurations',
     )->create_build_script;

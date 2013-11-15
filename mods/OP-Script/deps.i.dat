@@ -1,0 +1,10 @@
+File::Util
+File::Basename
+Getopt::Long
+Pod::Usage
+File::Spec::Functions
+Term::ANSIColor
+Data::Dumper
+IPC::Cmd
+OP::Base
+OP::VIMPERL
