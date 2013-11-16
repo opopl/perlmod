@@ -1,6 +1,6 @@
 
-LocalPath:= $(shell module_local_path.zsh $(Module))
-InstalledPaths:= $(shell module_install_paths.zsh $(Module))
+LocalPaths:= $(shell $(PERLMODDIR)/iall.pl --list_local_paths  $(Module))
+InstallPaths:= $(shell $(PERLMODDIR)/iall.pl --list_install_paths $(Module))
 
 define MODULE_MAKE_TEST_INSTALL
 @if [[ -f ./Makefile.PL ]]; then \
@@ -28,16 +28,16 @@ endef
 .PHONY: list list_installed list_local list_deps
 .PHONY: install_notest
 
-all: install_deps install 
+all: install 
 
 reinstall: remove install
 
 install_notest:
 	$(call MODULE_MAKE_NOTEST_INSTALL)
 
-install: $(InstalledPaths)
+install: $(InstallPaths)
 
-$(InstalledPaths): $(LocalPath)
+$(InstallPaths): $(LocalPaths)
 	$(call MODULE_MAKE_TEST_INSTALL)
 	touch $@
 
@@ -52,7 +52,7 @@ install_deps:
 	fi 
 
 remove:
-	@for path in $(InstalledPaths); do \
+	@for path in $(InstallPaths); do \
 		rm -rf $${path}  ; \
 	done ;
 
@@ -68,14 +68,14 @@ list_deps:
 
 
 list_installed:
-	@for path in $(InstalledPaths); do \
+	@for path in $(InstallPaths); do \
 		if [ -f $${path} ]; then \
 			ls -la $${path}  ; \
 		fi ; \
 	done ;
 
 list_local:
-	@for path in $(LocalPath); do \
+	@for path in $(LocalPaths); do \
 		if [ -f $${path} ]; then \
 			ls -la $${path}  ; \
 		fi ; \

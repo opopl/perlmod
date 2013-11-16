@@ -51,4 +51,5 @@ PerlMagick
 Sman
 Term::ShellUI
 OP::Writer
+OP::Writer::Pod
 OP::HTML

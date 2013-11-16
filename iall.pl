@@ -22,12 +22,21 @@ use Data::Dumper;
 use FindBin qw( $Bin $Script );
 use FileHandle;
 use Getopt::Long;
+use IO::String;
+
+use lib("$PERLMODDIR/mods/OP-Writer-Pod/lib");
+use OP::Writer::Pod;
+
+use Pod::Usage;
+use Pod::Text;
 
 ###our
-our(%opt,@optstr);
+our %S;
+our $POD;
+our $PODPARSER;
+our(%opt,@optstr,%optdesc);
 our($cmdline);
 our $DEBUG;
-
 
 our @installed_cpan;
 our @modules_esc;
@@ -44,14 +53,25 @@ our $M;
 our $M_is_installed;
 our @M_ipaths;
 our @M_paths_exclude;
-our $IMAX=10;
+our $IMAX;
 
 our %m_install_paths;
 our %m_local_paths;
 
 our %dat;
+our %mkfiles;
+our @datfiles;
 
 ###subs
+sub init_dat;
+sub init_m_paths;
+sub module_cpan_installed;
+sub write_defs;
+sub remove_dat;
+sub test;
+sub write_POD;
+sub process_opt;
+sub init_after_get_opt;
 sub _debug;
 sub _say;
 sub call;
@@ -89,25 +109,80 @@ sub get_opt {
     
     Getopt::Long::Configure(qw(bundling no_getopt_compat no_auto_abbrev no_ignore_case_always));
     
-    @optstr=qw( remove_dat );
+    @optstr=qw( help man remove_dat gen_dat 
+        IMAX=s 
+        list_install_paths=s
+        list_local_paths=s
+    );
+
+    %optdesc=(
+        help            => 'Display help message',
+        man             => 'Display man page',
+        remove_dat      => 'Remove dat-files',
+        gen_dat         => 'Generate dat-files',
+        IMAX            => 'Maximal number of modules to be processed',
+        list_install_paths          => 'List install paths ',
+        list_local_paths            => 'List local paths ',
+    );
+
+    write_POD;
     
     unless( @ARGV ){ 
-        dhelp;
-        exit 0;
     }else{
         $cmdline=join(' ',@ARGV);
         GetOptions(\%opt,@optstr);
     }
 
-    if ($opt{remove_dat}) {
-        foreach (qw(installed_cpan install_paths local_paths )) {
-            remove_tree($dat{$_});
-        }
+    if ($opt{help}){
+        dhelp;
+        exit 0;
     }
 
 }
 
+sub write_POD {
+
+    my $podw=OP::Writer::Pod->new;
+
+    $podw->head1('NAME');
+    $podw->_pod_line($Script . ' - install_modules.mk generator');
+    $podw->head1('USAGE');
+    $podw->_pod_line($Script . ' OPTIONS');
+    $podw->head1('OPTIONS');
+
+    my @i;
+    my $width=80;
+
+    foreach my $opt (@optstr) {
+        my $type='';
+        $type='(s)' if ($opt =~ /=s$/);
+
+        ( my $o=$opt ) =~ s/=\w+$//g;
+        my $desc=$optdesc{$o} // '';
+
+        my $first='--' . $o;
+        my $second= $desc;
+        my $shift=$width-length($second) - length($first);
+
+        $shift=0 if $shift < 0;
+
+        my $line= $first . "\n\n" . $type . ' ' .  $second;
+        push(@i,$line);
+    }
+
+    $podw->over({ items => \@i });
+
+    $podw->cut;
+
+    my $s=$podw->text;
+    $S{POD}=IO::String->new($s);
+
+}
+
 sub dhelp {
+
+    Pod::Text->filter($S{POD});
+
 }
 
 sub wanted_installed {
@@ -159,6 +234,12 @@ sub wanted_ipath {
 sub module_is_installed {
     my $module=shift;
 
+    my $ip=$m_install_paths{$module} // [];
+
+    foreach my $p (@$ip) {
+        return 1 if -e $p;
+    }
+
     $M=$module;
     $M_is_installed=0;
 
@@ -177,6 +258,8 @@ sub module_local_paths {
         return @$paths;
     }
 
+    $M=$module;
+
     ( my $modslash=$module )  =~ s/::/\//g;
     ( my $moddef=$module  ) =~ s/::/-/g;
 
@@ -193,10 +276,13 @@ sub module_local_paths {
     push(@$paths,@M_ipaths);
 
     foreach my $p (@$paths) {
-      append_file($dat{local_paths},"$module $p");
+      append_file($dat{local_paths},"$module $p" . "\n");
     }
 
+    $m_local_paths{$module}=$paths;
+
     @$paths;
+
 
 }
 
@@ -219,9 +305,11 @@ sub module_install_paths {
 
         push(@$paths,@M_ipaths);
         foreach my $p (@$paths) {
-            append_file($dat{install_paths},"$module $p");
+            append_file($dat{install_paths},"$module $p" . "\n");
         }
     }
+
+    $m_install_paths{$module}=$paths;
 
     uniq(@$paths);
 
@@ -238,7 +326,7 @@ sub module_deps {
 
     unless(@$deps){
         if (-e $dat_deps) {
-            @$deps=readarr($dat_deps);
+            @$deps=map { module_is_installed($_) ? $_ : ()  } readarr($dat_deps);
             $moduledeps{$module}=$deps;
         }
     }
@@ -318,24 +406,28 @@ sub readhash {
 
         @F = split( $sep, $line );
 
-         for (@F) {
+        for (@F) {
                 s/^\s*//g;
                 s/\s*$//g;
-         }
+        }
 
-         $var = shift @F;
+        $var = shift @F;
 
-         $hash{$var} = '' unless defined $hash{$var};
+        $hash{$var} = [] unless defined $hash{$var};
 
-         if (@F) {
-             $hash{$var} .= join( $sep, @F );
-         }
+        if (@F) {
+             push(@{$hash{$var}}, join( $sep, @F ));
+        }
 
-        $hash{$var} =~ s/\s+/ /g;
+        s/\s+/ /g for(@{$hash{$var}});
 
     }
 
     close(FILE);
+
+    while(my($k,$v)=each %hash){
+        @{$hash{$k}}=uniq(@$v);
+    }
 
     wantarray ? %hash : \%hash;
 
@@ -377,7 +469,7 @@ sub get_cpan_modules {
     }
 
     @cpan_modules=uniq(@cpan_modules);
-    _debug "Number of CPAN modules: " . scalar @cpan_modules;
+    _say "Number of CPAN modules: " . scalar @cpan_modules;
 
 }
 
@@ -385,10 +477,10 @@ sub get_installed_cpan {
 
 
     if (-e $dat{installed_cpan}){
-        _debug "Found dat-file with the list of installed CPAN modules:";
-        _debug "     $dat{installed_cpan}";
+        _say "Found dat-file with the list of installed CPAN modules:";
+        _say "     $dat{installed_cpan}";
 	    @installed_cpan=readarr($dat{installed_cpan});
-        _debug "Number of installed CPAN modules: " . scalar @installed_cpan;
+        _say "Number of installed CPAN modules: " . scalar @installed_cpan;
     }
 
 }
@@ -461,22 +553,63 @@ sub _say {
     print "$text\n";
 }
 
+sub module_cpan_installed {
+    my $module=shift; 
+
+   if (($module ~~ @cpan_modules) && (module_is_installed($module))){
+      _say "...INSTALLED, skipping...";
+
+      return 1;
+   }
+
+   return 0;
+
+}
+
+
+sub write_defs {
+
+	open(D,">",$mkfiles{defs}) || die $!;
+
+    my $imod=0;
+	foreach my $module (@modules) {
+        last if ($imod == $IMAX);
+
+        next if module_cpan_installed($module);
+
+        _say "(defs) Processing: $module";
+
+        ( my $modu=$module ) =~ s/::/_/g;
+        ( my $moddef=$module ) =~ s/::/-/g;
+	
+	    my @ipaths=module_install_paths($module);
+	    my @lpaths=module_local_paths($module);
+
+        print D ' ' . "\n";
+        print D $modu . '_ipaths:= ' . join(' ',@ipaths) . "\n";
+        print D $modu . '_lpaths:= ' . join(' ',@lpaths) . "\n";
+
+        $imod++;
+    }
+
+    close D;
+
+}
+
+
+
 
 
 sub write_mk {
 
-    my $mk=catfile($mkdir,qw(install_modules.mk));
-    my $defs=catfile($mkdir,qw(defs.mk));
-	
-	open(F,">$mk") || die $!;
-	open(D,">$defs") || die $!;
+	open(F,">",$mkfiles{install_modules}) || die $!;
 
     print F ' ' . "\n";
     print F '# ---------------- DEFINITIONS ----------------- ' . "\n";
     print F ' ' . "\n";
     print F 'PERLMODDIR:=' . $PERLMODDIR . "\n";
     print F ' ' . "\n";
-    print F 'include ' . $defs  . "\n";
+    print F 'include ' . $mkfiles{defs}  . "\n";
     print F ' ' . "\n";
     print F '# ---------------- TARGETS ----------------- ' . "\n";
     print F ' ' . "\n";
@@ -498,17 +631,15 @@ sub write_mk {
     print F 'remove_dat_local_paths: ' . "\n";
     print F "\t\@rm -rf $dat{local_paths}" . "\n";
 
-    _debug "Number of modules to be processed: " . scalar @modules ;
+    _say "Number of modules to be processed: " . scalar @modules ;
 
     my $imod=0;
 	foreach my $module (@modules) {
         last if ($imod == $IMAX);
-        _debug "Processing: $module";
 
-        if (($module ~~ @cpan_modules) && (module_is_installed($module))){
-            _debug "...INSTALLED, skipping...";
-            next;
-        }
+        _say "(mk) Processing: $module";
+
+        next if module_cpan_installed($module);
 
         my $moddir = module_dir($module);
 
@@ -517,10 +648,6 @@ sub write_mk {
 	
 	    my @ipaths=module_install_paths($module);
 	    my @lpaths=module_local_paths($module);
-
-        print D ' ' . "\n";
-        print D $modu . '_ipaths:=' . join(' ',@ipaths) . "\n";
-        print D $modu . '_lpaths:=' . join(' ',@lpaths) . "\n";
 
         my @deps=module_deps_esc($module);
 
@@ -543,7 +670,7 @@ sub write_mk {
 
         }elsif($module ~~ @all_local_modules){
         
-		    print F "\t\@cd \$(PERLMODDIR)/mods/$moddef/; ./imod.mk install" . "\n";
+		    print F "\t\@cd \$(PERLMODDIR)/mods/$moddef/; make -f ./imod.mk install" . "\n";
 		    print F "\t\@touch " . '$@' .  "\n";
 
         }   
@@ -605,16 +732,93 @@ sub _debug {
 
     append_file($DEBUG,"$text\n");
 
+}
+
+sub remove_dat {
+
+    _say "Removing dat-files...";
+
+        foreach (qw(installed_cpan install_paths local_paths )) {
+            remove_tree($dat{$_});
+        }
+}
+
+sub process_opt {
+
+    $IMAX=$opt{IMAX} // -1;
+
+###opt_remove_dat
+    if ($opt{remove_dat}) {
+        remove_dat;
+        exit 0;
+    }
+
+###opt_list_install_paths
+
+    if ($opt{list_install_paths}) {
+        my $module=$opt{list_install_paths};
+        my @ipaths=module_install_paths($module);
+        print $_ . "\n" for(@ipaths);
+        exit 0;
+    }
+
+###opt_list_local_paths
+
+    if ($opt{list_local_paths}) {
+        my $module=$opt{list_local_paths};
+        my @lpaths=module_local_paths($module);
+        print $_ . "\n" for(@lpaths);
+        exit 0;
+    }
+
+###opt_gen_dat
+    if ($opt{gen_dat}) {
+
+        get_all_local_modules;
+        remove_dat;
+
+        foreach my $module (@all_local_modules) {
+            my($stime,$etime,$time);
+
+            _say "Processing module: $module";
+
+            # first time
+            _say "First time...";
+            _say " Filling in the paths database...";
+
+            $stime=time;
+
+            module_install_paths($module);
+            module_local_paths($module);
+
+            $etime=time;
+            $time=$etime - $stime;
+
+            _say " Time spent: " . $time . ' (secs)';
+
+            # second time
+            _say "Second time...";
+
+            $stime=time;
+
+            my @ip= module_install_paths($module);
+            my @lp= module_local_paths($module);
+
+            print Dumper( \@ip);
+            print Dumper( \@lp);
+
+            $etime=time;
+            $time=$etime - $stime;
+
+            _say " Time spent: " . $time . ' (secs)';
+
+        }
+
+    }
 
 }
 
-sub init {
-    make_dirs;
-
-    $dat{install_paths}=catfile($PERLMODDIR,qw( inc iall install_paths.i.dat ));
-    $dat{local_paths}=catfile($PERLMODDIR,qw( inc iall local_paths.i.dat ));
-
-    $dat{installed_cpan}=catfile($PERLMODDIR,qw( inc iall installed_cpan.i.dat ));
+sub init_m_paths {
 
     if (-e $dat{local_paths}){
         %m_local_paths=readhash($dat{local_paths});
@@ -624,16 +828,65 @@ sub init {
         %m_install_paths=readhash($dat{install_paths});
     }
 
+}
+
+sub init_after_get_opt {
+
+    init_m_paths;
+
+}
+
+sub init_dat {
+
+    @datfiles=qw( installed_cpan install_paths local_paths );
+
+    $dat{install_paths}=catfile($PERLMODDIR,qw( inc iall install_paths.i.dat ));
+    $dat{local_paths}=catfile($PERLMODDIR,qw( inc iall local_paths.i.dat ));
+
+    $dat{installed_cpan}=catfile($PERLMODDIR,qw( inc iall installed_cpan.i.dat ));
+
+    # Initialize dat-files if non existing
+    foreach (@datfiles ) {
+        my $f=$dat{$_};
+        write_file("$f","") unless -e $f;
+    }
+
+}
+
+sub init_mkfiles {
+
+    $mkfiles{install_modules}=catfile($mkdir,qw(install_modules.mk));
+    $mkfiles{defs}=catfile($mkdir,qw(defs.mk));
+
+}
+
+sub init {
+
+    make_dirs;
+
+    init_mkfiles;
+    init_dat;
+    init_m_paths;
+
     @PERLLIB=map { ( defined $_ && -d "$_" ) ? $_ : () } @PERLLIB;
 
     $DEBUG="$Bin/log";
 
     write_file("$DEBUG","");
 
-    foreach (qw( install_paths local_paths )) {
-        my $f=$dat{$_};
-        write_file("$f","") unless -e $f;
-    }
+}
+
+sub test {
+    my $m;
+
+    $m='OP::Script';
+
+    my @i=module_install_paths($m);
+    my @l=module_local_paths($m);
+
+    print Dumper(\%m_local_paths);
+    print Dumper(\%m_install_paths);
+    exit 0;
 
 }
 
@@ -646,6 +899,8 @@ sub end {
 __DATA__
 
 get_opt
+process_opt
+init_after_get_opt
 
 get_modules_to_install
 
@@ -659,6 +914,9 @@ get_installed_cpan
 # set @modules, @modules_esc
 get_modules
 
-# write the mk-file
+# test
+
+# write the mk-files
+write_defs
 write_mk
 

@@ -1,5 +1,7 @@
 OP::Perl::Installer
 OP::Script
+OP::Writer
+OP::Writer::Pod
 OP::PERL::PMINST
 OP::VIMPERL
 OP::VIMPERL::TEST

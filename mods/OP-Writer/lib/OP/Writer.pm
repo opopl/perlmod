@@ -47,6 +47,13 @@ sub _appendfile {
 
 }
 
+sub _print_stdout {
+    my $self = shift;
+
+    print $self->text . "\n";
+
+}
+
 sub _print {
     my $self = shift;
 
