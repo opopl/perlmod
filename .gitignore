@@ -1,7 +1,6 @@
 *.pod
 *.log
 *.o
-*.mk
 blib
 mods/*/blib/libdoc/
 mods/**/blib/

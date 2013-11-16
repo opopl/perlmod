@@ -24,7 +24,10 @@ use FileHandle;
 our $DEBUG;
 
 our $dat_installed_cpan;
+
 our $dat_install_paths;
+our $dat_local_paths;
+
 our @installed_cpan;
 our @modules_esc;
 our %moduledeps;
@@ -40,7 +43,10 @@ our $M;
 our $M_is_installed;
 our @M_ipaths;
 our @M_paths_exclude;
-our $IMAX=10;
+our $IMAX=-1;
+
+our %m_install_paths;
+our %m_local_paths;
 
 ###subs
 sub end;
@@ -134,6 +140,13 @@ sub module_is_installed {
 sub module_local_paths {
     my $module=shift;
 
+    my $paths=$m_local_paths{$module} // [];
+
+    if(@$paths){
+        return @$paths;
+    }
+
+
     ( my $modslash=$module )  =~ s/::/\//g;
     ( my $moddef=$module  ) =~ s/::/-/g;
 
@@ -147,31 +160,40 @@ sub module_local_paths {
 
     File::Find::find({ wanted  => \&wanted_ipath },$moddir);
 
-    @M_ipaths;
+    push(@$paths,@M_ipaths);
+
+    foreach my $p (@$paths) {
+      append_file($dat_local_paths,"$module $p");
+    }
+
+    @$paths;
 
 }
-
 
 sub module_install_paths {
     my $module=shift;
 
     ( my $modslash=$module )  =~ s/::/\//g;
 
-    my @paths=();
+    my $paths=$m_install_paths{$module} // [];
+
+    if(@$paths){
+        return @$paths;
+    }
     
     unless (module_is_installed($module)) {
-        push(@paths, catfile($PERL_INSTALL_PREFIX, "$modslash.pm" ));    
+        push(@$paths, catfile($PERL_INSTALL_PREFIX, "$modslash.pm" ));    
     }else{
         @M_ipaths=();
         File::Find::find({ wanted  => \&wanted_ipath }, @PERLLIB);
 
-        push(@paths,@M_ipaths);
-        foreach my $p (@paths) {
+        push(@$paths,@M_ipaths);
+        foreach my $p (@$paths) {
             append_file($dat_install_paths,"$module $p");
         }
     }
 
-    uniq(@paths);
+    uniq(@$paths);
 
 }
 
@@ -346,7 +368,6 @@ sub main {
 
     init;
 
-
     call_subs;
 		
 }
@@ -362,13 +383,17 @@ sub _say {
 sub write_mk {
 
     my $mk=catfile($mkdir,qw(install_modules.mk));
+    my $defs=catfile($mkdir,qw(defs.mk));
 	
 	open(F,">$mk") || die $!;
+	open(D,">$defs") || die $!;
 
     print F ' ' . "\n";
     print F '# ---------------- DEFINITIONS ----------------- ' . "\n";
     print F ' ' . "\n";
     print F 'PERLMODDIR:=' . $PERLMODDIR . "\n";
+    print F ' ' . "\n";
+    print F 'include ' . $defs  . "\n";
     print F ' ' . "\n";
     print F '# ---------------- TARGETS ----------------- ' . "\n";
     print F ' ' . "\n";
@@ -392,17 +417,24 @@ sub write_mk {
         }
 
         my $moddir = module_dir($module);
+
+        ( my $modu=$module ) =~ s/::/_/g;
+        ( my $moddef=$module ) =~ s/::/-/g;
 	
 	    my @ipaths=module_install_paths($module);
 	    my @lpaths=module_local_paths($module);
 
+        print D ' ' . "\n";
+        print D $modu . '_ipaths:=' . join(' ',@ipaths) . "\n";
+        print D $modu . '_lpaths:=' . join(' ',@lpaths) . "\n";
+
         my @deps=module_deps_esc($module);
 
-        my @prereq=(@deps,@lpaths);
-        my $targets=join(' ',@ipaths);
+        my @prereq=(@deps,'$(' . $modu . '_lpaths)');
+        my $targets='$(' . $modu . '_ipaths)';
 
         print F ' ' . "\n";
-        print F module_esc("$module") . ': ' . join(' ',@ipaths) . "\n";
+        print F module_esc("$module") . ': $(' . $modu . '_ipaths)' . "\n";
 
         if ($module ~~ @cpan_modules){
             @prereq=();
@@ -417,7 +449,7 @@ sub write_mk {
 
         }elsif($module ~~ @all_local_modules){
         
-		    print F "\t\@cd \$(PERLMODDIR)/mods/$module/; ./imod.mk install" . "\n";
+		    print F "\t\@cd \$(PERLMODDIR)/mods/$moddef/; ./imod.mk install" . "\n";
 		    print F "\t\@touch " . '$@' .  "\n";
 
         }   
@@ -426,6 +458,7 @@ sub write_mk {
 	}
 	    
 	close(F);
+	close(D);
 
 }
 
@@ -484,13 +517,26 @@ sub _debug {
 sub init {
     make_dirs;
 
+    if (-e $dat_local_paths){
+        %m_local_paths=readhash($dat_local_paths);
+    }
+
+    if (-e $dat_install_paths){
+        %m_install_paths=readhash($dat_install_paths);
+    }
+
     @PERLLIB=map { ( defined $_ && -d "$_" ) ? $_ : () } @PERLLIB;
 
     $dat_install_paths=catfile($PERLMODDIR,qw( inc iall install_paths.i.dat ));
+    $dat_local_paths=catfile($PERLMODDIR,qw( inc iall local_paths.i.dat ));
 
     $DEBUG="$Bin/log";
+
     write_file("$DEBUG","");
-    write_file("$dat_install_paths","");
+
+    foreach my $f (($dat_install_paths, $dat_local_paths)) {
+        write_file("$f","") unless -e $f;
+    }
 
 }
 

@@ -75,6 +75,29 @@ install_deps(){
 
 }
 
+create_imod_mk(){
+
+  mk='./imod.mk'
+
+  ThisModule=`basename $PWD | sed 's/-/::/g'`
+  module=$ThisModule
+
+  rm -rf $mk
+  if [[ ! -f $mk ]]; then
+
+cat > $mk << EOF
+#!/usr/bin/make -f
+
+Module:=$module
+
+include \$(PERLMODDIR)/mk/install_module.mk
+
+EOF
+
+  fi
+
+}
+
 install_this_module(){
 
   ThisModule=`basename $PWD | sed 's/-/::/g'`
@@ -84,21 +107,7 @@ install_this_module(){
 
   ThisModuleInstalledPaths=( `module_all_install_paths $ThisModule` )
 
-  mk='./imod.mk'
-
-  rm -rf $mk
-  if [[ ! -f $mk ]]; then
-
-cat > $mk << EOF
-#!/usr/bin/make -f
-
-Module:=$ThisModule
-
-include \$(PERLMODDIR)/mk/install_module.mk
-
-EOF
-
-  fi
+  create_imod_mk 
 
   chmod +rx $mk
   make -f $mk all
