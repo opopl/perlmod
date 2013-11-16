@@ -3,6 +3,8 @@
 use strict;
 use warnings;
 
+###use
+
 use Env qw( 
     $PERLMODDIR 
     @PERLLIB 
@@ -19,14 +21,13 @@ use File::Find;
 use Data::Dumper;
 use FindBin qw( $Bin $Script );
 use FileHandle;
+use Getopt::Long;
 
 ###our
+our(%opt,@optstr);
+our($cmdline);
 our $DEBUG;
 
-our $dat_installed_cpan;
-
-our $dat_install_paths;
-our $dat_local_paths;
 
 our @installed_cpan;
 our @modules_esc;
@@ -43,42 +44,71 @@ our $M;
 our $M_is_installed;
 our @M_ipaths;
 our @M_paths_exclude;
-our $IMAX=-1;
+our $IMAX=10;
 
 our %m_install_paths;
 our %m_local_paths;
 
+our %dat;
+
 ###subs
-sub readhash;
-sub end;
 sub _debug;
 sub _say;
-sub init;
-sub call_subs;
 sub call;
-sub write_mk;
-sub get_modules;
-sub make_dirs;
-sub get_modules_to_install;
-sub wanted_installed;
-sub wanted_ipath;
-sub get_installed_cpan;
-sub module_is_installed;
-sub get_cpan_modules;
+sub call_subs;
+sub dhelp;
+sub end;
 sub get_all_local_modules;
-sub uniq;
+sub get_cpan_modules;
+sub get_installed_cpan;
+sub get_modules;
+sub get_modules_to_install;
+sub get_opt;
+sub init;
+sub main;
+sub make_dirs;
+sub module_deps;
 sub module_deps_esc;
+sub module_dir;
 sub module_esc;
+sub module_install_paths;
+sub module_is_installed;
+sub module_local_paths;
 sub print_prereq;
 sub readarr;
-sub module_dir;
-sub module_deps;
+sub readhash;
+sub uniq;
 sub wanted;
-sub module_local_paths;
-sub module_install_paths;
-sub main;
+sub wanted_installed;
+sub wanted_ipath;
+sub write_mk;
 
 main;
+      
+sub get_opt {
+    
+    Getopt::Long::Configure(qw(bundling no_getopt_compat no_auto_abbrev no_ignore_case_always));
+    
+    @optstr=qw( remove_dat );
+    
+    unless( @ARGV ){ 
+        dhelp;
+        exit 0;
+    }else{
+        $cmdline=join(' ',@ARGV);
+        GetOptions(\%opt,@optstr);
+    }
+
+    if ($opt{remove_dat}) {
+        foreach (qw(installed_cpan install_paths local_paths )) {
+            remove_tree($dat{$_});
+        }
+    }
+
+}
+
+sub dhelp {
+}
 
 sub wanted_installed {
 
@@ -163,7 +193,7 @@ sub module_local_paths {
     push(@$paths,@M_ipaths);
 
     foreach my $p (@$paths) {
-      append_file($dat_local_paths,"$module $p");
+      append_file($dat{local_paths},"$module $p");
     }
 
     @$paths;
@@ -189,7 +219,7 @@ sub module_install_paths {
 
         push(@$paths,@M_ipaths);
         foreach my $p (@$paths) {
-            append_file($dat_install_paths,"$module $p");
+            append_file($dat{install_paths},"$module $p");
         }
     }
 
@@ -353,12 +383,11 @@ sub get_cpan_modules {
 
 sub get_installed_cpan {
 
-    $dat_installed_cpan=catfile($PERLMODDIR,qw( inc installed_cpan.i.dat ));
 
-    if (-e $dat_installed_cpan){
+    if (-e $dat{installed_cpan}){
         _debug "Found dat-file with the list of installed CPAN modules:";
-        _debug "     $dat_installed_cpan";
-	    @installed_cpan=readarr($dat_installed_cpan);
+        _debug "     $dat{installed_cpan}";
+	    @installed_cpan=readarr($dat{installed_cpan});
         _debug "Number of installed CPAN modules: " . scalar @installed_cpan;
     }
 
@@ -454,9 +483,20 @@ sub write_mk {
 	print F '.PHONY: ' . join(' ',@modules_esc) .  "\n";
     print F ' ' . "\n";
     print F 'install_modules: ' . print_prereq(@modules_to_install_esc) . "\n";
+
+    print F 'remove_dat: ' . print_prereq(qw(
+        remove_dat_installed_cpan 
+        remove_dat_install_paths 
+        remove_dat_local_paths 
+    )) . "\n";
+
     print F ' ' . "\n";
-    print F 'remove_dat_installed_cpan:' . "\n";
-    print F "\t\@rm -rf $dat_installed_cpan" . "\n";
+    print F 'remove_dat_installed_cpan: ' . "\n";
+    print F "\t\@rm -rf " . $dat{installed_cpan} . "\n";
+    print F 'remove_dat_install_paths: ' . "\n";
+    print F "\t\@rm -rf $dat{install_paths}" . "\n";
+    print F 'remove_dat_local_paths: ' . "\n";
+    print F "\t\@rm -rf $dat{local_paths}" . "\n";
 
     _debug "Number of modules to be processed: " . scalar @modules ;
 
@@ -499,7 +539,7 @@ sub write_mk {
 
         if ($module ~~ @cpan_modules){
 		    print F "\t\@perl -MCPAN -e \"install('$module');\"" . "\n";
-            print F "\t\@echo '$module' >> $dat_installed_cpan" . "\n";
+            print F "\t\@echo '$module' >> " . $dat{installed_cpan} . "\n";
 
         }elsif($module ~~ @all_local_modules){
         
@@ -571,15 +611,17 @@ sub _debug {
 sub init {
     make_dirs;
 
-    $dat_install_paths=catfile($PERLMODDIR,qw( inc iall install_paths.i.dat ));
-    $dat_local_paths=catfile($PERLMODDIR,qw( inc iall local_paths.i.dat ));
+    $dat{install_paths}=catfile($PERLMODDIR,qw( inc iall install_paths.i.dat ));
+    $dat{local_paths}=catfile($PERLMODDIR,qw( inc iall local_paths.i.dat ));
 
-    if (-e $dat_local_paths){
-        %m_local_paths=readhash($dat_local_paths);
+    $dat{installed_cpan}=catfile($PERLMODDIR,qw( inc iall installed_cpan.i.dat ));
+
+    if (-e $dat{local_paths}){
+        %m_local_paths=readhash($dat{local_paths});
     }
 
-    if (-e $dat_install_paths){
-        %m_install_paths=readhash($dat_install_paths);
+    if (-e $dat{install_paths}){
+        %m_install_paths=readhash($dat{install_paths});
     }
 
     @PERLLIB=map { ( defined $_ && -d "$_" ) ? $_ : () } @PERLLIB;
@@ -588,7 +630,8 @@ sub init {
 
     write_file("$DEBUG","");
 
-    foreach my $f (($dat_install_paths, $dat_local_paths)) {
+    foreach (qw( install_paths local_paths )) {
+        my $f=$dat{$_};
         write_file("$f","") unless -e $f;
     }
 
@@ -598,11 +641,11 @@ sub end {
 
     $DEBUG->close;
 
-
 }
 
 __DATA__
 
+get_opt
 
 get_modules_to_install
 
@@ -610,7 +653,7 @@ get_all_local_modules
 
 get_cpan_modules
 
-# get @installed_cpan from $dat_installed_cpan
+# get @installed_cpan from $dat{installed_cpan}
 get_installed_cpan
 
 # set @modules, @modules_esc
