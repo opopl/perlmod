@@ -49,6 +49,7 @@ our %m_install_paths;
 our %m_local_paths;
 
 ###subs
+sub readhash;
 sub end;
 sub _debug;
 sub _say;
@@ -145,7 +146,6 @@ sub module_local_paths {
     if(@$paths){
         return @$paths;
     }
-
 
     ( my $modslash=$module )  =~ s/::/\//g;
     ( my $moddef=$module  ) =~ s/::/-/g;
@@ -257,6 +257,60 @@ sub readarr {
 
     @lines;
 }
+
+sub readhash {
+    my $if = shift;
+
+    my $opts = shift // {};
+
+    my $sep = $opts->{sep} // ' ';
+
+    unless ( -e $if ) {
+      return ();
+    }
+
+    open( FILE, "<$if" ) || die $!;
+
+    my %hash = ();
+    my ( @F, $line, $var );
+
+    while (<FILE>) {
+        chomp;
+
+        s/\s*$//g;
+
+        next if ( /^\s*#/ || /^\s*$/ );
+
+        $line = $_;
+
+        $line =~ s/\s*$//g;
+        $line =~ s/^\s*//g;
+
+        @F = split( $sep, $line );
+
+         for (@F) {
+                s/^\s*//g;
+                s/\s*$//g;
+         }
+
+         $var = shift @F;
+
+         $hash{$var} = '' unless defined $hash{$var};
+
+         if (@F) {
+             $hash{$var} .= join( $sep, @F );
+         }
+
+        $hash{$var} =~ s/\s+/ /g;
+
+    }
+
+    close(FILE);
+
+    wantarray ? %hash : \%hash;
+
+}
+
 
 sub get_all_local_modules {
 
@@ -517,6 +571,9 @@ sub _debug {
 sub init {
     make_dirs;
 
+    $dat_install_paths=catfile($PERLMODDIR,qw( inc iall install_paths.i.dat ));
+    $dat_local_paths=catfile($PERLMODDIR,qw( inc iall local_paths.i.dat ));
+
     if (-e $dat_local_paths){
         %m_local_paths=readhash($dat_local_paths);
     }
@@ -526,9 +583,6 @@ sub init {
     }
 
     @PERLLIB=map { ( defined $_ && -d "$_" ) ? $_ : () } @PERLLIB;
-
-    $dat_install_paths=catfile($PERLMODDIR,qw( inc iall install_paths.i.dat ));
-    $dat_local_paths=catfile($PERLMODDIR,qw( inc iall local_paths.i.dat ));
 
     $DEBUG="$Bin/log";
 
