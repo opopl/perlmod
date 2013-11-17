@@ -25,6 +25,7 @@ use Getopt::Long;
 use IO::String;
 
 use lib("$PERLMODDIR/mods/OP-Writer-Pod/lib");
+use lib("$PERLMODDIR/mods/OP-Writer/lib");
 use OP::Writer::Pod;
 
 use Pod::Usage;

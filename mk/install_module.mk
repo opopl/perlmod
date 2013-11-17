@@ -1,4 +1,6 @@
 
+export SHELL:=bash
+
 LocalPaths:= $(shell $(PERLMODDIR)/iall.pl --list_local_paths  $(Module))
 InstallPaths:= $(shell $(PERLMODDIR)/iall.pl --list_install_paths $(Module))
 
@@ -26,7 +28,7 @@ endef
 
 .PHONY: all install reinstall install_deps remove 
 .PHONY: list list_installed list_local list_deps
-.PHONY: install_notest
+.PHONY: install_notest force_install
 
 all: install 
 
@@ -36,6 +38,10 @@ install_notest:
 	$(call MODULE_MAKE_NOTEST_INSTALL)
 
 install: $(InstallPaths)
+
+force_install:
+	$(call MODULE_MAKE_TEST_INSTALL)
+	touch $@
 
 $(InstallPaths): $(LocalPaths)
 	$(call MODULE_MAKE_TEST_INSTALL)
