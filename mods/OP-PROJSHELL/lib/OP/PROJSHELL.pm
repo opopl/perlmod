@@ -6,7 +6,7 @@ use warnings;
 #------------------------------
 # intro               {{{
 
-use Env qw($HOME $HTMLOUT);
+use Env qw($hm $HTMLOUT);
 
 use Term::ShellUI;
 use File::Spec::Functions qw(catfile rel2abs curdir catdir );
@@ -75,7 +75,36 @@ __PACKAGE__
     ->mk_scalar_accessors(@scalar_accessors)
     ->mk_array_accessors(@array_accessors)
     ->mk_hash_accessors(@hash_accessors);
+##our
 
+###subs
+sub _begin;
+sub _complete_cmd;
+sub _proj_reset;
+sub _read_MKTARGETS;
+sub _read_PROJS;
+sub _sys;
+sub _term_exit;
+sub _term_get_commands;
+sub _term_init;
+sub _term_list_commands;
+sub _term_run;
+sub cmd_list;
+sub get_opt;
+sub importprojs;
+sub init_vars;
+sub main;
+sub make;
+sub move_html;
+sub new;
+sub runsyscmd;
+sub set_accessor_descriptions;
+sub set_these_cmdopts;
+sub sysrun;
+sub termcmd_reset;
+sub view;
+sub view_html;
+sub view_proj_tex;
 # }}}
 #------------------------------
 # Methods {{{
@@ -271,7 +300,7 @@ sub _term_init() {
 
     $self->_term_get_commands();
 
-    $self->shellterm( history_file => catfile($self->HOME,"ProjShell.history" ));
+    $self->shellterm( history_file => catfile($hm,"ProjShell.history" ));
     $self->shellterm( prompt       => "ProjShell>" );
 
     my $term = Term::ShellUI->new(
@@ -419,11 +448,9 @@ sub init_vars() {
 
     $self->set_accessor_descriptions();
 
-    $self->HOME($ENV{HOME});
+    $self->HTMLOUT(catfile($HTMLOUT,qw(PROJS)) // catfile( $hm,qw(html PROJS)));
 
-    $self->HTMLOUT(catfile($HTMLOUT,qw(PROJS)) // catfile( $self->HOME,qw(html PROJS)));
-
-    $self->PROJSDIR( $ENV{PROJSDIR},catfile($self->HOME, qw( wrk texdocs )) );
+    $self->PROJSDIR( $ENV{PROJSDIR},catfile($hm, qw( wrk texdocs )) );
 
     chdir($self->PROJSDIR) || die $!;
 

@@ -375,7 +375,7 @@ sub _hash_add {
 }
 
 sub _import {
-    my $opts=shift;
+    my $opts=shift // {};
 
     my $modules=$opts->{modules} // [];
     my $import=$opts->{import} // {};
@@ -385,22 +385,20 @@ sub _import {
 
        ( my $moddef=$module ) =~ s/::/-/g;
        my $use='use ' . $module;
-       my $funcs=$import->{module} // [];
+       my $funcs=$import->{$module} // [];
 
        if (@$funcs){
-           $use.=' qw( ' . join(' ',@$funcs) . ' );' ;
+           $use.=' qw( ' . join(' ',@$funcs) . ' )' ;
        }
        
-       push(@eva,'use lib("$PERLMODDIR/mods/' . $moddef . '/lib"); ');
-       push(@eva,$use);
-       push(@eva,' ');
+       push(@eva,'use lib("$PERLMODDIR/mods/' . $moddef . '/lib") ');
+       push(@eva,$use );
        
     }
 
     my $evs=join(";\n",@eva);
 
-    eval($evs);
-    die $@ if $@;
+    $evs;
 
 }
 

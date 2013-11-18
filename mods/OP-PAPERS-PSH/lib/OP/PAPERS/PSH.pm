@@ -1,8 +1,5 @@
-package OP::PAPERS::PSH;
 
-use strict;
-use warnings;
-use feature qw(switch);
+package OP::PAPERS::PSH;
 
 #---------------------------------
 # main()
@@ -11,25 +8,52 @@ use feature qw(switch);
 
 # use ... {{{
 
+use strict;
+use warnings;
+
+use feature qw(switch);
+
+BEGIN {
+
+    use Env qw( $hm $PERLMODDIR );
+
+    use lib("$PERLMODDIR/mods/OP-Base/lib");
+	use OP::Base qw( :vars :funcs );
+
+    my @mods=qw(
+		OP::BIBTEX
+		OP::TEX::Text
+		OP::TEX::NICE
+		OP::PROJSHELL
+		OP::TEX::Driver
+        IPC::Cmd
+        );
+	
+	my $imp=_import( { 
+            'modules' => \@mods,
+            'import' => { 
+                'IPC::Cmd' => [ qw( run ) ],
+            }
+    });
+
+    eval($imp);
+    die $@ if $@;
+
+}
+
 use Term::ShellUI;
-use OP::Base qw/:funcs :vars/;
-use OP::BIBTEX;
-use OP::TEX::Text;
-use OP::TEX::NICE;
 use Data::Dumper;
 use File::Copy;
 use File::Basename;
 use IO::File;
 use Directory::Iterator;
 use Text::Table;
-use OP::PROJSHELL;
 
 use Text::TabularDisplay;
 
 use LaTeX::BibTeX;
 use LaTeX::Table;
 use LaTeX::TOM;
-use OP::TEX::Driver;
 
 use File::Spec::Functions qw(catfile rel2abs curdir );
 use File::Slurp qw(
@@ -295,7 +319,7 @@ sub init_vars() {
 
     # root directory for the LaTeX files
     $self->texroot( $ENV{'PSH_TEXROOT'} // catfile( "$ENV{hm}", qw(wrk p) )
-          // catfile( "$ENV{HOME}", qw(wrk p) ) );
+          // catfile( "$hm", qw(wrk p) ) );
 
     $self->init_files;
     $self->init_MAKETARGETS;
@@ -864,7 +888,7 @@ sub _tex_paper_htlatex() {
 
     my $cfg = "p.$pkey.cfg.tex";
 
-    my $htmlout = catfile( $ENV{HOME}, qw(html pap), $pkey );
+    my $htmlout = catfile( $hm, qw(html pap), $pkey );
     make_path($htmlout);
     chdir $self->texroot;
 

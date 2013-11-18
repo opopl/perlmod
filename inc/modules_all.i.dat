@@ -3,6 +3,7 @@ Class::Accessor::Complex
 Directory::Iterator
 Directory::Iterator::PP
 File::Slurp
+IPC::Cmd
 LaTeX::BibTeX
 LaTeX::Table
 OP::App::Cpan
@@ -16,6 +17,7 @@ OP::GOPS::MKDEP
 OP::GOPS::RIF
 OP::GOPS::TEST
 OP::Git
+OP::HTML
 OP::MOD
 OP::ManViewer
 OP::Module::Build
@@ -29,6 +31,7 @@ OP::PaperConf
 OP::Parse::BL
 OP::Perl::Edit
 OP::Perl::Installer
+OP::Perl::Module
 OP::RE
 OP::RENAME
 OP::RENAME::PMOD
@@ -46,10 +49,9 @@ OP::VIMPERL
 OP::VIMPERL::TEST
 OP::Viewer
 OP::VimTag
+OP::Writer
+OP::Writer::Pod
 PDL::Graphics::PLplot
 PerlMagick
 Sman
 Term::ShellUI
-OP::Writer
-OP::Writer::Pod
-OP::HTML
