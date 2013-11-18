@@ -20,6 +20,9 @@ use 5.010001;
 use strict;
 use warnings;
 
+###use
+use Env qw( $hm $PERLMODDIR);
+
 use File::Basename;
 use Getopt::Long;
 use Pod::Usage;
@@ -27,6 +30,8 @@ use Data::Dumper;
 use FindBin qw($Bin $Script);
 use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 use List::Compare;
+
+use lib("$PERLMODDIR/mods/IPC-Cmd/lib");
  
 =head1 DEPENDENCIES
  
@@ -76,6 +81,7 @@ our %EXPORT_TAGS = (
           _join
           _hash_add
           _arrays_equal
+          _import
           cmd_opt_add
           is_const
           is_log
@@ -107,6 +113,7 @@ our %EXPORT_TAGS = (
           read_TF_cmd
           read_line_vars
           remove_local_dirs_from_INC
+          run_cmd
           skip_lines
           read_line_char_array
           sbvars
@@ -194,6 +201,10 @@ our %ftype;
 # subroutine declarations {{{
 
 ###subs
+sub eoo ;
+sub _import;
+sub run_cmd;
+sub eoo ;
 sub eoo ;
 sub _arrays_equal;
 sub eoo ;
@@ -360,6 +371,36 @@ sub _hash_add {
         $h->{$k} = $ih->{$k};
     }
     wantarray ? %$h : $h;
+
+}
+
+sub _import {
+    my $opts=shift;
+
+    my $modules=$opts->{modules} // [];
+    my $import=$opts->{import} // {};
+
+    my @eva;
+    foreach my $module (@$modules) {
+
+       ( my $moddef=$module ) =~ s/::/-/g;
+       my $use='use ' . $module;
+       my $funcs=$import->{module} // [];
+
+       if (@$funcs){
+           $use.=' qw( ' . join(' ',@$funcs) . ' );' ;
+       }
+       
+       push(@eva,'use lib("$PERLMODDIR/mods/' . $moddef . '/lib"); ');
+       push(@eva,$use);
+       push(@eva,' ');
+       
+    }
+
+    my $evs=join(";\n",@eva);
+
+    eval($evs);
+    die $@ if $@;
 
 }
 
@@ -684,6 +725,14 @@ sub getopt {
 }
 
 #}}}
+
+sub run_cmd {
+    my %opts=@_;
+
+    my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf ) =
+        IPC::Cmd::run( %opts );
+}
+
 # getopt_after() {{{
 =head3 getopt_after()
 

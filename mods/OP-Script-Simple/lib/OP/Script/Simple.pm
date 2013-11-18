@@ -5,6 +5,7 @@ use strict;
 
 use Exporter ();
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+use feature qw(switch);
 
 use Term::ANSIColor;
 use FindBin qw($Bin $Script);
@@ -19,6 +20,7 @@ my @ex_vars_scalar=qw(
     $PREFIX
     $WARNCOLOR
     $TEXTCOLOR
+    $HEADCOLOR
     $DEBUGCOLOR
     $DEBUG
     $IFNAME
@@ -41,6 +43,7 @@ my @ex_vars_array=qw(
 ###export_funcs
 'funcs' => [qw( 
     _say
+    _say_head
     _warn
     _debug
     pre_init
@@ -53,6 +56,7 @@ our @EXPORT  = qw( );
 our $VERSION = '0.01';
 
 ###our
+our $HEADCOLOR;
 our $IFNAME;
 our $IFILE;
 our $OFILE;
@@ -73,15 +77,43 @@ sub _say;
 sub pre_init;
 sub _debug;
 ###subs
+sub _say_head;
 
 sub _say {
     my $text=shift;
 
-    print color $TEXTCOLOR;
-    print $PREFIX . $text . "\n";
+    my $opts=shift // {};
+    my ($color,$prefix)=($TEXTCOLOR,$PREFIX);
+
+    unless(keys %$opts){
+
+    }else{
+        while(my($k,$v)=each %{$opts}){
+            given($k){
+                when('color'){ $color=$v;  }
+                when('prefix'){ $prefix=$v;  }
+                default { }
+            }
+            
+        }
+    }
+
+    print color $color;
+    print $prefix . $text . "\n";
     print color 'reset';
 
 }
+
+sub _say_head {
+    my $text=shift;
+
+    my $color=$HEADCOLOR;
+
+    _say "---- $text ----", { color => $color };
+
+}
+
+
 
 ###debug
 sub _debug {
@@ -94,7 +126,6 @@ sub _debug {
   }
 
 }
-
 
 sub _warn {
     my $text=shift;
@@ -110,7 +141,10 @@ sub pre_init {
 
     $WARNCOLOR='red';
     $ERRORCOLOR='bold red';
-    $TEXTCOLOR='bold green';
+
+    $TEXTCOLOR='green';
+    $HEADCOLOR='bold blue';
+    
 }
 
 BEGIN{
