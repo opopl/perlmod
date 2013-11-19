@@ -29,9 +29,19 @@ use Pod::Usage;
 use Data::Dumper;
 use FindBin qw($Bin $Script);
 use File::Spec::Functions qw(catfile rel2abs curdir catdir );
+use File::Slurp qw(
+  append_file
+  edit_file
+  edit_file_lines
+  read_file
+  write_file
+  prepend_file
+);
+
 use List::Compare;
 
 use lib("$PERLMODDIR/mods/IPC-Cmd/lib");
+use IPC::Cmd;
  
 =head1 DEPENDENCIES
  
@@ -57,14 +67,6 @@ use lib("$PERLMODDIR/mods/IPC-Cmd/lib");
  
 =cut
  
-use File::Slurp qw(
-  append_file
-  edit_file
-  edit_file_lines
-  read_file
-  write_file
-  prepend_file
-);
 
 require Exporter;
 
@@ -376,6 +378,54 @@ sub _hash_add {
 
 sub _import {
     my $opts=shift // {};
+
+    my $fh;
+    my @lines;
+
+    if (defined $opts->{file}){
+        @lines=read_file($opts->{file});
+    }
+
+    if (defined $opts->{lines}){
+        @lines=@{$opts->{lines}};
+    }
+
+    if (defined $opts->{fh}){
+        $fh=$opts->{fh};
+        @lines=<$fh>;
+    }
+
+    if (@lines) {
+
+        my $module='';
+        my $isdata=0;
+        
+        foreach (@lines){
+            chomp;
+            next if (/^\s*#/ || /^\s*$/);
+
+            $isdata=1 if /^__DATA__$/;
+
+            next unless ($isdata);
+
+            my $line=$_;
+
+            if (/^###import_local/) {
+                if (/^(\S+)$/) {
+                    $module=$1;
+                    push(@{$opts->{modules}},$module);
+                }
+
+                if (/^\s+(.*)$/) {
+                    my @f=split(' ',$line);
+                    if ($module) {
+                        push(@{$opts->{import}->{$module}},@f);
+                    }
+                }
+            }
+            last if (/^###import_local_end/);
+        }
+    }
 
     my $modules=$opts->{modules} // [];
     my $import=$opts->{import} // {};
