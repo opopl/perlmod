@@ -398,31 +398,41 @@ sub _import {
     if (@lines) {
 
         my $module='';
-        my $isdata=0;
+        my $is_data=0;
+        my $is_import_local=1;
         
         foreach (@lines){
             chomp;
-            next if (/^\s*#/ || /^\s*$/);
+            next if (/^\s*$/);
 
-            $isdata=1 if /^__DATA__$/;
+            if (/^__DATA__$/){
+                $is_data=1;
+                next;
+            }
 
-            next unless ($isdata);
+            next unless ($is_data);
 
             my $line=$_;
 
             if (/^###import_local/) {
-                if (/^(\S+)$/) {
-                    $module=$1;
-                    push(@{$opts->{modules}},$module);
-                }
+                $is_import_local=1;
+                next;
+            }
 
-                if (/^\s+(.*)$/) {
+            next unless $is_import_local;
+
+            if (/^(\S+)\s*$/) {
+                $module=$1;
+                push(@{$opts->{modules}},$module);
+            }
+
+            if (/^\s+(.*)$/) {
                     my @f=split(' ',$line);
                     if ($module) {
                         push(@{$opts->{import}->{$module}},@f);
                     }
-                }
             }
+
             last if (/^###import_local_end/);
         }
     }

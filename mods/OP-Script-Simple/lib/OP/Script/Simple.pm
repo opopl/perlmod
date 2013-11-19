@@ -3,7 +3,6 @@ package OP::Script::Simple;
 use warnings;
 use strict;
 
-
 use Exporter ();
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use feature qw(switch);
