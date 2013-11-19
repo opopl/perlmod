@@ -6,6 +6,8 @@ use warnings;
 
 use feature qw(switch);
 
+use Env qw( $hm $PERLMODDIR );
+use lib("$PERLMODDIR/mods/OP-Writer/lib");
 use parent qw( OP::Writer );
 
 ###__ACCESSORS_SCALAR

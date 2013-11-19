@@ -21,22 +21,18 @@ use File::Find;
 use Data::Dumper;
 use FindBin qw( $Bin $Script );
 use FileHandle;
-use Getopt::Long;
 use IO::String;
 
-use lib("$PERLMODDIR/mods/OP-Writer-Pod/lib");
-use lib("$PERLMODDIR/mods/OP-Writer/lib");
-use OP::Writer::Pod;
-
-use Pod::Usage;
-use Pod::Text;
+use lib("$PERLMODDIR/mods/OP-Script-Simple/lib");
+use OP::Script::Simple qw(
+    get_opt 
+    write_help_POD
+    %opt
+    %optdesc
+    @optstr
+);
 
 ###our
-our %S;
-our $POD;
-our $PODPARSER;
-our(%opt,@optstr,%optdesc);
-our($cmdline);
 our $DEBUG;
 
 our @installed_cpan;
@@ -70,7 +66,6 @@ sub module_cpan_installed;
 sub write_defs;
 sub remove_dat;
 sub test;
-sub write_POD;
 sub process_opt;
 sub init_after_get_opt;
 sub _debug;
@@ -84,7 +79,6 @@ sub get_cpan_modules;
 sub get_installed_cpan;
 sub get_modules;
 sub get_modules_to_install;
-sub get_opt;
 sub init;
 sub main;
 sub make_dirs;
@@ -106,85 +100,6 @@ sub write_mk;
 
 main;
       
-sub get_opt {
-    
-    Getopt::Long::Configure(qw(bundling no_getopt_compat no_auto_abbrev no_ignore_case_always));
-    
-    @optstr=qw( help man remove_dat gen_dat 
-        IMAX=s 
-        list_install_paths=s
-        list_local_paths=s
-    );
-
-    %optdesc=(
-        help            => 'Display help message',
-        man             => 'Display man page',
-        remove_dat      => 'Remove dat-files',
-        gen_dat         => 'Generate dat-files',
-        IMAX            => 'Maximal number of modules to be processed',
-        list_install_paths          => 'List install paths ',
-        list_local_paths            => 'List local paths ',
-    );
-
-    write_POD;
-    
-    unless( @ARGV ){ 
-    }else{
-        $cmdline=join(' ',@ARGV);
-        GetOptions(\%opt,@optstr);
-    }
-
-    if ($opt{help}){
-        dhelp;
-        exit 0;
-    }
-
-}
-
-sub write_POD {
-
-    my $podw=OP::Writer::Pod->new;
-
-    $podw->head1('NAME');
-    $podw->_pod_line($Script . ' - install_modules.mk generator');
-    $podw->head1('USAGE');
-    $podw->_pod_line($Script . ' OPTIONS');
-    $podw->head1('OPTIONS');
-
-    my @i;
-    my $width=80;
-
-    foreach my $opt (@optstr) {
-        my $type='';
-        $type='(s)' if ($opt =~ /=s$/);
-
-        ( my $o=$opt ) =~ s/=\w+$//g;
-        my $desc=$optdesc{$o} // '';
-
-        my $first='--' . $o;
-        my $second= $desc;
-        my $shift=$width-length($second) - length($first);
-
-        $shift=0 if $shift < 0;
-
-        my $line= $first . "\n\n" . $type . ' ' .  $second;
-        push(@i,$line);
-    }
-
-    $podw->over({ items => \@i });
-
-    $podw->cut;
-
-    my $s=$podw->text;
-    $S{POD}=IO::String->new($s);
-
-}
-
-sub dhelp {
-
-    Pod::Text->filter($S{POD});
-
-}
 
 sub wanted_installed {
 
@@ -874,6 +789,22 @@ sub init {
     $DEBUG="$Bin/log";
 
     write_file("$DEBUG","");
+
+    @optstr=qw( help man remove_dat gen_dat 
+        IMAX=s 
+        list_install_paths=s
+        list_local_paths=s
+    );
+
+    %optdesc=(
+        help            => 'Display help message',
+        man             => 'Display man page',
+        remove_dat      => 'Remove dat-files',
+        gen_dat         => 'Generate dat-files',
+        IMAX            => 'Maximal number of modules to be processed',
+        list_install_paths          => 'List install paths ',
+        list_local_paths            => 'List local paths ',
+    );
 
 }
 

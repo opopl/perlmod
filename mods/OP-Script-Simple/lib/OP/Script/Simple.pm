@@ -3,12 +3,22 @@ package OP::Script::Simple;
 use warnings;
 use strict;
 
+
 use Exporter ();
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 use feature qw(switch);
 
+###use
 use Term::ANSIColor;
 use FindBin qw($Bin $Script);
+
+use Env qw( $hm $PERLMODDIR );
+
+use Getopt::Long;
+use IO::String;
+
+use lib("$PERLMODDIR/mods/OP-Writer-Pod/lib");
+use OP::Writer::Pod;
 
 $VERSION = '0.01';
 @ISA     = qw(Exporter);
@@ -32,7 +42,11 @@ my @ex_vars_scalar=qw(
 ###export_vars_hash
 my @ex_vars_hash=qw(
     %opt
+    %optdesc
     %DIRS
+    %S
+    %podsections
+    $podsectionorder
 );
 ###export_vars_array
 my @ex_vars_array=qw(
@@ -47,6 +61,8 @@ my @ex_vars_array=qw(
     _warn
     _debug
     pre_init
+    get_opt
+    write_help_POD
 )],
 'vars'  => [ @ex_vars_scalar,@ex_vars_array,@ex_vars_hash ]
 );
@@ -71,12 +87,20 @@ our $DEBUGCOLOR;
 our (%opt,@optstr);
 our $cmdline;
 our %DIRS;
+our %optdesc;
+our %podsections;
+our $podsectionorder;
+our %S;
 
 sub _warn;
 sub _say;
 sub pre_init;
 sub _debug;
+
 ###subs
+sub write_help_POD;
+sub get_opt;
+sub dhelp;
 sub _say_head;
 
 sub _say {
@@ -147,10 +171,91 @@ sub pre_init {
     
 }
 
+sub write_help_POD {
+
+    my $podw=OP::Writer::Pod->new;
+    my %s;
+
+    my $order=$podsectionorder // [qw(NAME USAGE OPTIONS)];
+
+    foreach my $id (@$order) {
+        $s{$id}=$podsections{$id} // '';
+    }
+
+    $s{NAME}=$podsections{NAME} // $Script . ' - ...';
+    $s{USAGE}=$podsections{USAGE} // $Script . ' OPTIONS';
+    
+    foreach my $id (@$order) {
+        $podw->head1($id);
+        $podw->_pod_line($s{$id});
+        given($id){
+            when('OPTIONS') { 
+			    my @i;
+			    my $width=80;
+			
+			    foreach my $opt (@optstr) {
+			        my $type='';
+			        $type='(s)' if ($opt =~ /=s$/);
+			
+			        ( my $o=$opt ) =~ s/=\w+$//g;
+			        my $desc=$optdesc{$o} // '';
+			
+			        my $first='--' . $o;
+			        my $second= $desc;
+			        my $shift=$width-length($second) - length($first);
+			
+			        $shift=0 if $shift < 0;
+			
+			        my $line= $first . "\n\n" . $type . ' ' .  $second;
+			        push(@i,$line);
+			    }
+		
+	            $podw->over({ items => \@i });
+            }
+            default { }
+        }
+    }
+
+    $podw->cut;
+
+    my $s=$podw->text;
+    $S{POD}=IO::String->new($s);
+
+}
+
+sub dhelp {
+
+    Pod::Text->filter($S{POD});
+
+}
+
+sub get_opt {
+    my %opts=@_;
+    
+    Getopt::Long::Configure(qw(bundling no_getopt_compat no_auto_abbrev no_ignore_case_always));
+    
+    write_help_POD;
+    
+    unless( @ARGV ){ 
+        if ($opts{exit_help}){
+            dhelp;
+            exit 0;
+        }
+    }else{
+        $cmdline=join(' ',@ARGV);
+        GetOptions(\%opt,@optstr);
+    }
+
+    if ($opt{help}){
+        dhelp;
+        exit 0;
+    }
+
+}
+
 BEGIN{
     pre_init;
 }
-
 
 1;
 
