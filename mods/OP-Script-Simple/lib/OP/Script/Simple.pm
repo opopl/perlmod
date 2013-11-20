@@ -186,7 +186,15 @@ sub write_help_POD {
     
     foreach my $id (@$order) {
         $podw->head1($id);
-        $podw->_pod_line($s{$id});
+        my $sid=$s{$id};
+
+        unless(ref $sid){
+            $podw->_pod_line($s{$id});
+        } elsif (ref $sid eq "ARRAY"){
+            foreach my $pline(@$sid) {
+                $podw->_pod_line($pline);
+            }
+        }
         given($id){
             when('OPTIONS') { 
 			    my @i;
@@ -230,6 +238,8 @@ sub dhelp {
 
 sub get_opt {
     my %opts=@_;
+
+    $opts{exit_help}=1;
     
     Getopt::Long::Configure(qw(bundling no_getopt_compat no_auto_abbrev no_ignore_case_always));
     

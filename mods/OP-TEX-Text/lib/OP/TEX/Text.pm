@@ -6,6 +6,8 @@ package OP::TEX::Text;
 use strict;
 use warnings;
 
+use feature qw(switch);
+
 use Data::Dumper;
 use File::Slurp qw(read_file);
 use File::Spec::Functions qw(catfile );
@@ -340,7 +342,7 @@ sub def {
     my $src   = shift;
     my $nargs = shift;
 
-    $self->_add_line( "\\def" . "$def" . "{$src}" );
+    $self->_add_line( "\\def" . "\\$def" . "{$src}" );
 
 }
 
@@ -459,8 +461,8 @@ sub end() {
 sub documentclass() {
     my $self = shift;
 
-    my $class = shift;
-    my $ref   = shift;
+    my $class = shift // '';
+    my $ref   = shift // {};
     my $stropts;
 
     while ( my ( $k, $v ) = each %{$ref} ) {
@@ -576,6 +578,16 @@ sub usepackage() {
         $self->_add_line("\\usepackage{$pack}");
     }
 
+}
+
+sub usepackages {
+    my $self=shift;
+
+    my $packs=shift // [];
+
+    foreach my $pack (@$packs) {
+        $self->usepackage($pack);
+    }
 }
 
 =head3 newnc()
@@ -1298,6 +1310,36 @@ sub hypertarget() {
     my $ref = shift // '';
 
     $self->_add_line( '\hypertarget{' . $ref . '}{}' );
+}
+
+sub includepdf {
+    my $self = shift;
+
+    my $iref = shift // '';
+    my $ref;
+    my $opts;
+    my $optstr='';
+
+    if(ref $iref eq "HASH"){
+        $opts=$iref->{opts} // {};
+    }
+
+    $ref={
+        pages => 'all',
+    };
+
+    given($ref->{pages}){
+        when('all') { 
+            $optstr.='pages=-';
+        }
+        default { }
+    }
+
+    my $pfile=$iref->{fname} . '.pdf' // '';
+    return '' unless $pfile;
+
+    $self->_add_line( '\includepdf[' . $optstr . ']{'  . $pfile . '}' );
+
 }
 
 =head3 hypsetup()

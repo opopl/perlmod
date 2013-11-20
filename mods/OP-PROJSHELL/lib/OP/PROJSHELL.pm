@@ -6,24 +6,33 @@ use warnings;
 #------------------------------
 # intro               {{{
 
-use Env qw($hm $HTMLOUT);
+use Env qw($hm $HTMLOUT $PERLMODDIR);
 
 use Term::ShellUI;
 use File::Spec::Functions qw(catfile rel2abs curdir catdir );
-use OP::Base qw/:funcs :vars/;
+
+use lib("$PERLMODDIR/mods/OP-Writer-Tex/lib");
+use OP::Writer::Tex;
+
+#use lib("$PERLMODDIR/mods/OP-Base/lib");
+#use OP::Base qw/:funcs :vars/;
+use OP::Base qw(uniq readarr);
+
+#use lib("$PERLMODDIR/mods/OP-Git/lib");
+use OP::Git;
+
+use lib("$PERLMODDIR/mods/OP-BIBTEX/lib");
 use OP::BIBTEX;
-use OP::TEX::Text;
+
 use Data::Dumper;
 use File::Copy qw(copy move);
 use File::Path qw(make_path remove_tree);
 use File::Basename;
 use IO::File;
-use OP::Git;
-use OP::Base qw(uniq readarr);
 #use List::MoreUtils qw(uniq);
 
 use File::Slurp qw(
-append_file
+  append_file
   edit_file
   edit_file_lines
   read_file
@@ -32,6 +41,9 @@ append_file
 );
 
 use IPC::Cmd qw(can_run run run_forked);
+
+use lib("$PERLMODDIR/mods/OP-Script/lib");
+use lib("$PERLMODDIR/mods/Class-Accessor-Complex/lib");
 
 use parent qw( OP::Script Class::Accessor::Complex );
 
@@ -460,7 +472,7 @@ sub init_vars() {
     }
 
     $self->files( 
-        'maketex_mk'  => catfile($ENV{HOME},qw(scripts mk maketex.mk),
+        'maketex_mk'  => catfile($hm,qw(scripts mk maketex.mk),
         )); 
 
     $self->LOGFILENAME("ProjShell_log.data.tex");

@@ -790,12 +790,14 @@ sub init {
 
     write_file("$DEBUG","");
 
+###set_optstr
     @optstr=qw( help man remove_dat gen_dat 
         IMAX=s 
         list_install_paths=s
         list_local_paths=s
     );
 
+###set_optdesc
     %optdesc=(
         help            => 'Display help message',
         man             => 'Display man page',
