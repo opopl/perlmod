@@ -51,6 +51,7 @@ OP::Viewer
 OP::VimTag
 OP::Writer
 OP::Writer::Pod
+OP::Writer::Tex
 PDL::Graphics::PLplot
 PerlMagick
 Sman

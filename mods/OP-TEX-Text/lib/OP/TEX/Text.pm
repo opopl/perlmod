@@ -6,12 +6,24 @@ package OP::TEX::Text;
 use strict;
 use warnings;
 
-use OP::Base qw($endl);
 use Data::Dumper;
 use File::Slurp qw(read_file);
 use File::Spec::Functions qw(catfile );
 
-use parent qw( OP::Writer );
+###begin
+BEGIN {
+    use Env qw( $hm $PERLMODDIR );
+
+    use FindBin qw($Bin $Script);
+    use File::Spec::Functions qw(catfile);
+    
+    use lib("$PERLMODDIR/mods/OP-Base/lib");
+    use OP::Base qw( $endl );
+
+    use lib("$PERLMODDIR/mods/OP-Writer/lib");
+    use parent qw( OP::Writer );
+    
+}
 
 =head1 NAME
 
