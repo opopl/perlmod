@@ -1,0 +1,8 @@
+#!/usr/bin/env perl
+#-T
+
+require 5;
+
+use Pod::Webserver;
+
+Pod::Webserver::httpd();

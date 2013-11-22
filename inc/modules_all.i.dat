@@ -57,3 +57,4 @@ PerlMagick
 Sman
 Term::ShellUI
 Report::Trades
+Pod::Webserver
