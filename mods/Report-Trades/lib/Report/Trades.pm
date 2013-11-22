@@ -4,6 +4,9 @@ use strict;
 use warnings;
 
 ###use
+use Env qw($hm PERLMODDIR);
+
+use FindBin qw( $Bin $Script );
 use DBI;
 use Data::Dumper;
 use DBD::Pg;
@@ -11,7 +14,8 @@ use Pod::Usage;
 use Getopt::Long;
 use IO::String;
 
-use FindBin qw( $Bin $Script );
+use lib("$PERLMODDIR/mods/Report-Trades/lib/");
+use Report::Trades::App;
 
 use parent qw( Class::Accessor::Complex );
 
@@ -24,6 +28,8 @@ our @scalar_accessors = qw(
   dbuser
   fh_pod_help
   sth
+  taskid
+  webapp
 );
 
 # dbh       - DBI database handler
@@ -96,12 +102,31 @@ sub db_list_tables {
 
 }
 
-sub run {
+sub runweb {
     my $self = shift;
+
+    $self->webapp(Report::Trades::App->new);
+
+    $self->webapp->start;
+
+}
+
+sub load_db {
+    my $self=shift;
 
     $self->load_dump if $self->dbfile;
 
     $self->db_connect if $self->dbname;
+}
+
+sub run {
+    my $self = shift;
+
+    # connect to the database;
+    #   if necessary, restore beforehand the dumped database
+    $self->load_db;
+
+    $self->print_dbinfo if $self->opt('dbinfo');
 
     foreach my $id  ( $self->table_names ) {
 	    if ( $self->opt('list_' . $id) ) {
@@ -110,6 +135,8 @@ sub run {
 	        exit 0;
 	    }
     }
+
+    $self->runweb if $self->opt('webserver');
 
 }
 
@@ -158,6 +185,7 @@ sub init_vars {
 
     $self->init_pod;
 
+
 }
 
 sub init_pod {
@@ -172,17 +200,23 @@ sub init_pod {
           list_tables
           list_trades
           list_symbols
+          taskid
+          dbinfo
+          webserver
           )
     );
 
     $self->optdesc(
         "help"        => "Display help message",
-        "man"         => "Display man page",
-        "dbname"      => "PostgreSQL database name to be loaded",
-        "dbfile"      => "PostgreSQL database dump file to be restored",
-        "list_tables" => "List available tables",
-        "list_trades" => "",
-        "list_symbols" => "",
+        "man"               => "Display man page",
+        "dbname"            => "PostgreSQL database name to be loaded",
+        "dbfile"            => "PostgreSQL database dump file to be restored",
+        "list_tables"       => "List available tables",
+        "list_trades"       => "",
+        "list_symbols"      => "",
+        "taskid"            => "Select task id",
+        "dbinfo"            => "Show short database info",
+        "webserver"         => "Run web-server (Mojolicious-based)",
     );
 
     my @pod_text;
@@ -227,15 +261,42 @@ sub init_pod {
 
 }
 
+
+sub print_dbinfo {
+    my $self=shift;
+
+    print '=' x 50 . "\n";
+
+    print "Database name: " . $self->dbname . "\n";
+    print "Available tables within the database:\n";
+    print ' ' . join(' ',$self->table_names) . "\n";
+
+    print "Available columns for each database are:\n";
+    foreach my $table_name ($self->table_names) {
+        print "  table: $table_name\n";
+        foreach my $col ( @{$self->table_columns($table_name)} ){
+                print "     $col\n"  ;
+        }
+    }
+
+    print '=' x 50 . "\n";
+
+}
+
 sub process_opt {
     my $self = shift;
 
     my %opt = $self->opt;
 
-    $self->dbname( $opt{dbname} // $ENV{PGDATABASE} // 'mg' );
+    $self->dbname( $opt{dbname} // $ENV{PGDATABASE} );
 
     unless ( $self->dbname ) {
         die "No database name provided";
+    }
+
+    foreach my $x (qw( taskid )) {
+        eval '$self->' . $x . '($self->opt("' . $x . '"))';
+        die $@ if $@;
     }
 
 }
