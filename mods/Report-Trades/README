@@ -1,15 +1,32 @@
-pod2text Report::Trades.pm > README
 
-If this is still here it means the programmer was too lazy to create the readme file.
+---------------------------
+INTRODUCTION
+---------------------------
 
-You can create it now by using the command shown above from this directory.
+---------------------------
+INSTALLATION 
+---------------------------
 
-At the very least you should be able to use this set of instructions
-to install the module...
+To install Report::Trades trades reporting package run
+    
+    ./install.sh
 
-perl Build.PL
-./Build
-./Build test
-./Build install
+After installation, run
 
-If you are on a windows box you should use 'nmake' rather than 'make'.
+    report_trades.pl --help
+
+to see the list of available command-line options. You may work with the PostgreSQL 
+database either through the command-line or webserver (Mojolicious) interface.
+
+---------------------------
+RUNNING WEBSERVER
+---------------------------
+
+To start the webserver, use the --webserver command-line switch.
+
+---------------------------
+ACCESSING THE DATABASE
+---------------------------
+
+The trades database is stored as the PostgreSQL database and is accessed within
+Report::Trades via DBD::Pg interface.

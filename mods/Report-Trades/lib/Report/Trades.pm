@@ -3,9 +3,9 @@ package Report::Trades;
 use strict;
 use warnings;
 
-###use
-use Env qw($hm PERLMODDIR);
+use feature qw(switch);
 
+###use
 use FindBin qw( $Bin $Script );
 use DBI;
 use Data::Dumper;
@@ -13,9 +13,8 @@ use DBD::Pg;
 use Pod::Usage;
 use Getopt::Long;
 use IO::String;
-
-use lib("$PERLMODDIR/mods/Report-Trades/lib/");
-use Report::Trades::App;
+use HTML::Table;
+use File::Slurp qw( write_file );
 
 use parent qw( Class::Accessor::Complex );
 
@@ -29,21 +28,23 @@ our @scalar_accessors = qw(
   fh_pod_help
   sth
   taskid
-  webapp
+  format
+  ofile
 );
 
 # dbh       - DBI database handler
 # dbname    - name of the database, as understood by PostgreSQL
 # dbfile    - full path to the dump of the database
 # dbuser    - name of the user who connects to the database
+# format    - output format for the command-line application. 
+#               Possible values: text, html
+# ofile     - name of the file where generated output will be printed to 
 
 ###__ACCESSORS_HASH
 our @hash_accessors = qw(
   dbattr
   opt
   optdesc
-  tasks
-  trades
   table_columns
 );
 
@@ -51,7 +52,12 @@ our @hash_accessors = qw(
 our @array_accessors = qw(
   optstr
   table_names
+  taskids
 );
+
+# optstr        - list of command-line options, as accepted by Getopt::Long
+# taskids       - list of available task ids
+# table_names   - list of available tables
 
 __PACKAGE__->mk_scalar_accessors(@scalar_accessors)
   ->mk_array_accessors(@array_accessors)->mk_hash_accessors(@hash_accessors);
@@ -69,19 +75,103 @@ sub main {
 
 }
 
+sub db_dump_trades_all {
+    my $self = shift;
+
+
+    foreach my $task ($self->taskids) {
+	    $self->db_print_select(
+	        cols  => [ qw( * ) ],
+	        from  => "trades",
+	        where => "task_id = '$task'",
+	    );
+    }
+
+}
+
 sub db_list_trades {
     my $self = shift;
 
     my @query = ();
+    my $task=$self->taskid;
 
-    $self->db_exec_query(
-        "SELECT * FROM public.trades",
-    );
+    my $ref={
+        cols        => [qw( * )],
+        table       => "trades",
+        where       => "task_id = '$task'",
+        format      => $self->format,
+    };
 
-    while ( my @a = $self->sth->fetchrow_array ) {
-        print join(' ',@a) . "\n";
+    $ref->{ofile}=$self->ofile if $self->ofile;
+
+    $self->db_print_select( %$ref );
+
+}
+
+sub db_print_select {
+    my $self=shift;
+
+    my %opts=@_;
+
+    my @str=();
+
+    my $table_name=$opts{table} // '';
+
+    # output format, currently supported: text, html
+    #   default is 'text' ;
+    my $format=$opts{format} // 'text';
+
+    my @cols=@{$opts{cols}};
+    my $colnames=$self->table_columns($table_name);
+    
+    push(@str,'SELECT ' . join(',', @cols ));
+    push(@str,' FROM public.' . $table_name );
+    push(@str,' WHERE ' . $opts{where} );
+
+    my $q=join(' ',@str);
+    $self->db_exec_query( $q );
+
+    my $rows;
+    while ( my $a = $self->sth->fetchrow_arrayref ) {
+        push(@$rows, $a);
     }
 
+    my $text;
+    given($format){
+        when('text') { 
+            foreach my $row (@$rows) {
+                $text.=join(' ',@$row) . "\n";
+            }
+        }
+        when('html') { 
+            my $header=$colnames;
+            my $table=HTML::Table->new(
+              -cols     =>  scalar @$colnames,
+              -head     =>  $header,
+              -data     =>  $rows,
+              -align    =>  'center',
+              -rules    =>  'rows',
+              -border   =>  0,
+              -bgcolor  =>  'white',
+              -width    =>  '50%',
+              -spacing  =>  0,
+              -padding  =>  0,
+              -style    =>  'color: black',
+          );
+
+          $text=$table . "\n";
+        }
+        default { }
+    }
+    # output filehandle where to send output
+    #   by default print to standard output
+    my $fh=$opts{out} // \*STDOUT;
+
+    if( defined $opts{ofile} ){
+        write_file($opts{ofile},$text);
+    }else{
+        print $fh,  $text;
+    }
 }
 
 sub db_list_tables {
@@ -89,15 +179,8 @@ sub db_list_tables {
 
     my @query = ();
 
-    $self->db_exec_query(
-        " SELECT table_name, table_schema ",
-        "   FROM information_schema.tables ",
-    );
-
-    while ( my $ref = $self->sth->fetchrow_hashref ) {
-        my ( $tablename) =
-          ( $ref->{'table_name'}, $ref->{'table_schema'});
-        print "$tablename\n";
+    foreach my $table_name ($self->table_names) {
+        print $table_name . "\n";
     }
 
 }
@@ -105,9 +188,11 @@ sub db_list_tables {
 sub runweb {
     my $self = shift;
 
-    $self->webapp(Report::Trades::App->new);
+    require Mojolicious::Commands;
+    my $commands=Mojolicious::Commands->new;
+    push @{$commands->namespaces}, 'Report::Trades::App::Command';
 
-    $self->webapp->start;
+    $commands->run('daemon');
 
 }
 
@@ -117,6 +202,7 @@ sub load_db {
     $self->load_dump if $self->dbfile;
 
     $self->db_connect if $self->dbname;
+
 }
 
 sub run {
@@ -150,9 +236,8 @@ sub get_opt {
     my %opt;
 
     unless (@ARGV) {
-
-        #$self->dhelp;
-        #exit 0;
+        print "Try --help for more help\n";
+        exit 0;
     }
     else {
         GetOptions( \%opt, $self->optstr );
@@ -166,9 +251,11 @@ sub get_opt {
 sub dhelp {
     my $self = shift;
 
+    my $lev = shift;
+
     pod2usage( 
-        -input => $self->fh_pod_help, 
-        -verbose => 2 
+        -input      => $self->fh_pod_help, 
+        -verbose    => 2,
     );
 
 }
@@ -185,6 +272,9 @@ sub init_vars {
 
     $self->init_pod;
 
+    # output format for the command-line part of the 
+    #   application
+    $self->format('text');
 
 }
 
@@ -194,29 +284,34 @@ sub init_pod {
     $self->optstr(
         qw(
           help
-          man
           dbname=s
           dbfile=s
+          format=s
           list_tables
           list_trades
+          dump_trades_all
+          taskid=s
+          ofile=s
           list_symbols
-          taskid
           dbinfo
           webserver
           )
     );
 
     $self->optdesc(
-        "help"        => "Display help message",
-        "man"               => "Display man page",
+        "help"              => "Display this help message",
         "dbname"            => "PostgreSQL database name to be loaded",
         "dbfile"            => "PostgreSQL database dump file to be restored",
         "list_tables"       => "List available tables",
         "list_trades"       => "",
         "list_symbols"      => "",
+        "ofile"             => "Write generated content to a specified file, "
+                                        . " instead of sending it to standard output",
+        "dump_trades_all"   => "",
+        "format"            => "Output format for the command-line application",
         "taskid"            => "Select task id",
         "dbinfo"            => "Show short database info",
-        "webserver"         => "Run web-server (Mojolicious-based)",
+        "webserver"         => "Run web-server (Mojolicious-based)"
     );
 
     my @pod_text;
@@ -251,7 +346,13 @@ sub init_pod {
     push( @pod_text, ' ' );
     push( @pod_text, '=over' );
     push( @pod_text, ' ' );
+    my @ex=();
 
+    push(@ex,'--taskid 1000 --list_trades');
+    push(@ex,'--taskid 1000 --list_trades --format html --ofile 1000.html');
+
+    push( @pod_text, map { "$_" ? '=item ' . $Script . ' ' . "$_\n" : () } @ex);  
+    push( @pod_text, ' ' );
     push( @pod_text, '=back' );
     push( @pod_text, ' ' );
 
@@ -260,7 +361,6 @@ sub init_pod {
     $self->fh_pod_help($fh);
 
 }
-
 
 sub print_dbinfo {
     my $self=shift;
@@ -294,7 +394,7 @@ sub process_opt {
         die "No database name provided";
     }
 
-    foreach my $x (qw( taskid )) {
+    foreach my $x (qw( taskid format ofile )) {
         eval '$self->' . $x . '($self->opt("' . $x . '"))';
         die $@ if $@;
     }

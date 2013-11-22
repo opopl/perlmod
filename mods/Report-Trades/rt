@@ -1,0 +1,11 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use Env qw($PERLMODDIR);
+
+use lib("$PERLMODDIR/mods/Report-Trades/lib/");
+use Report::Trades;
+
+Report::Trades->new->main;
