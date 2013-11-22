@@ -1,0 +1,8 @@
+MANIFEST
+README
+LICENSE
+Todo
+Changes
+Build.PL
+lib/Report/Trades.pm
+t/001_load.t

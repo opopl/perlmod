@@ -56,3 +56,4 @@ PDL::Graphics::PLplot
 PerlMagick
 Sman
 Term::ShellUI
+Report::Trades
