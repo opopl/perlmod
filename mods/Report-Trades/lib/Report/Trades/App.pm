@@ -16,8 +16,10 @@ sub startup {
   # Router
   my $r = $self->routes;
 
+  $r->namespaces([qw(Report::Trades::App::Controller)]);
+
   # Normal route to controller
-  $r->get('/')->to('controller#welcome');
+  $r->get('/')->to('rootpage#welcome');
 
 }
 

@@ -14,6 +14,8 @@ Module::Build->new
           'Getopt::Long'             => 0,
           'IO::String'               => 0,
           'Mojolicious'              => 0,
+          'List::MoreUtils'          => 0,
       },
       script_files    => 'scripts',
+      recursive_test_files => 1,
     )->create_build_script;

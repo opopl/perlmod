@@ -3,6 +3,8 @@ package Report::Trades;
 use strict;
 use warnings;
 
+use v5.10.1;
+
 use feature qw(switch);
 
 ###use
@@ -14,7 +16,12 @@ use Pod::Usage;
 use Getopt::Long;
 use IO::String;
 use HTML::Table;
+use HTML::Tree;
+
 use File::Slurp qw( write_file );
+use File::Spec::Functions qw( catfile );
+use File::Path qw(make_path);
+use Cwd qw(cwd);
 
 use parent qw( Class::Accessor::Complex );
 
@@ -28,8 +35,10 @@ our @scalar_accessors = qw(
   fh_pod_help
   sth
   taskid
+  tabletext
   format
   ofile
+  odir
 );
 
 # dbh       - DBI database handler
@@ -53,11 +62,15 @@ our @array_accessors = qw(
   optstr
   table_names
   taskids
+  qurows
 );
 
 # optstr        - list of command-line options, as accepted by Getopt::Long
 # taskids       - list of available task ids
 # table_names   - list of available tables
+
+### query-specific
+# qurows        - rows which result from a query
 
 __PACKAGE__->mk_scalar_accessors(@scalar_accessors)
   ->mk_array_accessors(@array_accessors)->mk_hash_accessors(@hash_accessors);
@@ -75,17 +88,40 @@ sub main {
 
 }
 
+sub uniq {
+    my $self=shift;
+
+    my ( %h, @W );
+
+    my @words = @_;
+
+    foreach my $w (@words) {
+        push( @W, $w ) unless defined $h{$w};
+        $h{$w} = 1;
+    }
+
+    wantarray ? @W : \@W;
+
+}
+
 sub db_dump_trades_all {
     my $self = shift;
 
+    $self->format('html');
 
+    my $i=0;
     foreach my $task ($self->taskids) {
-	    $self->db_print_select(
-	        cols  => [ qw( * ) ],
-	        from  => "trades",
-	        where => "task_id = '$task'",
-	    );
-    }
+        print "Dumping task: $task...\n";
+
+        $self->taskid($task);
+        $self->ofile($task . ".html");
+
+        # extract trades data for the current task
+        #   and then generate a separate html table 
+        $self->db_list_trades;
+
+        $i++;
+	}
 
 }
 
@@ -96,17 +132,99 @@ sub db_list_trades {
     my $task=$self->taskid;
 
     my $ref={
-        cols        => [qw( * )],
+        cols        => [qw( 
+                id 
+                open_price close_price
+                trigger_type 
+                pl 
+                open_time close_time )],
         table       => "trades",
         where       => "task_id = '$task'",
         format      => $self->format,
     };
 
-    $ref->{ofile}=$self->ofile if $self->ofile;
-
+    # the text of generated table is available through $self->tabletext
     $self->db_print_select( %$ref );
 
+    my $text;
+    given($self->format){
+        when('text') { 
+            $text=$self->tabletext;
+        }
+        when('html') { 
+            $self->db_task_print_html_table;
+        }
+        default { }
+    }
+
+
 }
+
+sub lit {
+    my $self=shift;
+
+    my $text=shift;
+
+    return HTML::Element->new('~literal', text => $text);
+
+}
+
+sub db_task_print_html_table {
+    my $self=shift;
+
+    my $text;
+
+    my $root=HTML::Element->new('html');
+	my $body=HTML::Element->new('body');
+
+    my $task=$self->taskid;
+	
+	$body->push_content([ 'h1','Task: ' . $task ]);
+
+	my ($prev,$next,$index);
+    my($prevtask,$nexttask);
+	
+    $prevtask=$task-1;
+    $nexttask=$task+1;
+
+	$prev=catfile($self->odir,"$prevtask.html");
+	$next=catfile($self->odir,"$nexttask.html");
+	$index=catfile($self->odir,"index.html");
+
+	$body->push_content(
+		['br'],
+        $self->lit('['),
+		['a',{ href => $prev }, "prev. task"],
+        $self->lit('] ['),
+		['a',{ href => $next }, "next task"],
+        $self->lit('] ['),
+		['a',{ href => $index }, "index"],
+        $self->lit(']'),
+	);
+	
+	$body->push_content($self->lit($self->tabletext));
+	$root->push_content($body);
+
+    $text=$root->as_HTML;
+
+    if( $self->ofile ){
+        write_file(catfile($self->odir,$self->ofile),$text);
+    }else{
+        print $text;
+    }
+}
+
+=head3 db_print_select
+
+    $rt->db_print_select(
+        cols    => [qw( col1 col2 )],
+        table   => "$table",
+        where   => "",
+        format  => "html",
+        ofile   => 'aa.html',
+    );
+
+=cut
 
 sub db_print_select {
     my $self=shift;
@@ -122,56 +240,61 @@ sub db_print_select {
     my $format=$opts{format} // 'text';
 
     my @cols=@{$opts{cols}};
-    my $colnames=$self->table_columns($table_name);
+    my $colnames=\@cols;
+
+    if ( scalar @cols == 1 ){
+        if ( $cols[0] eq "*" ){
+            $colnames=$self->table_columns($table_name);
+        }
+    }
     
     push(@str,'SELECT ' . join(',', @cols ));
     push(@str,' FROM public.' . $table_name );
     push(@str,' WHERE ' . $opts{where} );
 
     my $q=join(' ',@str);
-    $self->db_exec_query( $q );
+    $self->db_exec_query( "$q" );
 
-    my $rows;
-    while ( my $a = $self->sth->fetchrow_arrayref ) {
-        push(@$rows, $a);
+    $self->qurows_clear;
+    my $i=0;
+    while ( my @a = $self->sth->fetchrow_array ) {
+        $self->qurows_push(\@a);
     }
 
     my $text;
+
     given($format){
         when('text') { 
-            foreach my $row (@$rows) {
+            foreach my $row ($self->qurows) {
                 $text.=join(' ',@$row) . "\n";
             }
         }
         when('html') { 
             my $header=$colnames;
+            my $rows=$self->qurows;
+
             my $table=HTML::Table->new(
               -cols     =>  scalar @$colnames,
               -head     =>  $header,
               -data     =>  $rows,
-              -align    =>  'center',
+              -align    =>  'left',
               -rules    =>  'rows',
-              -border   =>  0,
+              -border   =>  1,
               -bgcolor  =>  'white',
-              -width    =>  '50%',
-              -spacing  =>  0,
-              -padding  =>  0,
-              -style    =>  'color: black',
+              -width    =>  '100%',
+              -spacing  =>  1,
+              -padding  =>  1,
+              -style    =>  'vhg',
           );
 
-          $text=$table . "\n";
+          $text=$table->getTable;
+
         }
         default { }
     }
-    # output filehandle where to send output
-    #   by default print to standard output
-    my $fh=$opts{out} // \*STDOUT;
 
-    if( defined $opts{ofile} ){
-        write_file($opts{ofile},$text);
-    }else{
-        print $fh,  $text;
-    }
+    $self->tabletext($text);
+
 }
 
 sub db_list_tables {
@@ -196,10 +319,10 @@ sub runweb {
 
 }
 
-sub load_db {
+sub db_load {
     my $self=shift;
 
-    $self->load_dump if $self->dbfile;
+    $self->db_dump_load if $self->dbfile;
 
     $self->db_connect if $self->dbname;
 
@@ -210,20 +333,32 @@ sub run {
 
     # connect to the database;
     #   if necessary, restore beforehand the dumped database
-    $self->load_db;
+    $self->db_load;
 
     $self->print_dbinfo if $self->opt('dbinfo');
+    $self->db_dump_trades_all if $self->opt('dump_trades_all');
 
-    foreach my $id  ( $self->table_names ) {
+    $self->list_things_if_needed;
+
+    $self->runweb if $self->opt('webserver');
+
+}
+
+sub list_things_if_needed {
+    my $self=shift;
+
+    my @list_ids;
+
+    push(@list_ids,$self->table_names);
+    push(@list_ids,qw( taskids ));
+
+    foreach my $id  ( @list_ids ) {
 	    if ( $self->opt('list_' . $id) ) {
 	        eval '$self->db_list_' . $id;
 	        $self->finish;
 	        exit 0;
 	    }
     }
-
-    $self->runweb if $self->opt('webserver');
-
 }
 
 sub get_opt {
@@ -276,6 +411,9 @@ sub init_vars {
     #   application
     $self->format('text');
 
+    my $curdir=cwd();
+    $self->odir(catfile($curdir,qw(html)));
+
 }
 
 sub init_pod {
@@ -289,9 +427,11 @@ sub init_pod {
           format=s
           list_tables
           list_trades
+          list_taskids
           dump_trades_all
           taskid=s
           ofile=s
+          odir=s
           list_symbols
           dbinfo
           webserver
@@ -304,9 +444,11 @@ sub init_pod {
         "dbfile"            => "PostgreSQL database dump file to be restored",
         "list_tables"       => "List available tables",
         "list_trades"       => "",
+        "list_taskids"      => "",
         "list_symbols"      => "",
         "ofile"             => "Write generated content to a specified file, "
                                         . " instead of sending it to standard output",
+        "odir"              => "",
         "dump_trades_all"   => "",
         "format"            => "Output format for the command-line application",
         "taskid"            => "Select task id",
@@ -334,6 +476,7 @@ sub init_pod {
     push( @pod_text, ' ' );
     push( @pod_text, '=over ' );
     push( @pod_text, ' ' );
+
     foreach my $opt ( $self->optstr ) {
         ( my $optname = $opt ) =~ s/=s$//g;
         push( @pod_text,
@@ -394,15 +537,82 @@ sub process_opt {
         die "No database name provided";
     }
 
-    foreach my $x (qw( taskid format ofile )) {
-        eval '$self->' . $x . '($self->opt("' . $x . '"))';
+    foreach my $x (qw( 
+            taskid 
+            format 
+            ofile 
+            odir
+        )) {
+
+        eval '$self->' . $x . '($self->opt("' . $x . '")) if $self->opt_exists("' . $x  . '")';
         die $@ if $@;
+
     }
+
+    make_path($self->odir);
 
 }
 
-sub load_dump {
+sub db_dump_load {
     my $self = shift;
+
+}
+
+ # retrieve available table names from the database
+
+sub db_read_table_names {
+    my $self=shift;
+
+    $self->db_exec_query(
+            "select table_name",
+            "    from information_schema.tables",
+            "    where table_schema='public'",
+        );
+
+    my @tables;
+    while (my @a=$self->sth->fetchrow_array) {
+         push(@tables,@a);
+    }
+    $self->table_names(@tables); 
+
+}
+
+sub db_read_table_columns {
+    my $self=shift;
+
+    # retrieve column names for each available table
+    foreach my $table_name ($self->table_names) {
+        my $q="select column_name "
+            . " from information_schema.columns" 
+            . " where table_name='$table_name'";
+
+        $self->db_exec_query($q);
+
+        my @cols;
+        while (my @a=$self->sth->fetchrow_array) {
+            push(@cols,@a);
+        }
+        $self->table_columns( $table_name  => \@cols ); 
+    }
+}
+
+sub db_list_taskids {
+    my $self=shift;
+
+    print "$_\n" for($self->taskids);
+
+}
+
+sub db_read_taskids {
+    my $self=shift;
+
+    $self->db_exec_query( "select id from public.tasks" );
+
+    my @taskids;
+    while (my @a=$self->sth->fetchrow_array) {
+         push(@taskids,@a);
+    }
+    $self->taskids(sort { $a <=> $b } $self->uniq(@taskids));
 
 }
 
@@ -417,30 +627,9 @@ sub db_connect {
       . $self->dbname
       . " $DBI::errstr ";
 
-    # retrieve available table names
-    $self->db_exec_query(
-            "select table_name",
-            "    from information_schema.tables",
-            "    where table_schema='public'",
-        );
-
-    my @tables;
-    while (my @a=$self->sth->fetchrow_array) {
-            push(@tables,@a);
-    }
-    $self->table_names(@tables); 
-
-    # retrieve column names for each available table
-    foreach my $table_name ($self->table_names) {
-        my $q="select column_name from information_schema.columns where table_name='$table_name'";
-        $self->db_exec_query($q);
-
-        my @cols;
-        while (my @a=$self->sth->fetchrow_array) {
-            push(@cols,@a);
-        }
-        $self->table_columns( $table_name  => \@cols ); 
-    }
+    $self->db_read_table_names;
+    $self->db_read_table_columns;
+    $self->db_read_taskids;
 
 }
 
