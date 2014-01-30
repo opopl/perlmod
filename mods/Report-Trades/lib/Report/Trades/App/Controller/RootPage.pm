@@ -15,7 +15,7 @@ sub welcome {
   # Render template 
   $self->render(
       msg       => 'Welcome to the Mojolicious real-time web framework!',
-      template  =>  catfile($PERLMODDIR,qw(webserver templates RootPage)),
+      template  =>  catfile($PERLMODDIR,qw( webserver templates RootPage welcome )),
   );
 }
 

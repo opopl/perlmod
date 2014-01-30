@@ -1,3 +1,4 @@
+
 package Report::Trades;
 
 use strict;
@@ -17,6 +18,7 @@ use Getopt::Long;
 use IO::String;
 use HTML::Table;
 use HTML::Tree;
+use Term::ANSIColor;
 
 use File::Slurp qw( write_file );
 use File::Spec::Functions qw( catfile );
@@ -39,6 +41,8 @@ our @scalar_accessors = qw(
   format
   ofile
   odir
+  sayprefix
+  debuglev
 );
 
 # dbh       - DBI database handler
@@ -75,16 +79,97 @@ our @array_accessors = qw(
 __PACKAGE__->mk_scalar_accessors(@scalar_accessors)
   ->mk_array_accessors(@array_accessors)->mk_hash_accessors(@hash_accessors);
 
+sub new {
+    my $class=shift;
+
+    my $opts=shift // {};
+
+    my $self = bless ($opts, ref ($class) || $class);
+
+    while(my($k,$v)=each %{$opts}){
+        given($k){
+            when('subs_to_run') { 
+                my @subs=@$v;
+                $self->invoke(\@subs);
+            }
+            default { }
+        }
+    }
+
+    $self->init_vars;
+
+    return $self;
+}
+
+sub _say {
+    my $self=shift;
+
+    my $text=shift;
+
+    print color 'blue';
+    print $self->sayprefix . "$text\n";
+    print color 'reset';
+
+}
+
+sub _debug {
+    my $self=shift;
+
+    my $text=shift;
+
+    return unless $self->debuglev;
+
+    $self->_say($text);
+
+}
+
+=head3 invoke - for invoking this package methods
+
+=head4 USAGE
+
+    $self->invoke('init_vars');
+    $self->invoke([qw( init_vars get_opt )]);
+
+=cut
+
+sub invoke {
+    my $self=shift;
+
+    my $ref=shift // '';
+    return unless $ref;
+
+    # provided single subroutine name
+    unless(ref $ref){
+        my $sub=$ref;
+
+        $self->_debug("Invoking subroutine: $sub");
+	
+	    my @evs;
+	    
+	    push(@evs,'$self->' . $sub );
+	    
+	    eval(join(";\n",@evs));
+	    die $@ if $@;
+
+    # provided an array of subroutines
+    }elsif(ref $ref eq "ARRAY"){
+        my @subs=@$ref;
+        foreach my $sub (@subs) {
+            $self->invoke($sub);
+        }
+    }
+
+}
+
 sub main {
     my $self = shift;
 
-    $self->init_vars;
-    $self->get_opt;
-    $self->process_opt;
-
-    $self->run;
-
-    $self->finish;
+    $self->invoke([qw(
+        get_opt
+        process_opt
+        run
+        finish
+    )]);
 
 }
 
@@ -194,11 +279,11 @@ sub db_task_print_html_table {
 	$body->push_content(
 		['br'],
         $self->lit('['),
-		['a',{ href => $prev }, "prev. task"],
+		['a',{ href => $prev }, "previous task"],
         $self->lit('] ['),
 		['a',{ href => $next }, "next task"],
         $self->lit('] ['),
-		['a',{ href => $index }, "index"],
+		['a',{ href => $index }, "index" ],
         $self->lit(']'),
 	);
 	
@@ -312,6 +397,7 @@ sub runweb {
     my $self = shift;
 
     require Mojolicious::Commands;
+
     my $commands=Mojolicious::Commands->new;
     push @{$commands->namespaces}, 'Report::Trades::App::Command';
 
@@ -322,9 +408,9 @@ sub runweb {
 sub db_load {
     my $self=shift;
 
-    $self->db_dump_load if $self->dbfile;
+    $self->invoke('db_dump_load') if $self->dbfile;
 
-    $self->db_connect if $self->dbname;
+    $self->invoke('db_connect') if $self->dbname;
 
 }
 
@@ -333,14 +419,15 @@ sub run {
 
     # connect to the database;
     #   if necessary, restore beforehand the dumped database
-    $self->db_load;
+    $self->invoke('db_load');
 
-    $self->print_dbinfo if $self->opt('dbinfo');
-    $self->db_dump_trades_all if $self->opt('dump_trades_all');
+    $self->invoke('print_dbinfo')           if $self->opt('dbinfo');
 
-    $self->list_things_if_needed;
+    $self->invoke('db_dump_trades_all')     if $self->opt('dump_trades_all');
 
-    $self->runweb if $self->opt('webserver');
+    $self->invoke('list_things_if_needed');
+
+    $self->invoke('runweb')                 if $self->opt('webserver');
 
 }
 
@@ -412,7 +499,9 @@ sub init_vars {
     $self->format('text');
 
     my $curdir=cwd();
-    $self->odir(catfile($curdir,qw(html)));
+    $self->odir(catfile($curdir,qw( html )));
+
+    $self->sayprefix(   __PACKAGE__ . "> " );
 
 }
 
@@ -424,6 +513,7 @@ sub init_pod {
           help
           dbname=s
           dbfile=s
+          debug
           format=s
           list_tables
           list_trades
@@ -446,6 +536,7 @@ sub init_pod {
         "list_trades"       => "",
         "list_taskids"      => "",
         "list_symbols"      => "",
+        "debug"             => "Enable debugging messages",
         "ofile"             => "Write generated content to a specified file, "
                                         . " instead of sending it to standard output",
         "odir"              => "",
@@ -550,6 +641,8 @@ sub process_opt {
     }
 
     make_path($self->odir);
+
+    $self->debuglev(1) if $self->opt('debug');
 
 }
 
@@ -677,3 +770,4 @@ sub finish {
 #2.4 Пользователь должен иметь возможность просматривать все сделки по стратегии за конкретную дату.
 
 1;
+

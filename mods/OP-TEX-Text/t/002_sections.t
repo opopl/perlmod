@@ -72,7 +72,7 @@ sub test_commands {
 	ok_lines( [qw( \begin{document} )], 'commands> \begin{document} ' );
 
 	$TEX->_clear;
-  $reftex='\begin{table}[ht]';
+    $reftex='\begin{table}[ht]';
 
 	$TEX->_cmd({ cmd => 'begin', vars => 'table', optvars => 'ht' });
 	ok_lines([ $reftex ], 'commands> ' . $reftex );
@@ -84,10 +84,10 @@ sub test_macros {
 
   $reftex='\input{file}';
 	
-	$TEX->_clear;
-	$TEX->input("file");
+  $TEX->_clear;
+  $TEX->input("file");
 
-	ok_lines([ $reftex ], "macros> " . $reftex );
+  ok_lines([ $reftex ], "macros> " . $reftex );
 
 }
 

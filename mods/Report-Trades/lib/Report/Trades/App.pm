@@ -4,7 +4,7 @@ package Report::Trades::App;
 use warnings;
 use strict;
 
-use Mojo::Base qw( Mojolicious );
+use Mojo::Base 'Mojolicious';
 
 # This method will run once at server start
 sub startup {
@@ -21,6 +21,9 @@ sub startup {
   # Normal route to controller
   $r->get('/')->to('rootpage#welcome');
 
+  $r->route('/help')->to( 
+        cb => sub { shift->render( template=> 'help', format=>'html' ) } 
+  );
 }
 
 1;

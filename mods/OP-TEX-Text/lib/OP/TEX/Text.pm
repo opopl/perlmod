@@ -333,16 +333,41 @@ sub _cmd {
 
 =head3 def()
 
+=head4 SYNOPSIS
+
+=over 4
+
+=item def('')                 -> returns 1 
+
+=item def('PROJ','')          -> \def\PROJ{}
+
+=item def('PROJ','hello')     -> \def\PROJ{hello}
+
+=item def('PROJ','hello',2)   -> \def\PROJ#1#2{hello}
+
+=back
+
 =cut
 
 sub def {
     my $self = shift;
 
-    my $def   = shift;
-    my $src   = shift;
-    my $nargs = shift;
+    my $def   = shift // '';
 
-    $self->_add_line( "\\def" . "\\$def" . "{$src}" );
+    return 1 unless $def;
+
+    my $src   = shift // '';
+    my $nargs = shift // 0;
+
+    unless ($nargs) {
+        $self->_add_line( "\\def" . "\\$def" . "{$src}" );
+    }else{
+        my $argline='';
+        foreach my $i ((1..$nargs)) {
+            $argline.='#' . $i ;
+        }
+        $self->_add_line( "\\def" . "\\$def" . $argline .  "{$src}" );
+    }
 
 }
 
@@ -1101,6 +1126,19 @@ sub setcounter {
     my $val=shift;
 
     $self->_add_line('\setcounter{' . $counter . '}{' . $val . '}');
+
+}
+=head3 setlength()
+
+=cut
+
+sub setlength {
+    my $self=shift;
+
+    my $length=shift;
+    my $val=shift;
+
+    $self->_add_line('\setlength{' . "\\" .  $length . '}{' . $val . '}');
 
 }
 
