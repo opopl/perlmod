@@ -1,7 +1,7 @@
 # This Makefile is for the OP::VimTag extension to perl.
 #
 # It was generated automatically by MakeMaker version
-# 6.6302 (Revision: 66302) from the contents of
+# 6.86 (Revision: 68600) from the contents of
 # Makefile.PL. Don't edit this file, edit Makefile.PL instead.
 #
 #       ANY CHANGES MADE HERE WILL BE LOST!
@@ -20,6 +20,7 @@
 #     LICENSE => q[perl]
 #     NAME => q[OP::VimTag]
 #     PREREQ_PM => { Scalar::Util=>q[0], English=>q[0], parent=>q[0], Hash::Rename=>q[0], constant=>q[0], Getopt::Inherited=>q[0], Carp=>q[0], Test::More=>q[0.94], Class::Accessor::Constructor=>q[0], File::Find=>q[0], File::Temp=>q[0], UNIVERSAL::require=>q[0], File::Slurp=>q[0] }
+#     TEST_REQUIRES => {  }
 #     VERSION => q[1.110690]
 #     test => { TESTS=>q[t/*.t] }
 
@@ -28,7 +29,7 @@
 
 # --- MakeMaker const_config section:
 
-# These definitions are from config.sh (via /home/opopl/perldist/5.16.2/lib/5.16.2/i686-linux/Config.pm).
+# These definitions are from config.sh (via /usr/lib/perl/5.14/Config.pm).
 # They may have been overridden via Makefile.PL or on the command line.
 AR = ar
 CC = cc
@@ -39,19 +40,19 @@ DLSRC = dl_dlopen.xs
 EXE_EXT = 
 FULL_AR = /usr/bin/ar
 LD = cc
-LDDLFLAGS = -shared -O2 -L/usr/local/lib -fstack-protector
+LDDLFLAGS = -shared -L/usr/local/lib -fstack-protector
 LDFLAGS =  -fstack-protector -L/usr/local/lib
-LIBC = /lib/libc-2.13.so
+LIBC = 
 LIB_EXT = .a
 OBJ_EXT = .o
 OSNAME = linux
-OSVERS = 2.6.37-slitaz
+OSVERS = 3.2.0-37-generic
 RANLIB = :
-SITELIBEXP = /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2
-SITEARCHEXP = /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/i686-linux
+SITELIBEXP = /usr/local/share/perl/5.14.2
+SITEARCHEXP = /usr/local/lib/perl/5.14.2
 SO = so
-VENDORARCHEXP = 
-VENDORLIBEXP = 
+VENDORARCHEXP = /usr/lib/perl5
+VENDORLIBEXP = /usr/share/perl5
 
 
 # --- MakeMaker constants section:
@@ -73,60 +74,60 @@ INST_BIN = blib/bin
 INST_LIB = blib/lib
 INST_MAN1DIR = blib/man1
 INST_MAN3DIR = blib/man3
-MAN1EXT = 0
-MAN3EXT = 0
+MAN1EXT = 1p
+MAN3EXT = 3pm
 INSTALLDIRS = site
 DESTDIR = 
 PREFIX = $(SITEPREFIX)
-PERLPREFIX = /home/opopl/perldist/5.16.2
-SITEPREFIX = /home/opopl/perldist/5.16.2
-VENDORPREFIX = 
-INSTALLPRIVLIB = /home/opopl/perldist/5.16.2/lib/5.16.2
+PERLPREFIX = /usr
+SITEPREFIX = /usr/local
+VENDORPREFIX = /usr
+INSTALLPRIVLIB = /usr/share/perl/5.14
 DESTINSTALLPRIVLIB = $(DESTDIR)$(INSTALLPRIVLIB)
-INSTALLSITELIB = /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2
+INSTALLSITELIB = /usr/local/share/perl/5.14.2
 DESTINSTALLSITELIB = $(DESTDIR)$(INSTALLSITELIB)
-INSTALLVENDORLIB = 
+INSTALLVENDORLIB = /usr/share/perl5
 DESTINSTALLVENDORLIB = $(DESTDIR)$(INSTALLVENDORLIB)
-INSTALLARCHLIB = /home/opopl/perldist/5.16.2/lib/5.16.2/i686-linux
+INSTALLARCHLIB = /usr/lib/perl/5.14
 DESTINSTALLARCHLIB = $(DESTDIR)$(INSTALLARCHLIB)
-INSTALLSITEARCH = /home/opopl/perldist/5.16.2/lib/site_perl/5.16.2/i686-linux
+INSTALLSITEARCH = /usr/local/lib/perl/5.14.2
 DESTINSTALLSITEARCH = $(DESTDIR)$(INSTALLSITEARCH)
-INSTALLVENDORARCH = 
+INSTALLVENDORARCH = /usr/lib/perl5
 DESTINSTALLVENDORARCH = $(DESTDIR)$(INSTALLVENDORARCH)
-INSTALLBIN = /home/opopl/perldist/5.16.2/bin
+INSTALLBIN = /usr/bin
 DESTINSTALLBIN = $(DESTDIR)$(INSTALLBIN)
-INSTALLSITEBIN = /home/opopl/perldist/5.16.2/bin
+INSTALLSITEBIN = /usr/local/bin
 DESTINSTALLSITEBIN = $(DESTDIR)$(INSTALLSITEBIN)
-INSTALLVENDORBIN = 
+INSTALLVENDORBIN = /usr/bin
 DESTINSTALLVENDORBIN = $(DESTDIR)$(INSTALLVENDORBIN)
-INSTALLSCRIPT = /home/opopl/perldist/5.16.2/bin
+INSTALLSCRIPT = /usr/bin
 DESTINSTALLSCRIPT = $(DESTDIR)$(INSTALLSCRIPT)
-INSTALLSITESCRIPT = /home/opopl/perldist/5.16.2/bin
+INSTALLSITESCRIPT = /usr/local/bin
 DESTINSTALLSITESCRIPT = $(DESTDIR)$(INSTALLSITESCRIPT)
-INSTALLVENDORSCRIPT = 
+INSTALLVENDORSCRIPT = /usr/bin
 DESTINSTALLVENDORSCRIPT = $(DESTDIR)$(INSTALLVENDORSCRIPT)
-INSTALLMAN1DIR = none
+INSTALLMAN1DIR = /usr/share/man/man1
 DESTINSTALLMAN1DIR = $(DESTDIR)$(INSTALLMAN1DIR)
-INSTALLSITEMAN1DIR = $(INSTALLMAN1DIR)
+INSTALLSITEMAN1DIR = /usr/local/man/man1
 DESTINSTALLSITEMAN1DIR = $(DESTDIR)$(INSTALLSITEMAN1DIR)
-INSTALLVENDORMAN1DIR = 
+INSTALLVENDORMAN1DIR = /usr/share/man/man1
 DESTINSTALLVENDORMAN1DIR = $(DESTDIR)$(INSTALLVENDORMAN1DIR)
-INSTALLMAN3DIR = none
+INSTALLMAN3DIR = /usr/share/man/man3
 DESTINSTALLMAN3DIR = $(DESTDIR)$(INSTALLMAN3DIR)
-INSTALLSITEMAN3DIR = $(INSTALLMAN3DIR)
+INSTALLSITEMAN3DIR = /usr/local/man/man3
 DESTINSTALLSITEMAN3DIR = $(DESTDIR)$(INSTALLSITEMAN3DIR)
-INSTALLVENDORMAN3DIR = 
+INSTALLVENDORMAN3DIR = /usr/share/man/man3
 DESTINSTALLVENDORMAN3DIR = $(DESTDIR)$(INSTALLVENDORMAN3DIR)
-PERL_LIB = /home/opopl/perldist/5.16.2/lib/5.16.2
-PERL_ARCHLIB = /home/opopl/perldist/5.16.2/lib/5.16.2/i686-linux
+PERL_LIB = /usr/share/perl/5.14
+PERL_ARCHLIB = /usr/lib/perl/5.14
 LIBPERL_A = libperl.a
 FIRST_MAKEFILE = Makefile
 MAKEFILE_OLD = Makefile.old
 MAKE_APERL_FILE = Makefile.aperl
 PERLMAINCC = $(CC)
-PERL_INC = /home/opopl/perldist/5.16.2/lib/5.16.2/i686-linux/CORE
-PERL = /home/opopl/perldist/5.16.2/bin/perl
-FULLPERL = /home/opopl/perldist/5.16.2/bin/perl
+PERL_INC = /usr/lib/perl/5.14/CORE
+PERL = /usr/bin/perl
+FULLPERL = /usr/bin/perl
 ABSPERL = $(PERL)
 PERLRUN = $(PERL)
 FULLPERLRUN = $(FULLPERL)
@@ -139,9 +140,9 @@ PERM_DIR = 755
 PERM_RW = 644
 PERM_RWX = 755
 
-MAKEMAKER   = /home/opopl/perldist/5.16.2/lib/5.16.2//ExtUtils/MakeMaker.pm
-MM_VERSION  = 6.6302
-MM_REVISION = 66302
+MAKEMAKER   = /home/op/share/perl/5.14.2//ExtUtils/MakeMaker.pm
+MM_VERSION  = 6.86
+MM_REVISION = 68600
 
 # FULLEXT = Pathname for extension directory (eg Foo/Bar/Oracle).
 # BASEEXT = Basename part of FULLEXT. May be just equal FULLEXT. (eg Oracle)
@@ -163,8 +164,14 @@ XS_FILES =
 C_FILES  = 
 O_FILES  = 
 H_FILES  = 
-MAN1PODS = 
-MAN3PODS = 
+MAN1PODS = bin/ptagdir \
+	bin/ptags
+MAN3PODS = PerlModScript.examples.pod \
+	PerlModScript.help.pod \
+	lib/OP/VimTag.pm \
+	lib/OP/VimTag/Null.pm \
+	lib/OP/get_perl_package_name.examples.pod \
+	lib/OP/get_perl_package_name.help.pod
 
 # Where is the Config information that we are using/depend on
 CONFIGDEP = $(PERL_ARCHLIB)$(DFSEP)Config.pm $(PERL_INC)$(DFSEP)config.h
@@ -189,20 +196,26 @@ PERL_ARCHIVE_AFTER =
 TO_INST_PM = PerlModScript.examples.pod \
 	PerlModScript.help.pod \
 	lib/OP/VimTag.pm \
-	lib/OP/VimTag/Null.pm
+	lib/OP/VimTag/Null.pm \
+	lib/OP/get_perl_package_name.examples.pod \
+	lib/OP/get_perl_package_name.help.pod
 
-PM_TO_BLIB = lib/OP/VimTag.pm \
-	blib/lib/OP/VimTag.pm \
-	PerlModScript.examples.pod \
+PM_TO_BLIB = PerlModScript.examples.pod \
 	$(INST_LIB)/OP/PerlModScript.examples.pod \
 	PerlModScript.help.pod \
 	$(INST_LIB)/OP/PerlModScript.help.pod \
+	lib/OP/VimTag.pm \
+	blib/lib/OP/VimTag.pm \
 	lib/OP/VimTag/Null.pm \
-	blib/lib/OP/VimTag/Null.pm
+	blib/lib/OP/VimTag/Null.pm \
+	lib/OP/get_perl_package_name.examples.pod \
+	blib/lib/OP/get_perl_package_name.examples.pod \
+	lib/OP/get_perl_package_name.help.pod \
+	blib/lib/OP/get_perl_package_name.help.pod
 
 
 # --- MakeMaker platform_constants section:
-MM_Unix_VERSION = 6.6302
+MM_Unix_VERSION = 6.86
 PERL_MALLOC_DEF = -DPERL_EXTMALLOC_DEF -Dmalloc=Perl_malloc -Dfree=Perl_mfree -Drealloc=Perl_realloc -Dcalloc=Perl_calloc
 
 
@@ -244,6 +257,7 @@ MACROSTART =
 MACROEND = 
 USEMAKEFILE = -f
 FIXIN = $(ABSPERLRUN) -MExtUtils::MY -e 'MY->fixin(shift)' --
+CP_NONEMPTY = $(ABSPERLRUN) -MExtUtils::Command::MM -e 'cp_nonempty' --
 
 
 # --- MakeMaker makemakerdflt section:
@@ -388,15 +402,15 @@ linkext :: $(LINKTYPE)
 # --- MakeMaker dlsyms section:
 
 
-# --- MakeMaker dynamic section:
-
-dynamic :: $(FIRST_MAKEFILE) $(INST_DYNAMIC) $(INST_BOOT)
-	$(NOECHO) $(NOOP)
-
-
 # --- MakeMaker dynamic_bs section:
 
 BOOTSTRAP =
+
+
+# --- MakeMaker dynamic section:
+
+dynamic :: $(FIRST_MAKEFILE) $(BOOTSTRAP) $(INST_DYNAMIC)
+	$(NOECHO) $(NOOP)
 
 
 # --- MakeMaker dynamic_lib section:
@@ -419,8 +433,25 @@ POD2MAN_EXE = $(PERLRUN) "-MExtUtils::Command::MM" -e pod2man "--"
 POD2MAN = $(POD2MAN_EXE)
 
 
-manifypods : pure_all 
-	$(NOECHO) $(NOOP)
+manifypods : pure_all  \
+	PerlModScript.examples.pod \
+	PerlModScript.help.pod \
+	bin/ptagdir \
+	bin/ptags \
+	lib/OP/VimTag.pm \
+	lib/OP/VimTag/Null.pm \
+	lib/OP/get_perl_package_name.examples.pod \
+	lib/OP/get_perl_package_name.help.pod
+	$(NOECHO) $(POD2MAN) --section=1 --perm_rw=$(PERM_RW) \
+	  bin/ptagdir $(INST_MAN1DIR)/ptagdir.$(MAN1EXT) \
+	  bin/ptags $(INST_MAN1DIR)/ptags.$(MAN1EXT) 
+	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
+	  PerlModScript.examples.pod $(INST_MAN3DIR)/OP::PerlModScript.examples.$(MAN3EXT) \
+	  PerlModScript.help.pod $(INST_MAN3DIR)/OP::PerlModScript.help.$(MAN3EXT) \
+	  lib/OP/VimTag.pm $(INST_MAN3DIR)/OP::VimTag.$(MAN3EXT) \
+	  lib/OP/VimTag/Null.pm $(INST_MAN3DIR)/OP::VimTag::Null.$(MAN3EXT) \
+	  lib/OP/get_perl_package_name.examples.pod $(INST_MAN3DIR)/OP::get_perl_package_name.examples.$(MAN3EXT) \
+	  lib/OP/get_perl_package_name.help.pod $(INST_MAN3DIR)/OP::get_perl_package_name.help.$(MAN3EXT) 
 
 
 
@@ -469,24 +500,25 @@ clean_subdirs :
 
 clean :: clean_subdirs
 	- $(RM_F) \
-	  *$(LIB_EXT) core \
-	  core.[0-9] $(INST_ARCHAUTODIR)/extralibs.all \
-	  core.[0-9][0-9] $(BASEEXT).bso \
-	  pm_to_blib.ts MYMETA.json \
-	  core.[0-9][0-9][0-9][0-9] MYMETA.yml \
-	  $(BASEEXT).x $(BOOTSTRAP) \
-	  perl$(EXE_EXT) tmon.out \
-	  *$(OBJ_EXT) pm_to_blib \
-	  $(INST_ARCHAUTODIR)/extralibs.ld blibdirs.ts \
-	  core.[0-9][0-9][0-9][0-9][0-9] *perl.core \
-	  core.*perl.*.? $(MAKE_APERL_FILE) \
-	  $(BASEEXT).def perl \
-	  core.[0-9][0-9][0-9] mon.out \
-	  lib$(BASEEXT).def perlmain.c \
-	  perl.exe so_locations \
-	  $(BASEEXT).exp 
+	  $(BASEEXT).bso $(BASEEXT).def \
+	  $(BASEEXT).exp $(BASEEXT).x \
+	  $(BOOTSTRAP) $(INST_ARCHAUTODIR)/extralibs.all \
+	  $(INST_ARCHAUTODIR)/extralibs.ld $(MAKE_APERL_FILE) \
+	  *$(LIB_EXT) *$(OBJ_EXT) \
+	  *perl.core MYMETA.json \
+	  MYMETA.yml blibdirs.ts \
+	  core core.*perl.*.? \
+	  core.[0-9] core.[0-9][0-9] \
+	  core.[0-9][0-9][0-9] core.[0-9][0-9][0-9][0-9] \
+	  core.[0-9][0-9][0-9][0-9][0-9] lib$(BASEEXT).def \
+	  mon.out perl \
+	  perl$(EXE_EXT) perl.exe \
+	  perlmain.c pm_to_blib \
+	  pm_to_blib.ts so_locations \
+	  tmon.out 
 	- $(RM_RF) \
 	  blib 
+	  $(NOECHO) $(RM_F) $(MAKEFILE_OLD)
 	- $(MV) $(FIRST_MAKEFILE) $(MAKEFILE_OLD) $(DEV_NULL)
 
 
@@ -520,7 +552,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) 'configure_requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: 6.31' >> META_new.yml
 	$(NOECHO) $(ECHO) 'dynamic_config: 1' >> META_new.yml
-	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.132830'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 6.86, CPAN::Meta::Converter version 2.120351'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'license: perl' >> META_new.yml
 	$(NOECHO) $(ECHO) 'meta-spec:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  url: http://module-build.sourceforge.net/META-spec-v1.4.html' >> META_new.yml
@@ -548,7 +580,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '      "Marcel Gruenauer <marcel@cpan.org>"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
 	$(NOECHO) $(ECHO) '   "dynamic_config" : 1,' >> META_new.json
-	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.132830",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 6.86, CPAN::Meta::Converter version 2.120351",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "license" : [' >> META_new.json
 	$(NOECHO) $(ECHO) '      "perl_5"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
@@ -616,7 +648,7 @@ manifest :
 	$(PERLRUN) "-MExtUtils::Manifest=mkmanifest" -e mkmanifest
 
 veryclean : realclean
-	$(RM_F) *~ */*~ *.orig */*.orig *.bak */*.bak *.old */*.old 
+	$(RM_F) *~ */*~ *.orig */*.orig *.bak */*.bak *.old */*.old
 
 
 
@@ -631,6 +663,7 @@ tardist : $(DISTVNAME).tar$(SUFFIX)
 
 uutardist : $(DISTVNAME).tar$(SUFFIX)
 	uuencode $(DISTVNAME).tar$(SUFFIX) $(DISTVNAME).tar$(SUFFIX) > $(DISTVNAME).tar$(SUFFIX)_uu
+	$(NOECHO) $(ECHO) 'Created $(DISTVNAME).tar$(SUFFIX)_uu'
 
 $(DISTVNAME).tar$(SUFFIX) : distdir
 	$(PREOP)
@@ -638,6 +671,7 @@ $(DISTVNAME).tar$(SUFFIX) : distdir
 	$(TAR) $(TARFLAGS) $(DISTVNAME).tar $(DISTVNAME)
 	$(RM_RF) $(DISTVNAME)
 	$(COMPRESS) $(DISTVNAME).tar
+	$(NOECHO) $(ECHO) 'Created $(DISTVNAME).tar$(SUFFIX)'
 	$(POSTOP)
 
 zipdist : $(DISTVNAME).zip
@@ -647,12 +681,14 @@ $(DISTVNAME).zip : distdir
 	$(PREOP)
 	$(ZIP) $(ZIPFLAGS) $(DISTVNAME).zip $(DISTVNAME)
 	$(RM_RF) $(DISTVNAME)
+	$(NOECHO) $(ECHO) 'Created $(DISTVNAME).zip'
 	$(POSTOP)
 
 shdist : distdir
 	$(PREOP)
 	$(SHAR) $(DISTVNAME) > $(DISTVNAME).shar
 	$(RM_RF) $(DISTVNAME)
+	$(NOECHO) $(ECHO) 'Created $(DISTVNAME).shar'
 	$(POSTOP)
 
 
@@ -697,7 +733,7 @@ distmeta : create_distdir metafile
 
 # --- MakeMaker distsignature section:
 distsignature : create_distdir
-	$(NOECHO) cd $(DISTVNAME) && $(ABSPERLRUN) -MExtUtils::Manifest=maniadd -e 'eval { maniadd({q{SIGNATURE} => q{Public-key signature (added by MakeMaker)}}) } ' \
+	$(NOECHO) cd $(DISTVNAME) && $(ABSPERLRUN) -MExtUtils::Manifest=maniadd -e 'eval { maniadd({q{SIGNATURE} => q{Public-key signature (added by MakeMaker)}}) }' \
 	  -e '    or print "Could not add SIGNATURE to MANIFEST: $$$${'\''@'\''}\n"' --
 	$(NOECHO) cd $(DISTVNAME) && $(TOUCH) SIGNATURE
 	cd $(DISTVNAME) && cpansign -s
@@ -767,6 +803,7 @@ pure_vendor_install :: all
 		$(INST_SCRIPT) $(DESTINSTALLVENDORSCRIPT) \
 		$(INST_MAN1DIR) $(DESTINSTALLVENDORMAN1DIR) \
 		$(INST_MAN3DIR) $(DESTINSTALLVENDORMAN3DIR)
+
 
 doc_perl_install :: all
 	$(NOECHO) $(ECHO) Appending installation info to $(DESTINSTALLARCHLIB)/perllocal.pod
@@ -844,7 +881,7 @@ $(FIRST_MAKEFILE) : Makefile.PL $(CONFIGDEP)
 
 # --- MakeMaker makeaperl section ---
 MAP_TARGET    = perl
-FULLPERL      = /home/opopl/perldist/5.16.2/bin/perl
+FULLPERL      = /usr/bin/perl
 
 $(MAP_TARGET) :: static $(MAKE_APERL_FILE)
 	$(MAKE) $(USEMAKEFILE) $(MAKE_APERL_FILE) $@
@@ -874,7 +911,7 @@ subdirs-test ::
 
 
 test_dynamic :: pure_all
-	PERL_DL_NONLAZY=1 $(FULLPERLRUN) "-MExtUtils::Command::MM" "-e" "test_harness($(TEST_VERBOSE), '$(INST_LIB)', '$(INST_ARCHLIB)')" $(TEST_FILES)
+	PERL_DL_NONLAZY=1 $(FULLPERLRUN) "-MExtUtils::Command::MM" "-MTest::Harness" "-e" "undef *Test::Harness::Switches; test_harness($(TEST_VERBOSE), '$(INST_LIB)', '$(INST_ARCHLIB)')" $(TEST_FILES)
 
 testdb_dynamic :: pure_all
 	PERL_DL_NONLAZY=1 $(FULLPERLRUN) $(TESTDB_SW) "-I$(INST_LIB)" "-I$(INST_ARCHLIB)" $(TEST_FILE)
@@ -900,7 +937,7 @@ ppd :
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="UNIVERSAL::require" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="constant::" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="parent::" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="i686-linux-5.16" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="i686-linux-gnu-thread-multi-64int-5.14" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <CODEBASE HREF="" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    </IMPLEMENTATION>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '</SOFTPKG>' >> $(DISTNAME).ppd
@@ -910,10 +947,12 @@ ppd :
 
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
-	  lib/OP/VimTag.pm blib/lib/OP/VimTag.pm \
 	  PerlModScript.examples.pod $(INST_LIB)/OP/PerlModScript.examples.pod \
 	  PerlModScript.help.pod $(INST_LIB)/OP/PerlModScript.help.pod \
-	  lib/OP/VimTag/Null.pm blib/lib/OP/VimTag/Null.pm 
+	  lib/OP/VimTag.pm blib/lib/OP/VimTag.pm \
+	  lib/OP/VimTag/Null.pm blib/lib/OP/VimTag/Null.pm \
+	  lib/OP/get_perl_package_name.examples.pod blib/lib/OP/get_perl_package_name.examples.pod \
+	  lib/OP/get_perl_package_name.help.pod blib/lib/OP/get_perl_package_name.help.pod 
 	$(NOECHO) $(TOUCH) pm_to_blib
 
 

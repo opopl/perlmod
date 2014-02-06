@@ -286,8 +286,6 @@ sub wanted {
 
 1;
 
-__END__
-
 =head1 NAME
 
 pminst - find modules whose names match this pattern

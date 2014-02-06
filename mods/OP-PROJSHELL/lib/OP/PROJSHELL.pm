@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 #------------------------------
-# intro               {{{
+# intro {{{
 
 use Env qw($hm $HTMLOUT $PERLMODDIR);
 
@@ -124,7 +124,7 @@ sub view_proj_tex;
 # ============================
 # Shell Terminal stuff {{{
 
-# _term_get_commands()  {{{
+# _term_get_commands() {{{
 
 =head3 _term_get_commands()
 
@@ -135,13 +135,13 @@ sub _term_get_commands() {
 
     my $commands = {
         #########################
-        # Aliases           {{{
+        # Aliases {{{
         #########################
         "q"   => { alias => "quit" },
         "h"   => { alias => "help" },
-        #               }}}
+        # }}}
         #########################
-        # General purpose        {{{
+        # General purpose {{{
         #########################
 ##cmd_quit
         "quit" => {
@@ -184,7 +184,7 @@ sub _term_get_commands() {
             desc => "Invoke clear ",
             proc => sub { $self->_sys('clear') },
         },
-        #                 }}}
+        # }}}
         #########################
         # Compilation {{{
         #########################
@@ -221,6 +221,11 @@ sub _term_get_commands() {
         "pdfview" => {
             desc => "View the PDF file for the currently selected PROJ",
             proc => sub { $self->make('vdoc'); }
+        },
+##cmd_info
+        "info" => {
+            desc => "Display info",
+            proc => sub { $self->info; }
         },
         "setproj" => {
 		    desc => "Reset currently active project",
@@ -261,12 +266,12 @@ sub _term_get_commands() {
             desc => "View myself",
             proc => sub { $self->view("vm"); }
         },
-        #                 }}}
+        # }}}
         #########################
     };
 
     #########################
-    # System commands   {{{
+    # System commands {{{
 ###system_commands
     #########################
     $self->shellterm_sys_commands(qw( git cat less more ));
@@ -279,7 +284,7 @@ sub _term_get_commands() {
         };
     }
 
-    #           }}}
+    # }}}
     #########################
 
     $self->term_commands($commands);
@@ -882,6 +887,18 @@ sub sysrun() {
 # }}}
 # ============================
 
+=head3 info
+   
+=cut
+   
+sub info {
+	my $self=shift;
+    print "\n";
+   
+}
+
 # }}}
 #------------------------------
 1;
+  
+   
