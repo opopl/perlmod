@@ -319,8 +319,9 @@ sub wanted {
     # skip files that do not end with .pm
     return unless /\.pm$/;
 
-    $fullpath = $File::Find::name;
+    local $_ = $File::Find::name;
 
+    $fullpath=$_;
     $fullpath =~ s/\s*$//g;
 
     # File/Slurp.pm
