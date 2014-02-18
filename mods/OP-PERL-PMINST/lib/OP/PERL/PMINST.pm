@@ -11,6 +11,8 @@ use warnings;
 use feature qw(switch);
 use Env qw( $hm $PERLMODDIR );
 
+use lib("$PERLMODDIR/lib");
+
 use Data::Dumper;
 use Text::Table;
 use File::Find qw( find );
@@ -19,7 +21,6 @@ use FindBin qw( $Bin $Script );
 use Getopt::Long qw(GetOptions);
 use OP::PackName;
 
-use lib("$PERLMODDIR/mods/OP-Writer-Pod/lib");
 use OP::Writer::Pod;
 
 use Term::ANSIColor;
@@ -121,12 +122,13 @@ sub getopt {
     @optstr=( 
         "printpaths",
         "searchdirs=s",
-        "remove",
-        "help",
+        "remove"
     );
     
     %optdesc=(
-        "help"  => "Display help message",
+        "remove"  => "Remove modules which names match the provided pattern",
+        "searchdirs"  => "Specify a colon-separated list of directories to be searched over "
+            . " (instead of those present in \@INC )",
     );
 
     $self->OPTSTR(@optstr);

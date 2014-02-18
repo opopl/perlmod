@@ -16,7 +16,7 @@ use Env qw( $hm $PERLMODDIR );
 use Getopt::Long;
 use IO::String;
 
-use lib("$PERLMODDIR/mods/OP-Writer-Pod/lib");
+use lib("$PERLMODDIR/lib");
 use OP::Writer::Pod;
 
 $VERSION = '0.01';

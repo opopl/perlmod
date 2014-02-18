@@ -9,43 +9,34 @@ use warnings;
 use Env qw($hm $HTMLOUT $PERLMODDIR);
 
 use Term::ShellUI;
-use File::Spec::Functions qw(catfile rel2abs curdir catdir );
+use File::Spec::Functions qw(catfile rel2abs curdir);
 
-use lib("$PERLMODDIR/mods/OP-Writer-Tex/lib");
 use OP::Writer::Tex;
-
-#use lib("$PERLMODDIR/mods/OP-Base/lib");
-#use OP::Base qw/:funcs :vars/;
 use OP::Base qw(uniq readarr);
-
-#use lib("$PERLMODDIR/mods/OP-Git/lib");
 use OP::Git;
 
-use lib("$PERLMODDIR/mods/OP-BIBTEX/lib");
 use OP::BIBTEX;
 
 use Data::Dumper;
 use File::Copy qw(copy move);
-use File::Path qw(make_path remove_tree);
+use File::Path qw(make_path);
 use File::Basename;
 use IO::File;
-#use List::MoreUtils qw(uniq);
 
 use File::Slurp qw(
   append_file
-  edit_file
-  edit_file_lines
   read_file
   write_file
-  prepend_file
 );
 
-use IPC::Cmd qw(can_run run run_forked);
+#use IPC::Cmd qw(run);
 
-use lib("$PERLMODDIR/mods/OP-Script/lib");
 use lib("$PERLMODDIR/mods/Class-Accessor-Complex/lib");
 
-use parent qw( OP::Script Class::Accessor::Complex );
+use parent qw( 
+	OP::Script 
+	Class::Accessor::Complex 
+);
 
 ###__ACCESSORS_SCALAR
 our @scalar_accessors=qw(
@@ -532,7 +523,6 @@ sub runsyscmd{
     my $cmd=shift;
     my @args=@_;
 
-    chdir
     system("$cmd @args");
 }
 

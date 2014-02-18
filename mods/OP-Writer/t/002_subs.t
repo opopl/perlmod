@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!perl
 
 use strict;
 use warnings;
@@ -30,9 +30,9 @@ main;
 
 sub test_start {
 
-	ok($W->text eq "",              'upon_start: text zero');
-	ok($W->indent == 0,             'upon start: indent zero');
-	ok($W->textlines_count == 0 ,   'upon start: textlines zero');
+    ok($W->text eq "",              'upon_start: text zero');
+    ok($W->indent == 0,             'upon start: indent zero');
+    ok($W->textlines_count == 0 ,   'upon start: textlines zero');
 
 }
 
@@ -61,31 +61,31 @@ sub main {
 
 sub test_adding_lines {
 
-	$W->_add_line('hello');
-	ok($W->text eq 'hello' . "\n",         'text: single line');
-	
-	ok_lines( [qw(hello)],         'textlines: single line');
-	
-	$W->_clear;
-	$W->_add_line('1');
-	$W->_add_line('2');
-	$W->_add_line('3');
-	ok($W->text eq "1\n2\n3\n",                               'text: three lines');
+    $W->_add_line('hello');
+    ok($W->text eq 'hello' . "\n",         'text: single line');
+    
+    ok_lines( [qw(hello)],         'textlines: single line');
+    
+    $W->_clear;
+    $W->_add_line('1');
+    $W->_add_line('2');
+    $W->_add_line('3');
+    ok($W->text eq "1\n2\n3\n",                               'text: three lines');
 
-	ok_lines( [qw(1 2 3)],         'textlines: three lines' );
+    ok_lines( [qw(1 2 3)],         'textlines: three lines' );
 
 }
-	
+    
 sub test_indentation {
 
-	$W->_clear;
-	$W->plus('indent');
+    $W->_clear;
+    $W->plus('indent');
 
-	$W->_add_line('1');
+    $W->_add_line('1');
 
-	ok_lines( [ ' 1' ],            'indentation.1>');
+    ok_lines( [ ' 1' ],            'indentation.1>');
 
-	$W->minus('indent');
+    $W->minus('indent');
 
 }
 
@@ -93,7 +93,7 @@ sub ok_lines {
     my $a=shift;
     my $msg=shift;
 
-	  ok( _arrays_equal($W->textlines_ref,$a ), $msg);
+      ok( _arrays_equal($W->textlines_ref,$a ), $msg);
 
 }
 
@@ -143,19 +143,19 @@ sub test_commenting {
   $W->delimchar('-');
   $W->delimchars_num(50);
 
-	$W->_clear;
+  $W->_clear;
   $W->_c('COMMENT');
 
   $a=[ '%COMMENT' ];
   ok_lines( $a, 'commenting.1> single comment');
 
-	$W->_clear;
+  $W->_clear;
   $W->_c_delim;
 
   $a=[ $W->commentchar . $W->delimchar x $W->delimchars_num ];
   ok_lines( $a, 'commenting.2> delim comment');
 
-	$W->_clear;
+  $W->_clear;
   $W->_c('COMMENT1');
   $W->_c('COMMENT2');
   ok_lines( [qw( %COMMENT1 %COMMENT2)], 'commenting.3> two comments');

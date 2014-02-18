@@ -17,9 +17,8 @@ use File::Find qw( find );
 use File::Path qw( remove_tree);
 use FindBin qw( $Bin $Script );
 use Getopt::Long qw(GetOptions);
-use OP::PackName;
 
-use lib("$PERLMODDIR/mods/OP-Writer-Pod/lib");
+use OP::PackName;
 use OP::Writer::Pod;
 
 use Term::ANSIColor;
@@ -121,12 +120,13 @@ sub getopt {
     @optstr=( 
         "printpaths",
         "searchdirs=s",
-        "remove",
-        "help",
+        "remove"
     );
     
     %optdesc=(
-        "help"  => "Display help message",
+        "remove"  => "Remove modules which names match the provided pattern",
+        "searchdirs"  => "Specify a colon-separated list of directories to be searched over "
+            . " (instead of those present in \@INC )",
     );
 
     $self->OPTSTR(@optstr);
@@ -136,9 +136,14 @@ sub getopt {
         $self->dhelp;
         exit 0;
     }elsif(@ARGV == 1){
-        $OPTS{printpaths}=1;
     }else{
         GetOptions(\%opt,@optstr);
+    }
+
+    $OPTS{printpaths}=1;
+
+    if ($OPTS{remove}){
+        $OPTS{printpaths}=0;
     }
 
     for ( map { s/=\w+$//g; $_ } @optstr ) {
@@ -197,7 +202,8 @@ sub init {
     $OPTS{print}=0 if $self->opts_count;
 
     for(@INC){
-        next if /^\Q$PERLMODDIR\E/;
+        next if /^$PERLMODDIR\/mods/;
+        next if /^lib/;
         push(@SEARCHDIRS,$_);
     }
 
@@ -319,9 +325,8 @@ sub wanted {
     # skip files that do not end with .pm
     return unless /\.pm$/;
 
-    local $_ = $File::Find::name;
+    $fullpath = $File::Find::name;
 
-    $fullpath=$_;
     $fullpath =~ s/\s*$//g;
 
     # File/Slurp.pm

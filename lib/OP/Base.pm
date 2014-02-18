@@ -32,11 +32,11 @@ use File::Spec::Functions qw(catfile);
 use File::Slurp qw( read_file);
 
 use List::Compare;
+use File::Temp qw{tmpnam};
 
 use lib("$PERLMODDIR/mods/IPC-Cmd/lib");
 use IPC::Cmd;
 
-use lib("$PERLMODDIR/mods/OP-Module/lib");
 use OP::Module;
  
 =head1 DEPENDENCIES
@@ -1517,7 +1517,8 @@ sub remove_local_dirs_from_INC {
 # set_FILES() {{{
 sub set_FILES {
     foreach my $podo (@allowed_pod_options) {
-        $FILES{pod}{$podo} = "$sdata{sname}.$podo.pod";
+        #$FILES{pod}{$podo} = "$sdata{sname}.$podo.pod";
+        $FILES{pod}{$podo} = tmpnam();
     }
     $FILES{tkw} = "$ts.kw.i.dat";
     $FILES{ifs} = "$ts.ifs.i.dat";
