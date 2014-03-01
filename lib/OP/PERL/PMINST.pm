@@ -70,7 +70,7 @@ sub main {
 
     $self->init;
 
-    $self->getopt unless($self->opts_count);
+    $self->getopt if not $self->opts_count;
 
     $self->process_opts;
 
@@ -85,19 +85,38 @@ sub printout {
 
     if ($OPTS{print}) {
 
-        my $tb=Text::Table->new('','');
+        given( $OPTS{print} ) {
+            when('names_paths'){
 
-        if ( $OPTS{printpaths} ) {
-            foreach my $module (sort($self->MODPATHS_keys)) {
-                my @paths=@{$self->MODPATHS($module)};
-                foreach my $path (@paths) {
-                    chomp($path);
-                    $tb->load([ $module,$path ] );
+                my $tb=Text::Table->new('','');
+
+	            foreach my $module (sort($self->MODPATHS_keys)) {
+	                my @paths=@{$self->MODPATHS($module)};
+	                foreach my $path (@paths) {
+	                    chomp($path);
+	                    $tb->load([ $module,$path ] );
+	                }
+	            }
+
+                print $tb;
+            }
+            when('names'){
+                foreach my $module (sort($self->MODPATHS_keys)) {
+                    print $module . "\n";
                 }
+            }
+            when('paths'){
+                foreach my $module (sort($self->MODPATHS_keys)) {
+	                my @paths=@{$self->MODPATHS($module)};
+	                foreach my $path (@paths) {
+	                    chomp($path);
+                        print $path . "\n";
+	                }
+	            }
             }
         }
 
-        print $tb;
+
 
     }
 }
@@ -118,20 +137,28 @@ sub getopt {
     my(%opt,@optstr,%optdesc);
     
     @optstr=( 
-        "printpaths",
-        "searchdirs=s",
-        "remove"
+        "p|print=s",
+        "s|searchdirs=s",
+        "r|remove"
     );
     
     %optdesc=(
-        "remove"  => "Remove modules which names match the provided pattern",
-        "searchdirs"  => "Specify a colon-separated list of directories to be searched over "
-            . " (instead of those present in \@INC )",
+        "remove"        => "Remove modules which names match the provided pattern",
+        "print"         => "Specify print option",
+        "searchdirs"    => "Specify a colon-separated list of directories to be searched over "
+            . " (instead of those present in C<\@INC> )",
     );
 
     $self->OPTSTR(@optstr);
     $self->OPTDESC(%optdesc);
-    
+
+    my %optlong=map { 
+        my $s=$_; 
+        $s =~ s/=\w+$//g; 
+        my @o=split('\|',$s); 
+        ( $o[0] => $o[-1] ); 
+    } @optstr; 
+
     unless( @ARGV ){ 
         $self->dhelp;
         exit 0;
@@ -140,14 +167,13 @@ sub getopt {
         GetOptions(\%opt,@optstr);
     }
 
-    $OPTS{printpaths}=1;
-
     if ($OPTS{remove}){
-        $OPTS{printpaths}=0;
+        $OPTS{print}='';
     }
 
-    for ( map { s/=\w+$//g; $_ } @optstr ) {
-        $OPTS{$_}=$opt{$_} if defined $opt{$_};
+    while(my($short,$long)=each %optlong){
+        $OPTS{$long}=$opt{$long} if defined $opt{$long};
+        $OPTS{$long}=$opt{$short} if defined $opt{$short};
     }
 
     $PATTERN = shift(@ARGV) // '';
@@ -168,22 +194,37 @@ sub dhelp {
 
     $p->head1('USAGE');
     $p->_pod_line("$Script <options> <perl module pattern>");
+
+    $p->head1('MODULE');
+    $p->_pod_line("L<OP::PERL::PMINST>");
+
     $p->head1('OPTIONS');
 
     $p->over(4);
 
     for my $opt ( map { s/=\w+$//g; $_ } $self->OPTSTR ) {
-        $p->item("--" . $opt );
-        if ($self->OPTDESC_exists("$opt")){
-            $p->_pod_line($self->OPTDESC("$opt"));
+        my @o=split('\|',$opt);
+        my $optlong=$o[-1];
+
+        $p->item( join(', ' , map { '--' . $_ } @o ));
+
+        if ($self->OPTDESC_exists("$optlong")){
+            $p->_pod_line($self->OPTDESC("$optlong"));
         }
+
     }
     $p->back;
+
+    $p->head1('EXAMPLES');
+    $p->_pod_line(" $Script --print paths");
+    $p->_pod_line(" $Script --print names");
+    $p->_pod_line(" $Script --print paths_names");
 
     $p->head1('SCRIPT LOCATION');
     $p->_pod_line("$Bin");
     $p->cut;
 
+    #$p->_print_help;
     $p->_print_man;
 
 }
@@ -198,24 +239,25 @@ sub init {
     $INCDIR      = '';
     $OPTS{match} = '';
 
-    $OPTS{print} = 1;
-    $OPTS{print}=0 if $self->opts_count;
-
     for(@INC){
         next if /^$PERLMODDIR\/mods/;
         next if /^lib/;
         push(@SEARCHDIRS,$_);
     }
 
+    $OPTS{print}='names_paths';
+    $OPTS{print}='' if $self->opts_count;
+
     @SEARCHDIRS = $self->SEARCHDIRS if $self->SEARCHDIRS_count;
     $OPTS{searchmode}='simple';
 
 }
+# end: sub init 
 
 sub process_opts {
     my $self = shift;
 
-    return unless $self->opts_count;
+    return if not $self->opts_count;
 
     foreach my $k ( $self->opts_keys ) {
         my $v = $self->opts("$k");
@@ -230,7 +272,7 @@ sub process_opts {
                     };
                     ## list full paths
                     /^fullpath$/ && do {
-                        $OPTS{printpaths} = 1;
+                        $OPTS{print} = 'names_paths';
                         next;
                     };
                     /^remove$/ && do {
@@ -272,6 +314,7 @@ sub process_opts {
     }
 
 }
+# end: sub process_opts
 
 sub find_module_matches {
     my $self = shift;

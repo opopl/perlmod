@@ -14,7 +14,7 @@ use warnings;
 use Exporter ();
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
-use File::Spec::Functions qw(catfile rel2abs curdir catdir );
+use File::Spec::Functions qw(catfile);
 
 use OP::Base qw( readarr _hash_add );
 use Text::TabularDisplay;
@@ -22,12 +22,9 @@ use Text::TabularDisplay;
 use Data::Dumper;
 use File::Basename qw(basename dirname);
 use File::Slurp qw(
-  append_file
-  edit_file
   edit_file_lines
   read_file
   write_file
-  prepend_file
 );
 
 $VERSION = '0.01';
@@ -80,6 +77,7 @@ my @ex_vars_array = qw(
           init
           init_Args
           init_PIECES
+          process_quickfix_latex
           VimArg
           VimBufFiles_Insert_SubName
           VimChooseFromPrompt
@@ -133,6 +131,10 @@ my @ex_vars_array = qw(
     'vars' => [ @ex_vars_scalar, @ex_vars_array, @ex_vars_hash ]
 );
 
+our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
+our @EXPORT    = qw( );
+our $VERSION   = '0.01';
+
 sub _die;
 sub init;
 sub init_Args;
@@ -144,6 +146,9 @@ sub VimCurBuf_Basename;
 sub VimCurBuf_Name;
 sub VimCurBuf_Num;
 sub VimBufFiles_Insert_SubName;
+
+# ----------- quickfix -----------------------
+sub process_quickfix_latex;
 
 sub VimCmd;
 sub VimChooseFromPrompt;
@@ -196,9 +201,6 @@ sub Vim_MsgColor;
 sub Vim_MsgPrefix;
 sub Vim_MsgDebug;
 
-our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
-our @EXPORT    = qw( );
-our $VERSION   = '0.01';
 
 ################################
 # GLOBAL VARIABLE DECLARATIONS
@@ -248,6 +250,102 @@ our $PAPINFO;
 =head1 SUBROUTINES
 
 =cut
+
+sub process_quickfix_latex {
+
+  my $logfile=VimVar('g:logfile');
+  my @lines=read_file $logfile;
+
+  my $err=0;
+  my ($LNUM,$MSG,$FILE);
+
+  my $texroot=VimEval("g:paths['projs']");
+
+  $LNUM=0;
+
+  my $line_count=0;
+
+  foreach (@lines){
+    chomp;
+    next if /^\s*#/;
+
+    if ($err){
+
+      $line_count++;
+
+      if (/^\s*$/){
+
+          $MSG =~ s/(\\)/\\$1/g;
+
+          my $cmd=('call add(g:qlist, {' 
+                  . '"lnum":     '       . $LNUM        . ',' 
+                  . '"filename": ' . '"' . $FILE  . '"' . ',' 
+                  . '"text":     ' . '"' . $MSG   . '"' . ',' 
+                  . '"type":     ' . '"' . 'E'    . '"' . ',' 
+                  . "})" );
+    
+          VimCmd("$cmd");
+
+          $err=0;
+          $MSG='';
+          $line_count=0;
+
+          next;
+      };
+
+      my $msg=$_;
+
+      if($msg){
+        my $delim;
+
+        $msg=~s/^\s*//g;
+        $msg=~s/\s*$//g;
+
+        if ($line_count == 1 ){
+          $msg=~ s/^l\.\d+//g;
+          $delim=': ';
+          $msg = '... ' . $msg . ' >>> ';
+        }elsif ($line_count == 2 ){
+          $msg = '<<< ' . $msg . ' ... ';
+        }else{
+          $delim=' '
+        }
+
+        $MSG.=$delim . $msg;
+
+      }
+
+    }else{
+
+      #/^(?<file>\S*):(?<lnum>\d+):(?<msg>.*)$/ && do { 
+      /^(\S*):(\d+):(.*)$/ && do { 
+
+        $err=1;
+
+        $FILE=$1;
+        $LNUM=$2;
+        my $msg=$3;
+
+        #$LNUM=$+{lnum};
+        #$FILE=$+{file};
+        #my $msg=$+{msg};
+
+        $FILE=catfile($texroot,$FILE);
+
+        $msg=~s/^\s*//g;
+        $msg=~s/\s*$//g;
+        
+        $msg=~s/\.$//g;
+
+        if($msg){
+          $MSG=$msg;
+        }
+      };
+
+    }
+  } # end for-lines loop
+
+}
 
 sub VimCmd {
     my $cmd = shift;
@@ -533,8 +631,8 @@ sub VimChooseFromPrompt {
     unless ($inp) {
         $result = $empty;
     }
-    elsif ( $inp =~ /^\s*(?<num>\d+)\s*$/ ) {
-        $result = $opts[ $+{num} - 1 ];
+    elsif ( $inp =~ /^\s*(\d+)\s*$/ ) {
+        $result = $opts[ $1 - 1 ];
     }
     else {
         $result = $inp;
@@ -649,7 +747,7 @@ sub VimPerlGetModuleName {
         foreach my $k(keys %$opts){
           for($k){
             /^selectdialog$/ && do {
-	            $module = VimPerlGetModuleNameFromDialog;
+                $module = VimPerlGetModuleNameFromDialog;
               last LOOP;
             };
           }
@@ -666,26 +764,26 @@ sub VimPerlGetModuleName {
         #   check for the current buffer's name
         #
         my $path=VimCurBuf_Name;
-	    $module = '';
-	
-	    if($path) {
-	        if ($path =~ /\.pm$/){
-	            $module = VimPerlModuleNameFromPath($path);
-	        }
+        $module = '';
+    
+        if($path) {
+            if ($path =~ /\.pm$/){
+                $module = VimPerlModuleNameFromPath($path);
+            }
         }else{
         # 4. If fail to get the current buffer's name, pop up a module chooser dialog
         #
-	        VimMsgE('Failed to get $CurBuf->{name} from OP::VIMPERL');
-	
-	        $module = VimPerlGetModuleNameFromDialog;
-	    }
-	
-	    unless($module){
-	        VimMsg("Module name is zero");
-	    }else{
-	        VimMsg("Module name is set as: $module");
-	        $ModuleName = $module;
-	    }
+            VimMsgE('Failed to get $CurBuf->{name} from OP::VIMPERL');
+    
+            $module = VimPerlGetModuleNameFromDialog;
+        }
+    
+        unless($module){
+            VimMsg("Module name is zero");
+        }else{
+            VimMsg("Module name is set as: $module");
+            $ModuleName = $module;
+        }
 
         last;
     }
@@ -1125,23 +1223,23 @@ sub VimPerlInstallModule {
       }
     }
 
-	# rbi_force: 
+    # rbi_force: 
   #     Force to install module, even if the local vs installed versions are the same
-	# rbi_discard_loaddat: 
+    # rbi_discard_loaddat: 
   #     Discard the list of modules from the modules_to_install.i.dat
 
     foreach my $module (@imodules) {
 
-	    VimMsg("Running install for module $module");
+        VimMsg("Running install for module $module");
 
-	    my ($ok,$success,$fail,$failmods,$errorlines)=$i->run_build_install($module);
-	    if ($ok){
+        my ($ok,$success,$fail,$failmods,$errorlines)=$i->run_build_install($module);
+        if ($ok){
 ###imod_rbi
-	        VimMsg("SUCCESS");
-	    } else {
-	        VimMsg("FAIL");
-	        my $efmperl=catfile($VDIRS{VIMRUNTIME},qw(tools efm_perl.pl));
-	        my $efmfilter=catfile($VDIRS{VIMRUNTIME},qw(tools efm_filter.pl));
+            VimMsg("SUCCESS");
+        } else {
+            VimMsg("FAIL");
+            my $efmperl=catfile($VDIRS{VIMRUNTIME},qw(tools efm_perl.pl));
+            my $efmfilter=catfile($VDIRS{VIMRUNTIME},qw(tools efm_filter.pl));
             my $tmpfile=VimEval('tempname()');
             my $elines=$errorlines->{module} // [];
             write_file($tmpfile,join("\n",@$elines) . "\n");
@@ -1151,16 +1249,16 @@ sub VimPerlInstallModule {
             $qlist=[ {
                 filename  => VimPerlPathFromModuleName($module),
                 lnum  => '20',
-			#text	description of the error
+            #text   description of the error
                 text  => '',
-			#type	single-character error type, 'E', 'W', etc.
+            #type   single-character error type, 'E', 'W', etc.
                 type  => '',
             } ];
 ###imod_qlist
             print Dumper($qlist);
-			VimQuickFixList($qlist,'add');
+            VimQuickFixList($qlist,'add');
 ##TODO todo_quickfix
-	    }
+        }
     }
 
 }
@@ -1201,20 +1299,20 @@ sub VimQuickFixList {
     foreach my $a (@arr) {
         VimLet('qlist',$a);
 
-	    for($action){
-	      /^add$/ && do {
-		        VimCmd("call setqflist([ qlist ], 'a')");
-		        next;
-	      };
-	      /^new$/ && do {
-	          unless($i){
-		          VimCmd("call setqflist([ qlist ])");
-	          }else{
-		          VimCmd("call setqflist([ qlist ],'a')");
-	          }
-	          next;
-	      };
-	    }
+        for($action){
+          /^add$/ && do {
+                VimCmd("call setqflist([ qlist ], 'a')");
+                next;
+          };
+          /^new$/ && do {
+              unless($i){
+                  VimCmd("call setqflist([ qlist ])");
+              }else{
+                  VimCmd("call setqflist([ qlist ],'a')");
+              }
+              next;
+          };
+        }
           VimMsg("Processed QLIST: " . VimEval('getqflist()'));
       $i++;
     }
@@ -1339,7 +1437,7 @@ sub VimCurBuf_Basename {
 
     my $name=VimCurBuf_Name;
 
-	return $name unless $name;
+    return $name unless $name;
 
     $name = basename( $name );
 
@@ -1537,7 +1635,7 @@ BEGIN {
 
     unless ($@) {
         $UnderVim=1;
-   		init;
+        init;
     }else{
         $UnderVim=0;
         return;

@@ -11,6 +11,10 @@ use Env qw( $hm $PERLMODDIR );
 use IO::String;
 use Pod::Usage qw(pod2usage);
 
+use File::Temp qw{tmpnam};
+use File::Slurp qw( write_file );
+use Try::Tiny;
+
 use parent qw( OP::Writer );
 
 ###__ACCESSORS_SCALAR
@@ -143,18 +147,32 @@ sub item {
 sub _print_man {
     my $self=shift;
 
-    my $POD=IO::String->new($self->text);
-
-    pod2usage( -input => $POD, -verbose => 2 );
-
+    $self->_print_pod(2);
 }
 
 sub _print_help {
     my $self=shift;
 
-    my $POD=IO::String->new($self->text);
+    $self->_print_pod(1);
+}
 
-    pod2usage( -input => $POD, -verbose => 1 );
+
+sub _print_pod {
+    my $self=shift;
+
+    my $verbose=shift;
+
+    my $POD=tmpnam();
+
+    try { 
+        write_file($POD,$self->text);
+    } catch {
+        warn "Failed to write temporary file " . $POD;
+        $POD=IO::String->new($self->text);
+    } finally {
+        pod2usage( -input => $POD, -verbose => $verbose );
+    }
+
 
 }
 

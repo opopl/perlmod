@@ -15,13 +15,11 @@ OP::Base - Basic Perl functions and variables
 
 =cut
 
-use 5.010001;
-
 use strict;
 use warnings;
 
 ###use
-use Env qw( $hm $PERLMODDIR);
+use Env qw($PERLMODDIR);
 
 use File::Basename;
 use Getopt::Long;
@@ -33,11 +31,8 @@ use File::Slurp qw( read_file);
 
 use List::Compare;
 use File::Temp qw{tmpnam};
-
-use lib("$PERLMODDIR/mods/IPC-Cmd/lib");
 use IPC::Cmd;
 
-use OP::Module;
  
 =head1 DEPENDENCIES
  
@@ -1249,6 +1244,7 @@ sub read_kw_file {
 sub ListModuleSubs {
     my $module = shift;
 
+	require OP::Module;
     my $m=OP::Module->new(module => $module);
     $m->update;
 

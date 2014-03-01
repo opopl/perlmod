@@ -12,13 +12,12 @@ use strict;
 use warnings;
 
 use FindBin qw($Bin $Script);
-#use lib("$ENV{hm}/wrk/perlmod/mods/OP-Base/lib");
 
 use File::Basename;
 use File::Util;
 use Getopt::Long;
 use Pod::Usage;
-use File::Spec::Functions qw(catfile rel2abs curdir catdir );
+use File::Spec::Functions qw(catfile);
 
 use Term::ANSIColor;
 use Data::Dumper;
@@ -1319,4 +1318,5 @@ sub _view(){
 #=================================
 # }}}
 #---------------------------------
+#
 1;

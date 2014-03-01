@@ -4,24 +4,25 @@ package OP::Module;
 use strict;
 use warnings;
 
-use parent qw( Class::Accessor::Complex );
-
 use File::Slurp qw( read_file );
-use Env qw( $hm $PERLMODDIR );
+use Env qw( $hm  );
 use File::Spec::Functions qw( catfile );
 
+use parent qw( Class::Accessor::Complex );
+
+
 ###__ACCESSORS_SCALAR
-my @scalar_accessors=qw(
+our @scalar_accessors=qw(
     textcolor
 );
 
 ###__ACCESSORS_HASH
-my @hash_accessors=qw(
+our @hash_accessors=qw(
     accessors
 );
 
 ###__ACCESSORS_ARRAY
-my @array_accessors=qw(
+our @array_accessors=qw(
     modulesubs
 );
 
@@ -30,15 +31,6 @@ __PACKAGE__
     ->mk_array_accessors(@array_accessors)
     ->mk_hash_accessors(@hash_accessors)
     ->mk_new;
-
-#sub new
-#{
-    #my ($class, %parameters) = @_;
-
-    #my $self = bless ({}, ref ($class) || $class);
-
-    #return $self;
-#}
 
 sub update {
     my $self=shift;
