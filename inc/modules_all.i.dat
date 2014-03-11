@@ -60,3 +60,5 @@ Report::Trades
 Pod::Webserver
 Pod::Parser::VimHelp
 OP::Module
+OP::Projs::Create
+OP::perldoc2tex

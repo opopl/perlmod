@@ -1,79 +1,271 @@
 
-package OP::HTML::Tests;
+package OP::HTML;
 
 use strict;
 use warnings;
 
-use Test::More;
-use OP::HTML;
-use OP::Base qw( _arrays_equal );
+use feature qw(switch);
 
-use Exporter ();
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
+use parent qw( OP::Writer );
 
-$VERSION = '0.01';
-@ISA     = qw(Exporter);
-
-@EXPORT      = qw();
-
-###export_vars_scalar
-my @ex_vars_scalar=qw(
-    $H
-    $TEST
-);
-###export_vars_hash
-my @ex_vars_hash=qw(
-);
-###export_vars_array
-my @ex_vars_array=qw(
-    @TESTS
+###__ACCESSORS_SCALAR
+our @scalar_accessors=qw(
 );
 
-%EXPORT_TAGS = (
-###export_funcs
-'funcs' => [qw( 
-    do_tests
-    ok_lines
-)],
-'vars'  => [ @ex_vars_scalar,@ex_vars_array,@ex_vars_hash ]
+###__ACCESSORS_HASH
+our @hash_accessors=qw(
 );
 
-our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
-our @EXPORT  = qw( );
-our $VERSION = '0.01';
+###__ACCESSORS_ARRAY
+our @array_accessors=qw(
+    openedtags
+);
 
-###our
-our $H;
-our $TEST;
-our @TESTS;
+__PACKAGE__
+    ->mk_scalar_accessors(@scalar_accessors)
+    ->mk_array_accessors(@array_accessors)
+    ->mk_hash_accessors(@hash_accessors);
 
-###subs
-sub ok_lines;
-sub do_tests;
 
-sub ok_lines {
-  my $a=shift;
-  my $msg=shift;
+sub _init {
+    my $self = shift;
 
-  ok( _arrays_equal($H->textlines_ref,$a ), $msg);
+    $self->OP::Writer::_init;
+
+    $self->{package_name} = __PACKAGE__ unless defined $self->{package_name};
 
 }
 
-sub do_tests {
+=head3 _tag_open
 
-  foreach my $test (@TESTS) {
-      eval '&test_' . $test . ';' ;
-      warn $@ if $@;
-  }
+_tag_open('tag',{ name => 'a' });
 
-  done_testing;
+=cut
+
+sub _tag_open {
+    my $self=shift;
+
+    my $tag=shift // '';
+    my $attr=shift // '';
+
+    my $attr_str='';
+
+    if (ref $attr eq "HASH") {
+        while(my($k,$v)=each %{$attr}){
+            $attr_str.=' ' . $k . '=' . '"' . $v . '"';
+        }
+    }
+
+    my $text="<$tag" . "$attr_str" . '>';
+    $self->_add_line($text);
+
+    $self->plus('indent');
 
 }
 
-BEGIN {
-    $H=OP::HTML->new;
+sub _tag_single {
+    my $self=shift;
+
+    my $tag=shift // '';
+    my $attr=shift // '';
+
+    my $attr_str='';
+
+    if (ref $attr eq "HASH") {
+        while(my($k,$v)=each %{$attr}){
+            $attr_str.=' ' . $k . '=' . '"' . $v . '"';
+        }
+    }
+
+    my $text="<$tag" . "$attr_str" . ' />';
+    $self->_add_line($text);
+
 }
+
+sub _tag_close {
+    my $self=shift;
+
+    my $tag=shift // '';
+    my $title=shift // '';
+
+    my $attr=shift // '';
+
+    $self->minus('indent');
+
+    my $text="</$tag>";
+    $self->_add_line($text);
+
+}
+
+sub _tag {
+    my $self=shift;
+
+    my $tag=shift // '';
+    my $title=shift // '';
+
+    my $attr=shift // '';
+
+    my $text="<$tag>" . $title . "</$tag>";
+    $self->_add_line($text);
+
+}
+
+sub open_tags {
+    my $self=shift;
+
+    my $tags=shift;
+
+    foreach my $tag (@$tags) {
+        $self->_tag_open($tag);
+    }
+    $self->openedtags(@$tags);
+
+}
+
+sub close_tags {
+    my $self=shift;
+
+    my $tags=shift;
+
+    my $i=$self->openedtags_count-1;
+
+    foreach my $tag (@$tags) {
+        $self->_tag_close($tag);
+        $self->openedtags_pop;
+        $i--;
+    }
+
+}
+
+sub head {
+    my $self=shift;
+
+    my $ref=shift // '';
+
+    $self->_tag_open(qw(head));
+
+    unless (ref $ref) {
+    }elsif(ref $ref eq "HASH"){
+        while(my($k,$v)=each %{$ref}){
+            given($k){
+                when('title') { 
+                    $self->title($v);
+                }
+                default { }
+            }
+        }
+    }
+
+    $self->_tag_close(qw(head));
+
+}
+
+sub title {
+    my $self=shift;
+
+    my $title=shift;
+
+    $self->_tag('title',$title);
+}
+
+=head3 frameset()
+
+$H->frameset({ 
+    cols => '25%,75%',
+        frames => [ 
+            { src => 'SRC1', name => 'NAME1 '},
+            { src => 'SRC2', name => 'NAME2 '},
+        ],
+});
+
+=cut
+
+sub frameset {
+    my $self=shift;
+
+    my $ref=shift;
+    my $attr;
+
+	while(my($k,$v)=each %{$ref}){
+		next if grep { /^$k$/ } qw( frames );
+
+		$attr->{$k}=$v;
+	}
+
+    $self->_tag_open('frameset', $attr );
+
+    foreach my $frame (@{$ref->{frames}}) {
+        $self->frame($frame);
+    }
+
+    $self->close_tags([qw(frameset)]);
+
+}
+
+sub frame {
+    my $self=shift;
+
+    my $frame=shift;
+
+    $self->_tag_single('frame',$frame);
+}
+
+sub _start {
+    my $self=shift;
+
+    $self->_clear;
+
+    $self->open_tags([qw(html)]);
+
+}
+
+sub _end {
+    my $self=shift;
+
+    $self->close_tags([qw(html)]);
+
+}
+
+sub li {
+    my $self=shift;
+
+    my $title=shift // '';
+
+    $self->_tag('li',$title);
+}
+
+sub h1 {
+    my $self=shift;
+
+    my $title=shift // '';
+
+    $self->_tag('h1',$title);
+}
+
+sub h2 {
+    my $self=shift;
+
+    my $title=shift // '';
+
+    $self->_tag('h2',$title);
+}
+
+sub h3 {
+    my $self=shift;
+
+    my $title=shift // '';
+
+    $self->_tag('h3',$title);
+}
+
+sub h4 {
+    my $self=shift;
+
+    my $title=shift // '';
+
+    $self->_tag('h4',$title);
+}
+
 
 
 1;
-

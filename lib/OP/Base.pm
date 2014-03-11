@@ -75,6 +75,8 @@ our %EXPORT_TAGS = (
           _hash_add
           _arrays_equal
           _import
+					list_PROJS
+					list_MKPROJS
           cmd_opt_add
           is_const
           is_log
@@ -226,7 +228,9 @@ sub ListModuleSubs;
 sub op_write_file;
 sub open_files;
 sub printpod;
- 
+sub list_PROJS;
+sub list_MKPROJS;
+
 =head1 METHODS
  
 =over 4
@@ -352,6 +356,36 @@ sub toLower;
 
 # }}}
 # subs {{{
+#
+
+
+sub list_PROJS {
+	my $dat=shift;
+
+	my @projs;
+
+	unless (-e $dat) {
+		opendir(DIR,".") || die $!;
+	
+		while(my $file=readdir(DIR)){
+			if ($file =~ /^([^\.]+)\.tex$/){
+				push(@projs,$1);
+			}
+		}
+	
+		closedir(DIR);
+	
+	}else{
+		@projs=readarr($dat);
+	}
+	
+	print "$_\n" for(sort(@projs));
+
+}
+
+
+
+
 =head3 _hash_add()
 
 =cut
@@ -1264,6 +1298,11 @@ sub readarr {
 
     my $if = shift // '';
 
+	my $opts=shift // {};
+
+	my $splitsep=$opts->{sep} // qr/\s+/;
+	my $joinsep=$opts->{sep} // ' ';
+
     unless ($if) {
         warn "OP::Base::readarr(): empty file name provided: $if";
         return wantarray ? () : [];
@@ -1284,7 +1323,7 @@ sub readarr {
         s/\s*$//g;
         next if ( /^\s*#/ || /^\s*$/ );
         my $line = $_;
-        my @F = split( ' ', $line );
+        my @F = split( $splitsep, $line );
         push( @vars, @F );
     }
     close(FILE);
@@ -1333,7 +1372,8 @@ sub readhash {
 
     my $opts = shift // {};
 
-    my $sep = $opts->{sep} // ' ';
+    my $splitsep = $opts->{sep} // qr/\s+/;
+    my $joinsep = $opts->{sep} // ' ';
 
     unless ( -e $if ) {
         if (wantarray) {
@@ -1368,7 +1408,7 @@ sub readhash {
 
         if ($mainline) {
 
-            @F = split( $sep, $line );
+            @F = split( $splitsep, $line );
 
             for (@F) {
                 s/^\s*//g;
@@ -1380,7 +1420,7 @@ sub readhash {
             $hash{$var} = '' unless defined $hash{$var};
 
             if (@F) {
-                $hash{$var} .= join( $sep, @F );
+                $hash{$var} .= join( $joinsep, @F );
             }
 
         }

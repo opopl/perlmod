@@ -2,24 +2,38 @@ package OP::PROJSHELL;
 
 use strict;
 use warnings;
+use Switch;
 
 #------------------------------
 # intro {{{
 
-use Env qw($hm $HTMLOUT $PERLMODDIR);
+use Env qw(
+			$hm 
+			$HTMLOUT 
+			$PERLMODDIR 
+			$PROJSDIR
+			$PDFOUT
+		);
 
 use Term::ShellUI;
 use File::Spec::Functions qw(catfile rel2abs curdir);
+use HTTP::Request;
+use LWP::UserAgent;
 
 use OP::Writer::Tex;
 use OP::Base qw(uniq readarr);
 use OP::Git;
+use OP::HTML;
+
+use File::Find qw( find finddepth);
+use CGI;
+use Try::Tiny;
 
 use OP::BIBTEX;
 
 use Data::Dumper;
 use File::Copy qw(copy move);
-use File::Path qw(make_path);
+use File::Path qw(make_path remove_tree);
 use File::Basename;
 use IO::File;
 
@@ -28,8 +42,6 @@ use File::Slurp qw(
   read_file
   write_file
 );
-
-#use IPC::Cmd qw(run);
 
 use lib("$PERLMODDIR/mods/Class-Accessor-Complex/lib");
 
@@ -40,11 +52,16 @@ use parent qw(
 
 ###__ACCESSORS_SCALAR
 our @scalar_accessors=qw(
+	cgi
     HOME
     HTMLOUT
     PROJSDIR
     PROJ
     PROJFILE
+	PDFFILE
+	PDFFILENAME
+	PDFOUT
+	HTMLDIR
     inputcommands
     LOGFILE
     LOGFILE_PRINTED_TERMCMD
@@ -71,7 +88,9 @@ our @array_accessors=qw(
     PROJS
     MKNOTPROJS
     MKPROJS
+	HTMLPROJS
     MKTARGETS
+	HTMLFILES
 );
 
 __PACKAGE__
@@ -98,7 +117,6 @@ sub importprojs;
 sub init_vars;
 sub main;
 sub make;
-sub move_html;
 sub new;
 sub runsyscmd;
 sub set_accessor_descriptions;
@@ -152,6 +170,11 @@ sub _term_get_commands() {
                 shift->help_call( undef, @_ );
               }
         },
+##cmd_clean_html
+		"clean_html" => {
+            desc => "Clean the html out directory",
+            proc => sub { $self->clean_html(@_); },
+        },
 ##cmd_cat
         "cat" => {
             desc => "Use the 'cat' system command"
@@ -199,8 +222,14 @@ sub _term_get_commands() {
 ##cmd_htmlview
         "htmlview" => {
             desc => "View HTML for the currently selected PROJ",
-            args => sub { shift; $self->_complete_cmd( [qw(ALLPROJS)], @_ ); },
-            proc => sub { $self->view_html(@_); }
+            args => sub { shift; $self->_complete_cmd( [qw(HTMLPROJS)], @_ ); },
+            proc => sub { 
+				if ($self->_opt_true('cgi')) {
+					$self->_cgi_htmlview;
+				}else{
+					$self->view_html(@_); 
+				}
+			}
         },
 ##cmd_vtex
         "vtex" => {
@@ -211,7 +240,23 @@ sub _term_get_commands() {
 ##cmd_pdfview
         "pdfview" => {
             desc => "View the PDF file for the currently selected PROJ",
-            proc => sub { $self->make('vdoc'); }
+            proc => sub { 
+				if ($self->_opt_true("cgi")) {
+					$self->_cgi_pdfview;
+				}else{
+					$self->make('_vdoc'); 
+				}
+			}
+        },
+##cmd_gen
+        "cgi" => {
+            desc => "generate ...",
+			cmds => {
+				www => {
+					desc => 'generate root page in www/ subdirectory',
+            		proc => sub { $self->_cgi_www; }
+				},
+			}
         },
 ##cmd_info
         "info" => {
@@ -232,6 +277,12 @@ sub _term_get_commands() {
 		            desc => "List all projects (written in PROJS.i.dat)",
                     maxargs  => 0,
 		            proc => sub { $self->cmd_list('projs'); }
+                },
+##cmd_list_htmlprojs
+                htmlprojs  => {
+		            desc => "List all projects (written in PROJS.i.dat)",
+                    maxargs  => 0,
+		            proc => sub { $self->cmd_list('htmlprojs'); }
                 },
 ##cmd_list_targets
                 targets  => {
@@ -308,7 +359,13 @@ sub _term_init() {
 
     $self->_term_get_commands();
 
-    $self->shellterm( history_file => catfile($hm,"ProjShell.history" ));
+	my $hist=catfile($hm,"ProjShell.history" );
+
+	if (-e $hist) {
+		chmod 755,$hist;
+	}
+
+    $self->shellterm( history_file => $hist );
     $self->shellterm( prompt       => "ProjShell>" );
 
     my $term = Term::ShellUI->new(
@@ -409,6 +466,91 @@ sub _begin() {
 }
 
 # }}}
+#
+
+sub _cgi_htmlview {
+	my $self=shift;
+
+	my $q= CGI->new;
+
+	my $nfiles=$self->HTMLFILES_count;
+	my $PROJ=$self->PROJ;
+	my $HTMLDIR=$self->HTMLDIR;
+	my $h=OP::HTML->new;
+
+	if ($nfiles == 1) {
+		my $file=$self->HTMLFILES_shift;
+		my $wwwprojs='http://localhost/wwwprojs/index.html';
+		my $projuri='http://localhost/htmlprojs/' 
+				 . $self->PROJ . '/' . $file;
+
+		print $q->header;
+		print $q->start_html( 
+				title => 'Frames',
+ 				dtd => [ 
+					'-//W3C//DTD HTML 4.01 Transitional//EN', 
+					'http://www.w3.org/TR/html4/loose.dtd' 
+				],
+#<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN"  
+#"http://www.w3.org/TR/html4/frameset.dtd"> 
+			);
+
+		$h->frameset({
+	            rows        => '50%,50%',
+	            cols        => '*',
+	            frameborder => 'yes',
+	            border      => '1',
+	            frames      => [
+	                { src => $projuri,  name => "proj_$PROJ" },
+	                { src => $wwwprojs, name => 'wwwprojs' },
+	            ],
+			});
+
+		print $h->text . "\n";
+
+		print $q->end_html . "\n";
+
+		#print $q->redirect( $projuri);
+
+	}
+
+}
+
+sub _cgi_pdfview {
+	my $self=shift;
+
+	my $q=$self->cgi;
+
+	unless ($q->param) {
+	    print "<b>No query submitted yet.</b>";
+    	return;
+	}
+
+	my $proj=$q->param('proj');
+
+    print "<b>Project: $proj</b><p>";
+
+	$self->_proj_reset($proj);
+	
+	unless (-e $self->PDFFILE) {
+	    print "<b>PDF output file does not exist</b>";
+		return;
+	}
+
+	print "Content-Type:application/x-download\n";
+	print "Content-Disposition: attachment; filename=" 
+			. $self->PDFFILENAME . "\n\n";
+
+	open FILE, "<", $self->PDFFILE or die "can't open : $!";
+	binmode FILE;
+	local $/ = \10240;
+	while (<FILE>){
+	    print $_;
+	}
+	
+    close FILE;
+}
+
 # get_opt() {{{
 
 =head3 get_opt()
@@ -456,9 +598,12 @@ sub init_vars() {
 
     $self->set_accessor_descriptions();
 
-    $self->HTMLOUT(catfile($HTMLOUT,qw(PROJS)) // catfile( $hm,qw(html PROJS)));
+    $self->HTMLOUT(catfile($HTMLOUT,qw(projs)) // catfile( $hm,qw(html projs)));
 
-    $self->PROJSDIR( $ENV{PROJSDIR},catfile($hm, qw( wrk texdocs )) );
+
+    $self->PROJSDIR( $PROJSDIR // catfile($hm, qw( wrk texdocs )) );
+
+	$self->PDFOUT($PDFOUT // catfile($hm,qw(pdf out)));
 
     chdir($self->PROJSDIR) || die $!;
 
@@ -468,7 +613,7 @@ sub init_vars() {
     }
 
     $self->files( 
-        'maketex_mk'  => catfile($hm,qw(scripts mk maketex.mk),
+        'maketex_mk'  => catfile($hm,qw(scripts mk maketex.targets.mk ),
         )); 
 
     $self->LOGFILENAME("ProjShell_log.data.tex");
@@ -481,12 +626,37 @@ sub init_vars() {
     # and fill the corresponding arrays
     $self->_read_PROJS();
 
+	# retrieve the list of HTML-generated projects
+    $self->_reset_HTMLPROJS();
+
     # read in from ~/scripts/mk/maketex.mk
     #    the list of available makefile targets;
     #   this list will be stored in array $self->MKTARGETS
     $self->_read_MKTARGETS();
 
     $self->viewcmd("gvim -n -p --remote-tab-silent ");
+
+}
+
+sub _reset_HTMLFILES {
+	my $self=shift;
+
+	$self->HTMLDIR(catfile($self->HTMLOUT,$self->PROJ));
+
+	my $PROJ=$self->PROJ;
+
+	$self->HTMLFILES_clear;
+
+	if (! -d $self->HTMLDIR) {
+		#$self->warn('No HTMLDIR exists for project : ' . $self->PROJ );
+		return;
+	}
+
+	find(sub { 
+			if ( /^($PROJ|index)\.html$/ && -f ){
+				$self->HTMLFILES_push($_); 
+			}
+		}, $self->HTMLDIR);
 
 }
 
@@ -499,7 +669,6 @@ sub main() {
     $self->get_opt();
 
     $self->init_vars();
-    $self->move_html;
 
     $self->_term_init();
     $self->_term_run();
@@ -546,7 +715,11 @@ sub set_these_cmdopts() {
             name => "shcmds",
             desc => "Run command(s), then exit",
             type => "s"
-        }
+        },
+        {
+            name => "cgi",
+            desc => "CGI mode",
+        },
     );
 
     push( @$opts, { name => "shell", desc => "Start the interactive shell" } );
@@ -585,6 +758,10 @@ sub _complete_cmd() {
 ###complete_ALLPROJS
             /^ALLPROJS$/ && do {
                 push(@comps,$self->PROJS);
+                next;
+            };
+            /^HTMLPROJS$/ && do {
+                push(@comps,$self->HTMLPROJS);
                 next;
             };
             /^MKTARGETS$/ && do {
@@ -686,6 +863,12 @@ sub make() {
 
     chdir($self->PROJSDIR) || die $!;
 
+	switch($args){
+			case(qw/_html _makehtml_tex4ht/) { 
+				$self->_reset_HTMLPROJS;
+			}
+	}
+
     if ($self->belongsto_PROJS($args)){
         print "$args\n";
         $self->_proj_reset($args);
@@ -693,6 +876,7 @@ sub make() {
 
     my $cmd=join(";", "cd " . $self->PROJSDIR, "make " . $args);
     system($cmd);
+
 }
 
 # }}}
@@ -707,16 +891,157 @@ sub _proj_reset() {
 
     $self->PROJ($proj);
 
-    write_file ( $self->files('MKPROJS'), "$proj" );
+	$self->_reset_HTMLFILES;
 
-    $self->say("Project is set to: " . $proj );
+	$self->PDFFILENAME($self->PROJ . '.pdf');
+	$self->PDFFILE(
+		catfile($self->PDFOUT,$self->PDFFILENAME)
+	);
 
-    $self->_read_PROJS();
+
+	if ($self->_opt_true('cgi')){
+		return;
+	}
+
+	my $file=$self->files('MKPROJS');
+
+	try {
+	
+	   	$self->say("Project is set to: " . $proj );
+	   	write_file ( $file , "$proj" );
+	   	$self->_read_PROJS();
+	}
+	catch {
+		$self->warn('Failed to write to: ' . $file);
+	}
 
 }
 
 # }}}
+#
+#
+#
+sub _cgi_www_frame_response {
+	my $self=shift;
+
+	my $q=$self->cgi;
+
+	my $lines=[
+		$q->start_html('ProjsResponse'), 
+	];
+
+}
+
+sub _cgi_www_frame_query {
+	my $self=shift;
+
+	my $q=$self->cgi;
+
+	my $sname=$q->script_name;
+
+	my $lines=[
+		$q->start_html('ProjsQuery'), 
+		$q->h1('Project Index Page'),
+		$q->popup_menu(
+			-name		=> 'proj',
+			-values		=>	[ $self->PROJS ],
+			-default 	=> 'programmingperl'
+		),
+		# -------------- View PDF
+		$q->start_form(
+			-method => "GET",
+			-action => "$sname/pdfview",
+			-target => "response",
+		),
+		$q->submit('button_pdfview' ,'View PDF'),
+		$q->end_form,
+		# -------------- View HTML 
+		$q->start_form(
+			-method => "GET",
+			-action => "$sname/htmlview",
+			-target => "response",
+		),
+		$q->submit('button_htmlview','View HTML'),
+		$q->end_form,
+		# -------------- Generate PDF 
+		$q->start_form(
+			-method => "GET",
+			-action => "$sname/makepdf",
+			-target => "response",
+		),
+		$q->submit('button_makepdf' , 'Generate PDF'),
+		$q->end_form,
+		# -------------- Generate HTML
+		$q->submit('button_makehtml' ,'Generate HTML'),
+		$q->start_form(
+			-method => "GET",
+			-action => "$sname/makehtml",
+			-target => "response",
+		),
+		$q->end_form,
+	];
+
+	print join("\n",@$lines) . "\n";
+
+}
+
+sub _cgi_www {
+	my $self=shift;
+
+	$self->cgi( CGI->new );
+	my $pinfo=$self->cgi->path_info;
+
+	print $self->cgi->header;
+
+	switch($pinfo){
+		case('') { 
+			$self->_cgi_www_frameset;
+		}
+		case(/pdfview/) { 
+			$self->_cgi_pdfview;
+			exit 0;
+		}
+		case(/htmlview/) { 
+			$self->_cgi_htmlview;
+			exit 0;
+		}
+		case(/query/) { 
+			$self->_cgi_www_frame_query;
+		}
+		case(/response/) { 
+			$self->_cgi_www_frame_response;
+		}
+	}
+
+	print $self->cgi->end_html . "\n";
+
+    exit 0;
+}
+
+sub _cgi_www_frameset {
+	my $self=shift;
+
+	my $q=$self->cgi;
+
+	my $sname=$q->script_name;
+
+	my $h=OP::HTML->new;
+
+    print <<EOF;
+<html><head><title>Root Projs Page</title></head>
+	<frameset cols="30,70" frameborder='yes' border=1>
+	<frame src="$sname/query" name="query">
+	<frame src="$sname/response" name="response">
+</frameset>
+EOF
+
+}
+
 # _read_PROJS() {{{
+#
+=head3 _read_PROJS()
+
+=cut 
 
 sub _read_PROJS() {
     my $self=shift;
@@ -749,6 +1074,20 @@ sub _read_PROJS() {
     return 1 unless $self->MKPROJS;
 
     $self->PROJ($self->MKPROJS_index(0));
+
+}
+
+sub _reset_HTMLPROJS {
+	my $self=shift;
+
+	$self->HTMLPROJS_clear;
+	File::Find::find(
+		sub{ 
+			$self->HTMLPROJS_push($_) if (-d && ! /^\.$/)
+		},
+		$self->HTMLOUT);
+
+	$self->HTMLPROJS_sort;
 
 }
 
@@ -823,6 +1162,10 @@ sub cmd_list() {
             $self->MKTARGETS_print();
             next;
         };
+        /^(htmlprojs)$/ && do {
+            $self->HTMLPROJS_print();
+            next;
+        };
     }
 }
 
@@ -885,6 +1228,22 @@ sub info {
 	my $self=shift;
     print "\n";
    
+}
+
+=head3 clean_html
+   
+=cut
+
+sub clean_html {
+	my $self=shift;
+
+	my @emptydirs;
+
+	my $count=0;
+
+	finddepth(sub { rmdir },$self->HTMLOUT);
+	$self->_reset_HTMLPROJS;
+
 }
 
 # }}}

@@ -12,6 +12,8 @@ use Data::Dumper;
 use File::Slurp qw(read_file);
 use File::Spec::Functions qw(catfile );
 
+use OP::Base qw(_hash_add);
+
 ###begin
 BEGIN {
     use Env qw( $hm $PERLMODDIR );
@@ -481,6 +483,14 @@ sub end() {
 
 =head3 documentclass()
 
+	documentclass({
+		opts => 'a4paper,11pt',
+	});
+	
+	documentclass({
+		opts => [qw(a4paper 11pt)],
+	});
+
 =cut
 
 sub documentclass() {
@@ -597,7 +607,12 @@ sub usepackage() {
     return 1 unless $pack;
 
     if ($opts) {
-        $self->_add_line("\\usepackage[$opts]{$pack}");
+		unless(ref $opts){
+        	$self->_add_line("\\usepackage[$opts]{$pack}");
+		}elsif(ref $opts eq "ARRAY"){
+        	$self->_add_line(
+					"\\usepackage[" . join(',',@$opts) . "]{$pack}");
+		}
     }
     else {
         $self->_add_line("\\usepackage{$pack}");
