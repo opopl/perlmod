@@ -1,17 +1,22 @@
 
 package OP::hperl;
 
+use strict;
+use warnings;
+
 use OP::perldoc2tex;
 
-use Env qw($hm);
+use Env qw($hm $PDFOUT_PERLDOC);
 
 use FindBin qw($Bin $Script);
 use File::Basename;
 use File::Path qw(make_path);
 use File::Spec::Functions qw(catfile);
+use File::Slurp qw(write_file);
 use Getopt::Long;
 use Pod::LaTeX;
 use OP::TEX::Text;
+use Cwd;
 
 use parent qw( 
 	OP::Script
@@ -21,6 +26,7 @@ use parent qw(
 ###__ACCESSORS_SCALAR
 my @scalar_accessors=qw(
 	htexdir
+	topic
 );
 
 ###__ACCESSORS_HASH
@@ -35,12 +41,13 @@ __PACKAGE__
 	->mk_array_accessors(@array_accessors)
 	->mk_hash_accessors(@hash_accessors);
 
-#perldoc2tex.pl --what "$what" --texfile $topic.tex
-   #     cd $htexdir
-		#make $topic PDFOUT="$PDFOUT_PERLDOC"
-		#make _vdoc _clean
-		#cd $olddir
-#fi
+sub _begin(){
+	my $self=shift;
+
+	$self->{package_name}=__PACKAGE__ unless defined $self->{package_name}; 
+
+}
+
 sub main {
 	my $self=shift;
 		
@@ -50,17 +57,80 @@ sub main {
 
     $self->process_opt;
 
-	chdir $self->htexdir;
+    $self->buildpdf;
+
+
+
 }
+
+sub buildpdf {
+	my $self=shift;
+
+	my $p2tex=OP::perldoc2tex->new;
+	my $origtopic=$self->topic;
+
+	( my $topic = $origtopic ) =~ s/::/-/g;
+
+	print $origtopic . "\n";
+
+	@ARGV=( qw( --what ),$origtopic );
+	$p2tex->main;
+
+	my $olddir=Cwd::cwd();
+
+	chdir $self->htexdir || $self->_die("Failed to cd: " . $self->htexdir);
+
+	write_file('MKPROJS.i.dat',$topic . "\n");
+	system("PDFOUT=$PDFOUT_PERLDOC make _mkprojects");
+
+	unless ($self->_opt_eq("skip","vdoc")) {
+		system("make _vdoc");
+	}
+
+	system("make _clean");
+
+	chdir $olddir;
+
+}
+
+sub set_these_cmdopts() {
+    my $self = shift;
+
+    $self->OP::Script::set_these_cmdopts();
+
+    my $opts = [];
+    my $desc = {};
+
+    push(
+        @$opts,
+        {
+            name => "topic|t",
+            type => "s",
+            desc => "perldoc topic to display",
+        },
+	    {
+            name => "skip|s",
+            type => "s",
+            desc => "skip ...",
+        },
+
+    );
+
+    $self->add_cmd_opts($opts);
+
+}
+
 
 sub process_opt {
 	my $self=shift;
+
+	$self->opts_to_scalar_vars(qw(topic));
 }
 	
 sub init_vars {
 	my $self=shift;
 
-	$self->htexdir(catfile(qw( doc perl tex )));
+	$self->htexdir(catfile(qw( /doc perl tex )));
 }
 	
 

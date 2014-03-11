@@ -826,8 +826,16 @@ sub getopt_after {
 sub run_cmd {
     my %opts=@_;
 
-    my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf ) =
-        IPC::Cmd::run( %opts );
+	my %res;
+		
+	@res{qw( ok error_message full_buf stdout_buf stderr_buf )}=
+		IPC::Cmd::run( %opts );
+		
+	foreach my $id (qw( stdout_buf full_buf stderr_buf )) {
+		$res{$id}= [ split("\n",join("",@{$res{$id}})) ];
+	}
+
+	\%res;
 }
 
 #
@@ -932,8 +940,10 @@ sub is_const {
 =cut
 
 sub printpod {
+
     my $topic = shift // 'help';
     my $o;
+
     open( POD, ">$FILES{pod}{$topic}" ) || die $!;
 
     if ( grep { $topic eq $_ } @allowed_pod_options ) {
@@ -952,12 +962,12 @@ sub printpod {
                 my %argopt;
                 $argopt{type} = "long";
                 $argopt{type} = "short" if ( $o =~ m/^\w$/ );
-                if ( $o =~ m/^\s*([^\s,])\s*,\s*([^\s,]{2,})\s*$/ ) {
+                if ( $o =~ m/^\s*([^\s,|])\s*[,\|]\s*([^\s,|]{2,})\s*$/ ) {
                     $argopt{type}  = "mixed";
                     $argopt{short} = $1;
                     $argopt{long}  = $2;
                 }
-                $argopt{type} = "long" if ( $o =~ m/^\s*([^\s,]{2,})\s*$/ );
+                $argopt{type} = "long" if ( $o =~ m/^\s*([^\s,|]{2,})\s*$/ );
                 my $odesc = $cmdopts[$iopt]{desc};
                 if ( grep { $o eq $_ } @opthaspar ) {
                     $o .= " " . uc $o;
@@ -981,7 +991,11 @@ sub printpod {
         }
         elsif ( $topic eq "examples" ) {
             print POD "=head1 EXAMPLES\n\n";
-        }
+
+        } elsif ( $topic eq "location" ) {
+            print POD "=head1 LOCATION\n\n";
+            print POD "    $0\n\n";
+		}
         print POD "=cut\n\n";
     }
     close(POD);
@@ -1376,13 +1390,14 @@ sub readhash {
 
     my $splitsep = $opts->{sep} // qr/\s+/;
     my $joinsep = $opts->{sep} // ' ';
+	my $valtype=$opts->{valtype} // 'scalar';
 
     unless ( -e $if ) {
         if (wantarray) {
             return ();
         }
         else {
-            return [];
+            return {};
         }
     }
 
@@ -1419,19 +1434,37 @@ sub readhash {
 
             $var = shift @F;
 
-            $hash{$var} = '' unless defined $hash{$var};
+			if ($valtype eq 'scalar'){
+            	$hash{$var} = '' unless defined $hash{$var};
 
-            if (@F) {
-                $hash{$var} .= join( $joinsep, @F );
-            }
+	            if (@F) {
+	                $hash{$var} .= join( $joinsep, @F );
+	            }
+
+			} elsif ($valtype eq 'array'){
+            	$hash{$var} = [] unless defined $hash{$var};
+
+	            if (@F) {
+	                push(@{$hash{$var}},@F );
+	            }
+			}
+
 
         }
         else {
-            $hash{$var} .= $line;
+
+			if ($valtype eq 'scalar'){
+            	$hash{$var} .= ' ' . $line;
+
+			} elsif ($valtype eq 'array'){
+            	push(@{$hash{$var}},$line);
+
+			}
         }
 
-        $hash{$var} =~ s/\s+/ /g;
-
+		if ($valtype eq 'scalar'){
+        	$hash{$var} =~ s/\s+/ /g;
+		}
     }
 
     close(FILE);
@@ -1516,7 +1549,7 @@ sub sbvars {
 
     ( $ts = $Script ) =~ s/\.(\w+)$//g;
     $pref_eoo            = "$Script>";
-    @allowed_pod_options = qw( help examples );
+    @allowed_pod_options = qw( help examples location );
 
     %DIRS = (
         pod     => "pod",

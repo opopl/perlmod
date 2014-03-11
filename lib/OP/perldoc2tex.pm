@@ -4,14 +4,17 @@ package OP::perldoc2tex;
 use strict;
 use warnings;
 
+use Env qw($hm);
 use FindBin qw($Bin $Script);
+
 use File::Basename;
 use File::Path qw(make_path);
 use File::Spec::Functions qw(catfile);
 use Getopt::Long;
 use Pod::LaTeX;
+use Data::Dumper;
 use OP::TEX::Text;
-use Env qw($hm);
+use OP::Base qw(readhash);
 
 use parent qw( 
 	OP::Script 
@@ -21,8 +24,10 @@ use parent qw(
 ###__ACCESSORS_SCALAR
 my @scalar_accessors=qw(
 	what
+	curwhat
+	curtopic
 	texdir
-	temdir
+	texfile
 	poddir
 	topic
 );
@@ -30,10 +35,13 @@ my @scalar_accessors=qw(
 ###__ACCESSORS_HASH
 my @hash_accessors=qw(
 	files
+	allwhats
 );
 
 ###__ACCESSORS_ARRAY
-my @array_accessors=qw();
+my @array_accessors=qw(
+	whats
+);
 
 __PACKAGE__
 	->mk_scalar_accessors(@scalar_accessors)
@@ -119,7 +127,14 @@ HELP
 
 }
 
-sub main() {
+sub _begin {
+	my $self=shift;
+
+	$self->{package_name}=__PACKAGE__ unless defined $self->{package_name}; 
+
+}
+
+sub main {
     my $self = shift;
 
     $self->init_vars;
@@ -127,10 +142,20 @@ sub main() {
     $self->get_opt;
 
     $self->process_opt;
-    $self->run_perldoc;
-    $self->parse_pod;
-    $self->write_tex;
 
+	$self->_whats_update;
+
+	foreach my $what (@{$self->whats}) {
+		my $topic=$self->get_topic($what);
+
+		$self->curwhat($what);
+		$self->curtopic($topic);
+
+    	$self->run_perldoc;
+
+    	$self->parse_pod;
+    	$self->write_tex;
+	}
 
 }
 
@@ -144,42 +169,52 @@ sub write_tex {
 sub init_vars {
 	my $self=shift;
 
-	$self->temdir(catfile($hm, qw( templates latex )));
 	$self->poddir(catfile($hm,qw( doc perl pod )));
 
 	make_path($self->poddir);
 
 	$self->texdir(catfile($hm,qw( doc perl tex )));
 
+	my $dat=catfile($hm,qw(config mk vimrc perldoc2tex_topics.i.dat ));
+	my $allwhats=readhash($dat,{ 'valtype' => 'array' });
 
+	push(@{$allwhats->{perlfaq}},'perlfaq');
+	foreach my $n ((1..9)) {
+		push(@{$allwhats->{perlfaq}},'perlfaq' . $n );
+	}
+
+	$self->allwhats($allwhats);
 
 }
 
 sub process_opt {
 	my $self=shift;
 
-	if ( !$self->_opt_true("what") ) {
-	    die "Topic is not specified!\n";
+	$self->opts_to_scalar_vars(qw( what texfile ));
+
+	if ( not defined $self->what ) {
+	    $self->_die("Topic is not specified!");
 	}
 
-	$self->what( 
-			$self->_opt_get("what"));
+	$self->topic($self->get_topic($self->what));
 
-	$self->get_topic;
+	if ( not defined $self->texfile ) {
+		$self->texfile($self->topic . '.tex');
+	}
 
 	$self->files( 
-	    "tex_topic"    => catfile($self->texdir,
-				"perldoc." . $self->topic . ".tex"),
-
+	    "tex_topic"    => sub { 
+			catfile($self->texdir, "perldoc." . $self->curtopic . ".tex")
+		},
+	    "pod_topic"    => 
+			sub { catfile($self->poddir,$self->curtopic . ".pod") },
 	    "tex_preamble" => "perldoc.preamble.tex",
 	    "tex_end"      => "perldoc.end.tex",
 	    "tex_out"      => catfile($self->texdir,$self->topic . ".tex"),
-	    "pod_topic"    => catfile($self->poddir,$self->topic . ".pod"),
 	);
 
-	if ( $self->_opt_true("texfile") ) {
-	    $self->files( 
-			"tex_out" => $self->_opt_get("texfile") );
+	if ( defined $self->texfile ) {
+	    $self->files( "tex_out" => $self->texfile );
 	}
 
 }
@@ -187,33 +222,32 @@ sub process_opt {
 sub get_topic {
 	my $self=shift;
 
+	my $what=shift;
+
 	my $topic;
 
-	if ( $self->what =~ m/^\s*-f\s+/ ) {
-	    my @s = split( ' ', $self->what );
+	if ( $what =~ m/^\s*-f\s+/ ) {
+	    my @s = split( ' ', $what );
 	    $topic = $s[1];
 	}
 	else {
-	    $topic = $self->what;
+	    $topic = $what;
 	}
 
 	$topic =~ s/::/-/g;
 
-	$self->topic($topic);
+	$topic;
 
 }
-
-my $poddirs = ("/usr/share/perl/5.10.1/pod");
-
-
-###run_perldoc
 
 sub run_perldoc {
 	my $self=shift;
 
+
+
 	system("perldoc -u " 
-			. $self->what . " > "
-			. $self->files("pod_topic"));
+			. $self->curwhat . " > "
+			. $self->files('pod_topic')->() );
 
 }
 
@@ -229,9 +263,22 @@ sub parse_pod {
 	$parser->LevelNoNum(5);
 	$parser->UniqueLabels(1);
 	$parser->parse_from_file( 
-		$self->files("pod_topic"), 
-		$self->files("tex_topic") 
+		$self->files("pod_topic")->(), 
+		$self->files("tex_topic")->(),
 	);
+
+}
+
+sub _whats_update {
+	my $self=shift;
+
+	my $what=$self->what;
+
+	if ($self->allwhats_exists($what)) {
+		$self->whats(@{$self->allwhats($what)});
+	}else{
+		$self->whats($what);
+	}
 
 }
 
@@ -256,9 +303,17 @@ sub write_texfile {
 	$tex->_c_delim;
 
 	$tex->input($self->files("tex_preamble"));
-	$tex->chapter($self->what);
-	$tex->_empty_lines;
-	$tex->input($self->files("tex_topic"));
+
+	foreach my $what (@{$self->whats}) {
+		$self->what($what);
+
+		my $topic = $what =~ s/::/-/gr;
+
+		$tex->chapter($self->what);
+		$tex->_empty_lines;
+		$tex->input( $self->files("tex_topic")->() );
+		$tex->_empty_lines;
+	}
 	$tex->input($self->files("tex_end"));
 
 	$tex->_writefile;

@@ -69,7 +69,7 @@ sub new()
 
 =cut
 
-sub _begin(){
+sub _begin {
 	my $self=shift;
 
 	$self->{package_name}=__PACKAGE__ unless defined $self->{package_name}; 
@@ -592,8 +592,9 @@ sub init_docstyles {
 
 
 # opts_to_vars() {{{
+#
 
-sub opts_to_scalar_vars(){
+sub opts_to_scalar_vars {
     my $self=shift;
 
     my @vars=@_;
