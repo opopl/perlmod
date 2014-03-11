@@ -230,7 +230,8 @@ sub parse_pod {
 	$parser->UniqueLabels(1);
 	$parser->parse_from_file( 
 		$self->files("pod_topic"), 
-		$self->files("tex_topic") );
+		$self->files("tex_topic") 
+	);
 
 }
 

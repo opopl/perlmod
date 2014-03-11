@@ -2,6 +2,8 @@ package OP::PROJSHELL;
 
 use strict;
 use warnings;
+
+use feature qw(switch);
 use Switch;
 
 #------------------------------
@@ -19,9 +21,10 @@ use Term::ShellUI;
 use File::Spec::Functions qw(catfile rel2abs curdir);
 use HTTP::Request;
 use LWP::UserAgent;
+use IPC::Cmd;
 
 use OP::Writer::Tex;
-use OP::Base qw(uniq readarr);
+use OP::Base qw(uniq readarr uniq);
 use OP::Git;
 use OP::HTML;
 
@@ -61,6 +64,7 @@ our @scalar_accessors=qw(
 	PDFFILE
 	PDFFILENAME
 	PDFOUT
+	PDFOUT_PERLDOC
 	HTMLDIR
     inputcommands
     LOGFILE
@@ -79,6 +83,7 @@ our @hash_accessors=qw(
     files
     shellterm
     term_commands
+	runbufs
 );
 
 ###__ACCESSORS_ARRAY
@@ -89,8 +94,11 @@ our @array_accessors=qw(
     MKNOTPROJS
     MKPROJS
 	HTMLPROJS
+	PDFPROJS
+	PDFPERLDOC
     MKTARGETS
 	HTMLFILES
+	submits
 );
 
 __PACKAGE__
@@ -241,7 +249,7 @@ sub _term_get_commands() {
         "pdfview" => {
             desc => "View the PDF file for the currently selected PROJ",
             proc => sub { 
-				if ($self->_opt_true("cgi")) {
+				if ($self->usecgi) {
 					$self->_cgi_pdfview;
 				}else{
 					$self->make('_vdoc'); 
@@ -283,6 +291,22 @@ sub _term_get_commands() {
 		            desc => "List all projects (written in PROJS.i.dat)",
                     maxargs  => 0,
 		            proc => sub { $self->cmd_list('htmlprojs'); }
+                },
+##cmd_list_htmlfiles
+                htmlfiles  => {
+		            desc => "List htmlfiles for the chosen HTML project",
+                    maxargs  => 1,
+            		args => sub { 
+						shift; $self->_complete_cmd( [qw( HTMLPROJS )], @_ ); 
+					},
+		            proc => sub { 
+						my $proj=shift;
+
+						$self->_proj_reset($proj);
+						$self->_reset_HTMLFILES;
+
+						$self->cmd_list('htmlfiles'); 
+					}
                 },
 ##cmd_list_targets
                 targets  => {
@@ -468,53 +492,163 @@ sub _begin() {
 # }}}
 #
 
+sub _cgi_makepdf {
+	my $self=shift;
+
+	my $q= $self->cgi;
+
+	my $proj=$q->param('proj');
+
+	$self->_proj_reset($proj);
+
+	$self->make;
+
+}
+
+sub _cgi_makehtml {
+	my $self=shift;
+
+	my $q= $self->cgi;
+
+	my $proj=$q->param('proj');
+
+	$self->_proj_reset($proj);
+
+	$self->make('_html');
+
+}
+
+sub _cgi_printenv {
+	my $self=shift;
+
+	my $q=$self->cgi;
+
+	#print $q->header
+	print $q->start_html;
+
+	my @vars=sort keys %ENV;
+	my (%varlett,@letters);
+
+	foreach my $var (@vars) {
+		my ($lett) = ( $var =~ /^(\w)/ );
+		$lett=uc $lett;
+
+		push(@{$varlett{$lett}},$var);
+		push(@letters,$lett);
+	}
+	@letters=uniq(@letters);
+
+	print $q->a({ name => "up" });
+
+	print $q->hr . "\n";
+	foreach my $lett (@letters) {
+		print $q->a({ href => "#$lett" },$lett) . "\n";
+	}
+	print 	$q->hr . "\n";
+
+	foreach my $lett (('A'..'Z')) {
+		next unless defined $varlett{$lett};
+
+		print $q->h3("$lett"),
+			$q->a({ name => "$lett" }),
+			'	',
+			$q->a({ href => "#up" },'up'),
+			'	',
+			$q->a({ href => "#down" },'down'),
+			$q->br;
+
+		foreach my $var (@{$varlett{$lett}}) {
+			my $val=$ENV{$var};
+				if(grep { /^$var$/ } qw(PATH PERLLIB)){
+					print $q->br,"$var = ";
+					foreach my $dir (split(':',$val)) {
+						print $q->br,"   $dir" . "\n";
+					}
+					
+				}else{
+					print $q->br,"$var = $val";
+				}
+		}
+	}
+
+	print $q->a({ name => "down" }) . "\n";
+
+	print $q->end_html . "\n";
+
+	exit 0;
+}
+
 sub _cgi_htmlview {
 	my $self=shift;
 
-	my $q= CGI->new;
+	my $q= $self->cgi;
+
+	my $proj=$q->param('htmlproj');
+
+	$self->_proj_reset($proj);
 
 	my $nfiles=$self->HTMLFILES_count;
-	my $PROJ=$self->PROJ;
+
 	my $HTMLDIR=$self->HTMLDIR;
 	my $h=OP::HTML->new;
 
-	if ($nfiles == 1) {
+	print $q->header;
+
+	unless($nfiles){
+
+		print 
+			$q->p({ -style => 'Color: blue;' },
+					'HTML project: ' . $proj ),
+	    	$self->_cgi_error("No HTML files found");
+
+	} elsif ($nfiles == 1) {
 		my $file=$self->HTMLFILES_shift;
-		my $wwwprojs='http://localhost/wwwprojs/index.html';
 		my $projuri='http://localhost/htmlprojs/' 
 				 . $self->PROJ . '/' . $file;
 
-		print $q->header;
-		print $q->start_html( 
-				title => 'Frames',
- 				dtd => [ 
-					'-//W3C//DTD HTML 4.01 Transitional//EN', 
-					'http://www.w3.org/TR/html4/loose.dtd' 
-				],
-#<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN"  
-#"http://www.w3.org/TR/html4/frameset.dtd"> 
-			);
+		#print $q->redirect({ uri => $projuri });
 
-		$h->frameset({
-	            rows        => '50%,50%',
-	            cols        => '*',
-	            frameborder => 'yes',
-	            border      => '1',
-	            frames      => [
-	                { src => $projuri,  name => "proj_$PROJ" },
-	                { src => $wwwprojs, name => 'wwwprojs' },
-	            ],
-			});
-
-		print $h->text . "\n";
-
-		print $q->end_html . "\n";
-
-		#print $q->redirect( $projuri);
+		print $q->a({ href => $projuri },$file);
 
 	}
 
+	print $q->end_html;
+
 }
+
+sub usecgi {
+	my $self=shift;
+
+	$self->_opt_true("cgi" ) ? 1 : 0;
+
+}
+
+sub _cgi_error {
+	my $self=shift;
+
+	my $text=shift // '';
+
+	$self->cgi->b({ -style => 'Color: red;' },"$text");
+	
+}
+sub _cgi_pdfview_perldoc {
+	my $self=shift;
+
+	my $q=$self->cgi;
+
+	my $topic=$q->param('pdfperldoc');
+
+    print 
+		$q->b("PDF perldoc topic: $topic"),
+		$q->p, 
+		$q->a(
+			{
+				href => 'http://localhost/pdfperldoc/' . $topic . '.pdf' 
+			},$topic . '.pdf'),
+		$q->end_html;
+
+}
+
 
 sub _cgi_pdfview {
 	my $self=shift;
@@ -526,29 +660,48 @@ sub _cgi_pdfview {
     	return;
 	}
 
-	my $proj=$q->param('proj');
+	my $proj=$q->param('pdfproj');
 
-    print "<b>Project: $proj</b><p>";
-
-	$self->_proj_reset($proj);
-	
-	unless (-e $self->PDFFILE) {
-	    print "<b>PDF output file does not exist</b>";
+	unless (defined $proj) {
 		return;
 	}
 
-	print "Content-Type:application/x-download\n";
-	print "Content-Disposition: attachment; filename=" 
-			. $self->PDFFILENAME . "\n\n";
+    print 
+		$q->b("PDF project: $proj"),
+		$q->p;
 
-	open FILE, "<", $self->PDFFILE or die "can't open : $!";
-	binmode FILE;
-	local $/ = \10240;
-	while (<FILE>){
-	    print $_;
+	$self->_proj_reset($proj);
+
+	unless (defined $self->PDFFILE) {
+	    print $self->_cgi_error("PDFFILE is not defined");
+		return;
 	}
 	
-    close FILE;
+	unless (-e $self->PDFFILE) {
+	    print $self->_cgi_error("PDF output file does not exist");
+		return;
+	}
+
+	print $q->a(
+		{
+			href => 'http://localhost/pdfout/' . $self->PDFFILENAME
+		},$self->PDFFILENAME);
+
+	print $q->end_html;
+
+   # print "Content-Type:application/x-download\n";
+	#print "Content-Disposition: attachment; filename=" 
+			#. $self->PDFFILENAME . "\n\n";
+
+	#open FILE, "<", $self->PDFFILE or die "can't open : $!";
+	#binmode FILE;
+	#local $/ = \10240;
+	#while (<FILE>){
+		#print $_;
+	#}
+	
+    #close FILE;
+	#
 }
 
 # get_opt() {{{
@@ -605,6 +758,8 @@ sub init_vars() {
 
 	$self->PDFOUT($PDFOUT // catfile($hm,qw(pdf out)));
 
+	$self->PDFOUT_PERLDOC(catfile($self->PDFOUT,qw(perldoc)));
+
     chdir($self->PROJSDIR) || die $!;
 
     foreach my $id (qw( PROJS MKPROJS )) {
@@ -628,6 +783,12 @@ sub init_vars() {
 
 	# retrieve the list of HTML-generated projects
     $self->_reset_HTMLPROJS();
+
+	# retrieve the list of PDF-generated projects
+    $self->_reset_PDFPROJS();
+
+	# retrieve the list of PDF-generated perldoc files
+    $self->_reset_PDFPERLDOC();
 
     # read in from ~/scripts/mk/maketex.mk
     #    the list of available makefile targets;
@@ -870,12 +1031,29 @@ sub make() {
 	}
 
     if ($self->belongsto_PROJS($args)){
-        print "$args\n";
         $self->_proj_reset($args);
     }
 
+
+	if ($self->usecgi) {
+		foreach my $id (qw(TEXINPUTS TEXMFLOCAL)) {
+			my $msg;
+			if (defined $ENV{$id}) {
+				my $val=$ENV{$id};
+				$msg="$id : " . $val ;
+			}else{
+				$msg="$id : " . 'undefined' ;
+			}
+
+			$self->cgi->br("msg");
+		}
+		$self->cgi->hr;
+	}
+
     my $cmd=join(";", "cd " . $self->PROJSDIR, "make " . $args);
-    system($cmd);
+
+	$self->_sys($cmd);
+
 
 }
 
@@ -926,9 +1104,31 @@ sub _cgi_www_frame_response {
 
 	my $q=$self->cgi;
 
-	my $lines=[
-		$q->start_html('ProjsResponse'), 
-	];
+	$self->submits(qw(
+				pdfview htmlview
+				pdfview_perldoc
+				makepdf makehtml
+				printenv
+			)
+		);
+
+	foreach my $id (@{$self->submits}) {
+		if ($q->param('submit_' . $id )){
+			eval '$self->_cgi_' . $id;
+			if($@){
+				print $q->header,
+					$q->start_html;
+
+				print $self->_cgi_error($_) for(split(' ',$@));
+
+				print $q->end_html;
+
+				exit 1;
+			}
+		}
+	}
+
+	exit 0;
 
 }
 
@@ -941,47 +1141,81 @@ sub _cgi_www_frame_query {
 
 	my $lines=[
 		$q->start_html('ProjsQuery'), 
-		$q->h1('Project Index Page'),
-		$q->popup_menu(
-			-name		=> 'proj',
-			-values		=>	[ $self->PROJS ],
-			-default 	=> 'programmingperl'
-		),
-		# -------------- View PDF
 		$q->start_form(
-			-method => "GET",
-			-action => "$sname/pdfview",
+			-action => "$sname/response",
 			-target => "response",
 		),
-		$q->submit('button_pdfview' ,'View PDF'),
-		$q->end_form,
-		# -------------- View HTML 
-		$q->start_form(
-			-method => "GET",
-			-action => "$sname/htmlview",
-			-target => "response",
-		),
-		$q->submit('button_htmlview','View HTML'),
-		$q->end_form,
-		# -------------- Generate PDF 
-		$q->start_form(
-			-method => "GET",
-			-action => "$sname/makepdf",
-			-target => "response",
-		),
-		$q->submit('button_makepdf' , 'Generate PDF'),
-		$q->end_form,
-		# -------------- Generate HTML
-		$q->submit('button_makehtml' ,'Generate HTML'),
-		$q->start_form(
-			-method => "GET",
-			-action => "$sname/makehtml",
-			-target => "response",
-		),
+		"<table border=1>",
+			"<tr>",
+			   "<td>",
+					"PDF projects", $q->br,
+					$q->popup_menu(
+						-name		=> 'pdfproj',
+						-values		=>	[ $self->PDFPROJS ],
+						-default 	=> 'KantCPR'
+					),
+			   "</td>",
+			   "<td>",
+					"HTML projects",$q->br,
+					$q->popup_menu(
+						-name		=> 'htmlproj',
+						-values		=>	[ $self->HTMLPROJS ],
+						-default 	=> 'KantCPR'
+					),
+			   "</td>",
+			   "<td>",
+					"All projects",$q->br,
+					$q->popup_menu(
+						-name		=> 'proj',
+						-values		=>	[ $self->PROJS ],
+						-default 	=> 'programmingperl'
+					),
+			   "</td>",
+			   "<td>",
+					"PDF perldoc",$q->br,
+					$q->popup_menu(
+						-name		=> 'pdfperldoc',
+						-values		=>	[ $self->PDFPERLDOC ],
+						-default 	=> 'CGI',
+					),
+			   "</td>",
+			"</tr>",
+			"<tr>",
+			   "<td>",
+					$q->submit('submit_pdfview'  , 'View PDF'),
+			   "</td>",
+			   "<td>",
+					$q->submit('submit_htmlview' , 'View HTML'),
+			   "</td>",
+			   "<td>",
+					$q->submit('submit_makepdf'  , 'Generate PDF'),
+					$q->submit('submit_makehtml' , 'Generate HTML'),
+			   "</td>",
+			   "<td>",
+					$q->submit('submit_pdfview_perldoc'  , 'View PDF (perldoc)'),
+			   "</td>",
+			"</tr>",
+		"</table>",
+		$q->submit('submit_printenv' , 'Environment'),
+		# -------------- View/Generate HTML 
 		$q->end_form,
 	];
 
 	print join("\n",@$lines) . "\n";
+
+}
+
+sub _cgi_www_header {
+	my $self=shift;
+
+	my $pinfo=shift;
+
+	given($pinfo){
+		when(/pdfview/) { }
+		default { 
+			print $self->cgi->header;
+		}
+	}
 
 }
 
@@ -991,19 +1225,11 @@ sub _cgi_www {
 	$self->cgi( CGI->new );
 	my $pinfo=$self->cgi->path_info;
 
-	print $self->cgi->header;
+	$self->_cgi_www_header($pinfo);
 
 	switch($pinfo){
 		case('') { 
 			$self->_cgi_www_frameset;
-		}
-		case(/pdfview/) { 
-			$self->_cgi_pdfview;
-			exit 0;
-		}
-		case(/htmlview/) { 
-			$self->_cgi_htmlview;
-			exit 0;
 		}
 		case(/query/) { 
 			$self->_cgi_www_frame_query;
@@ -1029,8 +1255,15 @@ sub _cgi_www_frameset {
 
     print <<EOF;
 <html><head><title>Root Projs Page</title></head>
-	<frameset cols="30,70" frameborder='yes' border=1>
-	<frame src="$sname/query" name="query">
+	<frameset 
+		rows="20,80" 
+		frameborder='yes' 
+		border=2
+		scrolling='yes'>
+	<frame 
+		src="$sname/query" 
+		name="query"
+		marginwidth="10" marginheight="15">
 	<frame src="$sname/response" name="response">
 </frameset>
 EOF
@@ -1091,6 +1324,45 @@ sub _reset_HTMLPROJS {
 
 }
 
+sub _reset_PDFPROJS {
+	my $self=shift;
+
+	$self->PDFPROJS_clear;
+	File::Find::find(
+		sub{ 
+			if (-f && /\.pdf$/){
+				s/\.pdf$//g;
+				my $proj=$_;
+
+				if(grep { /^$proj$/ } @{$self->PROJS} ){
+					$self->PDFPROJS_push($_);
+				}
+			}
+		},
+		$self->PDFOUT);
+
+	$self->PDFPROJS_sort;
+
+}
+sub _reset_PDFPERLDOC {
+	my $self=shift;
+
+	$self->PDFPERLDOC_clear;
+	File::Find::find(
+		sub{ 
+			if (-f && /\.pdf$/){
+				s/\.pdf$//g;
+				my $proj=$_;
+
+				$self->PDFPERLDOC_push($_);
+			}
+		},
+		$self->PDFOUT_PERLDOC);
+
+	$self->PDFPERLDOC_sort;
+
+}
+
 # }}}
 
 sub _sys(){
@@ -1098,7 +1370,32 @@ sub _sys(){
 
     my $cmd=shift;
 
-    system("$cmd");
+	unless($self->usecgi) {
+    	system($cmd);
+	}else{
+		my %res;
+		
+		@res{qw( ok error_message full_buf stdout_buf stderr_buf )}=
+			IPC::Cmd::run( command => $cmd, verbose => 0 );
+
+		my $q=$self->cgi;
+		
+		foreach my $id (qw( stdout_buf full_buf stderr_buf )) {
+			$res{$id}= [ 
+					map { "<br/>$_" } 
+					split("\n",join("",@{$res{$id}})) 
+				];
+		}
+
+		$self->runbufs(%res);
+
+		my @out= @{$res{full_buf}};
+
+		print $_ . "\n" for(@out);
+
+	}
+
+
 }
 
 # _read_MKTARGETS() {{{
@@ -1164,6 +1461,10 @@ sub cmd_list() {
         };
         /^(htmlprojs)$/ && do {
             $self->HTMLPROJS_print();
+            next;
+        };
+        /^(htmlfiles)$/ && do {
+            $self->HTMLFILES_print();
             next;
         };
     }
@@ -1250,4 +1551,3 @@ sub clean_html {
 #------------------------------
 1;
   
-   

@@ -807,16 +807,6 @@ sub getopt {
 
 }
 
-#}}}
-
-sub run_cmd {
-    my %opts=@_;
-
-    my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf ) =
-        IPC::Cmd::run( %opts );
-}
-
-# getopt_after() {{{
 =head3 getopt_after()
 
 =cut
@@ -830,6 +820,18 @@ sub getopt_after {
     &printexamples() if $opt{examples};
 
 }
+
+#}}}
+
+sub run_cmd {
+    my %opts=@_;
+
+    my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf ) =
+        IPC::Cmd::run( %opts );
+}
+
+#
+
 =head3 printpodoptions()
 
 =cut

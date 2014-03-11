@@ -62,3 +62,4 @@ Pod::Parser::VimHelp
 OP::Module
 OP::Projs::Create
 OP::perldoc2tex
+OP::hperl
