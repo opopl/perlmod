@@ -4,17 +4,77 @@ package OP::perldoc2tex;
 use strict;
 use warnings;
 
+=head1 NAME
+
+OP::perldoc2tex - perldoc-to-LaTeX convertor module
+
+=head1 SYNOPSIS
+
+	#!/usr/bin/env perl 
+	#
+	use OP::perldoc2tex;
+	
+	OP::perldoc2tex->new->main;
+
+=head1 INHERITANCE
+
+	isa Class::Accessor::Complex
+	isa OP::Script
+
+=head1 ACCESSORS
+
+=head2 Scalar
+
+=over 4
+
+=item - what
+
+=item - tex
+
+=item - curwhat
+
+=item - curtopic
+
+=item - texdir
+
+=item - texfile
+
+=item - poddir
+
+=item - topic
+
+=back
+
+=head2 Hash
+
+=over 4
+
+=item files
+
+=item allwhats
+
+=back
+
+=cut
+
+use feature qw(switch);
+
 use Env qw($hm);
 use FindBin qw($Bin $Script);
 
-use File::Basename;
-use File::Path qw(make_path);
+use File::Basename qw(basename);
+use File::Path qw( make_path );
 use File::Spec::Functions qw(catfile);
+
 use Getopt::Long;
 use Pod::LaTeX;
 use Data::Dumper;
+
 use OP::TEX::Text;
-use OP::Base qw(readhash);
+use OP::Base qw(readhash _join_comma run_cmd );
+
+use PPI;
+use Carp;
 
 use parent qw( 
 	OP::Script 
@@ -24,6 +84,7 @@ use parent qw(
 ###__ACCESSORS_SCALAR
 my @scalar_accessors=qw(
 	what
+	tex
 	curwhat
 	curtopic
 	texdir
@@ -41,6 +102,7 @@ my @hash_accessors=qw(
 ###__ACCESSORS_ARRAY
 my @array_accessors=qw(
 	whats
+	subsourcefiles
 );
 
 __PACKAGE__
@@ -145,24 +207,186 @@ sub main {
 
 	$self->_whats_update;
 
-	foreach my $what (@{$self->whats}) {
-		my $topic=$self->get_topic($what);
+	$self->write_tex;
 
-		$self->curwhat($what);
-		$self->curtopic($topic);
+}
 
-    	$self->run_perldoc;
+sub _module_write_tex {
+	my $self=shift;
 
-    	$self->parse_pod;
-    	$self->write_tex;
+	my ($what,$module,$prefix,$file);
+
+	$what=shift // $self->curwhat;
+
+	my $tex=OP::TEX::Text->new;
+
+	if (-e $what) {
+		$file=$what;
+		$prefix = basename($what) =~ s/\.(\w+)$//gr;
+
+	}else{
+		$module=$what;
+
+		my $res=run_cmd(command => "perldoc -l $module", verbose => 0 );
+		if ($res->{ok}) {
+			($file)=map { 
+				chomp; my @vars=split(' ',$_); $vars[-1]; 
+			} @{$res->{full_buf}};
+		}else{
+		}
+
+		my $moddef = $module =~ s/::/-/gr;
+		$prefix=$moddef;
+
 	}
+
+	if (not defined $file) {
+		$self->warn("POD file is not defined for topic: " . $what ) ;
+		return;
+	}
+
+	if (not -e $file) {
+		$self->_die("POD file does not exist for Perl topic: " . $what ) ;
+	}
+	
+	my @subnames;
+	my %sublines;
+	
+	my $Document = PPI::Document->new($file) 
+		or croak "Failed to PPI::Document->new for file: $file";
+
+	$self->subsourcefiles_clear;
+
+	for my $sub ( @{ $Document->find('PPI::Statement::Sub') || [] } ) {
+		unless ( $sub->forward ) {
+			push(@subnames,$sub->name);
+			$sublines{ $sub->name } = $sub->content;
+		}
+	}
+
+	foreach my $sub (@subnames) {
+
+		my $texfile=catfile($self->texdir, 
+			_join_comma($prefix,$sub ,qw( subsource tex))
+		);
+
+		$self->subsourcefiles_push($texfile);
+	
+		my $subname = $sub =~ s/(_)/\\$1/gr;
+	
+		$tex->_clear;
+		$tex->ofile($texfile);
+	
+		$tex->clearpage;
+		$tex->subsubsection($subname);
+		$tex->_empty_lines;
+		$tex->begin('lstlisting');
+		$tex->_add_line($sublines{$sub});
+		$tex->end('lstlisting');
+	
+		$tex->_writefile;
+	
+	}
+
+	$self->subsourcefiles_uniq;
+	$self->subsourcefiles_sort;
 
 }
 
 sub write_tex {
 	my $self=shift;
 
-	$self->write_texfile;
+	my $tex=OP::TEX::Text->new;
+	$self->tex($tex);
+
+    $self->write_tex_header;
+
+    $self->write_tex_part([qw(POD SOURCE)]);
+
+    $self->write_tex_end;
+}
+
+sub write_tex_part {
+	my $self=shift;
+
+	my $tex=$self->tex;
+
+	my $ref=shift;
+	my $part;
+
+	unless(ref $ref){
+		$part=$ref;
+	}elsif(ref $ref eq "ARRAY"){
+		foreach my $part (@$ref) {
+			$self->write_tex_part($part);
+		}
+		return;
+	}
+
+	$tex->part($part);
+	$tex->_empty_lines;
+
+	foreach my $what (@{$self->whats}) {
+		my $topic=$self->get_topic($what);
+
+		$self->curwhat($what);
+		$self->curtopic($topic);
+
+		( my $c = $self->curtopic ) =~ s/-/::/g;
+		$tex->chapter($c);
+
+		given($part){
+			when('POD') { 
+					$self->run_perldoc;
+			    	$self->parse_pod;
+			    	$self->write_tex_curwhat;
+			
+			}
+			when('SOURCE') { 
+			    	$self->_module_write_tex;
+			    	$self->write_tex_source;
+			}
+			default { }
+		}
+    	
+	}
+
+	$tex->_empty_lines;
+
+
+}
+
+sub write_tex_end {
+	my $self=shift;
+
+	my $tex=$self->tex;
+
+	$tex->input($self->files("tex_end"));
+
+	$self->tex->_writefile;
+}
+
+sub write_tex_header {
+	my $self=shift;
+
+	my $date = localtime;
+
+	my $tex=$self->tex;
+
+	$tex->ofile($self->files("tex_out"));
+
+	$tex->_c_delim;
+	$tex->_c("File:");
+	$tex->_c("	" . $self->files("tex_out"));
+	$tex->_c("Purpose:");
+	$tex->_c("	Latex file for the perldoc documentation");
+	$tex->_c("Date created:");
+	$tex->_c("	$date");
+	$tex->_c("Creating script:");
+	$tex->_c("	$Script");
+	$tex->_c_delim;
+
+	$tex->input($self->files("tex_preamble"));
 
 }
 
@@ -231,7 +455,8 @@ sub get_topic {
 	    $topic = $s[1];
 	}
 	else {
-	    $topic = $what;
+		#$topic = basename($what) =~ s/\.(\w+)$//gr;
+	    $topic = basename($what) =~ s/\.$/_/gr;
 	}
 
 	$topic =~ s/::/-/g;
@@ -243,11 +468,17 @@ sub get_topic {
 sub run_perldoc {
 	my $self=shift;
 
+	my $res=run_cmd(command => 
+						"perldoc -u " 
+							. $self->curwhat . " > "
+				 			. $self->files('pod_topic')->(), 
+					verbose => 0 );
 
-
-	system("perldoc -u " 
-			. $self->curwhat . " > "
-			. $self->files('pod_topic')->() );
+	if($res->{ok}){
+		
+	}else{
+		
+	}
 
 }
 
@@ -282,41 +513,25 @@ sub _whats_update {
 
 }
 
-sub write_texfile {
+sub write_tex_curwhat {
 	my $self=shift;
 
-	my $date = localtime;
+	my $tex=$self->tex;
 
-	my $tex=OP::TEX::Text->new;
+	$tex->_empty_lines;
+	$tex->input( $self->files("tex_topic")->() );
+	$tex->_empty_lines;
 
-	$tex->ofile($self->files("tex_out"));
+}
 
-	$tex->_c_delim;
-	$tex->_c("File:");
-	$tex->_c("	" . $self->files("tex_out"));
-	$tex->_c("Purpose:");
-	$tex->_c("	Latex file for the perldoc documentation");
-	$tex->_c("Date created:");
-	$tex->_c("	$date");
-	$tex->_c("Creating script:");
-	$tex->_c("	$Script");
-	$tex->_c_delim;
+sub write_tex_source {
+	my $self=shift;
 
-	$tex->input($self->files("tex_preamble"));
+	my $tex=$self->tex;
 
-	foreach my $what (@{$self->whats}) {
-		$self->what($what);
-
-		my $topic = $what =~ s/::/-/gr;
-
-		$tex->chapter($self->what);
-		$tex->_empty_lines;
-		$tex->input( $self->files("tex_topic")->() );
-		$tex->_empty_lines;
+	foreach my $file (@{$self->subsourcefiles}) {
+		$tex->input( $file );
 	}
-	$tex->input($self->files("tex_end"));
-
-	$tex->_writefile;
 
 }
 

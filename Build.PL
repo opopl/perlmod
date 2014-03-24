@@ -7,7 +7,7 @@ Module::Build->new
       dist_abstract       => 'PERLMOD',
       dist_name           => 'PERLMOD',
       dist_version        => '0.01',
-      dist_author         => 'O.Poplavskyy',
+      dist_author         => 'O. Poplavskyy',
       module_name         => 'OP::Base',
       license             => 'restrictive',
       requires            => { 

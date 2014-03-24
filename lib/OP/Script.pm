@@ -344,8 +344,8 @@ sub _opt_eq(){
 	my $opt=shift;
 	my $val=shift;
 
-	return 1 if ( $OP::Base::opts{$opt} == $val );
-	return 0;
+   ( "$OP::Base::opts{$opt}" eq "$val" ) ? 1 : 0;
+
 }
 
 # }}}

@@ -4,19 +4,44 @@ package OP::hperl;
 use strict;
 use warnings;
 
-use OP::perldoc2tex;
+=head1 NAME
+
+OP::hperl - builder for POD + SOURCE documentation
+
+=head1 INHERITANCE
+
+	isa Class::Accessor::Complex
+	isa OP::Script 
+
+=head1 ACCESSORS
+
+=over 4
+
+=item Scalar:
+
+	htexdir topic
+
+=back
+
+=cut
 
 use Env qw($hm $PDFOUT_PERLDOC);
 
 use FindBin qw($Bin $Script);
+
 use File::Basename;
 use File::Path qw(make_path);
 use File::Spec::Functions qw(catfile);
 use File::Slurp qw(write_file);
+
 use Getopt::Long;
 use Pod::LaTeX;
+
+use OP::perldoc2tex;
 use OP::TEX::Text;
+
 use Cwd;
+use PPI;
 
 use parent qw( 
 	OP::Script
@@ -41,7 +66,7 @@ __PACKAGE__
 	->mk_array_accessors(@array_accessors)
 	->mk_hash_accessors(@hash_accessors);
 
-sub _begin(){
+sub _begin {
 	my $self=shift;
 
 	$self->{package_name}=__PACKAGE__ unless defined $self->{package_name}; 
@@ -59,9 +84,8 @@ sub main {
 
     $self->buildpdf;
 
-
-
 }
+
 
 sub buildpdf {
 	my $self=shift;
@@ -73,7 +97,7 @@ sub buildpdf {
 
 	print $origtopic . "\n";
 
-	@ARGV=( qw( --what ),$origtopic );
+	@ARGV=( qw( --what ) , $origtopic );
 	$p2tex->main;
 
 	my $olddir=Cwd::cwd();
@@ -93,7 +117,7 @@ sub buildpdf {
 
 }
 
-sub set_these_cmdopts() {
+sub set_these_cmdopts {
     my $self = shift;
 
     $self->OP::Script::set_these_cmdopts();
@@ -120,11 +144,11 @@ sub set_these_cmdopts() {
 
 }
 
-
 sub process_opt {
 	my $self=shift;
 
 	$self->opts_to_scalar_vars(qw(topic));
+
 }
 	
 sub init_vars {

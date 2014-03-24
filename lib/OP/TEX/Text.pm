@@ -650,6 +650,28 @@ sub newnc {
     }
 }
 
+sub newenvironment {
+	my $self=shift;
+
+    my $ref = shift;
+    unless ( ref $ref ) {
+
+    }
+    elsif ( ref $ref eq "HASH" ) {
+		my $cmd='\newenvironment{' 
+			. $ref->{env} 
+			.  '}{' 
+			. $ref->{begin}
+			.  '}{' 
+			. $ref->{end}
+			.  '}' ; 
+
+		$self->_add_line($cmd);
+    }
+
+
+}
+
 =head3 nc()
 
 =cut
@@ -821,12 +843,21 @@ sub chapter() {
 
 =cut
 
-sub paragraph() {
+sub paragraph {
     my $self = shift;
 
     my $title = shift // '';
 
     $self->_add_line("\\paragraph{$title}");
+}
+
+sub label {
+	my $self=shift;
+
+	my $label=shift;
+
+	$self->_add_line('\label{' . $label . '}');
+
 }
 
 # lof() {{{
@@ -835,7 +866,7 @@ sub paragraph() {
 
 =cut
 
-sub lof() {
+sub lof {
     my $self = shift;
 
     my $ref = shift // '';

@@ -944,19 +944,15 @@ sub VimMsgNL {
 
 =head4 Input variables
 
-=item $text           (SCALAR) - input text to be displayed by Vim
-=item $options        (HASH)   - additional options (color, highlighting etc.)
-
 =over 4
+
+=item $text           (SCALAR) - input text to be displayed by Vim
+
+=item $options        (HASH)   - additional options (color, highlighting etc.)
 
 =item Structure of the $options parameter.
 
 =back
-
-=item 
-
-=back
-
 
 =cut
 

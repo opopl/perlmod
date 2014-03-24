@@ -3,26 +3,54 @@ package OP::Script::Simple;
 use warnings;
 use strict;
 
+=head1 NAME
+
+	OP::Script::Simple 
+
+=head1 SYNOPSIS
+
+	package MyScript;
+
+	sub main;
+	sub init_vars;
+
+	main;
+
+	use OP::Script::Simple qw(
+		get_opt %opt @optstr
+	);
+
+	sub main {
+		init_vars;
+		get_opt;
+	}
+
+	sub init_vars {
+		...
+	}
+
+=head1 EXPORTS
+
+=cut
+
+use feature qw(switch);
+
 use Exporter ();
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-use feature qw(switch);
+
+$VERSION = '0.01';
+@ISA     = qw(Exporter);
+@EXPORT      = qw();
 
 ###use
 use Term::ANSIColor;
 use FindBin qw($Bin $Script);
 
-use Env qw( $hm $PERLMODDIR );
-
 use Getopt::Long;
 use IO::String;
 
-use lib("$PERLMODDIR/lib");
 use OP::Writer::Pod;
 
-$VERSION = '0.01';
-@ISA     = qw(Exporter);
-
-@EXPORT      = qw();
 
 ###export_vars_scalar
 my @ex_vars_scalar=qw(
@@ -55,10 +83,12 @@ my @ex_vars_array=qw(
 %EXPORT_TAGS = (
 ###export_funcs
 'funcs' => [qw( 
+	_eval
     _say
     _say_head
     _warn
     _debug
+    _die
     pre_init
     get_opt
     write_help_POD
@@ -91,16 +121,24 @@ our %podsections;
 our $podsectionorder;
 our %S;
 
-sub _warn;
-sub _say;
-sub pre_init;
-sub _debug;
-
 ###subs
-sub write_help_POD;
-sub get_opt;
-sub dhelp;
+sub _debug;
+sub _die;
+sub _eval;
+sub _say;
 sub _say_head;
+sub _warn;
+sub dhelp;
+sub get_opt;
+sub pre_init;
+sub write_help_POD;
+
+sub _eval {
+	my $evs=shift;
+
+	eval(join(";\n",@$evs));
+	_die $@ if $@;
+}
 
 sub _say {
     my $text=shift;
@@ -154,6 +192,15 @@ sub _warn {
     my $text=shift;
 
     print color $WARNCOLOR;
+    print $PREFIX . $text . "\n";
+    print color 'reset';
+
+}
+
+sub _die {
+    my $text=shift;
+
+    print color $ERRORCOLOR;
     print $PREFIX . $text . "\n";
     print color 'reset';
 
@@ -241,7 +288,12 @@ sub get_opt {
 
     $opts{exit_help}=1;
     
-    Getopt::Long::Configure(qw(bundling no_getopt_compat no_auto_abbrev no_ignore_case_always));
+    Getopt::Long::Configure(qw(
+		bundling 
+		no_getopt_compat 
+		no_auto_abbrev 
+		no_ignore_case_always
+		));
     
     write_help_POD;
     

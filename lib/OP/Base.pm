@@ -33,7 +33,6 @@ use List::Compare;
 use File::Temp qw{tmpnam};
 use IPC::Cmd;
 
- 
 =head1 DEPENDENCIES
  
 =over 4
@@ -72,6 +71,7 @@ our %EXPORT_TAGS = (
     'funcs' => [
         qw(
           _join
+          _join_comma
           _hash_add
           _arrays_equal
           _import
@@ -209,6 +209,7 @@ sub printpodoptions;
 sub is_log;
 sub is_const;
 sub _join;
+sub _join_comma;
 
 sub _hash_add;
 
@@ -504,6 +505,12 @@ sub _join {
     if ( ref $ref eq "ARRAY" ) {
         return join( $sep, @$ref );
     }
+
+}
+
+sub _join_comma {
+
+	return join('.',@_);
 
 }
 

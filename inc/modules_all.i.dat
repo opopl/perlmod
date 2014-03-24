@@ -43,6 +43,7 @@ OP::TEX::NICE
 OP::TEX::PERLTEX
 OP::TEX::PNC
 OP::TEX::Text
+OP::TEX::HTLATEX
 OP::Time
 OP::UTIL::APACK
 OP::VIMPERL
@@ -50,6 +51,7 @@ OP::VIMPERL::TEST
 OP::Viewer
 OP::VimTag
 OP::Writer
+OP::Shell
 OP::Writer::Pod
 OP::Writer::Tex
 PDL::Graphics::PLplot
@@ -63,3 +65,14 @@ OP::Module
 OP::Projs::Create
 OP::perldoc2tex
 OP::hperl
+OP::docperltex::build
+OP::cgi
+OP::cgi::perldoc
+OP::cgi::tex4ht
+OP::Projs::Postprocess::acw
+OP::Projs::Postprocess
+OP::Projs::Generate
+OP::Projs::Base
+OP::Projs::Tex
+OP::Projs::Generate::reply_oia_complaint_outcome
+OP::Projs::Generate::tex4ht

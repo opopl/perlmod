@@ -8,6 +8,9 @@ use Switch;
 
 #------------------------------
 # intro {{{
+#
+use OP::cgi::perldoc;
+use OP::cgi::tex4ht;
 
 use Env qw(
 			$hm 
@@ -27,12 +30,15 @@ use OP::Writer::Tex;
 use OP::Base qw(uniq readarr uniq);
 use OP::Git;
 use OP::HTML;
+use OP::BIBTEX;
+
 
 use File::Find qw( find finddepth);
 use CGI;
+use CGI::Carp qw(fatalsToBrowser);
+
 use Try::Tiny;
 
-use OP::BIBTEX;
 
 use Data::Dumper;
 use File::Copy qw(copy move);
@@ -45,8 +51,6 @@ use File::Slurp qw(
   read_file
   write_file
 );
-
-use lib("$PERLMODDIR/mods/Class-Accessor-Complex/lib");
 
 use parent qw( 
 	OP::Script 
@@ -98,6 +102,7 @@ our @array_accessors=qw(
 	PDFPERLDOC
     MKTARGETS
 	HTMLFILES
+	HPERLTARGETS
 	submits
 );
 
@@ -753,7 +758,6 @@ sub init_vars() {
 
     $self->HTMLOUT(catfile($HTMLOUT,qw(projs)) // catfile( $hm,qw(html projs)));
 
-
     $self->PROJSDIR( $PROJSDIR // catfile($hm, qw( wrk texdocs )) );
 
 	$self->PDFOUT($PDFOUT // catfile($hm,qw(pdf out)));
@@ -769,7 +773,9 @@ sub init_vars() {
 
     $self->files( 
         'maketex_mk'  => catfile($hm,qw(scripts mk maketex.targets.mk ),
-        )); 
+    )); 
+
+	$self->HPERLTARGETS(readarr(catfile(qw(/doc perl tex hperl_targets.i.dat ))));
 
     $self->LOGFILENAME("ProjShell_log.data.tex");
     $self->LOGFILE( IO::File->new() );
@@ -1108,13 +1114,14 @@ sub _cgi_www_frame_response {
 				pdfview htmlview
 				pdfview_perldoc
 				makepdf makehtml
-				printenv
+				printenv perldoc tex4ht
 			)
 		);
 
 	foreach my $id (@{$self->submits}) {
 		if ($q->param('submit_' . $id )){
 			eval '$self->_cgi_' . $id;
+
 			if($@){
 				print $q->header,
 					$q->start_html;
@@ -1189,14 +1196,24 @@ sub _cgi_www_frame_query {
 			   "</td>",
 			   "<td>",
 					$q->submit('submit_makepdf'  , 'Generate PDF'),
-					$q->submit('submit_makehtml' , 'Generate HTML'),
 			   "</td>",
 			   "<td>",
 					$q->submit('submit_pdfview_perldoc'  , 'View PDF (perldoc)'),
 			   "</td>",
 			"</tr>",
+			"<tr>",
+			   "<td>",
+			   "</td>",
+			   "<td>",
+			   "</td>",
+			   "<td>",
+					$q->submit('submit_makehtml' , 'Generate HTML'),
+			   "</td>",
+			"</tr>",
 		"</table>",
 		$q->submit('submit_printenv' , 'Environment'),
+		$q->submit('submit_perldoc' , 'Perldoc'),
+		$q->submit('submit_tex4ht' , 'TeX4HT'),
 		# -------------- View/Generate HTML 
 		$q->end_form,
 	];
@@ -1211,11 +1228,26 @@ sub _cgi_www_header {
 	my $pinfo=shift;
 
 	given($pinfo){
-		when(/pdfview/) { }
+		when(/pdfview/) { 
+		}
 		default { 
 			print $self->cgi->header;
 		}
 	}
+
+}
+
+sub _cgi_perldoc {
+	my $self=shift;
+
+	OP::cgi::perldoc->new->main;
+
+}
+
+sub _cgi_tex4ht {
+	my $self=shift;
+
+	OP::cgi::tex4ht->new->main;
 
 }
 
@@ -1227,6 +1259,8 @@ sub _cgi_www {
 
 	$self->_cgi_www_header($pinfo);
 
+	$pinfo =~ s{^\/(\w+)\/.*$}{$1}g;
+
 	switch($pinfo){
 		case('') { 
 			$self->_cgi_www_frameset;
@@ -1236,6 +1270,9 @@ sub _cgi_www {
 		}
 		case(/response/) { 
 			$self->_cgi_www_frame_response;
+		}
+		case(/perldoc/) { 
+			$self->_cgi_www_perldoc;
 		}
 	}
 
@@ -1256,7 +1293,7 @@ sub _cgi_www_frameset {
     print <<EOF;
 <html><head><title>Root Projs Page</title></head>
 	<frameset 
-		rows="20,80" 
+		rows="30,70" 
 		frameborder='yes' 
 		border=2
 		scrolling='yes'>
@@ -1344,17 +1381,22 @@ sub _reset_PDFPROJS {
 	$self->PDFPROJS_sort;
 
 }
+
 sub _reset_PDFPERLDOC {
 	my $self=shift;
 
 	$self->PDFPERLDOC_clear;
 	File::Find::find(
 		sub{ 
-			if (-f && /\.pdf$/){
+			if (-f && /\.pdf$/ ){
 				s/\.pdf$//g;
+
 				my $proj=$_;
 
-				$self->PDFPERLDOC_push($_);
+				if( grep { /^$proj$/ } @{$self->HPERLTARGETS} ){
+					$self->PDFPERLDOC_push($proj);
+				}
+
 			}
 		},
 		$self->PDFOUT_PERLDOC);
