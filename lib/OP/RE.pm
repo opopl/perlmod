@@ -1,3 +1,4 @@
+
 package OP::RE;
 
 use warnings;
@@ -43,6 +44,5 @@ our %REX=(
             \{(?<caption>.*)\}
             /x
 );
-
 
 1;

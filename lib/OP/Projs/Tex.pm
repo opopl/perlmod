@@ -30,6 +30,15 @@ sub ii {
 	$self->_cmd('ii',$sec);
 }
 
+sub icfg {
+	my $self=shift;
+
+	my $cfgname=shift;
+
+	$self->_cmd('icfg',$cfgname);
+
+}
+
 sub TEXHT {
 	my $self=shift;
 

@@ -25,8 +25,10 @@ use Env qw( $PROJSDIR );
 use FindBin qw($Bin $Script);
 use File::Spec::Functions qw(catfile);
 use File::Slurp qw( append_file);
+
 use Getopt::Long;
-use OP::TEX::Text qw();
+
+use OP::Projs::Tex qw();
 use OP::Base qw(readarr);
 
 use parent qw( Class::Accessor::Complex );
@@ -154,7 +156,7 @@ sub init_vars {
 
 	@MAINSECS=qw( preamble begin body  );
 
-    $self->TEX(OP::TEX::Text->new);
+    $self->TEX( OP::Projs::Tex->new );
 
 }
 
@@ -182,18 +184,27 @@ sub write_tex {
 	    },
 ###print_cfg
 	    'cfg' => sub  {
-			$self->TEXT->_cmd('Preamble',
-					'html,frames,5,index=2,next,charset=utf-8,javascript');
 
-			$self->TEX->input('_common.cfg.tex');
-			#$self->TEX->input('_cfg.frames-two-vertical.tex');
+            $self->TEX->_c_delim;
+            $self->TEX->_c("Generated via Perl package: " . __PACKAGE__ );
+            $self->TEX->_c("On: " . localtime );
+            $self->TEX->_c_delim;
+
+			$self->TEX->_cmd('Preamble',
+					'html,frames,5,index=2,next,charset=utf-8,javascript');
+            $self->TEX->_empty_lines;
+
+			$self->TEX->icfg('common');
+            $self->TEX->_empty_lines;
 
 			$self->TEX->begin('document');
+            $self->TEX->_empty_lines;
 
-			$self->TEX->input('_cfg.HEAD.showHide.tex');
-			$self->TEX->input('_cfg.TOC.tex');
+			$self->TEX->icfg('HEAD.showHide');
+			$self->TEX->icfg('TOC');
 
-			$self->TEXT->_cmd('EndPreamble');
+            $self->TEX->_empty_lines;
+			$self->TEX->_cmd('EndPreamble');
 	    },
 ###print_title
 	    'title' => sub  {
@@ -204,7 +215,7 @@ sub write_tex {
             $self->TEX->begin('document');
             $self->TEX->_cmd('thispagestyle','plain');
 
-            $self->TEX->_cmd('ii','title');
+            $self->TEX->ii('title');
             $self->TEX->_cmd('restoregeometry');
 
             $self->TEX->input('toc');
@@ -217,10 +228,10 @@ sub write_tex {
 			}); 
 
             $self->TEX->_empty_lines;
-            $self->TEX->_cmd('ii','packages');
-            $self->TEX->_cmd('ii','makeatletter');
-            $self->TEX->_cmd('ii','preamble_page_geometry');
-            $self->TEX->_cmd('ii','preamble_text_formatting');
+            $self->TEX->ii('packages');
+            $self->TEX->ii('makeatletter');
+            $self->TEX->ii('preamble_page_geometry');
+            $self->TEX->ii('preamble_text_formatting');
             $self->TEX->_empty_lines;
 
 	        $self->TEX->setcounter('page', '1');
@@ -279,7 +290,7 @@ EOF
 							pdfpagelabels
 							plainpages=false
 							bookmarksdepth=subparagraph 
-						)],
+					)],
 	            });
 	        $self->TEX->usepackages([ qw(bookmark) ]);
 	
@@ -296,12 +307,13 @@ EOF
 								'vmargin={2cm,2cm}',
 								'centering' 
 								],
-	            });
+	        });
+
 	        $self->TEX->usepackages([ qw( my projs )]); 
 	        $self->TEX->usepackages([ qw( 
 					authblk soul csquotes 
 					longtable alltt 
-					)]); 
+			)]); 
 	
 	    },
     );
