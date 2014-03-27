@@ -393,7 +393,12 @@ sub wanted {
         # check each found .pm file for the package ... ; string
     }
 
-    push(@{$MODPATHS{$module}},$fullpath);
+	# do not add already added path
+	# 
+	@{$MODPATHS{$module}}=();
+	if ( not grep {/^$fullpath$/ } @{$MODPATHS{$module}}){
+    	push(@{$MODPATHS{$module}},$fullpath);
+	}
 
     if ( $OPTS{remove} ) {
         remove_tree($fullpath);

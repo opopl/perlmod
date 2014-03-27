@@ -140,7 +140,7 @@ sub module_full_installed_paths {
                 excludedirs => catfile( $self->dirs("mods"), $mdef, qw(lib) ),
             }
         );
-    my @p=$pminst->MPATHS;
+	my @p=@{$pminst->MODPATHS($module)};
 
     wantarray ? @p : \@p;
 

@@ -17,7 +17,6 @@ BEGIN {
 
     use Env qw( $hm $PERLMODDIR );
 
-    use lib("$PERLMODDIR/mods/OP-Base/lib");
 	use OP::Base qw( :vars :funcs );
 
     my @mods=qw(
@@ -2188,29 +2187,19 @@ sub _gen_make_pdf_tex_mk {
     my $pminst = OP::PERL::PMINST->new;
 
 ###gen_make_perlmods
-    my @needed_mods = qw( OP::PaperConf OP::PAPERS::MKPDF );
-    my %modpaths_installed;
-    my %modpaths_local;
+   my @needed_mods = qw( OP::PaperConf OP::PAPERS::MKPDF );
+	my %modpaths_installed;
 
-    foreach my $module (@needed_mods) {
-        my @ipaths = $i->module_full_installed_paths($module);
-        my $lpath  = $i->module_full_local_path($module);
+	foreach my $module (@needed_mods) {
+		my @ipaths = $i->module_full_installed_paths($module);
+		$modpaths_installed{$module} = \@ipaths;
 
-        $modpaths_local{$module}     = $lpath;
-        $modpaths_installed{$module} = \@ipaths;
-
-        foreach my $mpath (@ipaths) {
-            push( @flines, "$mpath : $lpath" );
-            push( @flines,
-                "\t" . '@local_module_install.pl "' . "$module" . '"' );
-            push( @flines, ' ' );
-        }
-    }
+	}
     my @req_imods;
 
-    for my $ipaths ( @modpaths_installed{@needed_mods} ) {
-        push( @req_imods, @$ipaths );
-    }
+	for my $ipaths ( @modpaths_installed{@needed_mods} ) {
+		push( @req_imods, @$ipaths );
+	}
 
     my $varsdat = $self->files('vars');
 
@@ -2304,7 +2293,7 @@ sub _gen_make_pdf_tex_mk {
         push( @prereq_p_tex, "p.$p.secorder.i.dat" );
 
         push( @flines, "p.$p.tex: " . shift(@prereq_p_tex) . " \\" );
-        push( @flines, " " . join( " \\\n", @req_imods ) );
+        push( @flines, " " . join( " \\\n", @req_imods ) ) if @req_imods;
 
         push( @flines,
             "\t" . '@mk_pap_pdf.pl --pkey  ' . $p . ' --only_write_tex_main' );
@@ -2317,7 +2306,7 @@ sub _gen_make_pdf_tex_mk {
             my @prereq_pdf_preamble = ();
             my $dir_docstyle = $self->catroot( qw(docstyles), $self->docstyle );
 
-            push( @prereq_pdf_preamble, @req_imods );
+            push( @prereq_pdf_preamble, @req_imods ) if @req_imods;
             push( @prereq_pdf_preamble,
                 catfile( $dir_docstyle, 'usedpacks.i.dat' ) );
             push( @prereq_pdf_preamble,
@@ -2368,7 +2357,7 @@ sub _gen_make_pdf_tex_mk {
 
         push( @flines, "p.$p.pdf.tex: " . $first_prereq . " \\" );
 
-        push( @flines, " " . join( ' ', @req_imods ) . "\\" );
+        push( @flines, " " . join( ' ', @req_imods ) . "\\" ) if @req_imods;
         my $sp = " " x 10;
         s/^/\t/g for (@prereq_pdf_tex);
         my $depss = join( "  " . "\\\n", @prereq_pdf_tex );
@@ -2408,7 +2397,7 @@ sub _gen_make_pdf_tex_mk {
 ###make_bibt_PKEY_tex
         my @prereq_bibt;
 
-        push( @prereq_bibt, @req_imods );
+        push( @prereq_bibt, @req_imods ) if @req_imods;
         push( @prereq_bibt, "$varsdat" );
 
         push( @flines, "$p_bibt : \\" );
@@ -2425,7 +2414,7 @@ sub _gen_make_pdf_tex_mk {
 
         push( @prereq_cbib_tex, $varsdat );
         push( @prereq_cbib_tex, $p_refs );
-        push( @prereq_cbib_tex, @req_imods );
+        push( @prereq_cbib_tex, @req_imods ) if @req_imods;
 
         push( @flines, "$p_cbib : \\" );
         push( @flines, " " . join( " \\\n", @prereq_cbib_tex ) );

@@ -1211,7 +1211,7 @@ sub write_tex_preamble_fancyhdr() {
     if ( length($pauthors) > $allowedlength ) {
         $pauthors = substr( $pauthors, 0, $allowedlength ) . "\\ \\ldots";
     }
-    $pa->def( '\pauthors', $pauthors );
+    $pa->def( 'pauthors', $pauthors );
     $self->pauthors($pauthors);
 
 ###_FANCY_PTITLE
@@ -1221,7 +1221,7 @@ sub write_tex_preamble_fancyhdr() {
         $ptitle = substr( $self->ptitle, 0, $allowedlength ) . "\\ \\ldots";
     }
 
-    $pa->def( '\ptitle', $ptitle );
+    $pa->def( 'ptitle', $ptitle );
 
     $self->fancyhdr_style(
         lhead  => '\pauthors',
