@@ -41,7 +41,6 @@ use OP::perldoc2tex;
 use OP::TEX::Text;
 
 use Cwd;
-use PPI;
 
 use parent qw( 
 	OP::Script
@@ -105,13 +104,14 @@ sub buildpdf {
 	chdir $self->htexdir || $self->_die("Failed to cd: " . $self->htexdir);
 
 	write_file('MKPROJS.i.dat',$topic . "\n");
+
+	system("make _clean");
 	system("PDFOUT=$PDFOUT_PERLDOC make _mkprojects");
 
 	unless ($self->_opt_eq("skip","vdoc")) {
 		system("make _vdoc");
 	}
 
-	system("make _clean");
 
 	chdir $olddir;
 

@@ -7,6 +7,8 @@ use strict;
 use Exporter ();
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
+use Env qw($HTMLOUT $hm);
+
 $VERSION = '0.01';
 @ISA     = qw(Exporter);
 @EXPORT      = qw();
@@ -25,6 +27,9 @@ use File::Spec::Functions qw( catfile );
 use OP::perldoc2tex;
 use OP::hperl;
 
+use Pod::ProjectDocs;
+use Data::Dumper;
+
 use OP::Script::Simple qw(
 	get_opt _say _warn _die 
 );
@@ -36,6 +41,11 @@ our @TARGETS;
 our $TARGET;
 our $DAT;
 our $BUILDOPT;
+our $TEXDIR;
+our $OUTDIR;
+our $LIBROOT;
+our $OUTROOT;
+our $HTMLTITLE;
 
 ###subs
 sub build_hperl;
@@ -75,24 +85,75 @@ sub init_vars {
 	$DAT=catfile($Bin,qw( hperl_targets.i.dat ));
 	@TARGETS=readarr($DAT);
 
+	$OUTDIR=catfile($HTMLOUT,qw(perldoc)) // catfile($hm,qw(html perldoc));
+	$TEXDIR=catfile(qw(doc perl tex));
+
 }
 
-sub build_html {
+=head3 build_hperl_html
+
+=cut 
+
+sub build_hperl_html {
+
+	#$LIBROOT=[ grep { -d } @INC ];
+	#$OUTROOT=catfile($hm,qw(html perldoc ));
+	$LIBROOT=[];
+	$OUTROOT='';
+	$HTMLTITLE='';
+
+	_say "Processing: " . $TARGET ;
+	for($TARGET){
+		/^odtdms$/ && do {
+
+			my @mods=qw( Job Base Git Table Run );
+			push(@$LIBROOT,catfile($hm,qw(wrk filer odtdms lib ready ODTDMS )));
+			#foreach my $m (@mods) {
+				#push(@$LIBROOT,catfile($hm,qw(wrk filer odtdms lib ready ODTDMS ),$m));
+			#}
+
+			$OUTROOT=catfile($hm,qw(html perldoc odtdms));
+			$HTMLTITLE='ODTDMS';
+			
+			next;
+		};
+
+	}
+
+	if (@$LIBROOT && $OUTROOT){
+
+		my $pd = Pod::ProjectDocs->new(
+			outroot 	=> $OUTROOT,
+			libroot 	=> $LIBROOT,
+			index 		=> 1,
+			title 		=> $HTMLTITLE,
+		);
+		$pd->gen;
+	}
+
 }
 
-sub build_tex {
+=head3 build_hperl_tex
+
+=cut 
+
+sub build_hperl_tex {
 
 	@ARGV=( qw( --what ) , $TARGET);
 
 	my $p2tex=OP::perldoc2tex->new;
 	
-	_say "Running perldoc2tex for: $TARGET" ;
+	_say "Running perldoc2tex for: $TARGET";
 
 	$p2tex->main;
 
 }
 
-sub build_hperl {
+=head3 build_hperl_pdf 
+
+=cut 
+
+sub build_hperl_pdf {
 
 	my $hperl=OP::hperl->new;
 

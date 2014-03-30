@@ -136,59 +136,6 @@ sub set_these_cmdopts() {
 
 }
 
-sub dhelp() {
-
-    print << "HELP";
-=========================================================
-PURPOSE: 
-  Convert perldoc help information into LaTeX files
-USAGE: 
-  $Script --what TOPIC --texfile TEXFILE 
-OPTIONS:
-
-  --what      perldoc topic to display
-
-  --texfile   name of the output LaTeX file
-
-EXAMPLES:
-  
-  $Script --what File::Slurp --texfile File-Slurp.tex
-
-  The output of the 'cat' command on File-Slurp.tex shows:
-HELP
-
-    print << 'CAT';
-
-% ===========================================
-% File:
-%   File-Slurp.tex
-% Purpose:
-%   Latex file for the perldoc documentation
-% Date created:
-%   Wed Sep 25 20:36:09 2013
-% Creating script:
-%   perldoc2tex.pl
-% Command-line options for the creating script:
-%   --what File::Slurp --texfile File-Slurp.tex
-% ===========================================
-\input{/home/op/templates/latex//perldoc.preamble.tex}
-
-\chapter{File::Slurp}
-
-\input{/home/op/doc/perl/tex/perldoc.File-Slurp.tex}
-\input{/home/op/templates/latex//perldoc.end.tex}
-
-CAT
-    print << "HELP";
-
-SCRIPT LOCATION:
-  $0
-=========================================================
-
-HELP
-
-}
-
 sub _begin {
 	my $self=shift;
 
@@ -297,7 +244,10 @@ sub write_tex {
 	my $self=shift;
 
 	my $tex=OP::TEX::Text->new;
+
 	$self->tex($tex);
+
+	$tex->ofile($self->files("tex_out"));
 
     $self->write_tex_header;
 
@@ -361,7 +311,18 @@ sub write_tex_end {
 
 	my $tex=$self->tex;
 
-	$tex->input($self->files("tex_end"));
+	$tex->_add_line(<<'EOF');
+\clearpage
+\phantomsection
+\addcontentsline{toc}{part}{Index}
+\nc{\pagenumindex}{\thepage}
+\hypertarget{index}{}
+\printindex
+
+\end{document}
+
+EOF
+
 
 	$self->tex->_writefile;
 }
@@ -372,8 +333,6 @@ sub write_tex_header {
 	my $date = localtime;
 
 	my $tex=$self->tex;
-
-	$tex->ofile($self->files("tex_out"));
 
 	$tex->_c_delim;
 	$tex->_c("File:");
@@ -386,7 +345,37 @@ sub write_tex_header {
 	$tex->_c("	$Script");
 	$tex->_c_delim;
 
-	$tex->input($self->files("tex_preamble"));
+	$tex->_add_line(<<'EOF');
+
+\def\PROJ{perldoc}
+\input{_common.defs.tex}
+
+\documentclass[10pt,a4paper]{report}
+
+\ii{packages}
+\ii{hypersetup}
+\ii{pagelayout}
+
+\setcounter{tocdepth}{4}
+
+\title{Perldoc}
+\date{Last updated \today}
+
+\makeindex
+
+\begin{document}
+
+\clearpage
+\phantomsection
+\hypertarget{toc}{}
+\label{toc}
+\addcontentsline{toc}{chapter}{\contentsname}
+\tableofcontents
+\nc{\pagenumtoc}{\thepage}
+\clearpage
+
+EOF
+
 
 }
 
@@ -432,8 +421,6 @@ sub process_opt {
 		},
 	    "pod_topic"    => 
 			sub { catfile($self->poddir,$self->curtopic . ".pod") },
-	    "tex_preamble" => "perldoc.preamble.tex",
-	    "tex_end"      => "perldoc.end.tex",
 	    "tex_out"      => catfile($self->texdir,$self->topic . ".tex"),
 	);
 

@@ -32,14 +32,6 @@ $VERSION = '0.01';
 
 @EXPORT = qw();
 
-=head1 EXPORTS
-
-=head2 SUBROUTINES
-
-=head2 VARIABLES
-
-=cut
-
 ###export_vars_scalar
 my @ex_vars_scalar = qw(
   $ArgString
@@ -490,6 +482,47 @@ sub VimVarEcho {
 
 }
 
+
+=head3 VimVarType
+ 
+=head4 Purpose
+
+Check the type of a VimScript variable
+ 
+=head4 Usage
+
+    ###
+    # Synopsis
+    ###
+    VimVarType($varname);
+
+    ###
+    # More examples
+    ###
+
+    ...
+    VimScript section
+    ...
+    let lines=[1,2,3]
+    ...
+    perl << EOF
+
+    if ( VimVarType('lines') == 'List' ){
+        ...
+    }
+
+    EOF
+ 
+=head4 Input
+
+    Name of the input VimScript variable which type one wants to check
+ 
+=head4 Returns
+
+    String representation of the variable's type, can be: String, Number, Float, List, Dictionary
+ 
+=cut
+ 
 sub VimVarType {
     my $var = shift;
 
@@ -591,9 +624,11 @@ sub VimInput {
 
 =over 4
 
-=item $dialog (SCALAR) Input dialog message string
-=item $list   (SCALAR) String, containing list of values to be selected (separated by $sep)
-=item $sep   (SCALAR) Separator of values in $list 
+=item C<$dialog> (SCALAR) Input dialog message string
+
+=item C<$list>   (SCALAR) String, containing list of values to be selected ( separated by <$sep> )
+
+=item C<$sep>    (SCALAR) Separator of values in C<$list>
 
 =back
 
@@ -1035,23 +1070,21 @@ sub VimMsgE {
     VIM::Msg( " $text", "ErrorMsg" );
 }
 
-=head3 VimLet ( $var, $ref, $vtype )
+=head3 VimLet
 
-=over 4
+=head4 Usage
 
-=item Set the value of a vimscript variable
+    VimLet( $var, $ref );
 
-=item Examples: 
+=head4 Purpose
 
-=over 4
+Set the value of a vimscript variable
 
-=item VimLet('paths',\%paths,'g')
+=head4 Examples 
 
-=item VimLet('PMOD_ModSubs',\@SUBS,'g')
+    VimLet('g:paths',\%paths);
 
-=back
-
-=back
+    VimLet('g:PMOD_ModSubs',\@SUBS);
 
 =cut
 
@@ -1097,22 +1130,21 @@ sub VimLet {
 
 =head3 VimLetEval($var,$expr)
 
-=over 4
+=head4 Usage
 
-=item Assign to the variable $var the result of evaluation of expression $expr.
+    VimLetEval($var,$expr);
 
-=item Examples:
+=head4 Purpose
 
-=over 4
+Assign to the variable C<$var> the result of evaluation of expression C<$expr>.
 
-=item VimLetEval('tempvar','tempname()') - equivalent in vimscript to
-let tempvar=tempname()
+=head4 Examples
 
-=back
+    VimLetEval('tempvar','tempname()') 
 
-=back
+This is equivalent in vimscript to
 
-
+    let tempvar=tempname()
 
 =cut
 
@@ -1147,8 +1179,9 @@ sub VimMsgDebug {
 
 =over 4
 
-=item $str (SCALAR) - input string to be converted.
-=item $sep (SCALAR) - separator between options in the input string.
+=item C<$str> (SCALAR) - input string to be converted.
+
+=item C<$sep> (SCALAR) - separator between options in the input string.
 
 =back
 

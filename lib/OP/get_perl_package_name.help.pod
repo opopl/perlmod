@@ -1,0 +1,68 @@
+=head1 NAME
+
+get_perl_package_name.pl - do ... 
+
+=head1 SYNOPSIS
+
+get_perl_package_name.pl [--help] [--man] [OPTIONS] 
+
+=head1 DESCRIPTION
+
+...long description... 
+
+=head1 OPTIONS
+
+=over 4
+
+=item I<-h, --help>
+
+Print the help message
+
+
+
+=item I<--man>
+
+Print the man page
+
+
+
+=item I<--examples>
+
+Show examples of usage
+
+
+
+=item I<--vm>
+
+View myself
+
+
+
+=item I<-d, --debug>
+
+For debugging purposes
+
+
+
+=item I<-i>
+
+Short option
+
+
+
+=item I<--ifile>
+
+Input Perl package name
+
+
+
+=item I<--printdir>
+
+Return the package's root directory
+
+
+
+=back
+
+=cut
+
