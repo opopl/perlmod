@@ -4,10 +4,14 @@ package OP::PAPERS::mktex;
 use strict;
 use warnings;
 
+###use
+use Exporter ();
+
 use File::Basename;
 use File::Path qw(mkpath);
-use File::Slurp;
+use File::Slurp qw(read_file);
 use Getopt::Long::Descriptive;
+use Data::Dumper;
 
 use FindBin qw($Bin $Script);
 
@@ -16,27 +20,31 @@ use OP::Base qw(
     readhash
 );
 
+use OP::Script::Simple qw( _say );
+use OP::PAPERS::chvar;
+
 ###our
+our @ISA     = qw(Exporter);
+our @EXPORT_OK = qw( main);
+our @EXPORT  = qw( );
+our $VERSION = '0.01';
+
 our $opt;
 our $usage;
 our $pref=$Script . ">";
 our %bibplace;
 our($target,$desc);
 our(%flags);
-our($texexe,$texopts);
 
 our(%fold);
 
-#folds {{{
 %fold=( 
 	o => "{{{",
 	c => "}}}",
 );
 
-my $fo=$fold{o};
-my $fc=$fold{c};
-
-#}}}
+our $fo=$fold{o};
+our $fc=$fold{c};
 
 our(%nc);
 our(%pdfopts);
@@ -52,9 +60,7 @@ our($time);
 our($pfile,$hsfile,$bkfile);
 our($pdftitle);
 
-our %files=( 
-	vars	=>	"vars.i.dat"
-);
+our %files;
 our(@used_packages,%packopts,@optpacks);
 our($maintitle);
 # --sec, e.g. blnall, pullex etc.
@@ -66,22 +72,33 @@ our @F;
 our(%vars);
 
 ###subs
-
+sub dhelp;
+sub get_opt;
+sub get_papers;
+sub hx;
+sub init_vars;
+sub main;
+sub print_hypsetup;
+sub print_preamble;
+sub printtex;
+sub print_bm;
+sub print_bib;
+sub print_end;
+sub print_nc;
+sub print_start;
+sub set_flags;
 
 =head3 init_vars
 
 =cut
 
 sub init_vars {
-	# define in the perl-script
-	# $pname, files {{{
+
+    %files=( 
+	    vars	=>	"vars.i.dat"
+    );
     %vars=readhash($files{vars});
 
-	$vars{"texexe"}="latex";
-	$vars{"texopts"}='--nosafe';
-	$texexe=$vars{"texexe"};
-	$texopts=$vars{"texopts"};
-	
 	$pname=$vars{"pname"};
 	@pnames=$vars{"pnames"};
 	$bibfile=$vars{"bibfile"};
@@ -92,22 +109,17 @@ sub init_vars {
 	$bkfile="$pname-bookmarks.tex";
 	$hsfile="$pname-hypsetup.tex";
 
-	# }}}
-	# %flags {{{
 	%flags=(
 		print_index	=> 1,
 		print_title	=> 0
 	);
-	# }}}
-	# %tabs {{{
+
 	%tabs=( 
 		#"pf.gopairs"  =>	"List of native contacts in the Go-like model",
 		"res.bln.g46.ef"	  			=> 	"Go-like model, lowest energy vs applied force",
 		"res.bln.g46.ef.full"	  		=> 	"--//--, with job numbers",
 		"res.bln.g46.zf.le"		=>	"BLN model, lowest energy conformations "
 	);
-	# }}}
-	# %figs {{{
 	
 	my %figs_res=( 
 		"res.bln.gopairs"			=> "(bln.0.1) Native-state contacts",
@@ -128,77 +140,32 @@ sub init_vars {
 	);
 	
 	%figs=( %figs_res );
-	#}}}
-	# %parts {{{
 
-	open(S,"<$pname.parts.i.dat") or die $!;
-	while(<S>){ chomp; next if ( /^#/ || /^[\t\s]+$/ ); 
-			my @F=split;
-			my $key=shift @F;
-			my $val=join(' ',@F);
-			if (defined($key) && defined($val)){ $parts{$key}=$val; }
-	}
-	close S;
-	#}}}
-	# %ttex {{{
-	#open(S,"<$pname.ttex.i.dat") or die $!;
-	open(S,"<ttex.i.dat") or die $!;
-	while(<S>){ 
-		chomp; 
-		next if ( /^#/ || /^[\t\s]+$/ ); 
-		@F=split;
-		my $key=shift(@F);
-		my $val=join(' ',@F);
-		if (defined($key)){ $ttex{$key}=$val;}
-	}
-	close S;
-	#}}}
-	# @sects @papers {{{
+    %parts=readhash("$pname.parts.i.dat");
+    %ttex=readhash('ttex.i.dat');
 	
-	open(S,"<$pname.sects.i.dat") or die $!;
-	while(<S>){ chomp; next if ( /^#/ || /^[\t\s]+$/ ); push(@sects,$_); }
-	close S;
+    @sects=readarr("$pname.sects.i.dat");
 	
-	#}}}
-	# sort: %key_sort {{{
-	#}}}
-	# latex_packages {{{
-	
-	# used packages
-	open(UP,"<$pname.usedpacks.i.dat") or die $!;
-	while(<UP>){ 
-		chomp; 
-		next if ( /^#/ || /^[\t\s]+$/ ); 
-		@F=split;
-		push(@used_packages,@F); 
-		if ( grep { "perltex" eq $_ } @F ){ 
+    @used_packages=readarr("$pname.usedpacks.i.dat");
+
+	if ( grep { "perltex" eq $_ } @used_packages ){ 
+        unless($vars{"texexe"} eq "perltex"){
 			$vars{"texexe"}="perltex";
-			$texexe="perltex";
-			$texopts="--nosafe";
-			eval `ch texexe $texexe`;
-			#eval `ch texopts $texopts`;
-		}
+	        OP::PAPERS::chvar::main('texexe' ,'perltex' );
+        }
 	}
-	close UP;
-	
-	# package options
-	open(PO,"<$pname.packopts.i.dat") or die $!;
-	while(<PO>){ 
-		chomp; 
-		next if ( /^#/ || /^[\t\s]+$/ ); 
-		@F=split;
-		my $key=shift(@F);
-		my $val=join(' ',@F);
-		if (defined($key)){ $packopts{$key}=$val;}
-	}
-	close PO;
-	# }}}
-	# nc (new commands) {{{
-	# defnc  \nc
-	eval `cat nc.i.pl | sed '/^#/d'`;
-	
-	# }}}
-	# other {{{
+
+    %packopts=readhash("$pname.packopts.i.dat");
+
+    %nc=( 
+	    "min" => {  
+			"ak" 	=> '\alpha_k',
+			"xk" 	=> 'x_k',
+			"pk" 	=> 'p_k',
+			"xlong"	=> '(x_1,\ldots,x_n)',
+			'gk'	=> '\nabla f_k'
+	    },
+    );
 	
 	$maintitle="Pulling a protein: a basin-hopping search for the global energy minimum";
 	
@@ -214,17 +181,14 @@ sub init_vars {
 	
 	# \defbibplace \bibplace
 	for my $t (@trg){ $bibplace{$t}="each"; }
-	#for my $t (@trg){ $bibplace{$t}="common"; }
-	# }}}
 }
-#}}}
-# get_papers() {{{
 
-=head3 get_papers()
+=head3 get_papers
 
 =cut
 
 sub get_papers {
+
 	my	@papers=grep { !/^\s*$/ } map { m/^p\.([^\.]*)\.tex$/ && $1 } glob("p.*.tex");
 	my %files;
 	my($pname,$sec)=@_;
@@ -235,28 +199,24 @@ sub get_papers {
 		{
 			warn "$pref No file with papers for the section: $sec\n";
 		}else{
-			@papers=@{&readarr("$files{paps}")};
+			@papers=readarr("$files{paps}");
 		}
 	}
 	return \@papers;
 }
-# }}}
-# get_opt() {{{
 
-=head3 get_opt()
+=head3 get_opt
 
 =cut
 
 sub get_opt {
 
-	# describe_options() {{{
-	
-	if ( !@ARGV ){ 
+	unless( @ARGV ){ 
 		print "Type --help for more help\n";
 		exit 0;
 	}else{
 		($opt,$usage)=Getopt::Long::Descriptive::describe_options(
-			 "$FindBin::Script %o",
+			 "$Script %o",
 				[ "isec",	"" ],
 				[ "listtex", "List available TeX target names" ],
 				[ "listlong",  "" ],
@@ -284,8 +244,6 @@ sub get_opt {
 	
 			@papers=@{&get_papers($pname,$sec)};
 	
-	#}}}
-# --var {{{
 
 if (defined($opt->var)){
 	if(defined($vars{$opt->var})){
@@ -301,8 +259,6 @@ if (defined($opt->var)){
 		exit 0;
 	}
 }
-# }}}
-	# --listlong --list --listtex --listpapers {{{
 	
 	if ($opt->listlong ){
 			my $fmt2="%20s %20s";
@@ -349,8 +305,6 @@ if (defined($opt->var)){
 			}
 			exit;
 	}
-	#}}}
-	# process latex packages {{{
 	
 	# s_pack: package name
 	# s_opt: string with package options
@@ -376,11 +330,10 @@ if (defined($opt->var)){
 	#}}}
 
  }
- }
-#}}}
-# hx() dhelp() {{{
-sub hx { &dhelp(@_); exit; }
-# \\dhelp
+}
+
+sub hx { dhelp(@_); exit; }
+
 sub dhelp {
 # print help message {{{
 	my $htopic=$_[0];
@@ -490,8 +443,7 @@ eof
 			# 
 			# 			The below line reads in the paper keys from e.g. pap.sects.bln.i.dat file
 			# 			commented lines ('#'), and also lines with spaces only are ignored are ignored
-			my @tpaps=map { ( /^[ \t]*#/ || /^[\t\s]+$/ ) ? () : split } 
-					read_file("$pname.paps.$target.i.dat");
+			my @tpaps= readarr("$pname.paps.$target.i.dat");
 			# now include the given paper tex-file, e.g. "p.HT92.tex" into "pap.tex"
 			for my $p (@tpaps){ 
 				if (-e "p.$p.nc.tex"){ 
@@ -513,13 +465,12 @@ eof
 			# include anything else needed for the given $target
 			my $f="$pname.sects.$target.i.dat";
 			if ( -e $f ){
-					my @tsects=map { ( /^[ \t]*#/ || /^[\t\s]+$/ ) ? () : split } 
-						read_file("$f");
-						foreach(@tsects){ 
-							print PFILE "\\inpp{$target.$_}\n";
-						}
+				my @tsects=readarr("$f");
+				foreach(@tsects){ 
+					print PFILE "\\inpp{$target.$_}\n";
+				}
 			}
-						close(PFILE);
+			close(PFILE);
 		}
 		#}}}
 	}
@@ -574,15 +525,11 @@ eof
 	}
 }
 # }}}
-# nc {{{
-# \printnctex
-elsif ( $target eq "nc.tex" ){ eval `cat print.nc.i.pl`; }
-elsif ( $target eq "bib.tex" ){ eval `cat print.bib.i.pl`; }
-elsif ( $target eq "bm.tex" ){ eval `cat print.bm.i.pl`; }
-elsif ( $target eq "end.tex" ){ eval `cat print.end.i.pl`; }
-elsif ( $target eq "start.tex" ){ eval `cat print.start.i.pl`; }
-elsif ( $target eq "preamble.tex" ){ &print_preamble(); }
-elsif ( $target eq "hypsetup.tex" ){ &print_hypsetup(); }
+elsif ( grep { /^$target$/ } map { $_ . '.tex' } qw( nc bib bm end start preamble hypsetup ) ){ 
+    my $id = $target =~ s/\.tex$//gr;
+    eval 'print_' . $id; 
+    die $@ if $@;
+}
 
 # }}}
 # }}}
@@ -685,12 +632,345 @@ sub set_flags {
 	}
 }
 
+sub print_end {
+
+	if ($flags{print_index}){ 
+
+	print << "eof";
+\\clearpage
+\\phantomsection
+\\nc{\\pagenumindex}{\\thepage}
+\\hypertarget{index}{}\n
+\\addcontentsline{toc}{chapter}{Index}
+\\printindex
+eof
+
+	}
+
+}
+
+sub print_bib {
+
+	my(%bib);
+	
+	%bib=( 
+		name	=>	"Bibliography",
+		style	=>	"thesis",
+		#file	=>	"$pname-$sec"
+		file	=>	"$bibfile"
+	);
+	
+	if (defined($opt->bibstyle)){
+		$bib{style}=$opt->bibstyle;
+	}
+	
+	if ($sec eq $pname){
+		$bib{file}= "$bibfile";
+	}
+	
+	print << "eof";
+
+%\\cleardoublepage
+\\phantomsection
+\\hypertarget{bib}{}
+
+\\addcontentsline{toc}{chapter}{$bib{name}}
+
+\\bibliographystyle{$bib{style}}
+\\input{jnames}
+%\\nc{\\pagenumbib}{\\thepage}
+\\bibliography{$bib{file}}
+
+eof
+}
+
+sub print_nc {
+
+	# definitions and variables {{{
+
+	my($nnc,$s_nc);
+	my(@bnc,@inpnc,@refnc,%refnames);
+
+	@inpnc=qw( p fig tab eq bib nc bm start end alg ap );
+	@refnc=qw( eq tab fig alg sec ap bp );
+	%refnames=(
+			"eq"		=>	"Eq.",
+			"tab"		=>	"Table",
+			"fig"		=> 	"Fig.",
+			"alg"		=> 	"Algorithm",
+			"sec"		=> 	"Section",
+			"ap"		=> 	"Appendix",
+			"bp"		=> 	"Page"
+	);
+	#}}}
+
+	print "% Section: $sec \n\n";
+
+# base {{{
+	if ( $sec eq "base" ){
+# initial  {{{
+
+print << 'eof';
+\nc{\nn}{\nonumber}
+
+\newcommand{\loeq}{List of Equations}
+\newlistof{myeq}{equ}{\loeq}
+
+\newcommand{\myeq}[1]{%
+\addcontentsline{equ}{myeq}{\protect\numberline{\theequation}#1}\par}
+
+eof
+# }}}
+
+if ($pname eq "rep"){
+	for my $c (@refnc){ 
+		print "\\nc{\\ref$c}[1]{$refnames{$c}\ \\ref{$c\:#1}}\n"; 
+		print "\\nc{\\label$c}[1]{\\label{$c\:#1}\\hypertarget{$c\:#1}{}}\n"; 
+	}
+}elsif($pname eq "pap"){
+	for my $c (@refnc){ 
+		print "\\nc{\\ref$c}{}\n"; 
+		print "\\nc{\\label$c}{}\n"; 
+	}
+}
+for my $c (@inpnc){ print "\\nc{\\inp$c}{}\n"; }
+# @bnc: bare (empty) new commands
+my @bnc=qw( fn rkey hl );
+for my $c (@bnc){ print "\\nc{\\$c}{}\n"; }
+
+}
+
+# }}}
+# $pname {{{
+	
+	if ( $sec eq "rep" ){
+		print "\\rnc{\\fn}{$pname}\n\n";
+		for my $c (@inpnc){
+			my $c1="$c\.";
+			if ($c eq "p"){ $c1=""; }
+				print "\\rnc{\\inp$c}[1]{\\input{$c1\\fn-#1}}\n";
+		}
+	}
+	if ( $sec eq "pap" ){
+
+print << "eof";
+\\rnc{\\fn}{$sec}
+\\rnc{\\inpp}[1]{\\input{\\fn-#1}}
+\\nc{\\ipnc}[1]{\\input{p.#1.nc.tex}}
+eof
+
+	@inpnc=qw( bib nc bm start end );
+	for my $c (@inpnc){
+			my $c1="$c\.";
+			if ($c eq "p"){ $c1=""; }
+			print "\\rnc{\\inp$c}[1]{\\input{$c1\\fn-#1}}\n";
+	}
+
+	print "\\input{$sec-nc.0.tex}\n";
+
+	}
+	#}}}
+	# min {{{
+	if ($sec eq "min"){
+#print << 'eof';
+#%\DeclareMathOperator{\min}{min}
+#%\operatorname{rank}
+#eof
+	}
+	# }}}
+	# print out %nc defined in nc.i.pl {{{
+	if (defined($nc{$sec})){ 
+		my %nc1=%{$nc{$sec}};
+		my $nnc="";
+		for my $k (keys %nc1) {
+			( $s_nc=$nc1{$k} ) =~ s/^\s*\[(\w+)\]//g;
+			if (defined($1)){ $nnc="[$1]"; }else{ $nnc=""; }
+			print "\\nc{\\$k}$nnc\{$s_nc\}\n";
+		}
+	}
+	# }}}
+}
+
+sub print_bm {
+
+	print "\\bookmark[level=0,named=FirstPage]{Bookmarks}\n";
+	
+	my(%bmid,%bm,@usedbm,%lst1,%nm,$bm_opt,@bm_opts);
+	
+	@usedbm=qw( abs title lof lot loeq loa toc bib index ); 
+	
+	# define %bm %bmid {{{
+	%bm=(
+		"lof"	=> "List of figures",
+		"loa"	=> "List of algorithms",
+		"loeq"	=> "List of equations",
+		"lot"	=> "List of tables",
+		"toc"	=> "Table of contents",
+		"bib"	=> "Bibliography",
+		"title"	=> "Title",
+		"abs"	=> "Abstract",
+		"index"	=> "Index"
+	);
+	
+	%bmid=( 
+		"lof"	=> "fig",
+		"lot"	=> "tab",
+		"loa"	=> "alg",
+		"loeq"	=> "eq"
+	);
+	# }}}
+	if ($pname eq "pap"){
+		@usedbm=qw( lof lot loeq loa toc bib index ); 
+		if ($sec eq "blnpull"){
+			push(@usedbm,"title");
+		}
+	}
+	
+	if ( $sec eq "$pname" ){  
+		@usedbm=qw( abs title toc lof lot loa bib index ); 
+	}
+	
+	if ( $sec eq "abs" ){  
+		@usedbm=qw( abs title bib ); 
+	}
+	if ( grep { $_ eq $sec } qw( in pes pf ) ){
+		@usedbm=qw( bib toc ); 
+	}
+	if ( $sec eq "ft" ){  
+		@usedbm=qw( lof lot ); 
+	}
+	
+	
+	if ( $sec eq "min" ){  # {{{
+		@usedbm=qw( loeq loa toc bib ); 
+		%lst1=( 
+			"loa"	=> [ "bfgs", "lbfgs" , "lbfgs.twoloop" ],
+			"loeq"	=>	[ "wolfe", "bfgs.update" ]
+		);
+		%nm=(
+			"bfgs"			=> "BFGS method",
+			"bfgs.update"	=> "BFGS update formula",
+			"lbfgs"			=> "L-BFGS method",
+			"lbfgs.twoloop"	=> "L-BFGS two-loop recursion",
+			"wolfe"			=> "Wolfe conditions"
+		);
+	}
+	#}}}
+	# print bookmarks in @usedbm {{{
+	for my $b (@usedbm){ 
+		@bm_opts=(
+				"level=1",
+				"dest=$b"
+				#"page=\\pagenum$b"
+			);
+		$bm_opt=join(',',@bm_opts);
+		print "\\bookmark[$bm_opt]{$bm{$b}}\n"; 
+		if (defined $lst1{$b}){
+			for my $elem (@{$lst1{$b}}){
+				@bm_opts=( 
+					"level=2",
+					#"view=FitH 800",
+					"view={XYZ 0 1000 null}",
+					"dest=$bmid{$b}\:$elem"
+				);
+				$bm_opt=join(',',@bm_opts);
+				print "\\bookmark[$bm_opt]{$nm{$elem}}\n"; 
+			}
+		}
+	}
+	#}}}
+	
+}
+
+sub print_start {
+    my(%lst,@usedlst);
+	
+	%lst=( 
+		"toc"  => "tableofcontents",
+		"lof"  => "listoffigures",
+		"lot"  => "listoftables",
+		"loeq" => "listofmyeq",
+		"loa"  => "listofalgorithms"
+	);
+	
+	if ($flags{print_title}){
+
+print << "eof";
+\\hypertarget{title}{}
+\\inpp{title}
+\\nc{\\pagenumtitle}{\\thepage}
+eof
+
+    }
+
+	if ($flags{include_own_start_page}){
+
+print << "eof";
+\\inpstart{$sec.0} 
+
+eof
+
+	}
+
+	if ($flags{print_abs}){
+print << "eof";
+\\hypertarget{abs}{}
+\\inpp{abs}\n
+\\nc{\\pagenumabs}{\\thepage}
+eof
+	}
+
+
+	@usedlst=keys %lst;
+	
+	if ($pname eq "pap"){
+		print "\\chapter{Papers}\n";
+	}
+	
+	if ($sec eq $pname) {
+		#@usedlst=keys %lst;
+		@usedlst=qw( toc lof lot loa );
+		@usedlst=qw( toc lof );
+	} elsif($sec eq "abs") {
+		@usedlst=qw( );
+	}elsif ( grep { $_ eq $sec } qw( in pes pf ) ){
+		@usedlst=qw( abs toc lof );
+	} elsif($sec eq "min") {
+		@usedlst=qw( toc loa );
+	} elsif($sec eq "ft") {
+		@usedlst=qw( lof lot );
+	} elsif($sec eq "res") {
+		@usedlst=qw( lof lot );
+	} elsif($sec eq "tab") {
+		@usedlst=qw( lot );
+	} elsif($sec eq "fig") {
+		@usedlst=qw( lof );
+	}
+#@usedlst=qw( toc lof lot loa );
+
+	my $ai=0;
+	for my $k (@usedlst){
+		if ($ai == 0){ print "\\clearpage\n"; }
+
+print << "eof";
+\\phantomsection
+\\hypertarget{$k}{}
+\\$lst{$k}
+\\nc{\\pagenum$k}{\\thepage}
+\n
+eof
+	$ai++;
+	}
+
+}
+
 sub main {
 
 	init_vars;
 	get_opt;
 	set_flags($sec);
 	printtex;
+
 }
 
 1;

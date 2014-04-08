@@ -25,9 +25,13 @@ OP::Module::Build
 OP::PAPERS::MKPDF
 OP::PAPERS::PSH
 OP::PAPERS::idx_ins_hpage
+OP::PAPERS::ind_insert_bookmarks
 OP::PAPERS::listof_change
+OP::PAPERS::mktex
+OP::PAPERS::chvar
 OP::PERL::PMINST
 OP::POD
+OP::Pod::LaTeX
 OP::PROJSHELL
 OP::PackName
 OP::PaperConf
@@ -54,6 +58,7 @@ OP::TEX::HTLATEX
 OP::TEX::LATEX2HTML
 OP::TEX::MAKEINDEX
 OP::TEX::NICE
+OP::TEX::PDFLATEX
 OP::TEX::PERLTEX
 OP::TEX::PNC
 OP::TEX::Text

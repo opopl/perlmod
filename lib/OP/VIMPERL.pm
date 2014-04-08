@@ -12,7 +12,6 @@ use strict;
 use warnings;
 
 use Exporter ();
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use File::Spec::Functions qw(catfile);
 
@@ -26,11 +25,6 @@ use File::Slurp qw(
   read_file
   write_file
 );
-
-$VERSION = '0.01';
-@ISA     = qw(Exporter);
-
-@EXPORT = qw();
 
 ###export_vars_scalar
 my @ex_vars_scalar = qw(
@@ -61,7 +55,8 @@ my @ex_vars_array = qw(
   @LOCALMODULES
 );
 
-%EXPORT_TAGS = (
+###our_EXPORT_TAGS
+our %EXPORT_TAGS = (
 ###export_funcs
     'funcs' => [
         qw(
@@ -115,6 +110,7 @@ my @ex_vars_array = qw(
           VimSo
           VimSetTags
           VimVar
+          VimVars
           VimVarEcho
           VimVarType
           VimVarDump
@@ -122,6 +118,9 @@ my @ex_vars_array = qw(
     ],
     'vars' => [ @ex_vars_scalar, @ex_vars_array, @ex_vars_hash ]
 );
+
+###our_EXPORT
+our @ISA     = qw(Exporter);
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
 our @EXPORT    = qw( );
@@ -182,6 +181,7 @@ sub VimSo;
 sub VimStrToOpts;
 sub VimSetTags;
 sub VimVar;
+sub VimVars;
 sub VimVarEcho;
 sub VimVarType;
 sub VimVarDump;
@@ -242,6 +242,25 @@ our $PAPINFO;
 =head1 SUBROUTINES
 
 =cut
+
+=head3 process_quickfix_latex
+ 
+=head4 Usage
+ 
+    process_quickfix_latex();
+ 
+=head4 Purpose
+ 
+=head4 Input
+ 
+None. 
+
+=head4 Returns
+ 
+=head4 See also
+ 
+=cut
+ 
 
 sub process_quickfix_latex {
 
@@ -339,6 +358,45 @@ sub process_quickfix_latex {
 
 }
 
+=head2 SIMPLE 
+
+=over 4
+
+=item * L</VimCmd> - Wrapper around C<VIM::DoCommand> calls.
+
+=item * L</VimSo> - source a file.
+
+=back
+
+=head3 VimCmd
+ 
+=head4 Usage
+ 
+    ### 
+    VimCmd($cmd);
+
+    VimCmd("echo 'hello'");
+ 
+=head4 Purpose
+
+Wrapper around C<VIM::DoCommand> calls.
+ 
+=head4 Input
+ 
+=over 4
+ 
+=item * C<$cmd> (SCALAR) Vim command to be run.
+ 
+=back
+ 
+=head4 Returns
+
+Nothing.
+ 
+=head4 See also
+ 
+=cut
+ 
 sub VimCmd {
     my $cmd = shift;
 
@@ -354,6 +412,34 @@ sub VimArg {
     $arg;
 
 }
+
+=head3 VimSo
+ 
+=head4 Usage
+ 
+    ###
+    my $VimFile='a.vim';
+
+    VimSo($VimFile);
+ 
+=head4 Purpose
+
+Source a vim file.
+ 
+=head4 Input
+ 
+=over 4
+ 
+=item * C<$VimFile> - path to the vim file to be sourced. 
+ 
+=back
+ 
+=head4 Returns
+
+Nothing.
+ 
+=cut
+ 
 
 sub VimSo {
     my $file = shift;
@@ -376,18 +462,47 @@ sub VimLen {
     return $len;
 }
 
-#   examples:
-#       VimVar('000','arr','a')
-#       VimVar('confdir','','g')
 
-=head3 VimVar($var,$rtype,$vtype)
+=head3 VimVar
 
-Return Perl representation of VimScript variable
+=head4 Usage
+
+    my ... = VimVar($vim_variable_name);
+    
+    my $value=VimVar($vim_scalar_variable_name);
+
+    my @arr=VimVar($vim_list_variable_name);
+
+    my $arrayref=VimVar($vim_list_variable_name);
+
+=head4 Purpose
+
+Returns value of a VimScript variable.
+
+=head4 Input
+
+=over 4
+
+=item * C<$vim_variable_name> (SCALAR) - Vim variable name which value
+is retrieved.
+
+=back
+
+=head4 Examples
+
+    ### retrieve the array of a VimScript subroutine's parameters
+    my @arr=VimVar('000');
+
+    ### retrieve the value of a global variable
+    my $confdir=VimVar('g:confdir');
+
+=head4 Returns
+
+Array in list context, scalar in scalar context.
 
 =cut
 
 sub VimVar {
-
     my $var = shift;
 
     return '' unless VimExists($var);
@@ -444,6 +559,64 @@ sub VimVar {
         wantarray ? %$res : $res;
     }
 
+}
+
+=head3 VimVars
+ 
+=head4 Usage
+ 
+    ### Input variable names as array
+    my %vimvars=VimVars(@varnames);
+
+    ### Input variable names as arrayref
+    my %vimvars=VimVars($varnames);
+ 
+=head4 Purpose
+ 
+=head4 Input
+ 
+=over 4
+ 
+=item * C<@varnames> - array of vim variables names which values are requested. 
+ 
+=back
+ 
+=head4 Returns
+
+Hash C<%vimvars> of the form:
+
+    varname1 => value1,
+    varname2 => value,
+ 
+=head4 See also
+
+L</VimVar>
+ 
+=cut
+ 
+sub VimVars { 
+    my $self=shift;
+
+    my $ref=shift;
+    my @varnames;
+    my %vimvars;
+
+    unless(ref $ref){
+        push(@varnames,$ref);
+        push(@varnames,@_);
+        
+    }elsif(ref $ref eq "ARRAY"){
+        @varnames=@$ref;
+        
+    }
+
+    foreach my $varname (@varnames) {
+        VimMsg($varname);
+        $vimvars{$varname}=VimVar($varname);
+    }
+
+    wantarray ? %vimvars : \%vimvars;
+   
 }
 
 sub VimVarDump {
@@ -611,7 +784,7 @@ sub VimInput {
         VimCmd( "let input=input(" . "'" . $dialog . "'" . ")" );
     }
     else {
-        VimCmd(
+        VimCmd (
             "let input=input(" . "'" . $dialog . "','" . $default . "'" . ")" );
     }
 
@@ -620,15 +793,24 @@ sub VimInput {
     return $inp;
 }
 
-=head3 VimChooseFromPrompt($dialog,$list,$sep,@args)
+=head3 VimChooseFromPrompt
+
+=head4 Usage
+
+    VimChooseFromPrompt($dialog,$list,$sep,@args);
+
+=head4 Input
 
 =over 4
 
-=item C<$dialog> (SCALAR) Input dialog message string
+=item * C<$dialog> (SCALAR) Input dialog message string;
 
-=item C<$list>   (SCALAR) String, containing list of values to be selected ( separated by <$sep> )
+=item * C<$list>   (SCALAR) String, containing list of values to be selected (
+separated by <$sep> );
 
-=item C<$sep>    (SCALAR) Separator of values in C<$list>
+=item * C<$sep>    (SCALAR) Separator of values in C<$list>;
+
+=item * C<@args>   (SCALAR) List of optional parameters.
 
 =back
 
@@ -783,7 +965,7 @@ sub VimPerlGetModuleName {
           for($k){
             /^selectdialog$/ && do {
                 $module = VimPerlGetModuleNameFromDialog;
-              last LOOP;
+                last LOOP;
             };
           }
         }
@@ -975,19 +1157,27 @@ sub VimMsgNL {
     VimMsg( " ", { prefix => 'none' } );
 }
 
-=head3 VimMsg($text,$options)
+=head3 VimMsg
 
-=head4 Input variables
+=head4 Usage
+
+    VimMsg($text,$options);
+
+=head4 Purpose
+
+Wrapper around C<Vim::Msg>.
+
+=head4 Input
 
 =over 4
 
-=item $text           (SCALAR) - input text to be displayed by Vim
+=item * C<$text>  (SCALAR) - input text to be displayed by Vim;
 
-=item $options        (HASH)   - additional options (color, highlighting etc.)
-
-=item Structure of the $options parameter.
+=item * C<$options>  (HASH)   - additional options (color, highlighting etc.).
 
 =back
+
+=head4 Structure of the C<$options> parameter
 
 =cut
 
@@ -1128,7 +1318,7 @@ sub VimLet {
 
 }
 
-=head3 VimLetEval($var,$expr)
+=head3 VimLetEval
 
 =head4 Usage
 
@@ -1140,7 +1330,8 @@ Assign to the variable C<$var> the result of evaluation of expression C<$expr>.
 
 =head4 Examples
 
-    VimLetEval('tempvar','tempname()') 
+    ### perl code
+    VimLetEval('tempvar','tempname()');
 
 This is equivalent in vimscript to
 
@@ -1173,21 +1364,27 @@ sub VimMsgDebug {
     }
 }
 
-=head3 VimStrToOpts($str,$sep)
+=head3 VimStrToOpts
 
-=head4 INPUT 
+=head4 Usage
+
+    VimStrToOpts($str,$sep);
+
+=head4 Input 
 
 =over 4
 
-=item C<$str> (SCALAR) - input string to be converted.
+=item * C<$str> (SCALAR) - input string to be converted.
 
-=item C<$sep> (SCALAR) - separator between options in the input string.
+=item * C<$sep> (SCALAR) - separator between options in the input string.
 
 =back
 
-=head4 OUTPUT
+=head4 Returns
 
-hash reference of the form: { OPTION1 => 1, OPTION2 => 0, etc. }
+hash reference of the form: 
+
+    { OPTION1 => 1, OPTION2 => 0, etc. }
 
 =cut
 
@@ -1212,10 +1409,18 @@ sub VimStrToOpts {
 
 ###imod
 
-=head3 VimPerlInstallModule($opts) Install local Perl module(s)
+=head3 VimPerlInstallModule 
 
-Input Perl module name is provided through @Args. Additional options are specified
-in the optional hash structure $opts
+=head4 Usage
+
+    VimPerlInstallModule($opts) 
+
+=head4 Purpose
+
+Install local Perl module(s)
+
+Input Perl module name is provided through C<@Args>.  Additional options are
+specified in the optional hash structure C<$opts>.
 
 =cut
 
@@ -1292,19 +1497,24 @@ sub VimPerlInstallModule {
 
 }
 
-=head3 VimQuickFixList($qlist,$action) - apply an action to the quickfix list.
+=head3 VimQuickFixList
+
+=head4 Usage
+
+    VimQuickFixList($qlist,$action);
+
+=head4 Purpose
+
+apply an action to the quickfix list.
+
+=head4 Input
 
 =over 4
 
-=item Input variables:
+=item * C<$qlist>  (ARRAY) array of hash items which will be added to the
+quickfix list.
 
-=over 4
-
-=item $qlist    (ARRAY) array of hash items which will be added to the quickfix list.
-
-=item $action   (SCALAR) 
-
-=back
+=item * C<$action> (SCALAR) 
 
 =back
 
@@ -1420,21 +1630,24 @@ sub VimSetTags {
     }
 }
 
-=head3 VimJoin( $arrname, $sep,  $vtype )
+=head3 VimJoin
 
-=over 4
+=head4 Usage
 
-=item Apply join() on the vimscript array $arrname; returns string
+    VimJoin( $arrname, $sep,  $vtype );
 
-=item Examples: 
+=head4 Purpose
 
-=over 4
+Apply C<join()> on the vimscript array $arrname; returns string
 
-=item VimJoin('a:000') - Equivalent to join(a:000,' ') in vimscript
+=head4 Examples
 
-=back
+    ### Equivalent to join(a:000,' ') in vimscript
+    my $str=VimJoin('a:000');
 
-=back
+=head4 Returns
+
+Joined array as a string.
 
 =cut
 
@@ -1613,7 +1826,7 @@ sub _die {
     die "VIMPERL_$SubName : $text";
 }
 
-=head3 init_Args()
+=head3 init_Args
 
 Process optional vimscript command-line arguments ( specified as ... in
 vimscript function declarations )
@@ -1651,9 +1864,9 @@ sub init_PIECES {
 
 sub init_VDIRS {
     %VDIRS = (
-        'TAGS'    => catfile( $ENV{HOME}, 'tags' ),
-        'MKVIMRC' => catfile( $ENV{HOME}, qw( config mk vimrc ) ),
-        'VIMRUNTIME'  => $ENV{VIMRUNTIME},
+        'TAGS'          => catfile( $ENV{HOME}, 'tags' ),
+        'MKVIMRC'       => catfile( $ENV{HOME}, qw( config mk vimrc ) ),
+        'VIMRUNTIME'    => $ENV{VIMRUNTIME},
     );
 
 }

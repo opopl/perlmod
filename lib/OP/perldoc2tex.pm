@@ -27,21 +27,21 @@ OP::perldoc2tex - perldoc-to-LaTeX convertor module
 
 =over 4
 
-=item - what
+=item * what
 
-=item - tex
+=item * tex
 
-=item - curwhat
+=item * curwhat
 
-=item - curtopic
+=item * curtopic
 
-=item - texdir
+=item * texdir
 
-=item - texfile
+=item * texfile
 
-=item - poddir
+=item * poddir
 
-=item - topic
+=item * topic
 
 =back
 
@@ -49,9 +49,9 @@ OP::perldoc2tex - perldoc-to-LaTeX convertor module
 
 =over 4
 
-=item files
+=item * files
 
-=item allwhats
+=item * allwhats
 
 =back
 
@@ -67,11 +67,11 @@ use File::Path qw( make_path );
 use File::Spec::Functions qw(catfile);
 
 use Getopt::Long;
-use Pod::LaTeX;
+use OP::Pod::LaTeX;
 use Data::Dumper;
 
 use OP::TEX::Text;
-use OP::Base qw(readhash _join_comma run_cmd );
+use OP::Base qw(readhash _join_dot run_cmd );
 
 use PPI;
 use Carp;
@@ -214,7 +214,7 @@ sub _module_write_tex {
 	foreach my $sub (@subnames) {
 
 		my $texfile=catfile($self->texdir, 
-			_join_comma($prefix,$sub ,qw( subsource tex))
+			_join_dot($prefix,$sub, qw( subsource tex ))
 		);
 
 		$self->subsourcefiles_push($texfile);
@@ -247,13 +247,16 @@ sub write_tex {
 
 	$self->tex($tex);
 
-	$tex->ofile($self->files("tex_out"));
+	$tex->ofile($self->files("tex_out")->());
 
     $self->write_tex_header;
 
     $self->write_tex_part([qw(POD SOURCE)]);
 
     $self->write_tex_end;
+
+	#------ other tex files -------------
+    $self->write_tex_cfg;
 }
 
 sub write_tex_part {
@@ -314,8 +317,8 @@ sub write_tex_end {
 	$tex->_add_line(<<'EOF');
 \clearpage
 \phantomsection
-\addcontentsline{toc}{part}{Index}
-\nc{\pagenumindex}{\thepage}
+\addcontentsline{toc}{part}{\indexname}
+\def\pagenumindex{\thepage}
 \hypertarget{index}{}
 \printindex
 
@@ -327,16 +330,16 @@ EOF
 	$self->tex->_writefile;
 }
 
-sub write_tex_header {
+sub write_tex_header_comments {
 	my $self=shift;
-
-	my $date = localtime;
 
 	my $tex=$self->tex;
 
+	my $date = localtime;
+
 	$tex->_c_delim;
 	$tex->_c("File:");
-	$tex->_c("	" . $self->files("tex_out"));
+	$tex->_c("	" . $self->files("tex_out")->());
 	$tex->_c("Purpose:");
 	$tex->_c("	Latex file for the perldoc documentation");
 	$tex->_c("Date created:");
@@ -345,8 +348,63 @@ sub write_tex_header {
 	$tex->_c("	$Script");
 	$tex->_c_delim;
 
+}
+
+sub write_tex_cfg {
+	my $self=shift;
+
+	my $tex=OP::TEX::Text->new;
+
+	$tex->ofile($self->files("tex_cfg")->());
+
+	$tex->_add_line(<<'EOF');
+\Preamble{html,frames,4,index=2,next,pic-equation,pic-eqnarray,pic-align,charset=utf-8,javascript}
+
+\icfg{frames-two}
+\icfg{tabular}
+\icfg{common}
+\icfg{picmath}
+
+\begin{document}
+
+\Css{div.lstlisting .ectt-1000 {font-family: monospace;color:blue}}
+\Css{div.lstlisting .ecss-1000 {font-family: monospace;color:green}} 
+\Css{div.lstlisting .ecbx-1000 {font-family: monospace;color:red}}
+
+% basicstyle
+\Css{div.lstlisting .cmtt-10 {font-family:monospace; color:DimGray}} 
+% identifierstyle
+\Css{div.lstlisting .cmss-10 {font-family:monospace; color:Black}} 
+% keywordstyle
+\Css{div.lstlisting .cmssbx-10 {font-family:monospace; color:Blue}} 
+% commentstyle
+\Css{div.lstlisting .cmr-10 {font-family:monospace; color:Green}} 
+% stringstyle
+\Css{div.lstlisting .cmti-10 {font-family:monospace; color:DarkRed}} 
+% numberstyle
+\Css{div.lstlisting .cmr-8 {display:inline-block; width:20px}}
+
+\icfg{HEAD.showHide}
+\icfg{TOC}
+
+\EndPreamble
+EOF
+
+	$tex->_writefile;
+
+
+}
+
+sub write_tex_header {
+	my $self=shift;
+
+	my $tex=$self->tex;
+
+	$self->write_tex_header_comments; 
+
 	$tex->_add_line(<<'EOF');
 
+%\nonstopmode
 \def\PROJ{perldoc}
 \input{_common.defs.tex}
 
@@ -356,7 +414,26 @@ sub write_tex_header {
 \ii{hypersetup}
 \ii{pagelayout}
 
-\setcounter{tocdepth}{4}
+\makeatletter
+
+\@ifpackageloaded{bookmark}{%
+	\def\bmk#1#2{%
+		\bookmark[#1]{#2}%
+	}%
+}{}
+
+\renewcommand\paragraph{%
+   \@startsection{paragraph}{4}{0mm}%
+      {-\baselineskip}%
+      {.5\baselineskip}%
+      {\normalfont\normalsize\bfseries}}
+
+\makeatother
+
+\renewcommand\indexname{INDEX}
+
+\setcounter{tocdepth}{5}
+\setcounter{secnumdepth}{3}
 
 \title{Perldoc}
 \date{Last updated \today}
@@ -368,11 +445,12 @@ sub write_tex_header {
 \clearpage
 \phantomsection
 \hypertarget{toc}{}
-\label{toc}
+%\label{toc}
 \addcontentsline{toc}{chapter}{\contentsname}
 \tableofcontents
 \nc{\pagenumtoc}{\thepage}
 \clearpage
+
 
 EOF
 
@@ -421,11 +499,14 @@ sub process_opt {
 		},
 	    "pod_topic"    => 
 			sub { catfile($self->poddir,$self->curtopic . ".pod") },
-	    "tex_out"      => catfile($self->texdir,$self->topic . ".tex"),
+	    "tex_out"      => 
+			sub { catfile($self->texdir,$self->topic . ".tex") },
+	    "tex_cfg"      => 
+			sub { catfile($self->texdir,$self->topic . ".cfg.tex") },
 	);
 
 	if ( defined $self->texfile ) {
-	    $self->files( "tex_out" => $self->texfile );
+	    $self->files( "tex_out" => sub { $self->texfile } );
 	}
 
 }
@@ -472,7 +553,7 @@ sub run_perldoc {
 sub parse_pod {
 	my $self=shift;
 
-	my $parser = Pod::LaTeX->new();
+	my $parser = OP::Pod::LaTeX->new();
 
 	$parser->AddPreamble(0);
 	$parser->AddPostamble(0);

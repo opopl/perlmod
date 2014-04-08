@@ -36,11 +36,7 @@ use strict;
 use feature qw(switch);
 
 use Exporter ();
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
-$VERSION = '0.01';
-@ISA     = qw(Exporter);
-@EXPORT      = qw();
 
 ###use
 use Term::ANSIColor;
@@ -50,6 +46,7 @@ use Getopt::Long;
 use IO::String;
 
 use OP::Writer::Pod;
+use Data::Dumper;
 
 
 ###export_vars_scalar
@@ -78,26 +75,35 @@ my @ex_vars_hash=qw(
 ###export_vars_array
 my @ex_vars_array=qw(
     @optstr
+	$ARGVOLD
 );
 
-%EXPORT_TAGS = (
+our %EXPORT_TAGS = (
 ###export_funcs
-'funcs' => [qw( 
-	_eval
-    _say
-    _say_head
-    _warn
-    _debug
-    _die
-    pre_init
-    get_opt
-    write_help_POD
-)],
-'vars'  => [ @ex_vars_scalar,@ex_vars_array,@ex_vars_hash ]
+	'funcs' => [qw( 
+		_eval
+	    _say
+	    _say_head
+	    _warn
+	    _debug
+	    _die
+	    pre_init
+	    get_opt
+	    write_help_POD
+		override_argv
+		restore_argv
+	)],
+	'vars'  => [ 
+		@ex_vars_scalar,
+		@ex_vars_array,
+		@ex_vars_hash 
+	],
 );
+
+our @ISA     = qw(Exporter);
+our @EXPORT      = qw();
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
-our @EXPORT  = qw( );
 our $VERSION = '0.01';
 
 ###our
@@ -120,6 +126,7 @@ our %optdesc;
 our %podsections;
 our $podsectionorder;
 our %S;
+our $ARGVOLD;
 
 ###subs
 sub _debug;
@@ -132,6 +139,8 @@ sub dhelp;
 sub get_opt;
 sub pre_init;
 sub write_help_POD;
+sub override_argv;
+sub restore_argv;
 
 sub _eval {
 	my $evs=shift;
@@ -204,6 +213,24 @@ sub _die {
     print $PREFIX . $text . "\n";
     print color 'reset';
 
+	exit 1;
+
+}
+
+sub override_argv {
+	my $argvnew=shift;
+	
+	print Dumper($argvnew);
+
+	if (defined $argvnew && ref($argvnew) eq 'ARRAY'){
+		$ARGVOLD=\@ARGV;
+		@ARGV=@$argvnew;
+	}
+
+}
+
+sub restore_argv {
+	@ARGV=@$ARGVOLD if defined $ARGVOLD;
 }
 
 sub pre_init {

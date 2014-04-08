@@ -4,16 +4,8 @@ package OP::TEX::PDFLATEX;
 use warnings;
 use strict;
 
+###use
 use Exporter ();
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-
-$VERSION = '0.01';
-@ISA     = qw(Exporter);
-@EXPORT      = qw();
-
-our @EXPORT_OK = qw( main );
-our @EXPORT  = qw( );
-our $VERSION = '0.01';
 
 use FindBin qw($Bin $Script);
 use IPC::Cmd;
@@ -27,6 +19,11 @@ use OP::Script::Simple qw(
 );
 
 ###our
+our @EXPORT_OK = qw( main );
+our @EXPORT  = qw( );
+our $VERSION = '0.01';
+our @ISA = qw(Exporter);
+
 our $sopts;
 
 our $PKEY;
@@ -34,8 +31,10 @@ our $makeindexstyle;
 
 our (%opt,@optstr);
 our ($cmdline);
-our $opts_pdflatex;
+our $OPTS_PDFLATEX;
 
+###subs
+sub _pdflatex;
 sub main;
 sub listof_change;
 sub get_opt;
@@ -43,10 +42,6 @@ sub run;
 sub makeindex;
 sub ind_insert_bookmarks;
 sub c_idx;
-sub pdflatex;
-###subs
-
-main;
 
 sub main {
     pre_init;
@@ -56,10 +51,7 @@ sub main {
 
 sub run {
 
-    pdflatex $IFNAME;
-
-    #listof_change "lof", "figure", $IFNAME;
-    #listof_change "lot", "table",  $IFNAME;
+    _pdflatex $IFNAME;
 
     if (-e $OFILE){
       _say "Output file created: " . $OFILE;
@@ -67,10 +59,12 @@ sub run {
 
 }
 
-sub pdflatex {
+sub _pdflatex {
     my $ifname = shift // '';
+	
+	my $cmd;
 
-    my $cmd = "pdflatex -file-line-error $opts_pdflatex $ifname";
+    $cmd = "pdflatex $OPTS_PDFLATEX $ifname";
 
     system("$cmd");
 
@@ -78,7 +72,7 @@ sub pdflatex {
 
 sub get_opt {
 
-     $opts_pdflatex='';
+    $OPTS_PDFLATEX='';
 
     unless (@ARGV) {
         _say "Usage: $Script OPTIONS FILENAME";
@@ -87,7 +81,7 @@ sub get_opt {
     else {
         $cmdline = join( ' ', @ARGV );
         $IFNAME = pop @ARGV;
-        $opts_pdflatex=join(' ',@ARGV);
+        $OPTS_PDFLATEX=join(' ',@ARGV);
     }
 
     $IFNAME =~ s/\.tex$//g;
@@ -97,17 +91,17 @@ sub get_opt {
     if(-e $IFILE){
       _say "Input filename: $IFNAME";
     }else{
-      $opts_pdflatex.="$IFNAME";
+      $OPTS_PDFLATEX.=" $IFNAME";
       $IFNAME='';
     }
 
-    _say "Input options: $opts_pdflatex";
+    _say "Input pdflatex options: $OPTS_PDFLATEX";
 
     $sopts="";
 
-		if ($IFNAME =~ /^p.(?<pkey>\w+).pdf$/){
+	if ($IFNAME =~ /^p.(?<pkey>\w+).pdf$/){
         $PKEY=$+{pkey};
-				$sopts.=" --pkey $PKEY";
+		$sopts.=" --pkey $PKEY";
     }
 
 

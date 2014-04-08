@@ -1,0 +1,24 @@
+#!/usr/bin/env perl
+ 
+use warnings;
+use strict;
+ 
+use Env qw($hm);
+use File::Path qw( make_path remove_tree );
+use File::Spec::Functions qw(catfile);
+ 
+use Data::Dumper; 
+use Pod::Simple::Search;
+use FindBin qw( $Script );
+
+if (not @ARGV) {
+	my $msg = "USAGE: $Script MODULE" . "\n";
+	die $msg;
+}
+ 
+my $mod=shift @ARGV; 
+my $ps=Pod::Simple::Search->new;
+
+my $path= $ps->find($mod);
+
+print $path . "\n";

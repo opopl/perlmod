@@ -71,7 +71,7 @@ our %EXPORT_TAGS = (
     'funcs' => [
         qw(
           _join
-          _join_comma
+          _join_dot
           _hash_add
           _arrays_equal
           _import
@@ -91,6 +91,12 @@ our %EXPORT_TAGS = (
           getopt_after
           gettime
           ListModuleSubs
+		  modisa
+		  modexport
+		  modexportok
+		  printisa
+		  printexport
+		  printexportok
           open_files
           op_write_file
           printpod
@@ -209,7 +215,7 @@ sub printpodoptions;
 sub is_log;
 sub is_const;
 sub _join;
-sub _join_comma;
+sub _join_dot;
 
 sub _hash_add;
 
@@ -231,6 +237,14 @@ sub open_files;
 sub printpod;
 sub list_PROJS;
 sub list_MKPROJS;
+
+sub modisa;
+sub modexport;
+sub modexportok;
+
+sub printisa;
+sub printexport;
+sub printexportok;
 
 =head1 METHODS
  
@@ -358,6 +372,85 @@ sub toLower;
 # }}}
 # subs {{{
 #
+#
+sub modisa {
+	my $module=shift;
+
+	my (@evs,@isa);
+	
+	@evs=(
+		'require ' . $module,
+		'@isa=@' . $module . '::ISA',
+	);
+	
+	eval(join(";\n",@evs));
+	if ($@){
+		warn $@;
+	}
+	
+	wantarray ? @isa : \@isa ;
+
+}
+
+sub modexportok {
+	my $module=shift;
+
+	my (@evs,@exportok);
+	
+	@evs=(
+		'require ' . $module,
+		'@exportok=@' . $module . '::EXPORT_OK',
+	);
+	
+	eval(join(";\n",@evs));
+	if ($@){
+		warn $@;
+	}
+	
+	wantarray ? @exportok : \@exportok ;
+
+}
+sub modexport {
+	my $module=shift;
+
+	my (@evs,@export);
+	
+	@evs=(
+		'require ' . $module,
+		'@export=@' . $module . '::EXPORT',
+	);
+	
+	eval(join(";\n",@evs));
+	if ($@){
+		warn $@;
+	}
+	
+	wantarray ? @export : \@export ;
+
+}
+
+sub printisa {
+	my $module=shift;
+
+	my $isa=modisa($module);
+
+	print Data::Dumper->Dump([ $isa ], [ $module . '::ISA' ],);
+}
+
+sub printexportok {
+	my $module=shift;
+
+	my $exportok=modexportok($module);
+
+	print Data::Dumper->Dump([ $exportok ], [ $module . '::EXPORT_OK' ],);
+}
+sub printexport {
+	my $module=shift;
+
+	my $export=modexport($module);
+
+	print Data::Dumper->Dump([ $export ], [ $module . '::EXPORT' ],);
+}
 
 
 sub list_PROJS {
@@ -508,7 +601,7 @@ sub _join {
 
 }
 
-sub _join_comma {
+sub _join_dot {
 
 	return join('.',@_);
 
@@ -1335,12 +1428,11 @@ sub readarr {
         warn "OP::Base::readarr(): file does not exist: $if";
         return wantarray ? () : [];
     }
-
-    open( FILE, "<$if" ) || die "Opening $if : $!";
+    my @lines=read_file($if);
 
     my @vars;
 
-    while (<FILE>) {
+    foreach(@lines) {
         chomp;
         s/^\s*//g;
         s/\s*$//g;
@@ -1349,7 +1441,6 @@ sub readarr {
         my @F = split( $splitsep, $line );
         push( @vars, @F );
     }
-    close(FILE);
 
     @vars = uniq(@vars);
 

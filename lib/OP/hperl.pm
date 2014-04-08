@@ -55,6 +55,7 @@ my @scalar_accessors=qw(
 
 ###__ACCESSORS_HASH
 my @hash_accessors=qw(
+	files
 );
 
 ###__ACCESSORS_ARRAY
@@ -72,20 +73,20 @@ sub _begin {
 
 }
 
-sub main {
-	my $self=shift;
-		
-	$self->init_vars;
+=head3 buildpdf
+ 
+=head4 Purpose
 
-    $self->get_opt;
-
-    $self->process_opt;
-
-    $self->buildpdf;
-
-}
-
-
+Invoke C<makefile _mkprojects> 
+ 
+=head4 Usage
+ 
+=head4 Input
+ 
+=head4 Returns
+ 
+=cut
+ 
 sub buildpdf {
 	my $self=shift;
 
@@ -105,8 +106,35 @@ sub buildpdf {
 
 	write_file('MKPROJS.i.dat',$topic . "\n");
 
-	system("make _clean");
-	system("PDFOUT=$PDFOUT_PERLDOC make _mkprojects");
+	my $env=[
+		"PDFOUT=$PDFOUT_PERLDOC",
+		"MAKEINDEXSTYLE=" . $self->files("makeindexstyle")->(),
+	];
+	my $cmdprefix=join(" ",@$env);
+	my $idx=$origtopic . '.idx';
+	my $sub_idx= "perl -p -i.bak -e " 
+			. "'" 
+			. 's/^(\\\\indexentry)\{' . $origtopic . '!/$1\{/g' 
+			. "'"
+			. " "
+			. $idx;
+	my $make_latex= "make _latex_single; $sub_idx; make _makeindex";
+
+	my $cmds=[
+		'make _clean',
+		$make_latex,
+		$make_latex,
+		$make_latex,
+		$make_latex,
+		"make _mvpdf",
+	];
+	for(@$cmds){
+		print $_ . "\n";;
+	}
+
+	for(map { $cmdprefix . " " .  $_ } @$cmds){
+		system("$_");
+	}
 
 	unless ($self->_opt_eq("skip","vdoc")) {
 		system("make _vdoc");
@@ -114,6 +142,19 @@ sub buildpdf {
 
 
 	chdir $olddir;
+
+}
+
+sub main {
+	my $self=shift;
+		
+	$self->init_vars;
+
+    $self->get_opt;
+
+    $self->process_opt;
+
+    $self->buildpdf;
 
 }
 
@@ -155,6 +196,10 @@ sub init_vars {
 	my $self=shift;
 
 	$self->htexdir(catfile(qw( /doc perl tex )));
+
+	$self->files(
+		makeindexstyle => sub { catfile($hm,qw(wrk p opmist.ist )) },
+	);
 }
 	
 

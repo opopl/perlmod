@@ -702,6 +702,15 @@ sub idef() {
 
 }
 
+sub index {
+	my $self=shift;
+
+	my $index=shift;
+
+	$self->_add_line('\index{' . $index . '}');
+
+}
+
 =head3 figure()
 
 =cut

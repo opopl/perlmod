@@ -23,7 +23,6 @@ use Env qw(
     );
 
 use Exporter ();
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 BEGIN {
 	use lib("$PERLMODDIR/mods/OP-Base/lib");
@@ -70,10 +69,10 @@ use Data::Dumper;
 =cut
  
 
-$VERSION = '0.01';
-@ISA     = qw(Exporter);
+our $VERSION = '0.01';
+our @ISA     = qw(Exporter);
 
-@EXPORT      = qw();
+our @EXPORT      = qw();
 
 ###export_vars_scalar
 my @ex_vars_scalar=qw(
@@ -91,7 +90,7 @@ my @ex_vars_hash=qw(
 my @ex_vars_array=qw(
 );
 
-%EXPORT_TAGS = (
+our %EXPORT_TAGS = (
 ###export_funcs
 'funcs' => [qw( 
     check_repos
@@ -104,8 +103,6 @@ my @ex_vars_array=qw(
 );
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
-our @EXPORT  = qw( );
-our $VERSION = '0.01';
 
 ###subs
 sub git_push;
@@ -128,7 +125,7 @@ our @FilesUntracked;
 
 =cut
 
-=head3 new()
+=head3 new
 
 =cut
 
@@ -139,7 +136,7 @@ sub new
     return $self;
 }
 
-=head3 init_vars()
+=head3 init_vars
 
 =cut
 
@@ -237,6 +234,7 @@ sub check_repos {
     }
 }
 
+###_BEGIN
 BEGIN {
    init_vars;
 }

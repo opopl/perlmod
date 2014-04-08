@@ -5,27 +5,8 @@ use warnings;
 use strict;
 
 use Exporter ();
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
-$VERSION = '0.01';
-@ISA     = qw(Exporter);
-@EXPORT      = qw();
-
-my @ex_vars_scalar=qw();
-my @ex_vars_hash=qw();
-my @ex_vars_array=qw();
-
-%EXPORT_TAGS = (
-    'funcs' => [qw( 
-         main
-    )],
-    'vars'  => [ @ex_vars_scalar,@ex_vars_array,@ex_vars_hash ]
-);
-
-our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
-our @EXPORT  = qw( );
-our $VERSION = '0.01';
-
+###use
 use FindBin qw($Bin $Script);
 use IPC::Cmd;
 use OP::Script::Simple qw(_say pre_init 
@@ -36,6 +17,24 @@ use Env qw($hm @PATH);
 use File::Slurp qw( read_file);
 use File::Spec::Functions qw(catfile);
 use Data::Dumper;
+
+
+my @ex_vars_scalar=qw();
+my @ex_vars_hash=qw();
+my @ex_vars_array=qw();
+
+our %EXPORT_TAGS = (
+    'funcs' => [qw( 
+         main
+    )],
+    'vars'  => [ @ex_vars_scalar,@ex_vars_array,@ex_vars_hash ]
+);
+
+###our
+our @ISA     = qw(Exporter);
+our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
+our @EXPORT  = qw( );
+our $VERSION = '0.01';
 
 ###our
 our $opts_htlatex;

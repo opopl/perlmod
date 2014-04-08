@@ -44,11 +44,11 @@ our $VERSION     = '0.01';
 
 # new() {{{
 
-=head3 new()
+=head3 new
 
 =cut
 
-sub new()
+sub new
 {
     my ($class, %ipars) = @_;
     my $self = bless ({}, ref ($class) || $class);
@@ -65,7 +65,7 @@ sub new()
 # }}}
 # _begin() {{{
 
-=head3 _begin()
+=head3 _begin
 
 =cut
 
@@ -238,11 +238,27 @@ sub say() {
 # }}}
 # warn() {{{
 
-=head3 warn() 
-
+=head3 warn
+ 
+=head4 Purpose
+ 
+=head4 Usage
+ 
+=head4 Input
+ 
+=over 4
+ 
+=item
+ 
+=back
+ 
+=head4 Returns
+ 
+=head4 See also
+ 
 =cut
-
-sub warn() {
+ 
+sub warn {
 	my $self=shift;
 
 	my $text=shift;

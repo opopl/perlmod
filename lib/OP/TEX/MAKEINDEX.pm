@@ -13,7 +13,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 $VERSION = '0.01';
 @ISA     = qw(Exporter);
 
-our @EXPORT_OK = qw( main );
+our @EXPORT_OK = qw( makeindex );
 our @EXPORT  = qw( );
 our $VERSION = '0.01';
 
@@ -22,6 +22,7 @@ use FindBin qw($Bin $Script);
 use OP::Script::Simple qw(
 	_warn 
 	_say
+	_die
 	pre_init
 	$EXITCODE
 	$IFNAME
@@ -29,38 +30,45 @@ use OP::Script::Simple qw(
 	$OFILE
 	%opt
 	$cmdline
+	override_argv
+	restore_argv
 );
 use OP::Base qw(run_cmd);
+
 use OP::PAPERS::idx_ins_hpage;
+use OP::PAPERS::ind_insert_bookmarks qw( ind_insert_bookmarks );
 
 use IPC::Cmd;
 
 ###our
-our $opts_makeindex;
+our $OPTS_makeindex;
 
-sub main;
 ###subs
+sub _ind_insert_bookmarks;
+sub exe_makeindex;
 sub c_idx;
 sub get_opt;
-sub ind_insert_bookmarks;
 sub makeindex;
 sub run;
 
-sub main {
+sub makeindex {
+
     pre_init;
     get_opt;
     run;
 
     exit $EXITCODE;
+
 }
 
 sub run {
 
     #c_idx $IFNAME;
     #makeindex $IFNAME;
-    #ind_insert_bookmarks $IFNAME;
 	#
-    makeindex $IFNAME;
+    exe_makeindex $IFNAME;
+
+    _ind_insert_bookmarks $IFNAME;
 
 }
 
@@ -69,7 +77,9 @@ sub get_opt {
     # default values
     %opt=();
 
-    $opts_makeindex='';
+    $OPTS_makeindex='';
+
+	override_argv(@_);
 
     unless (@ARGV) {
         _say "Usage: $Script OPTIONS FILENAME";
@@ -78,45 +88,77 @@ sub get_opt {
     else {
         $cmdline = join(' ', @ARGV );
         $IFNAME = pop @ARGV;
-        $opts_makeindex=join(" ",@ARGV);
+        $OPTS_makeindex=join(" ",@ARGV);
     }
 
     $IFNAME =~ s/\.idx$//g;
     $IFILE=$IFNAME . '.idx';
     $OFILE=$IFNAME . '.ind';
 
+	if (defined $ENV{MAKEINDEXSTYLE}) {
+        $OPTS_makeindex.=" -s $ENV{MAKEINDEXSTYLE}";
+	}
+
     if(-e $IFILE){
       _say "Input filename: $IFNAME";
     }else{
-      $opts_makeindex.=" $IFNAME";
+	  _die "Input file was not found: $IFILE";
+      $OPTS_makeindex.=" $IFNAME";
       $IFNAME='';
     }
 
-    if ($opts_makeindex){
-        _say "Input options: $opts_makeindex";
+    if ($OPTS_makeindex){
+        _say "Input options for makeindex: $OPTS_makeindex";
     }
+
+	restore_argv;
 
 }
 
-sub ind_insert_bookmarks {
+=head3 _ind_insert_bookmarks
+ 
+=head4 Usage
+ 
+	_ind_insert_bookmarks($ifname);
+ 
+=head4 Purpose
+
+Invoke method L<OP::PAPERS::ind_insert_bookmarks/ind_insert_bookmarks> on
+input .ind file C<$indfile=$ifname.ind>.
+ 
+=head4 Input
+ 
+=over 4
+ 
+=item * C<$ifname> (SCALAR) input .ind filename (extension stripped).
+ 
+=back
+ 
+=head4 Returns
+
+Nothing.
+ 
+=cut
+ 
+sub _ind_insert_bookmarks {
     my $ifname = shift;
 
-    my $ind="$ifname.ind";
+    my $indfile="$ifname.ind";
 
-    unless (-e $ind){
-      return;
+    unless (-e $indfile){
+	  	_warn "Cannot find input .ind file: $indfile";
+      	return;
     }
 
-    my $cmd = "ind_insert_bookmarks.pl $ind";
+	ind_insert_bookmarks( $indfile );
 
-    system("$cmd");
 }
 
-sub makeindex {
+sub exe_makeindex {
     my $ifname = shift // '';
 
     unless($ifname){
-        my $cmd = "makeindex $opts_makeindex";
+        my $cmd = "makeindex $OPTS_makeindex";
         system("$cmd");
         return;
     }
@@ -124,10 +166,10 @@ sub makeindex {
     my $idx="$ifname.idx";
     
     unless(-e $idx){
-      return;
+	  _die "No idx file found: $idx";
     }
 
-    my $cmd = "makeindex $opts_makeindex $idx";
+    my $cmd = "makeindex $OPTS_makeindex $idx";
     my $res=run_cmd(command => "$cmd");
 
     $EXITCODE=1;
