@@ -15,19 +15,14 @@ use File::Spec::Functions qw(catfile );
 use OP::Base qw(_hash_add);
 
 ###begin
-BEGIN {
-    use Env qw( $hm $PERLMODDIR );
+use Env qw( $hm $PERLMODDIR );
 
-    use FindBin qw($Bin $Script);
-    use File::Spec::Functions qw(catfile);
-    
-    use lib("$PERLMODDIR/mods/OP-Base/lib");
-    use OP::Base qw( $endl );
+use FindBin qw($Bin $Script);
+use File::Spec::Functions qw(catfile);
 
-    use lib("$PERLMODDIR/mods/OP-Writer/lib");
-    use parent qw( OP::Writer );
-    
-}
+use OP::Base qw( $endl );
+
+use parent qw( OP::Writer );
 
 =head1 NAME
 
@@ -35,15 +30,15 @@ OP::TEX::Text - Perl package for writing TeX documents
 
 =head1 SYNOPSIS
 
-use OP::TEX::Text;
-
-my $t=OP::TEX::Text->new;
+	use OP::TEX::Text;
+	
+	my $t=OP::TEX::Text->new;
 
 =head1 INHERITANCE
 
 =over 4
 
-=item L<OP::Writer>
+=item * L<OP::Writer>
 
 =back
  
@@ -51,19 +46,19 @@ my $t=OP::TEX::Text->new;
  
 =over 4
  
-=item L<Data::Dumper>
+=item * L<Data::Dumper>
  
-=item L<File::Slurp>
+=item * L<File::Slurp>
  
-=item L<File::Spec::Functions>
+=item * L<File::Spec::Functions>
  
-=item L<OP::Base>
+=item * L<OP::Base>
  
-=item L<parent>
+=item * L<parent>
  
-=item L<strict>
+=item * L<strict>
  
-=item L<warnings>
+=item * L<warnings>
  
 =back
  
@@ -333,21 +328,18 @@ sub _cmd {
 
 }
 
-=head3 def()
+=head3 def
 
 =head4 SYNOPSIS
 
-=over 4
+	def('')                 -> returns 1 
+	
+	def('PROJ','')          -> \def\PROJ{}
+	
+	def('PROJ','hello')     -> \def\PROJ{hello}
+	
+	def('PROJ','hello',2)   -> \def\PROJ#1#2{hello}
 
-=item def('')                 -> returns 1 
-
-=item def('PROJ','')          -> \def\PROJ{}
-
-=item def('PROJ','hello')     -> \def\PROJ{hello}
-
-=item def('PROJ','hello',2)   -> \def\PROJ#1#2{hello}
-
-=back
 
 =cut
 
@@ -371,31 +363,6 @@ sub def {
         $self->_add_line( "\\def" . "\\$def" . $argline .  "{$src}" );
     }
 
-}
-
-=head3 section()
-
-=cut
-
-sub section {
-    my $self = shift;
-
-    my $title = shift // '';
-
-    $self->_cmd('section',"$title");
-
-}
-
-=head3 part()
-
-=cut
-
-sub part {
-    my $self = shift;
-
-    my $title = shift // '';
-
-    $self->_cmd('part',"$title");
 }
 
 =head3 _insert_file()
@@ -462,11 +429,11 @@ sub input {
     }
 }
 
-=head3 end()
+=head3 end
 
 =cut
 
-sub end() {
+sub end {
     my $self = shift;
 
     my $x = shift // '';
@@ -481,19 +448,42 @@ sub end() {
 
 # documentclass () {{{
 
-=head3 documentclass()
+=head3 documentclass
+ 
+X<documentclass,OP::TEX::Text>
+ 
+=head4 Usage
 
-	documentclass({
+	$tex->documentclass( $class, $options );
+ 
+	$tex->documentclass('article', {
 		opts => 'a4paper,11pt',
 	});
 	
-	documentclass({
+	$tex->documentclass('report', {
 		opts => [qw(a4paper 11pt)],
 	});
+ 
+=head4 Purpose
+ 
+=head4 Input
+ 
+=over 4
+ 
+=item * C<$documentclass> (SCALAR)
 
+=item * C<$options> (HASH)
+ 
+=back
+ 
+=head4 Returns
+ 
+=head4 See also
+ 
 =cut
+ 
 
-sub documentclass() {
+sub documentclass {
     my $self = shift;
 
     my $class = shift // '';
@@ -531,25 +521,12 @@ sub documentclass() {
 
 }
 
-=head3 date()
-
-=cut
-
-sub date() {
-    my $self = shift;
-
-    my $x = shift // '';
-    return 1 unless $x;
-
-    $self->_cmd( "date", $x );
-
-}
 
 =head3 begin()
 
 =cut
 
-sub begin() {
+sub begin {
     my $self = shift;
 
     my $what = shift // '';
@@ -672,11 +649,32 @@ sub newenvironment {
 
 }
 
-=head3 nc()
 
+=head3 nc
+ 
+X<nc,OP::TEX::Text>
+ 
+=head4 Usage
+ 
+    $tex->nc( $name, $cmd, $npars );
+ 
+=head4 Purpose
+ 
+=head4 Input
+ 
+=over 4
+ 
+=item * C< > 
+ 
+=back
+ 
+=head4 Returns
+ 
+=head4 See also
+ 
 =cut
-
-sub nc() {
+ 
+sub nc {
     my $self = shift;
 
     my ( $name, $cmd, $npars ) = @_;
@@ -689,33 +687,11 @@ sub nc() {
     }
 }
 
-=head3 idef()
+=head3 figure
 
 =cut
 
-sub idef() {
-    my $self = shift;
-
-    my $name = shift;
-
-    $self->_add_line("\\idef{$name}");
-
-}
-
-sub index {
-	my $self=shift;
-
-	my $index=shift;
-
-	$self->_add_line('\index{' . $index . '}');
-
-}
-
-=head3 figure()
-
-=cut
-
-sub figure() {
+sub figure {
     my $self = shift;
 
     my %opts = @_;
@@ -779,14 +755,15 @@ sub figure() {
 
 }
 
-=head3 bookmark()
+=head3 bookmark
 
 =cut
 
-sub bookmark() {
+sub bookmark {
     my $self = shift;
 
     my %opts  = @_;
+
     my $ostr  = '';
     my $str   = '';
     my $title = '';
@@ -812,62 +789,12 @@ sub bookmark() {
 
 }
 
-=head3 subsubsection()
 
-=cut
 
-sub subsubsection() {
-    my $self = shift;
 
-    my $title = shift // '';
 
-    $self->_add_line("\\subsubsection{$title}");
-}
 
-=head3 subsection()
 
-=cut
-
-sub subsection() {
-    my $self = shift;
-
-    my $title = shift // '';
-
-    $self->_add_line("\\subsection{$title}");
-}
-
-=head3 chapter()
-
-=cut
-
-sub chapter() {
-    my $self = shift;
-
-    my $title = shift // '';
-
-    $self->_add_line("\\chapter{$title}");
-}
-
-=head3 paragraph()
-
-=cut
-
-sub paragraph {
-    my $self = shift;
-
-    my $title = shift // '';
-
-    $self->_add_line("\\paragraph{$title}");
-}
-
-sub label {
-	my $self=shift;
-
-	my $label=shift;
-
-	$self->_add_line('\label{' . $label . '}');
-
-}
 
 # lof() {{{
 
@@ -1038,7 +965,7 @@ sub toc() {
 
 =cut
 
-sub abstract () {
+sub abstract {
     my $self = shift;
 
     my $text = shift;
@@ -1052,7 +979,7 @@ sub abstract () {
 
 =cut
 
-sub anchor () {
+sub anchor {
     my $self = shift;
 
     my $anchor = shift;
@@ -1064,7 +991,7 @@ sub anchor () {
 
 =cut
 
-sub bibliography() {
+sub bibliography {
     my $self = shift;
 
     my $ref = shift // '';
@@ -1195,16 +1122,6 @@ sub setlength {
 
     $self->_add_line('\setlength{' . "\\" .  $length . '}{' . $val . '}');
 
-}
-
-=head3 clearpage()
-
-=cut
-
-sub clearpage() {
-    my $self = shift;
-
-    $self->_add_line('\clearpage');
 }
 
 =head3 printindex()
@@ -1397,7 +1314,7 @@ EOF
 
 =cut
 
-sub hypertarget() {
+sub hypertarget {
     my $self = shift;
 
     my $ref = shift // '';
@@ -1435,11 +1352,11 @@ sub includepdf {
 
 }
 
-=head3 hypsetup()
+=head3 hypsetup
 
 =cut
 
-sub hypsetup() {
+sub hypsetup {
     my $self = shift;
 
     my $iref = shift // '';
@@ -1516,6 +1433,22 @@ sub _init {
       hypertarget title bibstyle inputs bibfiles sec
     ));
 
+}
+
+sub AUTOLOAD {
+	my $self=shift;
+
+	my $arg=shift // '';
+
+	my $cmd = our $AUTOLOAD;
+	
+	$cmd =~ s/^.*::(\w*)$/$1/g;
+
+	$self->_cmd("$cmd","$arg");
+
+}
+
+sub DESTROY {
 }
 
 # }}}

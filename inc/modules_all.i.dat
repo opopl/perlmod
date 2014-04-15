@@ -84,3 +84,5 @@ Pod::Webserver
 Report::Trades
 Sman
 Term::ShellUI
+OP::Pod::POM::View::HTML::Framed
+OP::install::vim

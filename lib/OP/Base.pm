@@ -5,11 +5,15 @@ package OP::Base;
 
 =head1 NAME
 
-OP::Base - Basic Perl functions and variables
+OP::Base - Basic Perl functions and variables. 
+
+X<NAME, OP::Base>
 
 =head1 SYNOPSIS
 
   use OP::Base qw/:vars :funcs/;
+
+X<SYNOPSIS, OP::Base>
 
 =head1 DESCRIPTION
 

@@ -5,9 +5,13 @@ use strict;
 
 =head1 NAME
 
-	OP::Script::Simple 
+OP::Script::Simple - simple script framework.
+
+X<NAME, OP::Script::Simple>
 
 =head1 SYNOPSIS
+
+X<SYNOPSIS, OP::Script::Simple>
 
 	package MyScript;
 

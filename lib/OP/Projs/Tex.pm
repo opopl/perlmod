@@ -25,9 +25,17 @@ __PACKAGE__
 sub ii {
 	my $self=shift;
 
-	my $sec=shift;
+	my $ref=shift;
 
-	$self->_cmd('ii',$sec);
+	unless(ref $ref){
+		$self->_cmd('ii',$ref);
+			
+	}elsif(ref $ref eq "ARRAY"){
+		foreach my $sec (@$ref) {
+			$self->ii($sec);
+		}
+	}
+
 }
 
 sub icfg {

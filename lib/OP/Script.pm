@@ -1,3 +1,4 @@
+
 package OP::Script;
 #---------------------------------
 # intro {{{
@@ -5,6 +6,12 @@ package OP::Script;
 =head1 NAME
 
 OP::Script - Base script class
+
+X<NAME, OP::Script>
+
+=head1 SYNOPSIS
+
+X<SYNOPSIS, OP::Script>
 
 =cut
 

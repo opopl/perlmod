@@ -75,7 +75,7 @@ sub main {
 	$BUILDOPT=shift @ARGV;
 
 	foreach $TARGET (@TARGETS) {
-		_eval [ 'build' . $BUILDOPT ]; 
+		_eval [ 'build' . $BUILDOPT . '(@_)']; 
 	}
 
 }
@@ -149,9 +149,31 @@ sub build_hperl_tex {
 
 }
 
-=head3 build_hperl_pdf 
+=head3 build_hperl_pdf
+ 
+X<build_hperl_pdf,OP::docperltex::build>
+ 
+=head4 Usage
+ 
+	build_hperl_pdf(%options);
+ 
+=head4 Purpose
+ 
+=head4 Input
+ 
+=over 4
+ 
+=item * C<%options> - the input options are forwarded to call C<< $hperl->main(%options) >>.
+ 
+=back
+ 
+=head4 Returns
 
-=cut 
+Return value from C<< $hperl->main(%options) >>.
+ 
+=head4 See also
+ 
+=cut
 
 sub build_hperl_pdf {
 
@@ -161,7 +183,7 @@ sub build_hperl_pdf {
 	
 	_say "Running hperl for: $TARGET" ;
 
-	$hperl->main;
+	$hperl->main(@_);
 
 }
 

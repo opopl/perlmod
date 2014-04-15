@@ -57,6 +57,7 @@ OP::perldoc2tex - perldoc-to-LaTeX convertor module
 
 =cut
 
+###use
 use feature qw(switch);
 
 use Env qw($hm);
@@ -70,7 +71,7 @@ use Getopt::Long;
 use OP::Pod::LaTeX;
 use Data::Dumper;
 
-use OP::TEX::Text;
+use OP::Projs::Tex;
 use OP::Base qw(readhash _join_dot run_cmd );
 
 use PPI;
@@ -103,6 +104,7 @@ my @hash_accessors=qw(
 my @array_accessors=qw(
 	whats
 	subsourcefiles
+	texparts
 );
 
 __PACKAGE__
@@ -143,6 +145,31 @@ sub _begin {
 
 }
 
+=head3 main
+ 
+X<main,OP::perldoc2tex>
+ 
+=head4 Usage
+ 
+	main();
+ 
+=head4 Purpose
+ 
+=head4 Input
+ 
+=over 4
+ 
+=item * C< > 
+ 
+=back
+ 
+=head4 Returns
+ 
+=head4 See also
+ 
+=cut
+ 
+
 sub main {
     my $self = shift;
 
@@ -165,7 +192,7 @@ sub _module_write_tex {
 
 	$what=shift // $self->curwhat;
 
-	my $tex=OP::TEX::Text->new;
+	my $tex=OP::Projs::Tex->new;
 
 	if (-e $what) {
 		$file=$what;
@@ -243,7 +270,7 @@ sub _module_write_tex {
 sub write_tex {
 	my $self=shift;
 
-	my $tex=OP::TEX::Text->new;
+	my $tex=OP::Projs::Tex->new;
 
 	$self->tex($tex);
 
@@ -251,7 +278,7 @@ sub write_tex {
 
     $self->write_tex_header;
 
-    $self->write_tex_part([qw(POD SOURCE)]);
+    $self->write_tex_part([ $self->texparts ]);
 
     $self->write_tex_end;
 
@@ -353,7 +380,7 @@ sub write_tex_header_comments {
 sub write_tex_cfg {
 	my $self=shift;
 
-	my $tex=OP::TEX::Text->new;
+	my $tex=OP::Projs::Tex->new;
 
 	$tex->ofile($self->files("tex_cfg")->());
 
@@ -392,7 +419,6 @@ EOF
 
 	$tex->_writefile;
 
-
 }
 
 sub write_tex_header {
@@ -402,19 +428,18 @@ sub write_tex_header {
 
 	$self->write_tex_header_comments; 
 
+	$tex->nonstopmode;
+	
+	$tex->def('PROJ','perldoc');
+	$tex->input('_common.defs.tex');
+
+	$tex->documentclass('book',{ opts => [qw( 10pt a4paper )]});
+
+	$tex->ii([qw( packages hypersetup pagelayout )]);
+
+	$tex->makeatletter;
+
 	$tex->_add_line(<<'EOF');
-
-%\nonstopmode
-\def\PROJ{perldoc}
-\input{_common.defs.tex}
-
-\documentclass[10pt,a4paper]{report}
-
-\ii{packages}
-\ii{hypersetup}
-\ii{pagelayout}
-
-\makeatletter
 
 \@ifpackageloaded{bookmark}{%
 	\def\bmk#1#2{%
@@ -428,9 +453,12 @@ sub write_tex_header {
       {.5\baselineskip}%
       {\normalfont\normalsize\bfseries}}
 
-\makeatother
+EOF
 
-\renewcommand\indexname{INDEX}
+	$tex->makeatother;
+	$tex->nc('indexname','INDEX');
+
+	$tex->_add_line(<<'EOF');
 
 \setcounter{tocdepth}{5}
 \setcounter{secnumdepth}{3}
@@ -451,14 +479,15 @@ sub write_tex_header {
 \nc{\pagenumtoc}{\thepage}
 \clearpage
 
-
 EOF
-
 
 }
 
 sub init_vars {
 	my $self=shift;
+
+     #$self->texparts( qw(POD SOURCE) );
+ 	$self->texparts( qw(POD) );
 
 	$self->poddir(catfile($hm,qw( doc perl pod )));
 
