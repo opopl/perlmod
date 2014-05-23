@@ -8,15 +8,18 @@ use strict;
 use Exporter ();
 
 use FindBin qw($Bin $Script);
-use IPC::Cmd;
+use IPC::Cmd qw(run_forked);
 use OP::Script::Simple qw( 
 	pre_init
 	_say 
+	_die
 	_warn 
+    %FILES
 	$IFILE
 	$IFNAME
 	$OFILE
 );
+
 
 ###our
 our @EXPORT_OK = qw( main );
@@ -64,9 +67,25 @@ sub _pdflatex {
 	
 	my $cmd;
 
-    $cmd = "pdflatex $OPTS_PDFLATEX $ifname";
+    my $exe=$FILES{pdflatex} // 'pdflatex';
+    $cmd = "$exe $OPTS_PDFLATEX $ifname";
 
-    system("$cmd");
+	my $res;
+	
+	if(not IPC::Cmd::can_run($exe)){
+        _die "Cannot run: $exe ";
+    }
+	
+    $res= IPC::Cmd::run_forked( $cmd );
+
+    if ($res->{exit_code}) {
+        _warn "FAILURE with exit code: " . $res->{exit_code};
+
+    }else{
+        _say "SUCCESS";
+
+    }
+
 
 }
 
@@ -90,9 +109,11 @@ sub get_opt {
 
     if(-e $IFILE){
       _say "Input filename: $IFNAME";
+
     }else{
       $OPTS_PDFLATEX.=" $IFNAME";
       $IFNAME='';
+
     }
 
     _say "Input pdflatex options: $OPTS_PDFLATEX";
@@ -103,7 +124,6 @@ sub get_opt {
         $PKEY=$+{pkey};
 		$sopts.=" --pkey $PKEY";
     }
-
 
 }
 

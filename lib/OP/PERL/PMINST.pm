@@ -8,7 +8,7 @@ package OP::PERL::PMINST;
 use strict;
 use warnings;
 
-use feature qw(switch);
+use Switch;
 use Env qw( $hm $PERLMODDIR );
 
 use Data::Dumper;
@@ -85,8 +85,8 @@ sub printout {
 
     if ($OPTS{print}) {
 
-        given( $OPTS{print} ) {
-            when('names_paths'){
+        for( $OPTS{print} ) {
+            /^names_paths$/ && do {
 
                 my $tb=Text::Table->new('','');
 
@@ -99,13 +99,15 @@ sub printout {
 	            }
 
                 print $tb;
-            }
-            when('names'){
+				next;
+            };
+            /^names$/ && do {
                 foreach my $module (sort($self->MODPATHS_keys)) {
                     print $module . "\n";
                 }
-            }
-            when('paths'){
+				next;
+            };
+            /^paths$/ && do {
                 foreach my $module (sort($self->MODPATHS_keys)) {
 	                my @paths=@{$self->MODPATHS($module)};
 	                foreach my $path (@paths) {
@@ -113,7 +115,8 @@ sub printout {
                         print $path . "\n";
 	                }
 	            }
-            }
+				next;
+            };
         }
 
 
@@ -262,8 +265,8 @@ sub process_opts {
     foreach my $k ( $self->opts_keys ) {
         my $v = $self->opts("$k");
 
-        given($k){
-            when("mode") {
+        switch($k){
+            case("mode") {
                 for ($v) {
                     ## list names
                     /^name$/ && do {
@@ -282,34 +285,33 @@ sub process_opts {
                 }
 ###PATTERN
             }
-            when("PATTERN"){
+            case("PATTERN"){
                 $PATTERN = $v;
                 $self->PATTERN($PATTERN);
             }
-            when("remove"){
+            case("remove"){
                 $PATTERN = "^" .  $v . '$';
                 $OPTS{remove}=1;
             }
-            when("excludedirs"){
+            case("excludedirs"){
                 unless(ref $v){
                     @EXCLUDEDIRS=split("\n",$v);
                 }elsif(ref $v eq "ARRAY"){
                     @EXCLUDEDIRS=@$v;
                 }
             }
-            when("searchdirs"){
+            case("searchdirs"){
                 unless(ref $v){
                     @SEARCHDIRS=split(':',$v);
                 }elsif(ref $v eq "ARRAY"){
                     @SEARCHDIRS=@$v;
                 }
             }
-            when("searchmode"){
+            case("searchmode"){
                 $OPTS{searchmode}=$v;
 
                 $PKN=OP::PackName->new;
             }
-            default { }
         }
     }
 

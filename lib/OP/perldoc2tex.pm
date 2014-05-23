@@ -493,7 +493,7 @@ sub init_vars {
 
 	make_path($self->poddir);
 
-	$self->texdir(catfile($hm,qw( doc perl tex )));
+	$self->texdir(catfile(qw( /doc perl tex )));
 
 	my $dat=catfile($hm,qw(config mk vimrc perldoc2tex_topics.i.dat ));
 	my $allwhats=readhash($dat,{ 'valtype' => 'array' });

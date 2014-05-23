@@ -1023,7 +1023,7 @@ sub view_html {
 # }}}
 # make() {{{
 
-sub make() {
+sub make {
     my $self=shift;
 
     my $args=shift // '';
@@ -1039,7 +1039,6 @@ sub make() {
     if ($self->belongsto_PROJS($args)){
         $self->_proj_reset($args);
     }
-
 
 	if ($self->usecgi) {
 		foreach my $id (qw(TEXINPUTS TEXMFLOCAL)) {
@@ -1407,13 +1406,22 @@ sub _reset_PDFPERLDOC {
 
 # }}}
 
-sub _sys(){
+sub _sys {
     my $self=shift;
 
     my $cmd=shift;
 
 	unless($self->usecgi) {
-    	system($cmd);
+        my $res= IPC::Cmd::run_forked( $cmd );
+        
+        if ($res->{exit_code}) {
+            $self->warn("FAILURE with exit code: " . $res->{exit_code});
+        
+        }else{
+            $self->say("SUCCESS");
+        
+        }
+
 	}else{
 		my %res;
 		

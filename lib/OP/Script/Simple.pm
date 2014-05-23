@@ -72,6 +72,7 @@ my @ex_vars_hash=qw(
     %opt
     %optdesc
     %DIRS
+    %FILES
     %S
     %podsections
     $podsectionorder
@@ -125,7 +126,7 @@ our $DEBUGCOLOR;
 
 our (%opt,@optstr);
 our $cmdline;
-our %DIRS;
+our (%DIRS,%FILES);
 our %optdesc;
 our %podsections;
 our $podsectionorder;

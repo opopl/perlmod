@@ -13,32 +13,19 @@ use warnings;
 
 use feature qw(switch);
 
-BEGIN {
+use Env qw( $hm $PERLMODDIR );
+#use OP::Base qw( :vars :funcs );
+use OP::Base qw( 
+	readhash 
+	readarr
+);
 
-    use Env qw( $hm $PERLMODDIR );
-
-	use OP::Base qw( :vars :funcs );
-
-    my @mods=qw(
-		OP::BIBTEX
-		OP::TEX::Text
-		OP::TEX::NICE
-		OP::PROJSHELL
-		OP::TEX::Driver
-        IPC::Cmd
-        );
-	
-	my $imp=_import( { 
-            'modules' => \@mods,
-            'import' => { 
-                'IPC::Cmd' => [ qw( run ) ],
-            }
-    });
-
-    eval($imp);
-    die $@ if $@;
-
-}
+use OP::BIBTEX;
+use OP::TEX::Text;
+use OP::TEX::NICE;
+use OP::PROJSHELL;
+use OP::TEX::Driver;
+use IPC::Cmd qw( run );
 
 use Term::ShellUI;
 use Data::Dumper;
@@ -368,7 +355,10 @@ sub init_vars() {
     # directory where the PDF files of the articles are stored
     $self->pdfpapersfield("ChemPhys");
 
-    my $papdir = "$ENV{hm}/doc/papers/" . $self->pdfpapersfield;
+    my $papdir = catfile( $hm, qw( doc papers ), $self->pdfpapersfield );
+
+	$self->_die("papdir does not exist")
+		unless -e $papdir;
 
     $self->papdir($papdir);
     $self->bibtex->papdir($papdir);
@@ -400,7 +390,8 @@ sub init_vars() {
     $self->_h_set( "parts_desc", readhash( $self->files('parts') ) );
 
     # List of PDF-papers
-    opendir DIR, $self->papdir;
+    opendir DIR, $self->papdir
+		or 
     my $ref = [ sort map { s/\.pdf$//g; $_; } grep { /\.pdf$/ } readdir(DIR) ];
     $self->original_pdf_papers($ref);
     closedir(DIR);

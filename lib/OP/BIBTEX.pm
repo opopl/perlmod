@@ -4,6 +4,8 @@ package OP::BIBTEX;
 
 use LaTeX::BibTeX;
 use File::Spec;
+
+use File::Temp qw( tmpnam );
 use parent qw( OP::Script Class::Accessor::Complex );
 
 ###__ACCESSORS_SCALAR
@@ -50,7 +52,8 @@ sub init_vars(){
 	# Initialize LaTeX::BibTeX stuff
 	$self->bibfile(LaTeX::BibTeX::File->new());
 
-	open(BLOG,">latex-bibtex.log") || die $!;
+	my $blog=tmpnam();
+	open(BLOG,">$blog") || die $!;
 	select(BLOG);
 
 	$self->bibfile->open($self->bibfname) || die $!;

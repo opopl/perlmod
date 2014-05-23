@@ -114,7 +114,7 @@ sub main(){
 
 =cut
 
-sub _die(){
+sub _die {
 	my $self=shift;
 
 	my $ref=shift // '';
@@ -123,6 +123,7 @@ sub _die(){
 	die "$msg";
 
 }
+
 # }}}
 # out() {{{
 

@@ -4,12 +4,6 @@ package OP::install::vim;
 use warnings;
 use strict;
 
-use feature qw(switch);
-
-use warnings;
-use strict;
-
- 
 use Exporter();
  
 our $VERSION = "0.01";
@@ -28,10 +22,10 @@ my @ex_vars_array=qw();
  
 our %EXPORT_TAGS = (
 ###export_funcs
-		funcs => [qw( 	
-			main
-		)],	
-     vars  => [ @ex_vars_scalar,@ex_vars_array,@ex_vars_hash ]
+	funcs => [qw( 	
+		main
+	)],	
+    vars  => [ @ex_vars_scalar,@ex_vars_array,@ex_vars_hash ]
 );
  
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{funcs} }, @{ $EXPORT_TAGS{vars} } );
