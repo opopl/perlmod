@@ -23,6 +23,8 @@ use FindBin qw($Bin);
 sub main;
 sub init_vars;
 sub update_envvars;
+sub update_perlenv;
+sub reval;
 
 ###our
 our @ENVVARS;
@@ -30,6 +32,7 @@ our @ENVVARS;
 sub main {
 	init_vars;
 	update_envvars;
+	update_perlenv;
 }
 
 sub init_vars {
@@ -44,11 +47,37 @@ sub update_envvars {
 
 	foreach my $var (@ENVVARS) {
 		my $val=$ENV{$var};
-		$val=join(':',uniq(split(':',$val)));
+		$val=reval($val);
 		$p->add_directive('SetEnv',"$var $val");
 	}
 
+
 	$p->save;
 }
+
+sub reval {
+    my $val=shift;
+
+    return join(':',map { $_ ? $_ : () } uniq(split(':',$val)));
+}
+
+sub update_perlenv {
+
+	my $conf=catfile($APACHEROOT,qw(conf perlenv.conf));
+	unlink $conf;
+	my $p=Apache::Admin::Config->new($conf, '-create'  );
+
+	foreach my $var (qw(PERLLIB)) {
+		my @dirs=split(':', $ENV{$var});
+        foreach my $dir (@dirs) {
+            next unless $dir;
+		    $p->add_directive('PerlSwitches',"-I$dir");
+        }
+	}
+
+	$p->save;
+
+}
+
 
 1;

@@ -58,8 +58,11 @@ my @array_accessors = qw(
   OPTSTR
 );
 
-__PACKAGE__->mk_scalar_accessors(@scalar_accessors)
-  ->mk_array_accessors(@array_accessors)->mk_hash_accessors(@hash_accessors);
+__PACKAGE__
+    ->mk_scalar_accessors(@scalar_accessors)
+    ->mk_array_accessors(@array_accessors)
+    ->mk_hash_accessors(@hash_accessors)
+    ->mk_new;
 
 sub main {
     my $self = shift;
@@ -122,14 +125,6 @@ sub printout {
 
 
     }
-}
-
-sub new() {
-    my ( $class, %ipars ) = @_;
-    my $self = bless( {}, ref($class) || $class );
-
-    return $self;
-
 }
 
 sub getopt {
@@ -265,8 +260,7 @@ sub process_opts {
     foreach my $k ( $self->opts_keys ) {
         my $v = $self->opts("$k");
 
-        switch($k){
-            case("mode") {
+        if($k eq "mode"){
                 for ($v) {
                     ## list names
                     /^name$/ && do {
@@ -285,15 +279,16 @@ sub process_opts {
                 }
 ###PATTERN
             }
-            case("PATTERN"){
+        elsif($k eq "PATTERN"){
                 $PATTERN = $v;
                 $self->PATTERN($PATTERN);
+                print $PATTERN . "\n";
             }
-            case("remove"){
+        elsif($k eq "remove"){
                 $PATTERN = "^" .  $v . '$';
                 $OPTS{remove}=1;
             }
-            case("excludedirs"){
+        elsif($k eq "excludedirs"){
                 unless(ref $v){
                     @EXCLUDEDIRS=split("\n",$v);
 
@@ -302,20 +297,19 @@ sub process_opts {
 
                 }
             }
-            case("searchdirs"){
+        elsif($k eq "searchdirs"){
                 unless(ref $v){
                     @SEARCHDIRS=split(':',$v);
                 }elsif(ref $v eq "ARRAY"){
                     @SEARCHDIRS=@$v;
                 }
             }
-            case("searchmode"){
+        elsif($k eq "searchmode"){
                 $OPTS{searchmode}=$v;
 
                 $PKN=OP::PackName->new;
             }
         }
-    }
 
 }
 # end: sub process_opts
