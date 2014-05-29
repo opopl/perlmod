@@ -33,6 +33,7 @@ sub init_vars {
 		pinerc
 		screenrc
         zshrc
+		ttreerc
     );
 }
 

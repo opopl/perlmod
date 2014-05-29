@@ -96,7 +96,7 @@ sub process_opt {
 sub main {
     my $self = shift;
 
-    $self->_begin();
+    $self->_begin;
 
     $self->init_vars;
 
@@ -120,7 +120,7 @@ sub main {
 
 }
 
-sub init_vars() { 
+sub init_vars { 
     my $self=shift;
 
     $self->textcolor('bold blue');
@@ -139,7 +139,7 @@ sub finalize {
     Test::Builder::plan(1) if $Test::Base::VERSION;
 }
 
-sub _begin() {
+sub _begin {
     my $self = shift;
 
     $self->{package_name} = __PACKAGE__ unless defined $self->{package_name};
@@ -244,6 +244,7 @@ sub write_tags {
 
 sub delete_tags_by_pattern {
     my ($self, $pattern) = @_;
+
     my %tags = %{ $self->tags };
     for my $key (keys %tags) {
         delete $tags{$key} if $key =~ qr/$pattern/;

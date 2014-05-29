@@ -13,8 +13,8 @@ use warnings;
 
 use feature qw(switch);
 
-use Env qw( $hm $PERLMODDIR );
-#use OP::Base qw( :vars :funcs );
+use Env qw( $hm );
+
 use OP::Base qw( 
 	readhash 
 	readarr
@@ -123,7 +123,6 @@ our @array_accessors = qw(
   builds
   compiled_parts
   compiled_tex_papers
-  dirs
   docstyles
   listof_types
   mistyles
@@ -152,6 +151,7 @@ our @hash_accessors = qw(
   accdesc
   accessors
   compiletex_opts
+  dirs
   done
   files
   journaldefs
@@ -248,6 +248,21 @@ sub init_MAKETARGETS {
 
 }
 
+sub init_dirs {
+    my $self = shift;
+
+	$self->dirs(
+		'config'	=>	catfile($hm,qw( .pshconfig )),
+	);
+
+	foreach my $id ($self->dirs_keys) {
+		my $dir=$self->dirs($id);
+		make_path($dir);
+	}
+
+}
+
+
 sub init_files {
     my $self = shift;
 
@@ -259,7 +274,9 @@ sub init_files {
         "parts"    => catfile( $self->texroot, 'pap.parts.i.dat' ),
         "makefile" => catfile( $self->texroot, 'makefile' ),
         "targets.mk" => catfile( $self->texroot, qw(targets.mk) ),
+		"history" => catfile( $self->dirs('config'), qw( hist ) ),
     );
+
 }
 
 # init_vars() {{{
@@ -268,10 +285,10 @@ sub init_files {
 
 =cut
 
-sub init_vars() {
+sub init_vars {
     my $self = shift;
 
-    $self->_begin();
+    $self->_begin;
 
 ###_ACCDESC
     my ( %accdesc, %accdesc_array, %accdesc_scalar, %accdesc_hash );
@@ -307,6 +324,7 @@ sub init_vars() {
     $self->texroot( $ENV{'PSH_TEXROOT'} // catfile( "$ENV{hm}", qw(wrk p) )
           // catfile( "$hm", qw(wrk p) ) );
 
+    $self->init_dirs;
     $self->init_files;
     $self->init_MAKETARGETS;
 
@@ -390,11 +408,24 @@ sub init_vars() {
     $self->_h_set( "parts_desc", readhash( $self->files('parts') ) );
 
     # List of PDF-papers
-    opendir DIR, $self->papdir
-		or 
-    my $ref = [ sort map { s/\.pdf$//g; $_; } grep { /\.pdf$/ } readdir(DIR) ];
-    $self->original_pdf_papers($ref);
-    closedir(DIR);
+	my $sdir=$self->papdir ;
+	File::Find::find({ 
+		wanted => sub { 
+			return unless /\.pdf$/;
+			my $subdir= $File::Find::dir =~ s{\Q$sdir}{}gr;
+
+			return if $subdir;
+
+			my $pkey = $_ =~ s{\.pdf$}{}gr;
+
+			$self->original_pdf_papers_push($pkey);
+
+		} 
+	},	$sdir
+	);
+
+	$self->original_pdf_papers_sort;
+	$self->original_pdf_papers_uniq;
 
     # Output directory for compiled PDF files
     my $pdfout = catfile( $self->texroot, "out" );
@@ -4850,7 +4881,7 @@ sub _term_get_commands() {
 ##cmd_list_pdf_papers
                 pdfpapers => {
                     desc => "List original PDF papers",
-                    proc => sub { $self->original_pdf_papers_print(); }
+                    proc => sub { $self->original_pdf_papers_print; }
                 },
                 "refs" => {
                     desc => "List references for the given paper key",
@@ -5593,7 +5624,8 @@ sub _term_init() {
 
     $self->_term_get_commands();
 
-    $self->shellterm( history_file => "psh.history" );
+    $self->shellterm( history_file => $self->files('history') );
+
     $self->shellterm( prompt       => "PaperShell>" );
 
     my $term = Term::ShellUI->new(

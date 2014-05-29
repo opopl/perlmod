@@ -1,4 +1,6 @@
+
 use 5.008;
+
 use strict;
 use warnings;
 
@@ -13,7 +15,10 @@ use Data::Dumper;
 use Text::TabularDisplay;
 use List::MoreUtils 'uniq';
 
-use parent qw(Class::Accessor Class::Accessor::Installer);
+use parent qw(
+	Class::Accessor 
+	Class::Accessor::Installer
+);
 
 sub mk_new {
     my ($self, @args) = @_;

@@ -1,6 +1,9 @@
 
 package OP::cgi;
 
+use strict;
+use warnings;
+
 use parent qw( 
 	Class::Accessor::Complex 
 );

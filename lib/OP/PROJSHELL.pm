@@ -15,7 +15,6 @@ use OP::cgi::tex4ht;
 use Env qw(
 			$hm 
 			$HTMLOUT 
-			$PERLMODDIR 
 			$PROJSDIR
 			$PDFOUT
 		);
@@ -1350,6 +1349,11 @@ sub _reset_HTMLPROJS {
 	my $self=shift;
 
 	$self->HTMLPROJS_clear;
+
+    unless (-e $self->HTMLOUT) {
+        return 0;
+    }
+
 	File::Find::find(
 		sub{ 
 			$self->HTMLPROJS_push($_) if (-d && ! /^\.$/)
@@ -1525,7 +1529,7 @@ sub cmd_list() {
 # ============================
 # set_accessor_descriptions() {{{
 
-sub set_accessor_descriptions() {
+sub set_accessor_descriptions {
     my $self=shift;
 
 ###_ACCDESC

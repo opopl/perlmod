@@ -296,8 +296,10 @@ sub process_opts {
             case("excludedirs"){
                 unless(ref $v){
                     @EXCLUDEDIRS=split("\n",$v);
+
                 }elsif(ref $v eq "ARRAY"){
                     @EXCLUDEDIRS=@$v;
+
                 }
             }
             case("searchdirs"){
@@ -346,7 +348,7 @@ sub find_module_matches {
                 wanted => \&wanted, 
                 follow => 1, 
               },
-                $INCDIR );
+              $INCDIR );
     }
 
     $self->MODPATHS(%MODPATHS);
@@ -357,13 +359,6 @@ sub find_module_matches {
 }
 
 sub wanted {
-
-#    if ( -d && /^[a-z]/ ) {
-
-        ## this is so we don't go down site_perl etc too early
-        #$File::Find::prune = 1;
-        #return;
-    #}
 
     my($fullpath,$module,$relpath,$modslash);
 
@@ -397,7 +392,10 @@ sub wanted {
 
 	# do not add already added path
 	# 
-	@{$MODPATHS{$module}}=();
+	#@{$MODPATHS{$module}}=();
+
+	return if $module =~ /^i(686|386)/;
+
 	if ( not grep {/^$fullpath$/ } @{$MODPATHS{$module}}){
     	push(@{$MODPATHS{$module}},$fullpath);
 	}

@@ -30,7 +30,8 @@ use Term::ANSIColor;
 use Data::Dumper;
 use IPC::Cmd qw(can_run run);
 
-use OP::Base qw/:vars :funcs/;
+use OP::Base qw( readarr readhash );
+
 use OP::VIMPERL qw(
     VimMsg 
     $UnderVim
@@ -1250,7 +1251,7 @@ sub _f_set(){
 
 }
 
-sub _f_readarr(){
+sub _f_readarr {
 	my $self=shift;
 
 	my($ref)=@_;
@@ -1260,13 +1261,13 @@ sub _f_readarr(){
 
 }
 
-sub _f_readhash(){
+sub _f_readhash {
 	my $self=shift;
 
 	my($ref)=@_;
 
 	my $fname=$self->_f_get($ref);
-	return &readhash($fname);
+	return readhash($fname);
 
 }
 
