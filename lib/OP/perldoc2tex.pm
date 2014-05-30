@@ -512,9 +512,12 @@ sub process_opt {
 
 	$self->opts_to_scalar_vars(qw( what texfile ));
 
+
 	if ( not defined $self->what ) {
 	    $self->_die("Topic is not specified!");
 	}
+
+    $self->say("Topic to be processed: " . $self->what );
 
 	$self->topic($self->get_topic($self->what));
 
@@ -552,7 +555,6 @@ sub get_topic {
 	    $topic = $s[1];
 	}
 	else {
-		#$topic = basename($what) =~ s/\.(\w+)$//gr;
 	    $topic = basename($what) =~ s/\.$/_/gr;
 	}
 
