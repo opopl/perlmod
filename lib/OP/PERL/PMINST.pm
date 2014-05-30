@@ -41,6 +41,7 @@ use parent qw( Class::Accessor::Complex );
 my @scalar_accessors = qw(
   textcolor
   PATTERN
+  wanted
 );
 
 ###__ACCESSORS_HASH
@@ -62,7 +63,15 @@ __PACKAGE__
     ->mk_scalar_accessors(@scalar_accessors)
     ->mk_array_accessors(@array_accessors)
     ->mk_hash_accessors(@hash_accessors)
-    ->mk_new;
+    ->mk_new(qw(prenew));
+
+sub new {
+    my ( $class, %ipars ) = @_;
+    my $self = bless( \%ipars, ref($class) || $class );
+
+    return $self;
+
+}
 
 sub main {
     my $self = shift;
@@ -249,6 +258,58 @@ sub init {
     @SEARCHDIRS = $self->SEARCHDIRS if $self->SEARCHDIRS_count;
     $OPTS{searchmode}='simple';
 
+	my $wanted = sub {
+	
+	    my($fullpath,$module,$relpath,$modslash);
+	
+	    # skip files that do not end with .pm
+	    return unless /\.pm$/;
+	
+	    $fullpath = $File::Find::name;
+	
+	    $fullpath =~ s/\s*$//g;
+	
+	    # File/Slurp.pm
+	    (  $relpath = $fullpath ) =~ s{^\Q$INCDIR}{};
+	    $relpath =~ s{^[\/]*}{}g;
+	
+	    # File/Slurp
+	    (  $modslash=$relpath ) =~ s/\.pm$//g;
+	
+	    # File::Slurp
+	    ( $module = $modslash ) =~ s{\Q/}{::}g;
+	
+	    if ($OPTS{searchmode} eq 'simple'){
+	        unless ( $OPTS{match} ) {
+	            return unless $modslash =~ /$RE{PATTERN}/;
+	        }
+	        elsif ( $OPTS{endofline} ) {
+	            return unless $modslash =~ /$RE{PATTERN}$/;
+	        }
+	    }elsif ($OPTS{searchmode} eq 'allpm'){
+	        # check each found .pm file for the package ... ; string
+	    }
+	
+		# do not add already added path
+		# 
+		#@{$MODPATHS{$module}}=();
+	
+		return if $module =~ /^i(686|386)/;
+	
+		if ( not grep {/^$fullpath$/ } @{$MODPATHS{$module}}){
+	    	push(@{$MODPATHS{$module}},$fullpath);
+		}
+	
+	    if ( $OPTS{remove} ) {
+	        remove_tree($fullpath);
+	    }
+	
+	};
+
+    $self->wanted($wanted);
+
+
+
 }
 # end: sub init 
 
@@ -258,7 +319,7 @@ sub process_opts {
     return if not $self->opts_count;
 
     foreach my $k ( $self->opts_keys ) {
-        my $v = $self->opts("$k");
+        my $v = $self->opts($k);
 
         if($k eq "mode"){
                 for ($v) {
@@ -276,13 +337,16 @@ sub process_opts {
                         $OPTS{remove} = 1;
                         next;
                     };
+                    /^noprint$/ && do {
+                        $OPTS{print} = 0;
+                        next;
+                    };
                 }
 ###PATTERN
             }
         elsif($k eq "PATTERN"){
                 $PATTERN = $v;
                 $self->PATTERN($PATTERN);
-                print $PATTERN . "\n";
             }
         elsif($k eq "remove"){
                 $PATTERN = "^" .  $v . '$';
@@ -339,7 +403,7 @@ sub find_module_matches {
         }
 
         find( { 
-                wanted => \&wanted, 
+                wanted => $self->wanted, 
                 follow => 1, 
               },
               $INCDIR );
@@ -349,54 +413,6 @@ sub find_module_matches {
 
     $self->MODULES(sort($self->MODPATHS_keys));
 
-
-}
-
-sub wanted {
-
-    my($fullpath,$module,$relpath,$modslash);
-
-    # skip files that do not end with .pm
-    return unless /\.pm$/;
-
-    $fullpath = $File::Find::name;
-
-    $fullpath =~ s/\s*$//g;
-
-    # File/Slurp.pm
-    (  $relpath = $fullpath ) =~ s{^\Q$INCDIR}{};
-    $relpath =~ s{^[\/]*}{}g;
-
-    # File/Slurp
-    (  $modslash=$relpath ) =~ s/\.pm$//g;
-
-    # File::Slurp
-    ( $module = $modslash ) =~ s{\Q/}{::}g;
-
-    if ($OPTS{searchmode} eq 'simple'){
-        unless ( $OPTS{match} ) {
-            return unless $modslash =~ /$RE{PATTERN}/;
-        }
-        elsif ( $OPTS{endofline} ) {
-            return unless $modslash =~ /$RE{PATTERN}$/;
-        }
-    }elsif ($OPTS{searchmode} eq 'allpm'){
-        # check each found .pm file for the package ... ; string
-    }
-
-	# do not add already added path
-	# 
-	#@{$MODPATHS{$module}}=();
-
-	return if $module =~ /^i(686|386)/;
-
-	if ( not grep {/^$fullpath$/ } @{$MODPATHS{$module}}){
-    	push(@{$MODPATHS{$module}},$fullpath);
-	}
-
-    if ( $OPTS{remove} ) {
-        remove_tree($fullpath);
-    }
 
 }
 
