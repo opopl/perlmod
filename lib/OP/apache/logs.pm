@@ -18,6 +18,7 @@ OP::apache::logs
 
 use Apache2::RequestRec ( ); # for $r->content_type
 use Apache2::Const -compile => qw(OK);
+use Apache2::Request ();
 
 our $R;
 

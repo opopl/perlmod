@@ -25,73 +25,39 @@ use Data::Dumper;
 use URI::Escape;
 
 use OP::apache::perldoc::pmsearch;
+use OP::apache::base qw(
+	$PINFO $SNAME
+	$R $H $Q
+	init_handler_vars
+);
+use OP::apache::base::html;
 
 ###subs
 sub printhtml_response;
 sub printhtml_;
 sub handler;
 sub _response_searchmodule;
-sub _html_start;
-sub _html_restart;
-sub _html_print;
-sub _html_end;
-sub _html_clear;
-sub _html_add;
-
 
 ###our
-our $HTMLLINES;
 our @SUBMITS;
 
-our ($R,$REQ,$Q);
-our $SNAME;
-our $PINFO;
-
-sub _html_add {
-    push(@$HTMLLINES, @_ );
-}
-
-sub _html_start {
-	_html_add
-		$Q->start_html;
-}
-
-sub _html_restart {
-	_html_clear;
-	_html_start;
-}
-
-sub _html_print {
-    $R->print($_ . "\n") for(@$HTMLLINES);
-}
-
-sub _html_clear {
-	@$HTMLLINES=();
-}
-
-sub _html_end {
-	_html_add
-		$Q->end_html;
-}
-
-sub handler {
-    $R = Apache2::Request->new(shift);
-    
-    $Q = CGI->new($R);
-
-    $PINFO = $R->path_info =~ s{^\/}{}gr ;
-
-	$SNAME = $R->uri =~ s{\/$PINFO$}{}gr;
+sub init_vars {
 
     @SUBMITS=qw( searchmodule );
 
+}
+
+sub handler {
+	init_handler_vars(@_);
+	init_vars;
+
     $R->content_type('text/html');
 
-	_html_restart;
+	$H->restart;
     eval 'printhtml_' . $PINFO ;
-	_html_end;
+	$H->end;
 
-	_html_print;
+	$H->print;
 
     return OK;
 
@@ -99,7 +65,7 @@ sub handler {
 
 sub printhtml_searchform {
 
-	_html_add
+	$H->_add(
         $Q->h1('Perl modules search form'),
         $Q->hr,
         $Q->start_form(
@@ -118,13 +84,13 @@ sub printhtml_searchform {
 			-values		=>	[ 'At start', 'At end'  ],
 			-defaults	=>	[ 'At start' ]	),
         $Q->end_form,
-    ;
+	);
 }
 
 sub printhtml_ {
 
-	_html_clear;
-	_html_add
+	$H->clear;
+	$H->_add(
 		$Q->frameset( 
 			{ -rows => '20%,70%' }, 
 			$Q->frame({ 
@@ -133,38 +99,39 @@ sub printhtml_ {
 			$Q->frame({ 
 					-src 	=> "$SNAME/response", 	
 					-name 	=> 'response' }),
-		);
+		)
+	);
 
 }
 
 sub _response_searchmodule {
 
-	_html_add
+	$H->_add(
         $Q->h1('Found modules'),
-        $Q->hr 
-    ;
+        $Q->hr, 
+	);
 
     my $mod=$R->param('perlmodule');
     my $s=Apache::perldoc::pmsearch->new( pattern => $mod );
 
-    $s->search( untaint => 1 );
+	$s->search( untaint => 1 );
 
-	_html_add
+	$H->_add(
         $Q->p('Provided search pattern:'), 
         $Q->p($mod),
         $Q->p('Value of @INC:'), 
         $Q->p(join(':',@INC)),
-    ;
+	);
 
 	my @modules=@{$s->{modules}};
 
-	_html_add '<table border="1">';
+	$H->_add( '<table border="1">' );
 
 	foreach my $module (@modules) {
 		my $paths=$s->{modpaths}->{$module};
 
 		foreach my $path (@$paths) {
-			_html_add 
+			$H->_add(
 				'<tr>',
 				$Q->td($module),
 				$Q->td( 
@@ -176,18 +143,18 @@ sub _response_searchmodule {
 					)
 				),
 				'</tr>',
-				;
+			);
 		}
 	}
 
-	_html_add '</table>';
+	$H->_add( '</table>' );
 
 }
 
 sub printhtml_loadsource {
 	my $path=uri_unescape( $R->param('path') );
 
-	_html_add $Q->p($path);
+	$H->_add( $H->Q->p($path) );
 }
 
 sub printhtml_response {
