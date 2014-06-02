@@ -24,7 +24,7 @@ use CGI;
 use Data::Dumper;
 use URI::Escape;
 
-use Apache::perldoc::pmsearch;
+use OP::apache::perldoc::pmsearch;
 
 ###subs
 sub printhtml_response;

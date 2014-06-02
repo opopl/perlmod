@@ -34,6 +34,7 @@ sub init_vars {
 		screenrc
         zshrc
 		ttreerc
+		my.cnf
     );
 }
 

@@ -1,5 +1,5 @@
 
-package OP::apache::NavBar;
+package OP::apache::navbar;
 
 use strict;
 use warnings;
