@@ -29,8 +29,10 @@ use OP::apache::base qw(
 	$PINFO $SNAME
 	$R $H $Q
 	init_handler_vars
+	@SUBMITS
 );
 use OP::apache::base::html;
+use Pod::POM;
 
 ###subs
 sub printhtml_response;
@@ -39,7 +41,6 @@ sub handler;
 sub _response_searchmodule;
 
 ###our
-our @SUBMITS;
 
 sub init_vars {
 
@@ -112,7 +113,7 @@ sub _response_searchmodule {
 	);
 
     my $mod=$R->param('perlmodule');
-    my $s=Apache::perldoc::pmsearch->new( pattern => $mod );
+    my $s=OP::apache::perldoc::pmsearch->new( pattern => $mod );
 
 	$s->search( untaint => 1 );
 
@@ -132,17 +133,17 @@ sub _response_searchmodule {
 
 		foreach my $path (@$paths) {
 			$H->_add(
-				'<tr>',
-				$Q->td($module),
-				$Q->td( 
-					$Q->a( { 
-						-href 	=> "$SNAME/loadsource?path=" 
-							. uri_escape($path),
-						-target => 'response',
-						}, $path 
-					)
+				$Q->Tr(
+					$Q->td($module),
+					$Q->td( 
+						$Q->a( { 
+							-href 	=> "$SNAME/loadsource?path=" 
+								. uri_escape($path),
+							-target => 'response',
+							}, $path 
+						)
+					),
 				),
-				'</tr>',
 			);
 		}
 	}
@@ -154,7 +155,7 @@ sub _response_searchmodule {
 sub printhtml_loadsource {
 	my $path=uri_unescape( $R->param('path') );
 
-	$H->_add( $H->Q->p($path) );
+	$H->_add( $Q->p($path) );
 }
 
 sub printhtml_response {

@@ -28,6 +28,7 @@ sub reval;
 
 ###our
 our @ENVVARS;
+our %FILES;
 
 sub main {
 	init_vars;
@@ -78,6 +79,7 @@ sub update_perlenv {
 	$p->save;
 
 }
+
 
 
 1;
