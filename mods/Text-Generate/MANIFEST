@@ -1,0 +1,11 @@
+Build.PL
+Changes
+lib/Text/Generate/Base.pm
+lib/Text/Generate/Utils.pm
+LICENSE
+log
+MANIFEST			This list of files
+README
+t/Base/001_load.t
+t/Base/002_subs.t
+Todo

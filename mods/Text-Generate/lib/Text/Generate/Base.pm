@@ -1,13 +1,15 @@
 
-package OP::Writer;
-use strict;
+package Text::Generate::Base;
 
-use parent qw( OP::Script Class::Accessor::Complex );
-use OP::Base qw( %opts %fh );
+use strict;
+use warnings;
+
+use parent qw( 
+	Class::Accessor::Complex
+);
 
 ###__ACCESSORS_SCALAR
 our @scalar_accessors=qw(
-    textcolor
     text
     ofile
     commentchar
@@ -31,12 +33,17 @@ our @array_accessors=qw(
 __PACKAGE__
     ->mk_scalar_accessors(@scalar_accessors)
     ->mk_array_accessors(@array_accessors)
-    ->mk_hash_accessors(@hash_accessors);
+    ->mk_hash_accessors(@hash_accessors)
+	->mk_new;
 
 sub _writefile {
     my $self=shift;
 
-    $self->_print({file => $self->ofile, fmode => 'w' });
+    $self->_print(
+		{
+			file => $self->ofile, 
+			fmode => 'w' 
+		});
 
 }
 
@@ -54,19 +61,53 @@ sub _print_stdout {
 
 }
 
+=head3 _print
+
+X<_print,Text::Generator::Base>
+
+=head4 Usage
+
+	_print($opts);
+
+=head4 Purpose
+
+=head4 Input
+
+=over 4
+
+=item * C<$opts> (HASH) 
+
+Input options for printing
+
+=back
+
+=head4 Returns
+
+=over 4
+
+=item * 1, if success;
+
+=item * 0, if failure.
+
+=back
+
+=head4 See also
+
+L<_writefile>
+
+=cut
+
 sub _print {
     my $self = shift;
 
-    my $opts;
-
-    $opts = shift // '';
+    my $opts = shift // '';
 
     unless ($opts) {
         print $self->text;
         return 1;
     }
 
-    $opts->{fmode} = $self->_defaults("print_file_mode")
+    $opts->{fmode} = $self->default_options("print_file_mode")
       unless defined $opts->{fmode};
 
     if ( ref $opts eq "HASH" ) {
@@ -87,38 +128,18 @@ sub _print {
             close F;
 
         }
-        elsif ( defined $opts{fh} ) {
-
-            my $fh = $opts{fh};
-
-            print $fh { $self->text };
-
-        }
         else {
             print $self->text;
         }
     }
 }
 
-sub _defaults {
+sub init {
     my $self = shift;
 
-    my $opt = shift // '';
-
-    return undef unless $opt;
-
-    return $self->default_options( $opt );
-
-}
-
-sub _init {
-    my $self = shift;
-
-    $self->{package_name} = __PACKAGE__ unless defined $self->{package_name};
-
-    my $dopts = { print_file_mode => "w" };
-
-    $self->default_options( $dopts );
+    $self->default_options( 
+		print_file_mode => 'w' 
+	);
 
     $self->text('');
     $self->textlines();
@@ -138,16 +159,51 @@ sub _c_delim {
     $self->_c("$text");
 }
 
+=head3 _c
+
+X<_c,Text::Generator::Base>
+
+=head4 Usage
+
+	_c($text);
+
+=head4 Purpose
+
+=head4 Input
+
+=over 4
+
+=item * C<$ref> 
+
+(SCALAR) Input text to be added as a comment using the value of C<commentchar>
+accessor as a comment char, e.g. C<%> for C<LaTeX> etc.
+
+=back
+
+=cut
+
 sub _c {
     my $self = shift;
 
-    my $ref = shift // '';
-
-    my $text = $ref;
+    my $text = shift // '';
 
     $self->_add_line($self->commentchar . "$text");
 
 }
+
+=head3 _clear
+
+X<_clear,Text::Generator::Base>
+
+=head4 Usage
+
+	_clear();
+
+=head4 Purpose
+
+Clear the contents of C<textlines> and C<text> scalar accessors.
+
+=cut
 
 sub _clear {
     my $self = shift;
@@ -166,15 +222,6 @@ sub _empty_lines {
     for ( 1 .. $num ) {
         $self->_add_line(" ");
     }
-}
-
-sub new {
-    my ( $class, %parameters ) = @_;
-    my $self = bless( {}, ref($class) || $class );
-
-    $self->_init;
-
-    return $self;
 }
 
 sub _flush {
@@ -233,11 +280,12 @@ sub minus {
     my $self=shift;
 
     my $id=shift;
-    my $val=shift // 1;
+
+    my $value=shift // 1;
 
     for($id){
         /^indent$/ && do {
-            $self->indent($self->indent-$val);
+            $self->indent($self->indent-$value);
             next;
         };
     }

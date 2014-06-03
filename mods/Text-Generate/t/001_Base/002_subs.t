@@ -5,11 +5,14 @@ use warnings;
 
 use Test::More;
 
-use OP::Writer;
-use OP::Base qw( _arrays_equal );
+use Text::Generate::Base;
+
+use Text::Generate::Utils qw( _arrays_equal );
+
 use List::Compare;
 use File::Spec::Functions qw( catfile );
 use File::Path qw( make_path remove_tree );
+use File::Temp qw(tempdir);
 use FindBin qw( $Bin $Script );
 
 ###subs
@@ -22,7 +25,8 @@ sub test_commenting;
 sub test_adding_lines;
 sub main;
 
-our $W=OP::Writer->new;
+our $W=Text::Generate::Base->new;
+
 our @TESTS;
 our $testdir;
 
@@ -93,15 +97,13 @@ sub ok_lines {
     my $a=shift;
     my $msg=shift;
 
-      ok( _arrays_equal($W->textlines_ref,$a ), $msg);
+    ok( _arrays_equal([ $W->textlines ],$a ), $msg);
 
 }
 
 sub test_printing {
 
-    $testdir=catfile($Bin,qw(testdirs), $Script);
-    remove_tree($testdir);
-    make_path($testdir);
+    $testdir=tempdir( CLEANUP => 1 );
 
     my $filemy=catfile($testdir, 'my.txt');
     my $filepack=catfile($testdir, 'pack.txt');
