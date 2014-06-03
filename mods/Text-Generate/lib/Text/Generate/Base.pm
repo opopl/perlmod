@@ -36,6 +36,15 @@ __PACKAGE__
     ->mk_hash_accessors(@hash_accessors)
 	->mk_new;
 
+sub _die {
+    my $self=shift;
+
+    my $msg=shift;
+
+	die "$msg";
+
+}
+
 sub _writefile {
     my $self=shift;
 

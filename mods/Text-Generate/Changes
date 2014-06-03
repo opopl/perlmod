@@ -1,6 +1,9 @@
-Revision history for Perl module OP::Writer
 
-0.01 Wed Nov 13 08:37:08 2013
-    - original version; created by ExtUtils::ModuleMaker 0.51
+Revision history for Perl distribution Text::Generate
 
-
+03-Jun-2014 - 0.01 version. 
+	Contains modules:
+		Text::Generate::Base
+		Text::Generate::Utils
+		Text::Generate::Pod
+		Text::Generate::TeX

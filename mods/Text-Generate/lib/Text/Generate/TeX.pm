@@ -12,7 +12,7 @@ use Data::Dumper;
 use File::Slurp qw(read_file);
 use File::Spec::Functions qw(catfile );
 
-use OP::Base qw(_hash_add);
+use Text::Generate::Utils qw(_hash_add);
 
 use FindBin qw($Bin $Script);
 use File::Spec::Functions qw(catfile);
@@ -33,14 +33,11 @@ Text::Generate::TeX - Perl package for writing TeX documents
 
 =over 4
 
-=item * L<Text::Generate::TeX>
+=item * L<Text::Generate::Base>
 
 =back
  
 =head1 DEPENDENCIES
- 
-=cut
- 
 
 =head1 METHODS
 
@@ -80,7 +77,7 @@ __PACKAGE__
 # }}}
 # Methods {{{
 
-=head3 _write_hash()
+=head3 _write_hash
 
 =cut
 
@@ -115,19 +112,15 @@ sub _write_hash {
 
 }
 
-=head3 _cmd()
+=head3 _cmd
 
 =head4 USAGE
 
-=over 4
-
-=item $TEX->_cmd('maketitle');
-
-=item $TEX->_cmd('begin','document');
-
-=item $TEX->_cmd('begin','section');
-
-=back
+	$TEX->_cmd('maketitle');
+	
+	$TEX->_cmd('begin','document');
+	
+	$TEX->_cmd('begin','section');
 
 =cut
 
@@ -195,7 +188,7 @@ sub _cmd {
 
 =head3 def
 
-=head4 SYNOPSIS
+=head4 Usage
 
 	def('')                 -> returns 1 
 	
@@ -230,7 +223,7 @@ sub def {
 
 }
 
-=head3 _insert_file()
+=head3 _insert_file
 
 =cut
 
@@ -387,7 +380,7 @@ sub documentclass {
 }
 
 
-=head3 begin()
+=head3 begin
 
 =cut
 
@@ -826,7 +819,7 @@ sub toc() {
 
 }
 
-=head3 abstract()
+=head3 abstract
 
 =cut
 
@@ -840,7 +833,7 @@ sub abstract {
     $self->end('abstract');
 }
 
-=head3 anchor()
+=head3 anchor
 
 =cut
 
@@ -852,7 +845,7 @@ sub anchor {
     $self->_add_line("%%%$anchor");
 }
 
-=head3 bibliography()
+=head3 bibliography
 
 =cut
 
@@ -928,7 +921,7 @@ sub bibliography {
 
 }
 
-=head3 _write_fancyhdr_style()
+=head3 _write_fancyhdr_style
 
 =cut
 
@@ -1272,10 +1265,10 @@ sub hypsetup {
 
 =cut
 
-sub _init {
+sub init {
     my $self = shift;
 
-    $self->OP::Writer::_init;
+    $self->Text::Generate::Base::init;
 
     $self->{package_name} = __PACKAGE__ unless defined $self->{package_name};
 
