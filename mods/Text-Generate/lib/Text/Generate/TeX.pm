@@ -51,6 +51,7 @@ our @scalar_accessors = qw(
   doctitle
   makeindex
   ncfiles
+  package_name
   packopts
   put_today_date
   shift_parname
@@ -98,7 +99,7 @@ sub _write_hash {
             }
         }
         else {
-            $self->warn("_write_hash: zero-size hash supplied");
+            $self->_warn("_write_hash: zero-size hash supplied");
         }
 
     }
@@ -242,24 +243,18 @@ sub _insert_file {
     }
 }
 
-=head3 input()
+=head3 input
 
-=head4 USAGE 
+=head4 Usage
 
-=over 4
+	input($filename,{ %OPTIONS });
 
-=item input($filename,{ %OPTIONS });
+=head4 Examples
 
-=back
+	input('a',{ check_exists  => 1 } );
 
-=head4 EXAMPLES
+	input('a');
 
-=over 4
-
-=item input('a',{ check_exists  => 1 } );
-=item input('a');
-
-=back
 
 =cut
 
@@ -334,10 +329,6 @@ X<documentclass,Text::Generate::TeX>
  
 =back
  
-=head4 Returns
- 
-=head4 See also
- 
 =cut
  
 
@@ -346,6 +337,7 @@ sub documentclass {
 
     my $class = shift // '';
     my $ref   = shift // {};
+
     my $stropts;
 
     while ( my ( $k, $v ) = each %{$ref} ) {
@@ -417,11 +409,11 @@ sub begin {
 
 }
 
-=head3 usepackage()
+=head3 usepackage
 
 =cut
 
-sub usepackage() {
+sub usepackage {
     my $self = shift;
 
     my $ref = shift // '';
@@ -450,7 +442,7 @@ sub usepackage() {
 		}
     }
     else {
-        $self->_add_line("\\usepackage{$pack}");
+        $self->_cmd('usepackage', $pack );
     }
 
 }
@@ -465,7 +457,7 @@ sub usepackages {
     }
 }
 
-=head3 newnc()
+=head3 newnc
 
 =cut
 
@@ -656,7 +648,7 @@ sub bookmark {
 
 # lof() {{{
 
-=head3 lof()
+=head3 lof
 
 =cut
 
@@ -707,7 +699,7 @@ sub lof {
 # }}}
 # lot() {{{
 
-=head3 lot()
+=head3 lot
 
 =cut
 
@@ -757,7 +749,7 @@ sub lot {
 
 # }}}
 
-=head3 true()
+=head3 true
 
 =cut
 
@@ -771,11 +763,11 @@ sub true {
     }
 }
 
-=head3 toc()
+=head3 toc
 
 =cut
 
-sub toc() {
+sub toc {
     my $self = shift;
 
     my $ref = shift // '';
@@ -955,7 +947,7 @@ sub _write_fancyhdr_style {
 }
 
 
-=head3 setcounter()
+=head3 setcounter
 
 =cut
 
@@ -968,7 +960,8 @@ sub setcounter {
     $self->_add_line('\setcounter{' . $counter . '}{' . $val . '}');
 
 }
-=head3 setlength()
+
+=head3 setlength
 
 =cut
 
@@ -982,11 +975,11 @@ sub setlength {
 
 }
 
-=head3 printindex()
+=head3 printindex
 
 =cut
 
-sub printindex() {
+sub printindex {
     my $self = shift;
 
     my $s = '
@@ -1006,11 +999,11 @@ sub printindex() {
 
 }
 
-=head3 preamble()
+=head3 preamble
 
 =cut
 
-sub preamble() {
+sub preamble {
     my $self = shift;
 
     my $ref = shift // '';
@@ -1168,7 +1161,7 @@ EOF
     }
 }
 
-=head3 hypertarget()
+=head3 hypertarget
 
 =cut
 
@@ -1196,11 +1189,11 @@ sub includepdf {
         pages => 'all',
     };
 
-    given($ref->{pages}){
-        when('all') { 
+    for($ref->{pages}){
+        /^all$/ && do { 
             $optstr.='pages=-';
+			next;
         }
-        default { }
     }
 
     my $pfile=$iref->{fname} . '.pdf' // '';
@@ -1261,7 +1254,7 @@ sub hypsetup {
 
 }
 
-=head3 _init()
+=head3 init
 
 =cut
 
@@ -1270,7 +1263,7 @@ sub init {
 
     $self->Text::Generate::Base::init;
 
-    $self->{package_name} = __PACKAGE__ unless defined $self->{package_name};
+    $self->package_name( __PACKAGE__ ) unless defined $self->package_name;
 
     $self->commentchar('%');
 
@@ -1310,5 +1303,28 @@ sub DESTROY {
 }
 
 # }}}
+# }}}
 1;
+__END__
+
+=head1 SEE ALSO 
+
+=over 4
+
+=item * L<Text::Generate::Base>
+
+=item * L<Text::Generate::Pod>
+
+=back
+
+=head1 LICENSE
+
+Perl Artistic License.
+
+=head1 AUTHOR
+
+Oleksandr Poplavskyy.
+
+=cut
+
 

@@ -4,6 +4,12 @@ package Text::Generate::Base;
 use strict;
 use warnings;
 
+=head1 NAME
+
+Text::Generate::Base - base package for all package in L<Text::Generate> distribution
+
+=cut
+
 use parent qw( 
 	Class::Accessor::Complex
 );
@@ -42,6 +48,15 @@ sub _die {
     my $msg=shift;
 
 	die "$msg";
+
+}
+
+sub _warn {
+    my $self=shift;
+
+    my $msg=shift;
+
+	warn "$msg";
 
 }
 
@@ -301,4 +316,15 @@ sub minus {
 }
 
 1;
+__END__
+
+=head1 LICENSE
+
+Perl Artistic License.
+
+=head1 AUTHOR
+
+Oleksandr Poplavskyy.
+
+=cut
 

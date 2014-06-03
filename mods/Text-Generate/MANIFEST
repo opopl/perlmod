@@ -6,12 +6,13 @@ lib/Text/Generate/TeX.pm
 lib/Text/Generate/Utils.pm
 LICENSE
 MANIFEST			This list of files
+META.json
+META.yml
 README
 t/001_Base/001_load.t
 t/001_Base/002_subs.t
 t/002_Pod/001_load.t
 t/003_TeX/001_load.t
 t/003_TeX/002_sections.t
+Text::Generate-0.01.tar.gz
 Todo
-META.yml
-META.json

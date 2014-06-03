@@ -489,13 +489,27 @@ sub VimInput {
     return $inp;
 }
 
-=head3 VimChooseFromPrompt($dialog,$list,$sep,@args)
+=head3 VimChooseFromPrompt
+
+=head4 Usage
+
+	VimChooseFromPrompt($dialog,$list,$sep,@args);
+
+=head4 Input
 
 =over 4
 
-=item $dialog (SCALAR) Input dialog message string
-=item $list   (SCALAR) String, containing list of values to be selected (separated by $sep)
-=item $sep   (SCALAR) Separator of values in $list 
+=item $dialog (SCALAR) 
+
+Input dialog message string;
+
+=item $list   (SCALAR) 
+
+String, containing list of values to be selected (separated by $sep);
+
+=item $sep   (SCALAR) 
+
+Separator of values in $list.
 
 =back
 
@@ -846,12 +860,19 @@ sub VimMsgNL {
 
 =head4 Input variables
 
-=item $text           (SCALAR) - input text to be displayed by Vim
-=item $options        (HASH)   - additional options (color, highlighting etc.)
+=over 4
+
+=item $text (SCALAR)
+
+input text to be displayed by Vim;
+
+=item $options (HASH)
+
+additional options (color, highlighting etc.).
 
 =over 4
 
-=item Structure of the $options parameter.
+=item Structure of the C<$options> parameter.
 
 =back
 
@@ -941,23 +962,21 @@ sub VimMsgE {
     VIM::Msg( " $text", "ErrorMsg" );
 }
 
-=head3 VimLet ( $var, $ref, $vtype )
+=head3 VimLet
 
-=over 4
+=head4 Usage
 
-=item Set the value of a vimscript variable
+	VimLet( $var, $ref, $vtype );
 
-=item Examples: 
+=head4 Purpose
 
-=over 4
+Set the value of a vimscript variable
 
-=item VimLet('paths',\%paths,'g')
+=head4 Examples
 
-=item VimLet('PMOD_ModSubs',\@SUBS,'g')
+	VimLet('paths',\%paths,'g')
 
-=back
-
-=back
+	VimLet('PMOD_ModSubs',\@SUBS,'g')
 
 =cut
 
@@ -1001,24 +1020,23 @@ sub VimLet {
 
 }
 
-=head3 VimLetEval($var,$expr)
+=head3 VimLetEval
 
-=over 4
+=head4 Usage
 
-=item Assign to the variable $var the result of evaluation of expression $expr.
+	VimLetEval($var,$expr);
 
-=item Examples:
+=head4 Purpose
 
-=over 4
+Assign to the variable C<$var> the result of evaluation of expression C<$expr>.
 
-=item VimLetEval('tempvar','tempname()') - equivalent in vimscript to
-let tempvar=tempname()
+=head4 Examples
 
-=back
+	VimLetEval('tempvar','tempname()') 
 
-=back
+equivalent in vimscript to 
 
-
+	let tempvar=tempname()
 
 =cut
 
@@ -1047,20 +1065,31 @@ sub VimMsgDebug {
     }
 }
 
-=head3 VimStrToOpts($str,$sep)
+=head3 VimStrToOpts
 
-=head4 INPUT 
+=head4 Usage
+
+	VimStrToOpts($str,$sep);
+
+=head4 Input
 
 =over 4
 
-=item $str (SCALAR) - input string to be converted.
-=item $sep (SCALAR) - separator between options in the input string.
+=item C<$str> (SCALAR) 
+
+input string to be converted;
+
+=item C<$sep> (SCALAR) 
+
+separator between options in the input string.
 
 =back
 
-=head4 OUTPUT
+=head4 Output
 
-hash reference of the form: { OPTION1 => 1, OPTION2 => 0, etc. }
+hash reference of the form: 
+
+	{ OPTION1 => 1, OPTION2 => 0, etc. }
 
 =cut
 
@@ -1085,10 +1114,18 @@ sub VimStrToOpts {
 
 ###imod
 
-=head3 VimPerlInstallModule($opts) Install local Perl module(s)
+=head3 VimPerlInstallModule($opts) 
 
-Input Perl module name is provided through @Args. Additional options are specified
-in the optional hash structure $opts
+=head4 Usage
+
+	VimPerlInstallModule($opts);
+
+=head4 Purpose
+
+Install local Perl module(s)
+
+Input Perl module name is provided through C<@Args>. Additional options are specified
+in the optional hash structure C<$opts>.
 
 =cut
 
@@ -1293,17 +1330,21 @@ sub VimSetTags {
     }
 }
 
-=head3 VimJoin( $arrname, $sep,  $vtype )
+=head3 VimJoin
+
+=head4 Usage
+
+	VimJoin( $arrname, $sep,  $vtype );
 
 =over 4
 
-=item Apply join() on the vimscript array $arrname; returns string
+=item Apply C<join()> on the vimscript array $arrname; returns string
 
 =item Examples: 
 
 =over 4
 
-=item VimJoin('a:000') - Equivalent to join(a:000,' ') in vimscript
+=item C<VimJoin('a:000')> - Equivalent to C<join(a:000,' ')> in vimscript
 
 =back
 
@@ -1486,7 +1527,7 @@ sub _die {
     die "VIMPERL_$SubName : $text";
 }
 
-=head3 init_Args()
+=head3 init_Args
 
 Process optional vimscript command-line arguments ( specified as ... in
 vimscript function declarations )

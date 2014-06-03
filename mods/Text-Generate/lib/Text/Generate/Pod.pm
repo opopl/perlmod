@@ -4,6 +4,37 @@ package Text::Generate::Pod;
 use strict;
 use warnings;
 
+=head1 NAME
+
+Text::Generate::Pod - Perl package for writing Pod documents
+
+=head1 SYNOPSIS
+
+	use Text::Generate::Pod;
+	
+	my $p=Text::Generate::Pod->new;
+
+	$p->head1('NAME');
+
+	$p->_add_line( ... );
+	$p->_add_line( ... );
+
+	$p->head1('SYNOPSIS');
+
+	$p->head1('METHODS');
+
+	$p->head2('method1');
+
+	$p->over({ 
+		items => [qw( item1 item2 )],
+		start => '*',
+		indent => 4,
+	});
+
+	$p->cut;
+
+=cut
+
 use IO::String;
 use Pod::Usage qw(pod2usage);
 
@@ -12,21 +43,6 @@ use File::Slurp qw( write_file );
 use Try::Tiny;
 
 use parent qw( Text::Generate::Base );
-
-###__ACCESSORS_SCALAR
-our @scalar_accessors=qw();
-
-###__ACCESSORS_HASH
-our @hash_accessors=qw();
-
-###__ACCESSORS_ARRAY
-our @array_accessors=qw();
-
-__PACKAGE__
-    ->mk_scalar_accessors(@scalar_accessors)
-    ->mk_array_accessors(@array_accessors)
-    ->mk_hash_accessors(@hash_accessors)
-    ->mk_new;
 
 sub init {
     my $self = shift;
@@ -67,6 +83,7 @@ sub over {
 
     my $items;
     my $indent=4;
+	my $start='';
 	
 	unless(ref $ref){
         $indent=$ref;
@@ -77,15 +94,17 @@ sub over {
 	    
 	}elsif(ref $ref eq "HASH"){
         $items=$ref->{items};
+        $start=$ref->{start} if defined $ref->{start};
+        $indent=$ref->{indent} if defined $ref->{indent};
 	}
 
     $self->_pod_line('=over ' . $indent);
 
     foreach my $item (@$items) {
-        $self->item($item);
+        $self->item($item, $start);
     }
 
-    $self->_pod_line('=back');
+    $self->back;
 
 }
 
@@ -131,8 +150,9 @@ sub item {
     my $self=shift;
 
     my $item=shift;
+    my $start=shift . ' ' // '';
 
-    $self->_pod_line('=item ' . $item);
+    $self->_pod_line('=item ' . $start . $item);
 
 }
 
@@ -169,3 +189,26 @@ sub _print_pod {
 }
 
 1;
+
+__END__
+
+=head1 SEE ALSO 
+
+=over 4
+
+=item * L<Text::Generate::Base>
+
+=item * L<Text::Generate::TeX>
+
+=back
+
+=head1 LICENSE
+
+Perl Artistic License.
+
+=head1 AUTHOR
+
+Oleksandr Poplavskyy.
+
+=cut
+

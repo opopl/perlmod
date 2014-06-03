@@ -21,7 +21,7 @@ use OP::Base qw(
 );
 
 use OP::BIBTEX;
-use OP::TEX::Text;
+use Text::Generate::TeX;
 use OP::TEX::NICE;
 use OP::PROJSHELL;
 use OP::TEX::Driver;
@@ -916,7 +916,7 @@ sub _tex_paper_htlatex() {
     unless ( -e $cfg ) {
         my $text;
 
-        my $s = OP::TEX::Text->new;
+        my $s = Text::Generate::TeX->new;
         my ( @in_document, @in_preamble );
 
         @in_preamble = qw( _cfg.frames-two _cfg.tabular _common.cfg );
@@ -1672,7 +1672,7 @@ sub _tex_paper_sep() {
     $self->papeqfiles(
         glob( catfile( $self->texroot, "p." . $self->pkey . ".eq.*.tex" ) ) );
 
-    my $s = OP::TEX::Text->new();
+    my $s = Text::Generate::TeX->new();
 
     $self->pdfeqfile(
         catfile( $self->texroot, 'p.' . $self->pkey . '.pdfeqs.tex' ) );
@@ -1846,7 +1846,7 @@ sub _tex_paper_gen_file() {
                             join( '.', qw(p), $pkey, $sstype, $n, qw(tex) ) );
 
                         if ( ( $sstype eq "fig" ) ) {
-                            my $s = OP::TEX::Text->new;
+                            my $s = Text::Generate::TeX->new;
 
                             if ( !-e $figfile ) {
                                 my $sz = "12cm";
@@ -1860,7 +1860,7 @@ sub _tex_paper_gen_file() {
                             }
                         }
                         elsif ( $sstype eq "tab" ) {
-                            my $s = OP::TEX::Text->new;
+                            my $s = Text::Generate::TeX->new;
                             use LaTeX::Table;
 
                             # file with tabular data
@@ -3007,7 +3007,7 @@ sub _part_make_generate_tex() {
     $usedpacks = $self->pap_usedpacks($part);
     $packopts  = $self->pap_packopts($part);
 
-    my $s = OP::TEX::Text->new();
+    my $s = Text::Generate::TeX->new();
     $s->texroot( $self->texroot );
 
 ###_PART_MAKE_PREAMBLE
@@ -4466,7 +4466,7 @@ sub update_info() {
     my $file;
 
     # temporary variable used for storing/printing LaTeX text
-    my $s = OP::TEX::Text->new;
+    my $s = Text::Generate::TeX->new;
 
     # Preamble
     open PA, ">$texp.preamble.tex" || die $!;

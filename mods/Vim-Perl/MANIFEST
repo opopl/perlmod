@@ -1,8 +1,10 @@
-MANIFEST
-README
-LICENSE
-Todo
-Changes
 Build.PL
-lib/OP/VIMPERL.pm
-t/001_load.t
+Changes
+lib/Vim/Perl.pm
+LICENSE
+MANIFEST			This list of files
+META.json
+META.yml
+README
+t/use.t
+Todo

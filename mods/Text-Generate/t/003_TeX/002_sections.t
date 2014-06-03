@@ -10,7 +10,7 @@ use FindBin qw( $Bin $Script );
 
 use Text::Generate::TeX;
 
-use OP::Base qw( _arrays_equal );
+use Text::Generate::Utils qw( _arrays_equal );
 use File::Spec::Functions qw( catfile );
 use File::Path qw( make_path remove_tree );
 
@@ -56,7 +56,7 @@ sub ok_lines {
   my $a=shift;
   my $msg=shift;
 
-  ok( _arrays_equal($TEX->textlines_ref,$a ), $msg);
+  ok( _arrays_equal( [ $TEX->textlines ] ,$a ), $msg);
 
 }
 
