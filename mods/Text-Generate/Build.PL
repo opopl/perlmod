@@ -2,7 +2,7 @@
 use Module::Build;
 
 Module::Build->new
-    ( dist_name     		=> 'Text::Generate',
+    ( dist_name     		=> 'Text-Generate',
 	  module_name 			=> 'Text::Generate::Base',
       dist_author     		=> 'O. Poplavskyy',
       dist_abstract   		=> 'Base class for formatted text generation',

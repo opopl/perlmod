@@ -1,8 +1,8 @@
-package OP::VIMPERL;
+package Vim::Perl;
 
 =head1 NAME 
 
-OP::VIMPERL - Perl package for efficient interaction with VimScript
+Vim::Perl - Perl package for efficient interaction with VimScript
 
 =head1 USAGE
 
@@ -16,7 +16,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 
-use OP::Base qw( readarr _hash_add );
+use File::Dat::Utils qw( readarr );
 use Text::TabularDisplay;
 
 use Data::Dumper;
@@ -675,7 +675,7 @@ sub VimPerlGetModuleName {
         }else{
         # 4. If fail to get the current buffer's name, pop up a module chooser dialog
         #
-	        VimMsgE('Failed to get $CurBuf->{name} from OP::VIMPERL');
+	        VimMsgE('Failed to get $CurBuf->{name} from Vim::Perl');
 	
 	        $module = VimPerlGetModuleNameFromDialog;
 	    }

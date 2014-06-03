@@ -1,4 +1,4 @@
-pod2text OP::VIMPERL.pm > README
+pod2text File::Dat::Utils.pm > README
 
 If this is still here it means the programmer was too lazy to create the readme file.
 

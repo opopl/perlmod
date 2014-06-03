@@ -7,7 +7,7 @@ use warnings;
 use File::Copy qw(copy);
 
 ###begin
-use OP::Writer::Tex;
+use Text::Generate::TeX;
 use OP::Script::Simple qw(
 	_say 
 	get_opt 
@@ -22,6 +22,7 @@ use OP::Base qw( readarr readhash );
 use Env qw( $hm $PROJSDIR );
 use FindBin qw($Bin $Script);
 use File::Spec::Functions qw(catfile);
+use File::Slurp qw( edit_file_lines );
 
 ###our
 our ( $if, @pdffiles, @parts, %cvtypes, %files );
@@ -32,7 +33,6 @@ sub process_opt;
 sub main;
 sub init_vars;
 sub do_mktex;
-sub do_mk;
 sub do_list;
 sub do_ch;
 
@@ -62,15 +62,13 @@ sub init_vars {
 
 ###set_optstr
     @optstr = qw( 
-				help
-				man
-				mktex
-				pdf
-				mk
-				ch
-				pfoto
-                list=s
-                type=s
+		help
+		man
+		mktex
+		pdf
+		ch
+        list=s
+        type=s
     );
 
 ###set_optdesc
@@ -112,7 +110,6 @@ sub main {
 
 sub process_opt {
 
-    do_mk if $opt{mk};
 	do_ch if ($opt{ch});
 	do_list if ($opt{list});
 	do_mktex if ( $opt{mktex} );
@@ -139,7 +136,7 @@ sub do_list {
 sub do_mktex {
 	
 	    my @langs = qw(eng ukr );
-	    my $T=OP::Writer::Tex->new;
+	    my $T=Text::Generate::TeX->new;
 
         $T->_clear;
         $T->ofile(catfile($PROJSDIR,qw(cv.tex)));
@@ -190,7 +187,7 @@ sub do_mktex {
             $T->_clear;
 	        $T->ofile("cv_$lang.tex");
 	
-			my $date=time;
+			my $date=localtime;
 
 	        $T->_c_delim;
 	        $T->_c(" Date:");
@@ -234,57 +231,13 @@ sub do_ch {
     my @files=glob("$PROJSDIR/cv_*.tex");
 	
 	foreach my $f (@files) {
-		open(F,"<$f") || die $!;
-		open(N,">$f.n") || die $!;
 
 		print "Processing file: $f\n";
 
-		while(<F>){
-			chomp; 
-			#next if /^\s*\%/;
-			my $line=$_;
-			$line =~ s/^\s*\\section\{([\s\w]+)\}/\\\\ $1 \& /g;
-			print N "$line\n";
-		}
-		copy("$f","$f.bak");
-		#move("$f.n","$f");
-		close(F);
-		close(N);
+		edit_file_lines {
+			s/^\s*\\section\{([\s\w]+)\}/\\\\ $1 \& /g; 
+		} $f;
 	}
-
-}
-
-sub do_mk {
-
-    do_mktex;
-	
-	foreach my $pdf (@pdffiles){ 
-	            system("LATEXMK $pdf");
-	
-				if ($opt{pfoto}){ 
-				   # my $n="$.pdf.n";
-					#prFile("$n");
-					#prForm( { file	 => "$_.pdf" });
-					#prImage(
-						#{ 	file => "pfoto.pdf",
-							#x => 470,
-							#y => 500,
-							#xsize	 => 0.7,
-							#ysize	 => 0.7,
-							#page	 => 1
-						#});
-					#prPage();
-					#prEnd();
-	
-	   #             my $pdf = PDF::API2->open("$_.pdf");
-					#my $page = $pdf->openpage(1);
-					#$pdf->saveas("$n");
-					#move("$n","$_.pdf");
-				}
-		}
-	    foreach(@pdffiles){ s/$/.pdf/g; }
-		#`pdftk @pdffiles cat output cv.pdf`;
-		system("pdftk @pdffiles cat output cv.pdf");
 
 }
 

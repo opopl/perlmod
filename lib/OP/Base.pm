@@ -252,98 +252,6 @@ sub printexportok;
 
 =head1 METHODS
  
-=over 4
- 
-=item L<ListModuleSubs()>
- 
-=item L<_hash_add()>
- 
-=item L<_join()>
- 
-=item L<cmd_opt_add()>
- 
-=item L<edelim()>
- 
-=item L<eoo()>
- 
-=item L<eoo_arr()>
- 
-=item L<eoo_vars()>
- 
-=item L<eoolog()>
- 
-=item L<eval_fortran()>
- 
-=item L<evali()>
- 
-=item L<getopt()>
- 
-=item L<getopt_after()>
- 
-=item L<getopt_init()>
- 
-=item L<gettime()>
- 
-=item L<is_const()>
- 
-=item L<is_log()>
- 
-=item L<op_write_file()>
- 
-=item L<open_files()>
- 
-=item L<printexamples()>
- 
-=item L<printhelp()>
- 
-=item L<printman()>
- 
-=item L<printpod()>
- 
-=item L<printpodoptions()>
- 
-=item L<read_TF()>
- 
-=item L<read_TF_cmd()>
- 
-=item L<read_all_vars()>
- 
-=item L<read_const()>
- 
-=item L<read_in_flist()>
- 
-=item L<read_init_vars()>
- 
-=item L<read_kw_file()>
- 
-=item L<read_line_char_array()>
- 
-=item L<read_line_vars()>
- 
-=item L<readarr()>
- 
-=item L<readhash()>
- 
-=item L<remove_local_dirs_from_INC()>
- 
-=item L<sbvars()>
- 
-=item L<set_DATFILES()>
- 
-=item L<set_FILES()>
- 
-=item L<setcmdopts()>
- 
-=item L<setsdata()>
- 
-=item L<skip_lines()>
- 
-=item L<toLower()>
- 
-=item L<uniq()>
- 
-=back
- 
 =cut
  
 sub printhelp;
@@ -1683,23 +1591,22 @@ sub remove_local_dirs_from_INC {
 
 }
 
-=head3 set_FILES()
+=head3 set_FILES
 
 =cut
 
-# set_FILES() {{{
 sub set_FILES {
     foreach my $podo (@allowed_pod_options) {
-        #$FILES{pod}{$podo} = "$sdata{sname}.$podo.pod";
         $FILES{pod}{$podo} = tmpnam();
     }
     $FILES{tkw} = "$ts.kw.i.dat";
     $FILES{ifs} = "$ts.ifs.i.dat";
+
 }
-=head3 set_DATFILES()
+
+=head3 set_DATFILES
 
 =cut
-
 
 sub set_DATFILES {
     %DATFILES = ( modules_to_install => catfile( $DIRS{PERLMOD}, qw(inc) ), );
