@@ -433,17 +433,21 @@ sub usepackage {
 
     return 1 unless $pack;
 
+	my $optstr='';
+
     if ($opts) {
-		unless(ref $opts){
-        	$self->_add_line("\\usepackage[$opts]{$pack}");
-		}elsif(ref $opts eq "ARRAY"){
-        	$self->_add_line(
-					"\\usepackage[" . join(',',@$opts) . "]{$pack}");
+		if (not ref $opts && $opts){ 
+			$optstr=$opts;
+
+		} elsif (ref $opts eq "ARRAY" && @$opts){
+			$optstr = join(',',@$opts);
+
 		}
+
     }
-    else {
-        $self->_cmd('usepackage', $pack );
-    }
+	$optstr='[' . $optstr . ']' if $optstr;
+
+    $self->_add_line( '\usepackage' . $optstr  . "{$pack}");
 
 }
 
@@ -451,9 +455,13 @@ sub usepackages {
     my $self=shift;
 
     my $packs=shift // [];
+    my $packopts=shift // {};
 
     foreach my $pack (@$packs) {
-        $self->usepackage($pack);
+        $self->usepackage({ 
+				'package' => $pack, 
+				'options' => $packopts->{$pack} // [],
+			} );
     }
 }
 

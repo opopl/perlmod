@@ -151,7 +151,7 @@ sub view_proj_tex;
 
 =cut
 
-sub _term_get_commands() {
+sub _term_get_commands {
     my $self = shift;
 
     my $commands = {
@@ -208,7 +208,7 @@ sub _term_get_commands() {
 ##cmd_clear
         "clear" => {
             desc => "Invoke clear ",
-            proc => sub { $self->_sys('clear') },
+            proc => sub { $self->_sys('clear', runmode => 'system' ) },
         },
         # }}}
         #########################
@@ -256,7 +256,7 @@ sub _term_get_commands() {
 				if ($self->usecgi) {
 					$self->_cgi_pdfview;
 				}else{
-					$self->make('_vdoc'); 
+					$self->make('_vdoc', runmode => 'system'); 
 				}
 			}
         },
@@ -369,7 +369,7 @@ sub _term_get_commands() {
 
 =cut
 
-sub _term_list_commands() {
+sub _term_list_commands {
     my $self = shift;
 }
 
@@ -382,7 +382,7 @@ Initialize a shell terminal L<Term::ShellUI> instance.
 
 =cut
 
-sub _term_init() {
+sub _term_init {
     my $self = shift;
 
     $self->_term_get_commands();
@@ -412,7 +412,7 @@ sub _term_init() {
 
 =cut
 
-sub _term_run() {
+sub _term_run {
     my $self = shift;
 
     my $cmds = shift // [qw()];
@@ -448,7 +448,7 @@ sub _term_run() {
 
 =cut
 
-sub _term_exit() {
+sub _term_exit {
     my $self = shift;
 
     $self->LOGFILE->close;
@@ -458,7 +458,7 @@ sub _term_exit() {
 # }}}
 # termcmd_reset() {{{
 
-sub termcmd_reset() {
+sub termcmd_reset {
 
     my $self = shift;
     my $cmd  = shift;
@@ -476,11 +476,11 @@ sub termcmd_reset() {
 
 # _begin() {{{
 
-=head3 _begin()
+=head3 _begin
 
 =cut
 
-sub _begin() {
+sub _begin {
     my $self = shift;
 
     $self->{package_name} = __PACKAGE__ unless defined $self->{package_name};
@@ -714,7 +714,7 @@ sub _cgi_pdfview {
 
 =cut
 
-sub get_opt() {
+sub get_opt {
     my $self = shift;
 
     $self->OP::Script::get_opt();
@@ -744,11 +744,11 @@ sub move_html {
 
 # init_vars() {{{
 
-=head3 init_vars()
+=head3 init_vars
 
 =cut
 
-sub init_vars() {
+sub init_vars {
     my $self = shift;
 
     $self->_begin();
@@ -829,21 +829,21 @@ sub _reset_HTMLFILES {
 # }}}
 # main() {{{
 
-sub main() {
+sub main {
     my $self = shift;
 
-    $self->get_opt();
+    $self->get_opt;
 
-    $self->init_vars();
+    $self->init_vars;
 
-    $self->_term_init();
-    $self->_term_run();
+    $self->_term_init;
+    $self->_term_run;
 }
 
 # }}}
 # new() {{{
 
-sub new() {
+sub new {
     my $self = shift;
 
     $self->OP::Script::new();
@@ -867,7 +867,7 @@ sub runsyscmd{
 
 =cut
 
-sub set_these_cmdopts() {
+sub set_these_cmdopts {
     my $self = shift;
 
     $self->OP::Script::set_these_cmdopts();
@@ -906,7 +906,7 @@ sub set_these_cmdopts() {
 
 =cut
 
-sub _complete_cmd() {
+sub _complete_cmd {
     my $self = shift;
 
     my $ref_cmds = shift // '';
@@ -959,7 +959,7 @@ sub _complete_cmd() {
 # ============================
 # view() {{{
 
-sub view() {
+sub view {
     my $self = shift;
 
     my $id = shift;
@@ -1027,6 +1027,8 @@ sub make {
 
     my $args=shift // '';
 
+    my %runopts=@_;
+
     chdir($self->PROJSDIR) || die $!;
 
 	switch($args){
@@ -1056,7 +1058,7 @@ sub make {
 
     my $cmd=join(";", "cd " . $self->PROJSDIR, "make " . $args);
 
-	$self->_sys($cmd);
+	$self->_sys($cmd,%runopts);
 
 
 }
@@ -1064,7 +1066,7 @@ sub make {
 # }}}
 # _proj_reset() {{{
 
-sub _proj_reset() {
+sub _proj_reset {
     my $self=shift;
 
     my $proj=shift // '';
@@ -1311,7 +1313,7 @@ EOF
 
 =cut 
 
-sub _read_PROJS() {
+sub _read_PROJS {
     my $self=shift;
 
     my @lines;
@@ -1415,16 +1417,34 @@ sub _sys {
 
     my $cmd=shift;
 
+    my %runopts=@_;
+
+	$runopts{runmode}='ipc_cmd_forked' 
+		unless defined  $runopts{runmode};
+
 	unless($self->usecgi) {
-        my $res= IPC::Cmd::run_forked( $cmd );
-        
-        if ($res->{exit_code}) {
-            $self->warn("FAILURE with exit code: " . $res->{exit_code});
-        
-        }else{
-            $self->say("SUCCESS");
-        
-        }
+
+		for($runopts{runmode}){	
+			/^ipc_cmd_forked$/ && do { 
+		        my $res= IPC::Cmd::run_forked( $cmd );
+		        
+		        if ($res->{exit_code}) {
+		            $self->warn("FAILURE with exit code: " . $res->{exit_code});
+		        
+		        }else{
+		            $self->say("SUCCESS");
+		        
+		        }
+				next;
+			};
+
+			/^system$/ && do { 
+				system("$cmd");
+				next;
+			};
+
+			system("$cmd");
+		}
 
 	}else{
 		my %res;
@@ -1454,7 +1474,7 @@ sub _sys {
 
 # _read_MKTARGETS() {{{
 
-sub _read_MKTARGETS() {
+sub _read_MKTARGETS {
     my $self=shift;
 
     my $tmk=shift // $self->files("maketex_mk");
@@ -1496,7 +1516,7 @@ sub _read_MKTARGETS() {
 # }}}
 # cmd_list() {{{
 
-sub cmd_list() {
+sub cmd_list {
     my $self=shift;
 
     my $opt=shift // ''; 
@@ -1564,7 +1584,7 @@ sub set_accessor_descriptions {
 # ============================
 # sysrun() {{{
 
-sub sysrun() {
+sub sysrun {
     my $self=shift;
 
     my $cmd=shift;

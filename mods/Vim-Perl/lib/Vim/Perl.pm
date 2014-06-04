@@ -286,13 +286,21 @@ sub VimLen {
     return $len;
 }
 
-#   examples:
-#       VimVar('000','arr','a')
-#       VimVar('confdir','','g')
+=head3 VimVar
 
-=head3 VimVar($var,$rtype,$vtype)
+=head4 Usage
 
-Return Perl representation of VimScript variable
+	VimVar($var,$rtype,$vtype);
+
+=head4 Purpose
+
+Return Perl representation of a VimScript variable
+
+=head4 Examples
+
+	VimVar('000','arr','a');
+
+	VimVar('confdir','','g');
 
 =cut
 
@@ -499,15 +507,15 @@ sub VimInput {
 
 =over 4
 
-=item $dialog (SCALAR) 
+=item C<$dialog> (SCALAR) 
 
 Input dialog message string;
 
-=item $list   (SCALAR) 
+=item C<$list>   (SCALAR) 
 
 String, containing list of values to be selected (separated by $sep);
 
-=item $sep   (SCALAR) 
+=item C<$sep>   (SCALAR) 
 
 Separator of values in $list.
 
@@ -856,17 +864,21 @@ sub VimMsgNL {
     VimMsg( " ", { prefix => 'none' } );
 }
 
-=head3 VimMsg($text,$options)
+=head3 VimMsg
+
+=head4 Usage
+
+	VimMsg($text,$options);
 
 =head4 Input variables
 
 =over 4
 
-=item $text (SCALAR)
+=item C<$text> (SCALAR)
 
 input text to be displayed by Vim;
 
-=item $options (HASH)
+=item <$options> (HASH)
 
 additional options (color, highlighting etc.).
 
@@ -1586,4 +1598,17 @@ BEGIN {
 }
 
 1;
+__END__
 
+=head1 AUTHOR
+
+Oleksandr Poplavskyy <opopl@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2014 by Oleksandr Poplavskyy.
+
+This is free software; you can redistribute it and/or modify it under the same
+terms as the Perl 5 programming language system itself.
+
+=cut

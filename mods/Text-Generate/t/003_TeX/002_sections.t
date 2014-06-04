@@ -19,11 +19,14 @@ our $testdir;
 our $TEX;
 
 ###subs
-sub test_commands;
-sub ok_lines;
-sub test_sections;
-sub main;
 sub init_vars;
+sub main;
+sub ok_lines;
+sub test_commands;
+sub test_sections;
+sub test_macros;
+sub test_usepackage;
+sub test_usepackages;
 
 main;
 
@@ -35,6 +38,8 @@ sub init_vars {
       commands
       sections
       macros
+      usepackage
+      usepackages
  );
 
 }
@@ -88,6 +93,86 @@ sub test_macros {
   $TEX->input("file");
 
   ok_lines([ $reftex ], "macros> " . $reftex );
+
+}
+
+sub test_usepackages {
+  my $reflines;
+
+  $reflines=[ 
+  	'\usepackage[draft]{bookmark}',
+  	'\usepackage{my}',
+  ];
+
+  $TEX->_clear;
+  $TEX->usepackages( 
+	  [ qw(bookmark my) ],
+  	  { bookmark => 'draft' }
+  );
+
+  ok_lines($reflines, "usepackages> " );
+
+  $TEX->_clear;
+  $TEX->usepackages( 
+	  [ qw(bookmark my) ],
+  	  { bookmark => [qw(draft)] }
+  );
+
+  ok_lines($reflines, "usepackages> " );
+
+
+}
+
+sub test_usepackage {
+  my $reftex;
+
+  $reftex='\usepackage{bookmark}';
+	
+	  $TEX->_clear;
+	  $TEX->usepackage("bookmark");
+	
+	  ok_lines([ $reftex ], "usepackage> " . $reftex );
+	
+	  $TEX->_clear;
+	  $TEX->usepackage({ package => "bookmark" });
+	
+	  ok_lines([ $reftex ], "usepackage> " . $reftex );
+
+  $reftex='\usepackage[draft]{bookmark}';
+
+	  $TEX->_clear;
+	  $TEX->usepackage({ 
+			  'package' => "bookmark", 
+			  'options' => 'draft' 
+	  });
+	
+	  ok_lines([ $reftex ], "usepackage> " . $reftex );
+
+	  $TEX->_clear;
+	  $TEX->usepackage({ 
+			  'package' => "bookmark", 
+			  'options' => [qw(draft)], 
+	  });
+
+	  ok_lines([ $reftex ], "usepackage> " . $reftex );
+
+  $reftex='\usepackage[draft,view={FitB}]{bookmark}';
+
+	  $TEX->_clear;
+	  $TEX->usepackage({ 
+			  'package' => "bookmark", 
+			  'options' => 'draft,view={FitB}', 
+	  });
+	
+	  ok_lines([ $reftex ], "usepackage> " . $reftex );
+
+	  $TEX->_clear;
+	  $TEX->usepackage({ 
+			  'package' => "bookmark", 
+			  'options' => [qw(draft view={FitB} )], 
+	  });
+	
+	  ok_lines([ $reftex ], "usepackage> " . $reftex );
 
 }
 

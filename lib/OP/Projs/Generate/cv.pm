@@ -25,18 +25,41 @@ use File::Spec::Functions qw(catfile);
 use File::Slurp qw( edit_file_lines );
 
 ###our
-our ( $if, @pdffiles, @parts, %cvtypes, %files );
+our ( $if, @pdffiles,  %cvtypes, %files );
 our %part_desc;
+
+# Text::Generate::TeX instance
+our $TEX;
+
+# TeX file which is being written at the moment 
+our $TEXFILE;
+
+# List of languages
+our @LANGS;
+
+# Currently selected language
+our $LANG;
+
+# List of document parts, e.g. computer, work, stored 
+our @PARTS;
+
+# Currently selected part
+our $PART;
 
 ###subs
 sub process_opt;
 sub main;
 sub init_vars;
 sub do_mktex;
+sub do_mktex_lang;
+sub do_mktex_main;
 sub do_list;
 sub do_ch;
 
-main;
+sub mktex_lang_header;
+sub mktex_lang_preamble;
+sub mktex_lang_parts;
+sub mktex_lang_end;
 
 sub init_vars {
 
@@ -57,7 +80,7 @@ sub init_vars {
     }
 
 	@pdffiles=readarr($files{pdffiles});
-	@parts=readarr($files{parts});
+	@PARTS=readarr($files{parts});
 	%cvtypes=readhash($files{types});
 
 ###set_optstr
@@ -93,9 +116,12 @@ sub init_vars {
                       .  ''   ,
         "INPUT DAT FILES"  => [
             'cv.pdffiles.i.dat ', ' @pdffiles=' . join(' ',@pdffiles),
-            'cv.parts.i.dat ' , ' @parts=' . join(' ',@parts),
+            'cv.parts.i.dat ' , ' @PARTS=' . join(' ',@PARTS),
             'cv.types.i.dat ' , ],
     );
+
+	@LANGS = qw(eng ukr );
+	$TEX=Text::Generate::TeX->new;
 
 }
 
@@ -134,96 +160,189 @@ sub do_list {
 }
 
 sub do_mktex {
+	do_mktex_main;
+	do_mktex_lang;
+}
+
+sub do_mktex_main {
+
+  $TEXFILE=catfile($PROJSDIR,qw(cv.tex));
+
+  $TEX->_clear;
+  $TEX->ofile($TEXFILE);
+  $TEX->_empty_lines;
+
+  $TEX->def('PROJ','cv' );
+  $TEX->input('_common.defs.tex');
+  $TEX->documentclass('report',{ opts => [qw( a4paper 12pt )] });
+
+  $TEX->_empty_lines;
+
+  $TEX->usepackages([qw( pdfpages bookmark )]);
+
+  $TEX->_empty_lines;
+  $TEX->begin('document');
+
+  my %cv_desc=(
+      'ukr'  => 'CV (Ukrainian)',
+      'rus'  => 'CV (Russian)',
+      'eng'  => 'CV (English)',
+
+  );
+
+  foreach $LANG (@LANGS) {
+      my $cv='cv_' . $LANG;
+      my $cvpdf=catfile($PROJSDIR,$cv . '.pdf');
+
+      next unless -e $cvpdf;
+
+      $TEX->bookmark( 
+              dest    => $cv, 
+              title   => $cv_desc{$LANG},
+              level   => 1,
+          ); 
+      $TEX->hypertarget($cv);
+      $TEX->includepdf({ fname => $cv  });
+      $TEX->_empty_lines;
+
+  }
+
+  $TEX->end('document');
+  $TEX->_writefile;
+}
+
+sub mktex_lang_preamble {
+
+   	$TEX->_empty_lines;
+   	$TEX->_c_delim;
+   	$TEX->_c("Preamble");
+   	$TEX->_c_delim;
+
+	$TEX->documentclass('mycv', {
+		opts => [qw(margin 11pt)],
+	});
+   	$TEX->_empty_lines;
+	$TEX->usepackage({
+		'package' => 'hyperref',
+		'options' => [qw(
+			letterpaper
+			linktocpage
+			bookmarksdepth=subparagraph
+		)]
+	});
+	if (grep { /^$LANG$/ } qw( ukr rus )) {
+		$TEX->usepackage({
+			'package' => 'fontenc',
+			'options' => [qw( OT1 T2A )],
+		});
+	}
+	#$TEX->usepackage({
+			#'package' => 'inputenc',
+			#'options' => 'utf8',
+	#});
+
+	$TEX->_add_line('');
+
+	if (grep { /^$LANG$/ } qw( eng )) {
+
+		$TEX->_add_line('\def\iff#1{%');
+		$TEX->plus('indent',2);
+		$TEX->_add_line('\hypertarget{#1}{}%');
+		$TEX->_add_line('\bookmark[level=2,dest=#1,]{#1}%');
+		$TEX->_add_line('\ii{#1}%');
+		$TEX->minus('indent',2);
+		$TEX->_add_line('}%');
+
+	}
+
+	$TEX->usepackages([qw( url graphicx my bookmark)]);
+
+	# increase textwidth to get smaller right margin
+	$TEX->_add_line('\textwidth=5.2in');
+	$TEX->_add_line('');
+
+	$TEX->def('gitwchf' , '\url{https://www.gitorious.org/wchf/wchf}');
+	$TEX->def('srcfwchf', '\url{https://www.gitorious.org/wchf/wchf}');
+	$TEX->def('dxwchf'  , '\url{www.srcf.ucam.org/~op226/wchf/dx_wchf/}');
+	$TEX->def('webwchf' , '\url{www.srcf.ucam.org/~op226/wchf}');
+	$TEX->def('gitgops' , '\url{www.github.com/opopl/gops}' );
+
+   	$TEX->_empty_lines;
+	$TEX->begin('document');
+   	$TEX->_empty_lines;
+
+}
+
+
+sub mktex_lang_parts {
+
+	foreach $PART (@PARTS) {
 	
-	    my @langs = qw(eng ukr );
-	    my $T=Text::Generate::TeX->new;
+		if (grep { /^$LANG$/ } qw( eng )) {
+			$TEX->_cmd('iff',$PART);
 
-        $T->_clear;
-        $T->ofile(catfile($PROJSDIR,qw(cv.tex)));
-        $T->_empty_lines;
+		}else{
+		
+			$TEX->hypertarget($PART);
+			$TEX->bookmark( 
+				dest    => $PART, 
+				title   => $part_desc{$PART} // $PART,
+				level   => 2,
+			);
+			
+			$TEX->_cmd('ii',"$PART");
+		}
+	}
+}
 
-        $T->def('PROJ','cv' );
-        $T->input('_common.defs.tex');
-        $T->documentclass('report',{ opts => [qw( a4paper 12pt )] });
+sub mktex_lang_end {
 
-        $T->_empty_lines;
+	$TEX->_empty_lines;
+	$TEX->end('resume');
+	$TEX->end('document');
 
-        $T->usepackages([qw( pdfpages bookmark )]);
+}
 
-        $T->_empty_lines;
-        $T->begin('document');
-
-        my %cv_desc=(
-            'ukr'  => 'CV (Ukrainian)',
-            'rus'  => 'CV (Russian)',
-            'eng'  => 'CV (English)',
-        );
-
-	    foreach my $lang (@langs) {
-            my $cv='cv_' . $lang;
-            my $cvpdf=catfile($PROJSDIR,$cv . '.pdf');
-
-            next unless -e $cvpdf;
+sub mktex_lang_header {
 	
-	        $T->bookmark( 
-                    dest    => $cv, 
-                    title   => $cv_desc{$lang},
-                    level   => 1,
-                ); 
-	        $T->hypertarget($cv);
-	        $T->includepdf({ fname => $cv  });
-	        $T->_empty_lines;
-
-        }
-
-        $T->end('document');
-        $T->_writefile;
-
-	    foreach my $lang (@langs) {
-            my $file=catfile($PROJSDIR,"cv_$lang.tex");
-
-	        _say "Editing language: $lang";
+	my $date=localtime;
 	
-            $T->_clear;
-	        $T->ofile("cv_$lang.tex");
+	$TEX->_c_delim;
+	$TEX->_c(" Date:");
+	$TEX->_c("   $date");
+	$TEX->_c(" File:");
+	$TEX->_c("   $TEXFILE");
+	$TEX->_c(" Creating script:");
+	$TEX->_c("   $Script");
+	$TEX->_c(" Creating script directory:");
+	$TEX->_c("   $Bin");
+	$TEX->_c(" Package:");
+	$TEX->_c("   " . __PACKAGE__ );
+	$TEX->_c_delim;
 	
-			my $date=localtime;
+	$TEX->_empty_lines;
+	$TEX->def('PROJ','cv_' . $LANG );
+	$TEX->input('_common.defs.tex');
+	$TEX->_empty_lines;
+}
 
-	        $T->_c_delim;
-	        $T->_c(" Date:");
-	        $T->_c("   $date");
-	        $T->_c(" File:");
-	        $T->_c("   $file");
-	        $T->_c(" Creating script:");
-	        $T->_c("   $Script");
-	        $T->_c_delim;
+sub do_mktex_lang {
 
-            $T->_empty_lines;
-            $T->def('PROJ','cv_' . $lang );
-            $T->input('_common.defs.tex');
-            $T->_empty_lines;
+    foreach $LANG (@LANGS) {
+        _say "Editing language: $LANG";
 
-            $T->input('cv.preamble');
-            $T->_empty_lines;
+        $TEXFILE=catfile($PROJSDIR,"cv_$LANG.tex");
+		$TEX->_clear;
+		$TEX->ofile($TEXFILE);
 
-	        foreach my $part (@parts) {
+		mktex_lang_header;
+		mktex_lang_preamble;
+		mktex_lang_parts;
+		mktex_lang_end;
 
-                $T->hypertarget($part);
-	            $T->bookmark( 
-                    dest    => $part, 
-                    title   => $part_desc{$part} // $part,
-                    level   => 2,
-                );
+        $TEX->_writefile;
 
-                $T->_cmd('ii',"$part");
-	        }
-
-            $T->_empty_lines;
-            $T->input('cv.end');
-
-            $T->_writefile;
-
-	    }
+    }
 }
 
 sub do_ch {
