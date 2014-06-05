@@ -16,6 +16,7 @@ use File::Path qw(make_path remove_tree);
 use FindBin qw( $Script $Bin );
 use Carp;
 use File::Slurp qw(edit_file);
+use File::Copy qw(move);
 
 use Pod::LaTeX::Plus;
 use TeX::Driver::PDFLATEX;
@@ -131,8 +132,21 @@ sub run_tex {
     my $drv=TeX::Driver::PDFLATEX->new;
 
 	my $ifname=$self->{files}->{topictex};
+	my $pdfdest=catfile( 
+		$self->{dirs}->{pdf}, 
+		$self->{topic} . '.pdf' 
+	);
+	my $pdf=catfile( 
+		$self->{dirs}->{tex}, 
+		$self->{topic} . '.pdf' 
+	);
+
 
 	$drv->_pdflatex($ifname);
+	$drv->_pdflatex($ifname);
+	$drv->_pdflatex($ifname);
+
+	move($pdf, $pdfdest);
 
 }
 
