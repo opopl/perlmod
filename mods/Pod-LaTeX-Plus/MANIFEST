@@ -1,0 +1,8 @@
+MANIFEST
+README
+LICENSE
+Todo
+Changes
+Build.PL
+lib/Pod/LaTeX/Plus.pm
+t/001_load.t

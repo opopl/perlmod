@@ -35,6 +35,7 @@ sub init_vars {
         zshrc
 		ttreerc
 		my.cnf
+		poddisplaypdf.topics.yaml
     );
 }
 

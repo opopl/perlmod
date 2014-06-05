@@ -36,6 +36,8 @@ our (%opt,@optstr);
 our ($cmdline);
 our $OPTS_PDFLATEX;
 
+our (@WARNINGS,@ERRORS);
+
 ###subs
 sub _pdflatex;
 sub main;
@@ -75,11 +77,51 @@ sub _pdflatex {
 	if(not IPC::Cmd::can_run($exe)){
         _die "Cannot run: $exe ";
     }
+
+    my ($line,$msg,$file,$lnum,$type);
+
+    my $opts={
+        stdout_handler => sub {
+            local $_=shift;
+
+            if (/^(?<file>.*):(?<lnum>\d+): LaTeX Error:(?<msg>.*)/) {
+                $line=$_;
+                $lnum=$+{lnum};
+                $file=$+{file};
+                $type='latexerror';
+                $msg=$+{msg};
+                return;
+            }
+
+            $line .= $_ if $line;
+            $msg .= $_ if $msg;
+
+            if (/^\s*$/ && $line){
+
+	            push(@ERRORS,
+	            { 
+					lnum    => $lnum, 
+					file    => $file, 
+					type    => $type,
+					msg     => $msg,
+					line    => $_,
+	            });
+
+                $line='';
+                $msg='';
+            }
+
+        }
+    };
 	
-    $res= IPC::Cmd::run_forked( $cmd );
+    $res= IPC::Cmd::run_forked( $cmd, $opts );
 
     if ($res->{exit_code}) {
         _warn "FAILURE with exit code: " . $res->{exit_code};
+        _warn 'Errors: ';
+        for(@ERRORS){
+            print $_->{line};
+        }
 
     }else{
         _say "SUCCESS";
@@ -91,7 +133,7 @@ sub _pdflatex {
 
 sub get_opt {
 
-    $OPTS_PDFLATEX='';
+    $OPTS_PDFLATEX='-file-line-error';
 
     unless (@ARGV) {
         _say "Usage: $Script OPTIONS FILENAME";
@@ -100,7 +142,7 @@ sub get_opt {
     else {
         $cmdline = join( ' ', @ARGV );
         $IFNAME = pop @ARGV;
-        $OPTS_PDFLATEX=join(' ',@ARGV);
+        $OPTS_PDFLATEX=join(' ',@ARGV) if @ARGV;
     }
 
     $IFNAME =~ s/\.tex$//g;

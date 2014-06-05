@@ -68,7 +68,7 @@ use File::Path qw( make_path );
 use File::Spec::Functions qw(catfile);
 
 use Getopt::Long;
-use OP::Pod::LaTeX;
+use Pod::LaTeX::Plus;
 use Data::Dumper;
 
 use OP::Projs::Tex;
@@ -585,7 +585,7 @@ sub run_perldoc {
 sub parse_pod {
 	my $self=shift;
 
-	my $parser = OP::Pod::LaTeX->new();
+	my $parser = Pod::LaTeX::Plus->new();
 
 	$parser->AddPreamble(0);
 	$parser->AddPostamble(0);

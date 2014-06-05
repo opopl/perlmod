@@ -1,0 +1,15 @@
+#!/usr/bin/env perl
+ 
+use warnings;
+use strict;
+
+use Module::Search;
+
+my $pattern=shift @ARGV // '';
+
+my $s = Module::Search->new(
+    pattern => $pattern,
+);
+
+$s->search;
+$s->print_modules;

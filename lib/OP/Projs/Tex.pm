@@ -4,7 +4,7 @@ package OP::Projs::Tex;
 use warnings;
 use strict;
  
-use parent qw( OP::TEX::Text );
+use parent qw( Text::Generate::TeX );
 
 ###__ACCESSORS_SCALAR
 my @scalar_accessors=qw(

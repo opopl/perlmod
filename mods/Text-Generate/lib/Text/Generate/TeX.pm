@@ -1211,6 +1211,22 @@ sub includepdf {
 
 }
 
+sub listopts {
+	my $self=shift;
+
+	my $ref=shift // {};
+
+	my $name = $ref->{name};
+	my $opts = $ref->{opts};
+
+	$self->_add_line("\\" . $name . '{%');
+	foreach my $opt (@$opts) {
+		$self->_add_line("\t" . $opt . ',');
+	}
+	$self->_add_line('}%');
+
+}
+
 =head3 hypsetup
 
 =cut

@@ -1,0 +1,9 @@
+Build.PL
+Changes
+lib/Module/Search.pm
+LICENSE
+MANIFEST
+README
+scripts/pmsearch
+t/001_load.t
+Todo
