@@ -10,6 +10,7 @@ use Exporter ();
 use FindBin qw($Bin $Script);
 use IPC::Cmd qw(run_forked);
 use Term::ANSIColor;
+use File::Which qw(which);
 
 ###our
 our $VERSION = '0.01';
@@ -24,7 +25,7 @@ sub main {
 sub run {
     my $self=shift;
 
-    $self->_pdflatex( $self->{IFNAME} );
+    $self->_pdflatex( $self->{ifname} );
 
     if (-e $self->{ofile}){
       $self->_say( "Output file created: " . $self->{ofile} );
@@ -51,6 +52,10 @@ sub init_vars {
     $self->{errorcolor}='bold red';
 
     $self->{textcolor}='green';
+
+    $self->{files}->{pdflatex}=which('pdflatex');
+
+    $self->{opts}->{pdflatex}='-file-line-error';
     
 }
 
@@ -62,7 +67,11 @@ sub _pdflatex {
 	my $cmd;
 
     my $exe=$self->{files}->{pdflatex} // 'pdflatex';
-    $cmd = join(' ', $exe, $self->{opts}->{pdflatex}, $self->{ifname});
+    $cmd = join(' ', 
+				$exe, 
+				$self->{opts}->{pdflatex}, 
+				$self->{ifname}
+			);
 
 	my $res;
 	
@@ -70,23 +79,62 @@ sub _pdflatex {
         $self->_die( "Cannot run: $exe ");
     }
 	
-    $res= IPC::Cmd::run_forked( $cmd );
+	my @ERRORS;
+    my ($line,$msg,$file,$lnum,$type);
+
+    my $opts={
+        stdout_handler => sub {
+            local $_=shift;
+
+            if (/^(?<file>.*):(?<lnum>\d+): LaTeX Error:(?<msg>.*)/) {
+                $line=$_;
+                $lnum=$+{lnum};
+                $file=$+{file};
+                $type='latexerror';
+                $msg=$+{msg};
+                return;
+            }
+
+            $line .= $_ if $line;
+            $msg .= $_ if $msg;
+
+            if (/^\s*$/ && $line){
+
+	            push(@ERRORS,
+	            { 
+					lnum    => $lnum, 
+					file    => $file, 
+					type    => $type,
+					msg     => $msg,
+					line    => $_,
+	            });
+
+                $line='';
+                $msg='';
+            }
+
+        }
+    };
+	
+    $res= IPC::Cmd::run_forked( $cmd, $opts );
 
     if ($res->{exit_code}) {
-        $self->_warn( "FAILURE with exit code: " . $res->{exit_code} );
+        $self->_warn( "FAILURE with exit code: " . $res->{exit_code});
+        $self->_warn('Errors: ');
+        for(@ERRORS){
+            print $_->{line};
+        }
 
     }else{
-       $self->_say( "SUCCESS" );
+        $self->_say( "SUCCESS" );
 
     }
-
 
 }
 
 sub get_opt {
     my $self=shift;
 
-    $self->{opts}->{pdflatex}='';
 
     unless (@ARGV) {
         $self->_say( "Usage: $Script OPTIONS FILENAME" );
@@ -94,7 +142,7 @@ sub get_opt {
 
     } else {
         $self->{ifname} = pop @ARGV;
-        $self->{opts}->{pdflatex}=join(' ',@ARGV);
+        $self->{opts}->{pdflatex}=join(' ',@ARGV) if @ARGV;
 
     }
 
@@ -104,6 +152,7 @@ sub get_opt {
 
     if(-e $self->{ifile}){
       $self->_say( "Input filename: " . $self->{ifname} );
+      $self->_say( "Input filepath: " . $self->{ifile} );
 
     }else{
       $self->{opts}->{pdflatex} .= " $self->{ifname}";

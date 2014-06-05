@@ -15,6 +15,7 @@ use File::Temp qw(tmpnam);
 use File::Path qw(make_path remove_tree);
 use FindBin qw( $Script $Bin );
 use Carp;
+use File::Slurp qw(edit_file);
 
 use Pod::LaTeX::Plus;
 use TeX::Driver::PDFLATEX;
@@ -125,7 +126,13 @@ sub cmd_build {
 sub run_tex {
     my $self=shift;
 
+	local @ARGV=qw();
+
     my $drv=TeX::Driver::PDFLATEX->new;
+
+	my $ifname=$self->{files}->{topictex};
+
+	$drv->_pdflatex($ifname);
 
 }
 
@@ -389,6 +396,10 @@ sub parse_pod_mods {
             $self->{files}->{perldocpod}, 
             $self->{files}->{perldoctex}, 
         );
+
+		edit_file {
+			s/\\end{lstlisting}[\n\s]*\\begin{lstlisting}//gms;
+		} $self->{files}->{perldoctex};
 
     }
 
