@@ -209,25 +209,28 @@ sub write_tex_header_comments {
     my $date = localtime;
 
     $tex->_c_delim;
-    $tex->_c("File:");
-    $tex->_c("  " . $self->{files}->{topictex} );
-    $tex->_c("Purpose:");
-    $tex->_c("  LaTeX file for the perldoc documentation");
-    $tex->_c("Topic:");
-    $tex->_c("  " . $self->{topic} );
-    $tex->_c("Date created:");
-    $tex->_c("  $date");
-    $tex->_c("Creating script:");
-    $tex->_c("  $Script");
-    $tex->_c("Creating script directory:");
-    $tex->_c("  $Bin");
-    $tex->_c("Creating module:");
-    $tex->_c("  " . __PACKAGE__ );
-    $tex->_c("Used configuration file:");
-    $tex->_c("  " . $self->{files}->{yamlconfig} );
-    $tex->_c("Used topics file:");
-    $tex->_c("  " . $self->{files}->{yamltopics} );
-    $tex->_c("Included topics (itopics):");
+    $tex->_c(
+		[ "File:"
+    	,	"  " . $self->{files}->{topictex}
+	    , "Purpose:"
+	    , "  LaTeX file for the perldoc documentation"
+	    , "Topic:"
+	    , "  " . $self->{topic} 
+	    , "Date created:"
+	    , "  $date"
+	    , "Creating script:"
+	    , "  $Script"
+	    , "Creating script directory:"
+	    , "  $Bin"
+	    , "Creating module:"
+	    , "  " . __PACKAGE__ 
+	    , "Used configuration file:"
+	    , "  " . $self->{files}->{yamlconfig} 
+	    , "Used topics file:"
+	    , "  " . $self->{files}->{yamltopics} 
+	    , "Included topics (itopics):"
+	]);
+
     foreach my $itopic ( @{$self->{itopics}} ) {
         $tex->_c("  " . $itopic );
     }

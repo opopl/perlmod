@@ -6,7 +6,7 @@ use warnings;
 
 ###use
 use Apache2::RequestRec ( ); # for $r->content_type
-use Apache2::Const -compile => qw(OK);
+use Apache2::Const qw(OK);
 use Apache2::Request ();
 use CGI;
 
@@ -26,10 +26,17 @@ our %EXPORT_TAGS = (
 	'funcs' => [qw( 
 		init_handler_vars
 	)],
-	'vars'  => [ @ex_vars_scalar,@ex_vars_array,@ex_vars_hash ]
+	'vars'  => [ 
+		@ex_vars_scalar,
+		@ex_vars_array,
+		@ex_vars_hash 
+	]
 );
 
-our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
+our @EXPORT_OK = ( 
+	@{ $EXPORT_TAGS{'funcs'} }, 
+	@{ $EXPORT_TAGS{'vars'} } 
+);
 
 our($Q, $R, $PINFO, $SNAME );
 our $H;

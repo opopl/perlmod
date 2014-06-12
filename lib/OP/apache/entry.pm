@@ -19,7 +19,7 @@ OP::apache::entry
 use Apache2::RequestRec ( ); # for $r->content_type
 use Apache2::Request ( );
 use Apache2::Response ( );
-use Apache2::Const -compile => qw(OK REDIRECT);
+use Apache2::Const qw(OK REDIRECT);
 
 use OP::apache::base qw(
 	$R $Q $H $PINFO $SNAME
@@ -54,16 +54,17 @@ sub handler {
 	$R->content_type('text/html');
 
 	CASE: {
-		$_ = $PINFO ;
-		/^app$/ and do {
-			$R->custom_response( Apache2::Const::REDIRECT, "$SNAME/$PINFO" );
+		$_ = $R->path_info ;
+		/app/ and do {
+			my $app=$R->param('choose_app');
+			$R->custom_response( REDIRECT, "$app" );
 			last CASE;
 		};
 
 		print_html_ ;
 	}
 		
-	return Apache2::Const::OK;
+	return OK;
 
 }
 
@@ -78,7 +79,7 @@ sub print_html_ {
 			-values =>  \@APPS,
 		),
         start_form(
-        	-action => "http://localhost/app",
+        	-action => "app",
         	-target => "response",
         ),
 		hr,

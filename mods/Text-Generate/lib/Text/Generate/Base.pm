@@ -189,9 +189,13 @@ X<_c,Text::Generator::Base>
 
 =head4 Usage
 
-	_c($text);
+	_c( $comment );
+
+	_c([ $comment_1, $comment_2 ]);
 
 =head4 Purpose
+
+Generate comment lines.
 
 =head4 Input
 
@@ -199,8 +203,8 @@ X<_c,Text::Generator::Base>
 
 =item * C<$ref> 
 
-(SCALAR) Input text to be added as a comment using the value of C<commentchar>
-accessor as a comment char, e.g. C<%> for C<LaTeX> etc.
+either (SCALAR) or (ARRAY).  Input text to be added as a comment using the
+value of C<commentchar> accessor as a comment char, e.g. C<%> for C<LaTeX> etc.
 
 =back
 
@@ -209,9 +213,18 @@ accessor as a comment char, e.g. C<%> for C<LaTeX> etc.
 sub _c {
     my $self = shift;
 
-    my $text = shift // '';
+    my $ref = shift // '';
 
-    $self->_add_line($self->commentchar . "$text");
+	unless(ref $ref){
+    	$self->_add_line($self->commentchar . "$ref");
+		
+	}elsif(ref $ref eq "ARRAY"){
+		foreach my $line (@$ref) {
+			$self->_c($line);
+		}
+		
+	}
+
 
 }
 
