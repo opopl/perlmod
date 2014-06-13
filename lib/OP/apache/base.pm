@@ -9,6 +9,8 @@ use Apache2::RequestRec ( ); # for $r->content_type
 use Apache2::Const qw(OK);
 use Apache2::Request ();
 use Apache2::Log ();
+use Apache2::ServerUtil ();
+use File::Spec::Functions qw(catfile);
 
 use CGI;
 
@@ -19,9 +21,19 @@ use Exporter qw( );
 ###our
 our @ISA=qw(Exporter); 
 
-our @ex_vars_scalar=qw( $Q $R $PINFO $SNAME $H $LOG );
+our @ex_vars_scalar=qw(
+	$H
+	$LOG
+	$PINFO
+	$Q
+	$R
+	$SERVROOT
+	$SNAME
+);
 our @ex_vars_array=qw( @SUBMITS );
-our @ex_vars_hash=qw();
+our @ex_vars_hash=qw(
+	%FILES
+);
 
 our %EXPORT_TAGS = (
 ###export_funcs
@@ -42,6 +54,8 @@ our @EXPORT_OK = (
 
 our($Q, $R, $PINFO, $SNAME, $LOG );
 our $H;
+our $SERVROOT;
+our %FILES;
 our @SUBMITS;
 
 ###subs
@@ -51,6 +65,12 @@ sub init_handler_vars {
 
  	$R = Apache2::Request->new(shift);
 	$LOG=$R->log;
+
+	$SERVROOT=Apache2::ServerUtil::server_root();
+
+	foreach my $id (qw(error_log)) {
+		$FILES{$id}=catfile($SERVROOT,qw(logs),$id);
+	}
 
 	$LOG->info('<<<<< start: init_handler_vars >>>>>');
 

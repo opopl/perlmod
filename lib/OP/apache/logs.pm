@@ -17,16 +17,51 @@ OP::apache::logs
 =cut
 
 use Apache2::RequestRec ( ); # for $r->content_type
-use Apache2::Const -compile => qw(OK);
+use Apache2::Const qw(OK);
 use Apache2::Request ();
+use Apache2::ServerUtil ();
 
-our $R;
+use File::Slurp qw(read_file);
 
-sub handler {
-	$R=Apache2::Request(shift);
+use OP::apache::base qw(
+	$R $Q $H $PINFO $SNAME
+	init_handler_vars $SERVROOT %FILES
+);
+use CGI qw(:standard);
 
-	return Apache2::Const::OK;
+sub init_vars;
 
+sub init_vars {
 }
 
+sub handler {
+	init_handler_vars(@_);
+	init_vars;
+
+	$R->content_type('text/html');
+
+	unless($PINFO){
+		my @lines=map { br,$_ } read_file($FILES{error_log});
+
+		$R->print(
+			start_html,
+			b('Log files'),
+			br,$FILES{error_log},
+			hr,
+			@lines,
+			end_html
+		);
+		
+		return OK;
+	}
+
+	for($PINFO){
+		/^ / && do {
+			next;
+		};
+	}
+		
+	return OK;
+
+}
 1;
