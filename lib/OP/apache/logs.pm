@@ -41,7 +41,7 @@ sub handler {
 	$R->content_type('text/html');
 
 	unless($PINFO){
-		my @lines=map { br,$_ } read_file($FILES{error_log});
+		my @lines=map { br, $_ } read_file($FILES{error_log});
 
 		$R->print(
 			start_html,

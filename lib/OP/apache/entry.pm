@@ -22,6 +22,7 @@ use Apache2::SubRequest ( );
 use Apache2::Response ( );
 use Apache2::Const qw(OK REDIRECT);
 use APR::Table ();
+use CGI::Carp qw(fatalsToBrowser);
 
 use OP::apache::base qw(
 	$R $Q $H $PINFO $SNAME
@@ -138,8 +139,8 @@ sub print_html_frameset {
 	$R->print(<<EOF);
 <html><head><title>Entry</title></head>
 <frameset rows="20%,80%">
-<frame src="$SNAME/controlpanel" name="controlpanel">
-<frame src="$SNAME/output" name="output">
+	<frame src="localhost/controlpanel" name="controlpanel">
+	<frame src="localhost/output" name="output">
 </frameset></html>
 EOF
 
