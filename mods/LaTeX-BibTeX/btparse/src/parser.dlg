@@ -3,14 +3,15 @@
  *
  * Generated from: bibtex.g
  *
- * Terence Parr, Will Cohen, and Hank Dietz: 1989-1994
+ * Terence Parr, Will Cohen, and Hank Dietz: 1989-2001
  * Purdue University Electrical Engineering
  * With AHPCRC, University of Minnesota
- * ANTLR Version 1.33
+ * ANTLR Version 1.33MR33
  */
 
-#include <stdio.h>
-#define ANTLR_VERSION	133
+#define ANTLR_VERSION	13333
+#include "pcctscfg.h"
+#include "pccts_stdio.h"
 
 #define ZZCOL
 #define USER_ZZSYN
@@ -28,7 +29,13 @@ extern char * InputFilename;            /* for zzcr_ast call in pccts/ast.c */
 #include "tokens.h"
 #include "dlgdef.h"
 LOOKAHEAD
-void zzerraction()
+
+void
+#ifdef __USE_PROTOS
+zzerraction(void)
+#else
+zzerraction()
+#endif
 {
 	(*zzerr)("invalid token");
 	zzadvance();
@@ -47,31 +54,31 @@ void zzerraction()
 \@
 	<<
 		NLA = AT;
-		at_sign ();   
+    at_sign ();   
 	>>
 
 \n
 	<<
 		NLA = 3;
-		newline ();   
+    newline ();   
 	>>
 
 \%~[\n]*\n
 	<<
 		NLA = COMMENT;
-		comment ();   
+    comment ();   
 	>>
 
 [\ \r\t]+
 	<<
 		NLA = 5;
-		zzskip ();   
+    zzskip ();   
 	>>
 
 ~[\@\n\ \r\t]+
 	<<
 		NLA = 6;
-		toplevel_junk ();   
+    toplevel_junk ();   
 	>>
 
 
@@ -85,19 +92,19 @@ void zzerraction()
 \n
 	<<
 		NLA = 7;
-		newline ();   
+    newline ();   
 	>>
 
 \%~[\n]*\n
 	<<
 		NLA = COMMENT;
-		comment ();   
+    comment ();   
 	>>
 
 [\ \r\t]+
 	<<
 		NLA = 8;
-		zzskip ();   
+    zzskip ();   
 	>>
 
 [0-9]+
@@ -108,31 +115,31 @@ void zzerraction()
 [a-z0-9\!\$\&\*\+\-\.\/\:\;\<\>\?\[\]\^\_\`\|]+
 	<<
 		NLA = NAME;
-		name ();   
+    name ();   
 	>>
 
 \{
 	<<
 		NLA = LBRACE;
-		lbrace ();   
+    lbrace ();   
 	>>
 
 \}
 	<<
 		NLA = RBRACE;
-		rbrace ();   
+    rbrace ();   
 	>>
 
 \(
 	<<
 		NLA = ENTRY_OPEN;
-		lparen ();   
+    lparen ();   
 	>>
 
 \)
 	<<
 		NLA = ENTRY_CLOSE;
-		rparen ();   
+    rparen ();   
 	>>
 
 =
@@ -153,7 +160,7 @@ void zzerraction()
 \"
 	<<
 		NLA = 18;
-		start_string ('"');   
+    start_string ('"');   
 	>>
 
 
@@ -167,49 +174,49 @@ void zzerraction()
 \n~[\n\{\}\(\)\"\\]*
 	<<
 		NLA = 19;
-		check_runaway_string ();   
+    check_runaway_string ();   
 	>>
 
 [\r\t]
 	<<
 		NLA = 20;
-		zzreplchar (' '); zzmore ();   
+    zzreplchar (' '); zzmore ();   
 	>>
 
 \{
 	<<
 		NLA = 21;
-		open_brace ();   
+    open_brace ();   
 	>>
 
 \}
 	<<
 		NLA = 22;
-		close_brace ();   
+    close_brace ();   
 	>>
 
 \(
 	<<
 		NLA = 23;
-		lparen_in_string ();   
+    lparen_in_string ();   
 	>>
 
 \)
 	<<
 		NLA = 24;
-		rparen_in_string ();   
+    rparen_in_string ();   
 	>>
 
 \"
 	<<
 		NLA = STRING;
-		quote_in_string ();   
+    quote_in_string ();   
 	>>
 
 ~[\n\{\}\(\)\"]+
 	<<
 		NLA = 26;
-		zzmore ();   
+    zzmore ();   
 	>>
 
 %%
