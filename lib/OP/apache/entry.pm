@@ -54,6 +54,7 @@ sub init_vars {
 		logs
 		search
 		perldoc
+		filemanager
 	);
 
 	%DOCS=(
