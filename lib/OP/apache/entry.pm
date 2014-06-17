@@ -46,14 +46,16 @@ sub print_html_controlpanel;
 sub init_vars {
 
 	@APPS=qw(
-		printenv1
-		printenv2
+		bibtex
+		logs
 		mp_eforms
 		mp_perldoc
 		navbar
-		logs
-		search
 		perldoc
+		printenv1
+		printenv2
+		search
+		filemanager
 	);
 
 	%DOCS=(
@@ -139,8 +141,8 @@ sub print_html_frameset {
 	$R->print(<<EOF);
 <html><head><title>Entry</title></head>
 <frameset rows="20%,80%">
-	<frame src="localhost/controlpanel" name="controlpanel">
-	<frame src="localhost/output" name="output">
+	<frame src="$SNAME/controlpanel" name="controlpanel">
+	<frame src="$SNAME/output" name="output">
 </frameset></html>
 EOF
 
