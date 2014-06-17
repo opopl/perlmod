@@ -46,6 +46,7 @@ sub print_html_controlpanel;
 sub init_vars {
 
 	@APPS=qw(
+		bibtex
 		printenv1
 		printenv2
 		mp_eforms
@@ -140,8 +141,8 @@ sub print_html_frameset {
 	$R->print(<<EOF);
 <html><head><title>Entry</title></head>
 <frameset rows="20%,80%">
-	<frame src="localhost/controlpanel" name="controlpanel">
-	<frame src="localhost/output" name="output">
+	<frame src="$SNAME/controlpanel" name="controlpanel">
+	<frame src="$SNAME/output" name="output">
 </frameset></html>
 EOF
 

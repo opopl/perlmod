@@ -64,7 +64,7 @@ our @scalar_accessors=qw(
 
 ###__ACCESSORS_HASH
 our @hash_accessors=qw(
-	entries
+	entries_pkey
 );
 
 ###__ACCESSORS_ARRAY
@@ -86,13 +86,25 @@ sub main {
 	my $self=shift;
 
 	$self->connect;
+	$self->parsebib;
+	$self->fillsql;
 
-	$self->dbh->disconnect;
+	$self->end;
+
 	
 }
 
+sub end {
+	my $self=shift;
 
-sub init_vars {
+	my $dbh=$self->dbh;
+
+	$dbh->commit;
+	$dbh->disconnect;
+
+}
+
+sub init {
 	my $self=shift;
 
 	{
@@ -115,13 +127,18 @@ sub init_vars {
 sub connect {
 	my $self=shift;
 
-	my $dsn="DBD:mysql:" . $self->db;
+	my $dsn="dbi:mysql:" . $self->db;
 
-	my $dbh = DBI->connect($dsn, $self->user, $self->password,
-                    { RaiseError => 1, AutoCommit => 0 });
+	my %attr=( 
+		RaiseError => 1, 
+		AutoCommit => 0 
+	);
+	my $dbh = DBI->connect($dsn, $self->user, $self->password, \%attr )
+					or die $DBI::errstr;
 
 	$self->dbh( $dbh );
 
+	1;
 }
 
 sub parsebib {
@@ -136,6 +153,62 @@ sub parsebib {
 	}
 
 	$self->pkeys(sort $self->pkeys);
+	$self->pkeys_uniq;
+
+	1;
+}
+
+sub fillsql {
+	my $self=shift;
+
+	$self->sql_filltable_pkeys;
+
+}
+
+sub sql_filltable_pkeys {
+	my $self=shift;
+
+	my $table='pkeys';
+	my $dbh=$self->dbh;
+
+	my $sql=[
+		"drop table if exists $table",
+		qq{ 
+			create table if not exists $table ( 
+				pkey char(50) primary key, 
+				title char(50),
+				author char(50),
+				volume int, 
+				year char(10)
+			) 
+		},
+	];
+
+	foreach my $cmd (@$sql) {
+		$dbh->do($cmd) || die $dbh->errstr;
+	}
+
+	my $cmd=qq{
+		insert into $table ( pkey, title, author, volume, year ) values ( ?, ?, ?, ?, ? ); 
+	};
+	my $sth=$dbh->prepare($cmd);
+
+	foreach my $pkey($self->pkeys) {
+		my $entry=$self->entries_pkey($pkey);
+
+		my @fields=qw( title author volume year );
+		my @bind=( $pkey );
+
+		foreach my $f (@fields) {
+			my $val=$entry->get($f);
+			push(@bind,$val);
+		}
+
+		$sth->execute(@bind) || die $sth->errstr;
+
+	}
+
+
 }
 
 1;

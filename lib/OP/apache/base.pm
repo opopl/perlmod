@@ -74,19 +74,25 @@ sub init_handler_vars {
 
 	$LOG->info('<<<<< start: init_handler_vars >>>>>');
 
-	foreach my $id (qw(
-		filename 
-		hostname 
-		method 
-		path_info 
-		uri 
-	)) {
-		no strict 'refs';
-		$LOG->info('$R->' . $id . ' = ', $R->$id);
-	}
-
 	$PINFO = $R->path_info =~ s{^\/}{}gr;
 	$SNAME = $R->uri =~ s{^\/$PINFO}{}gr;
+
+	{
+		no strict 'refs';
+		foreach my $id (qw(
+			filename 
+			hostname 
+			method 
+			path_info 
+			uri 
+		)) {
+			$LOG->info('$R->' . $id . ' = ', $R->$id);
+		}
+		foreach my $id (qw(PINFO SNAME )) {
+			$LOG->info('$' . $id . '=' . $$id );
+		}
+	}
+
     
     $Q = CGI->new($R);
 
