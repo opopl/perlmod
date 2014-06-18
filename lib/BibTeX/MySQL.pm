@@ -18,6 +18,8 @@ use parent qw( Class::Accessor::Complex );
 use LaTeX::BibTeX;
 use DBI;
 
+use FindBin qw($Script);
+
 =head1 ACCESSORS
 
 =head2 Scalar Accessors
@@ -91,6 +93,7 @@ sub main {
 
 	$self->end;
 
+	exit 0;
 	
 }
 
@@ -100,7 +103,7 @@ sub end {
 	my $dbh=$self->dbh;
 
 	$dbh->commit;
-	$dbh->disconnect;
+	$dbh->disconnect or warn $dbh->errstr;
 
 }
 
@@ -141,8 +144,19 @@ sub connect {
 	1;
 }
 
+sub say {
+	my $self=shift;
+
+	my $msg=shift;
+
+	print "$Script> " . $msg . "\n";
+	
+}
+
 sub parsebib {
 	my $self=shift;
+
+	$self->say('Parsing BibTeX file...');
 
 	while (my $entry = new LaTeX::BibTeX::Entry->new($self->bib)){
     	next unless $entry->parse_ok;
@@ -168,6 +182,8 @@ sub fillsql {
 sub sql_filltable_pkeys {
 	my $self=shift;
 
+	$self->say('Filling table: pkeys');
+
 	my $table='pkeys';
 	my $dbh=$self->dbh;
 
@@ -176,8 +192,8 @@ sub sql_filltable_pkeys {
 		qq{ 
 			create table if not exists $table ( 
 				pkey char(50) primary key, 
-				title char(50),
-				author char(50),
+				title varchar(200),
+				author varchar(100),
 				volume int, 
 				year char(10)
 			) 
@@ -188,12 +204,15 @@ sub sql_filltable_pkeys {
 		$dbh->do($cmd) || die $dbh->errstr;
 	}
 
+	$self->say('	Created table: pkeys');
+
 	my $cmd=qq{
 		insert into $table ( pkey, title, author, volume, year ) values ( ?, ?, ?, ?, ? ); 
 	};
 	my $sth=$dbh->prepare($cmd);
 
 	foreach my $pkey($self->pkeys) {
+		print 'Processing key: ' . $pkey . "\n";
 		my $entry=$self->entries_pkey($pkey);
 
 		my @fields=qw( title author volume year );

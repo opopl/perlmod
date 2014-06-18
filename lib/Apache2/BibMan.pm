@@ -22,9 +22,12 @@ use Env qw($hm);
 use Apache2::RequestRec ( ); # for $r->content_type
 use Apache2::Request ( );
 use Apache2::Const qw(OK);
+use Apache::DBI ();
+
 use CGI qw(:standard);
 use File::Spec::Functions qw( catfile );
 use BibTeX::MySQL;
+
 use CGI::Carp qw(fatalsToBrowser);
 
 use OP::apache::base qw(
@@ -33,25 +36,34 @@ use OP::apache::base qw(
 	init_handler_vars
 );
 
+###our
+
 # table rows, see init_vars where they are defined
 our %rows;
 
 # default values, see init_vars 
-our %defaults;
+our %DEFAULTS;
+
+# list of existing BibTeX fields in the MySQL database
+our @BIBFIELDS;
 
 our ( $BIBSQL, $DBH );
 
 our $ROOT;
 
+###subs
 sub init_vars;
 
 sub print_html_;
 sub print_html_view_pkey;
 sub print_html_response;
 
+sub _html_footer;
+sub _html_header;
+
 sub init_vars {
 
-	%defaults=( 
+	%DEFAULTS=( 
 		user 			=> 'bibuser',
 		password	 	=> 'bib',
 		db			 	=> 'bibdb',
@@ -65,7 +77,7 @@ sub init_vars {
 				td( 'BibTeX file to be loaded:' ),
 				td( textfield(
 					-name 		=> 'bibpath',
-					-default 	=> $defaults{bibpath},
+					-default 	=> $DEFAULTS{bibpath},
 	            	-size 		=>  50 
 				))
 			),
@@ -75,7 +87,7 @@ sub init_vars {
 				td( 'User name' ),
 				td( textfield(
 					-name 		=> 'user',
-					-default 	=> $defaults{user},
+					-default 	=> $DEFAULTS{user},
 	            	-size 		=>  50 
 				))
 			),
@@ -83,7 +95,7 @@ sub init_vars {
 				td( 'Password' ),
 				td( textfield(
 					-name 		=> 'password',
-					-default 	=> $defaults{password},
+					-default 	=> $DEFAULTS{password},
 	            	-size 		=>  50 
 				))
 			),
@@ -91,7 +103,7 @@ sub init_vars {
 				td( 'Database name' ),
 				td( textfield(
 					-name 		=> 'db',
-					-default 	=> $defaults{db},
+					-default 	=> $DEFAULTS{db},
 	            	-size 		=>  50 
 				))
 			),
@@ -99,7 +111,7 @@ sub init_vars {
 				td( 'Table for storing BibTeX keys' ),
 				td( textfield(
 					-name 		=> 'table_keys',
-					-default 	=> $defaults{table_keys},
+					-default 	=> $DEFAULTS{table_keys},
 	            	-size 		=>  50 
 				))
 			),
@@ -111,7 +123,7 @@ sub init_vars {
 sub print_html_ {
 
 	$R->print(
-		start_html,
+		_html_header,
 		start_form( 
 			-action => "$SNAME/options",
 		),
@@ -120,7 +132,7 @@ sub print_html_ {
 			-value 	=> 'Options',
 		),
 		end_form,
-		end_html
+		_html_footer
 	);
 
 	OK;
@@ -129,7 +141,7 @@ sub print_html_ {
 sub print_html_options {
 
 	$R->print(
-		start_html,
+		_html_header,
 		start_form( 
 			-action => "response",
 		),
@@ -144,7 +156,7 @@ sub print_html_options {
 			-value 	=> 'Process BibTeX file',
 		),
 		end_form,
-		end_html
+		_html_footer
 	);
 
 	OK;
@@ -163,10 +175,13 @@ sub print_html_response {
 	$BIBSQL->connect
 		or die "Failure to connect to the database";
 
+	$DBH=$BIBSQL->dbh;
+
 	$BIBSQL->parsebib
 		or die "Failure to parse the bib file";
 
 	$R->print(  
+		_html_header,
 		'Select a BibTeX key: ',
 		start_form(
 			-action => "view_pkey"
@@ -180,22 +195,30 @@ sub print_html_response {
         	-value      => 'View BibTeX key record',
        	),
 		end_form,
+		_html_footer,
 	);
-	$R->print( end_html );
 
 	$BIBSQL->fillsql
 		or die "Failure to fill the MySQL database";
+
+	$BIBSQL->end;
 
 	OK;
 
 }
 
 sub print_html_view_pkey {
+	my $sth;
 
 	my $pkey=$R->param('pkey');
 
 	$DBH=$BIBSQL->dbh;
-	my $sth;
+
+	$sth=$DBH->prepare('show columns from pkeys');
+	$sth->execute;
+	while (my @ary=$sth->fetchrow_array) {
+		push(@BIBFIELDS,shift @ary);
+	}
 
 	$sth=$DBH->prepare('select * from pkeys where pkey = ?');
 	$sth->execute($pkey);
@@ -206,13 +229,22 @@ sub print_html_view_pkey {
 	}
 
 	$R->print( 
-		start_html,
+		_html_header,
 		@rows,
-		end_html ,
+		map { p,$_ } @BIBFIELDS,
+		_html_footer ,
 	);
 
 	OK;
 
+}
+
+sub _html_footer {
+	hr, end_html;
+}
+
+sub _html_header {
+	start_html, hr;
 }
 
 sub handler {
