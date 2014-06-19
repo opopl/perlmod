@@ -71,7 +71,7 @@ use Getopt::Long;
 use Pod::LaTeX::Plus;
 use Data::Dumper;
 
-use OP::Projs::Tex;
+use TeX::Project::GenerateTeX;
 use OP::Base qw(readhash _join_dot run_cmd );
 
 use PPI;
@@ -192,7 +192,7 @@ sub _module_write_tex {
 
 	$topic=shift // $self->curtopic;
 
-	my $tex=OP::Projs::Tex->new;
+	my $tex=TeX::Project::GenerateTeX->new;
 
 	if (-e $topic) {
 		$file=$topic;
@@ -270,7 +270,7 @@ sub _module_write_tex {
 sub write_tex {
 	my $self=shift;
 
-	my $tex=OP::Projs::Tex->new;
+	my $tex=TeX::Project::GenerateTeX->new;
 
 	$self->tex($tex);
 
@@ -380,7 +380,7 @@ sub write_tex_header_comments {
 sub write_tex_cfg {
 	my $self=shift;
 
-	my $tex=OP::Projs::Tex->new;
+	my $tex=TeX::Project::GenerateTeX->new;
 
 	$tex->ofile($self->files("tex_cfg")->());
 

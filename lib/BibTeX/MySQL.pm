@@ -14,7 +14,7 @@ BibTeX::MySQL
 
 =cut
 
-use parent qw( Class::Accessor::Complex );
+use parent qw( Exporter Class::Accessor::Complex );
 use LaTeX::BibTeX;
 use DBI;
 
@@ -54,6 +54,9 @@ Password for the MySQL connection
 
 =cut
 
+###our
+our @EXPORT_OK=qw(@CONFKEYS %DESC);
+
 ###__ACCESSORS_SCALAR
 our @scalar_accessors=qw(
 	bib
@@ -62,6 +65,27 @@ our @scalar_accessors=qw(
 	dbh
 	user 
 	password
+	table_keys
+	table_bib
+);
+
+our	@CONFKEYS=qw( 
+		bibpath 
+		db 
+		password 
+		user 
+		table_keys table_bib
+);
+
+our	%DESC=(
+		CONFKEYS => {
+			bibpath 		=> 'Full path to the BibTeX file',
+			db 				=> 'MySQL database name',
+			password 		=> 'Password for connecting to the MySQL database',
+			user			=> 'User name for connecting to the MySQL database',
+			table_bib	 	=> 'Table specific for this BibTeX file ',
+			table_keys	 	=> 'Table used for storing BibTeX keys',
+		},
 );
 
 ###__ACCESSORS_HASH
@@ -87,7 +111,6 @@ __PACKAGE__
 sub main {
 	my $self=shift;
 
-	$self->connect;
 	$self->parsebib;
 	$self->fillsql;
 
@@ -110,18 +133,20 @@ sub end {
 sub init {
 	my $self=shift;
 
+	# Initialize LaTeX::BibTeX stuff
+	$self->bib(LaTeX::BibTeX::File->new());
+
+	$self->connect;
+
 	{
 		no strict 'refs';
-		foreach my $id (qw(bibpath user password db )) {
-			( defined $self->$id ) || die "accessor not defined: " . $id;
+		foreach my $id (@scalar_accessors) {
+			( defined $self->$id ) || die "scalar accessor not defined: " . $id;
 		}
 	}
 	( defined $self->bibpath ) || die "bibpath not defined";
 
 	( -e $self->bibpath ) || die "bib file does not exist: " . $self->bibpath;
-
-	# Initialize LaTeX::BibTeX stuff
-	$self->bib(LaTeX::BibTeX::File->new());
 
 	$self->bib->open($self->bibpath) || die $!;
 
@@ -142,6 +167,31 @@ sub connect {
 	$self->dbh( $dbh );
 
 	1;
+}
+
+sub readconf {
+	my $self=shift;
+
+	unless ( $self->conffile ){
+		return 0;
+	}
+
+	unless ( -e $self->conffile ){
+		return 0;
+	}
+
+	my $c=Config::YAML->new( 
+		config => $self->conffile,
+	);
+
+	my %pars;
+	
+	foreach my $id (@CONFKEYS) {
+		next unless defined $c->{$id};
+	
+		$self->$id( $c->{$id} );
+	}
+
 }
 
 sub say {
@@ -182,9 +232,9 @@ sub fillsql {
 sub sql_filltable_pkeys {
 	my $self=shift;
 
-	$self->say('Filling table: pkeys');
+	$self->say('Filling table: ' . $self->table_bib );
 
-	my $table='pkeys';
+	my $table=$self->table_bib;
 	my $dbh=$self->dbh;
 
 	my $sql=[
@@ -204,7 +254,7 @@ sub sql_filltable_pkeys {
 		$dbh->do($cmd) || die $dbh->errstr;
 	}
 
-	$self->say('	Created table: pkeys');
+	$self->say('	Created table: ' . $self->table_bib );
 
 	my $cmd=qq{
 		insert into $table ( pkey, title, author, volume, year ) values ( ?, ?, ?, ?, ? ); 

@@ -1,5 +1,5 @@
 
-package OP::Projs::Tex;
+package TeX::Project::GenerateTeX;
 
 use warnings;
 use strict;

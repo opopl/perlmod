@@ -6,7 +6,7 @@ use warnings;
 
 use Carp;
 
-use OP::Projs::Tex;
+use TeX::Project::GenerateTeX;
 use OP::Base qw(readarr);
 
 use File::Spec::Functions qw(catfile);
@@ -204,7 +204,7 @@ sub init_vars {
 		}
 	}
 
-	$self->tex(OP::Projs::Tex->new);
+	$self->tex(TeX::Project::GenerateTeX->new);
 
 	$self->OSECS( readarr($self->FILES('secorder')) );
 

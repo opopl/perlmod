@@ -1,21 +1,32 @@
 
-package OP::Projs::Create;
+package TeX::Project;
 
 use strict;
 use warnings;
 
 =head1 NAME 
 
-tex_create_proj.pl - TeX projects generating script
+TeX::Projecte - TeX projects generating package
 
 =head1 PURPOSE
 
 Creation of a new project in the projs-directory specified by the environment
-variable $PROJSDIR. 
+variable C<$PROJSDIR>. 
 
 =head1 SYNOPSIS
 
-tex_create_proj.pl --dir DIR --proj PROJ --sec SEC
+	tex_create_proj.pl [ --dir DIR --proj PROJ --sec SEC  --force --appenddat ]
+
+where script C<tex_create_proj.pl> is simply as follows:
+
+	#!/usr/bin/env perl
+	#
+	use strict;
+	use warnings;
+	
+	use TeX::Project;
+	
+	TeX::Project->new->main;
 
 =cut
 
@@ -28,7 +39,7 @@ use File::Slurp qw( append_file);
 
 use Getopt::Long;
 
-use OP::Projs::Tex qw();
+use TeX::Project::GenerateTeX qw();
 use OP::Base qw(readarr);
 
 use parent qw( Class::Accessor::Complex );
@@ -54,8 +65,10 @@ __PACKAGE__
 #Usage: $Script DIR PROJ SEC
 
 ###_our
-our($FILE,$DIR,$PROJ,$SEC);
+our($SECFILE,$DIR,$PROJ,$SEC);
 our($PFILE,@MAINSECS,@PROJS);
+
+our $PROJEXISTS;
 
 # for Getopt::Long, see get_opt subroutine
 our(%opt,@optstr,%optdesc);
@@ -65,10 +78,14 @@ our($cmdline);
 sub dhelp {
 	my $self=shift;
 
-    print "USAGE:\n";
-	print "   $Script --dir DIR --proj PROJ --sec SEC --dat" . "\n";
-    print "SCRIPT:\n";
-    print "   $0\n";
+	my $h=[
+    	  'USAGE:'
+	    , "   $Script --dir DIR --proj PROJ --sec SEC --appenddat"
+        , 'SCRIPT:'
+        , "   $0"
+		,
+	];
+	print join("\n",@$h) . "\n";
 
 }
       
@@ -93,20 +110,29 @@ sub get_opt {
         "dir"   => "Value for directory with projects",
         "sec"   => "Project's section",
         "proj"  => "Name of the project",
+        "force"  => "Force project creation (in case project already exists)",
         "appenddat"   => "Add project's name to the list of all projects ( PROJS.i.dat )",
     );
     
     unless( @ARGV ){ 
-        dhelp;
+        $self->dhelp;
 		exit 0;
     }else{
         $cmdline=join(' ',@ARGV);
         GetOptions(\%opt,@optstr);
     }
 
+    $self->dhelp, exit 1 if $opt{help};
+
     $DIR=$opt{dir} // $PROJSDIR;
     $PROJ=$opt{proj};
     $SEC=$opt{sec} // '_main_';
+
+	die "No project name provided"
+		unless $PROJ;
+
+	die "No project directory provided"
+		unless $DIR;
 
 }
 
@@ -125,28 +151,36 @@ sub process_opt {
 
 	$PFILE=catfile($DIR,"PROJS.i.dat");
 
-	die "$PFILE file not found!"
+    @PROJS=readarr($PFILE);
+
+	$PROJEXISTS= ($PROJ ~~ @PROJS) ? 1 : 0 ;
+
+	die "PROJS datfile not found: $PFILE"
 	  unless -e $PFILE;
 
-    @PROJS=readarr($PFILE);
-    if (($PROJ ~~ @PROJS) && (!$opt{force})){
-        die "Project already exists";
+    if ($PROJEXISTS && (!$opt{force})){
+        die "Project already exists: $PROJ";
+
     }elsif($opt{appenddat}){
         my $date=localtime;
 
-        append_file($PFILE,"# Added by $Script on $date" . "\n");
-        append_file($PFILE,$PROJ . "\n");
+		unless ($PROJEXISTS){
+        	append_file($PFILE,"# Added by $Script on $date" . "\n");
+        	append_file($PFILE,$PROJ . "\n");
+		}
+
+		warn "Project '" . $PROJ . "' is already written in PROJS datfile\n";
 
 		exit 0;
     }
 
 	foreach($SEC){
 		/^_main_$/ && do {
-			$FILE=catfile($DIR,$PROJ . ".tex");
+			$SECFILE=catfile($DIR,$PROJ . ".tex");
 			next; 
 		};
 	
-		$FILE=catfile($DIR,$PROJ . ".$SEC" . ".tex");
+		$SECFILE=catfile($DIR,$PROJ . ".$SEC" . ".tex");
 	}
 
 }
@@ -156,16 +190,29 @@ sub init_vars {
 
 	@MAINSECS=qw( preamble begin body  );
 
-    $self->TEX( OP::Projs::Tex->new );
+    $self->TEX( TeX::Project::GenerateTeX->new );
 
 }
 
 sub write_tex {
 	my $self=shift;
 
-    $self->TEX->_c("Generated via $Script");
+	my $tex=$self->TEX;
 
-    $self->TEX->ofile($FILE);
+    $tex->_c_delim;
+    $tex->_c(" Project Name:");
+    $tex->_c("  $PROJ");
+    $tex->_c(" Creating script:");
+    $tex->_c("  $Script");
+    $tex->_c(" Script location:");
+    $tex->_c("  $Bin");
+    $tex->_c(" Creating package:");
+    $tex->_c("  " . __PACKAGE__);
+    $tex->_c(" Date:");
+    $tex->_c("  " . localtime );
+    $tex->_c_delim;
+
+    $self->TEX->ofile($SECFILE);
 
 	my %write_subs=(
 ###print_main

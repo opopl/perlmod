@@ -10,7 +10,7 @@ use OP::Base qw(readarr);
 use File::Slurp qw(read_file write_file);
 use FindBin qw($Bin);
 
-use OP::Projs::Tex;
+use TeX::Project::GenerateTeX;
 
 use Carp;
 

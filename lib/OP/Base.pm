@@ -1568,10 +1568,6 @@ sub sbvars {
 
     $endl = "\n";
 
-    foreach my $k ( keys %DIRS ) {
-        mkdir $DIRS{$k};
-    }
-
 }
 
 # }}}

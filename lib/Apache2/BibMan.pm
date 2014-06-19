@@ -26,7 +26,9 @@ use Apache::DBI ();
 
 use CGI qw(:standard);
 use File::Spec::Functions qw( catfile );
-use BibTeX::MySQL;
+use Data::Dumper;
+
+use BibTeX::MySQL qw(@CONFKEYS %DESC);
 
 use CGI::Carp qw(fatalsToBrowser);
 
@@ -36,23 +38,29 @@ use OP::apache::base qw(
 	init_handler_vars
 );
 
+use Config::YAML;
+
 ###our
 
 # table rows, see init_vars where they are defined
-our %rows;
+my %rows;
 
 # default values, see init_vars 
-our %DEFAULTS;
+my %DEFAULTS;
 
 # list of existing BibTeX fields in the MySQL database
-our @BIBFIELDS;
+my @BIBFIELDS;
 
-our ( $BIBSQL, $DBH );
+my ( $BIBSQL, $DBH );
 
-our $ROOT;
+my $ROOT;
+
+local $SIG{__DIE__} = \&Apache2::BibMan::mydie;
+local $SIG{__WARN__} = \&Apache2::BibMan::mywarn;
 
 ###subs
 sub init_vars;
+sub read_conf;
 
 sub print_html_;
 sub print_html_view_pkey;
@@ -61,16 +69,46 @@ sub print_html_response;
 sub _html_footer;
 sub _html_header;
 
-sub init_vars {
 
-	%DEFAULTS=( 
-		user 			=> 'bibuser',
-		password	 	=> 'bib',
-		db			 	=> 'bibdb',
-		table_keys		=> 'pkeys',
-		bibpath		 	=> catfile($hm,qw( wrk p repdoc.bib )),
+sub mywarn {
+	my $why=shift;
+
+	print("WARNING: $why\n"), return unless $ENV{MOD_PERL};
+
+	$R->print( 
+		_html_header, 
+		p({ -style => 'Color: blue' }, 'WARNING: ' . $why ),
+		_html_footer, 
 	);
 
+	$LOG->warn($why);
+
+}
+
+sub mydie {
+	my $why=shift;
+
+	print("ERROR: $why\n"), exit 1 unless $ENV{MOD_PERL};
+
+	$R->print( 
+		_html_header, 
+		p({ -style => 'Color: red' }, 'ERROR: ' . $why ),
+		_html_footer, 
+	);
+
+	$LOG->error($why);
+
+	exit 1;
+
+}
+
+
+
+
+sub init_vars {
+
+	readconf;
+	
 	%rows=(
 		bibtex => [
 			TR( 
@@ -83,38 +121,16 @@ sub init_vars {
 			),
 		],
 		mysqlconf => [
-			TR( 
-				td( 'User name' ),
-				td( textfield(
-					-name 		=> 'user',
-					-default 	=> $DEFAULTS{user},
-	            	-size 		=>  50 
-				))
-			),
-			TR( 
-				td( 'Password' ),
-				td( textfield(
-					-name 		=> 'password',
-					-default 	=> $DEFAULTS{password},
-	            	-size 		=>  50 
-				))
-			),
-			TR( 
-				td( 'Database name' ),
-				td( textfield(
-					-name 		=> 'db',
-					-default 	=> $DEFAULTS{db},
-	            	-size 		=>  50 
-				))
-			),
-			TR( 
-				td( 'Table for storing BibTeX keys' ),
-				td( textfield(
-					-name 		=> 'table_keys',
-					-default 	=> $DEFAULTS{table_keys},
-	            	-size 		=>  50 
-				))
-			),
+			map { 
+				TR( 
+					td( $DESC{CONFKEYS}->{$_} ),
+					td( textfield(
+						-name 		=> 'user',
+						-default 	=> $DEFAULTS{$_},
+		            	-size 		=>  50 
+					))
+				) 
+			} map { !/bibpath/ : $_ : () } @CONFKEYS,
 		],
 	);
 
@@ -165,9 +181,7 @@ sub print_html_options {
 sub print_html_response {
 	my %pars;
 
-	foreach my $id (qw( user password db bibpath )) {
-		$pars{$id}=$R->param($id);
-	}
+	@pars{@CONFKEYS}=map { $R->param($_) } @CONFKEYS;
 
 	$BIBSQL=BibTeX::MySQL->new( %pars ) 
 		or die "Failure to create a BibTeX::MySQL object";
@@ -180,8 +194,11 @@ sub print_html_response {
 	$BIBSQL->parsebib
 		or die "Failure to parse the bib file";
 
-	$R->print(  
-		_html_header,
+	$LOG->info(Dumper(\%pars));
+
+	die 'aa';
+
+	$R->print( _html_header,
 		'Select a BibTeX key: ',
 		start_form(
 			-action => "view_pkey"
@@ -214,13 +231,13 @@ sub print_html_view_pkey {
 
 	$DBH=$BIBSQL->dbh;
 
-	$sth=$DBH->prepare('show columns from pkeys');
+	$sth=$DBH->prepare('show columns from ' . $BIBSQL->table_bib );
 	$sth->execute;
 	while (my @ary=$sth->fetchrow_array) {
 		push(@BIBFIELDS,shift @ary);
 	}
 
-	$sth=$DBH->prepare('select * from pkeys where pkey = ?');
+	$sth=$DBH->prepare('select * from ' . $BIBSQL->table_bib . ' where pkey = ?');
 	$sth->execute($pkey);
 
 	my @rows;
@@ -240,11 +257,14 @@ sub print_html_view_pkey {
 }
 
 sub _html_footer {
-	hr, end_html;
+	hr, 
+	end_html;
 }
 
 sub _html_header {
-	start_html, hr;
+	start_html, 
+	a({ -href => 'options' }, 'OPTIONS'),
+	hr;
 }
 
 sub handler {
@@ -257,6 +277,8 @@ sub handler {
 	$LOG->info('PINFO: ' . $PINFO );
 	eval '$code = print_html_' . $PINFO;
 	return $code unless $@;
+
+	die $@ if $@;
 
 	OK;
 
