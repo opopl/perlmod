@@ -1,5 +1,5 @@
 
-package OP::Projs::Generate::cv;
+package TeX::Project::Generate::cv;
 
 use strict;
 use warnings;

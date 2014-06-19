@@ -80,7 +80,7 @@ sub dhelp {
 
 	my $h=[
     	  'USAGE:'
-	    , "   $Script --dir DIR --proj PROJ --sec SEC --appenddat"
+	    , "   $Script --dir <Project directory> --proj <Project name> --sec <Section> [ --appenddat --force ]"
         , 'SCRIPT:'
         , "   $0"
 		,
@@ -156,7 +156,7 @@ sub process_opt {
 	$PROJEXISTS= ($PROJ ~~ @PROJS) ? 1 : 0 ;
 
 	die "PROJS datfile not found: $PFILE"
-	  unless -e $PFILE;
+	  	unless -e $PFILE;
 
     if ($PROJEXISTS && (!$opt{force})){
         die "Project already exists: $PROJ";

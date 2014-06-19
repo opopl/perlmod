@@ -25,7 +25,6 @@ use HTTP::Request;
 use LWP::UserAgent;
 use IPC::Cmd;
 
-use OP::Writer::Tex;
 use OP::Base qw(uniq readarr uniq);
 use OP::Git;
 use OP::HTML;
@@ -1307,9 +1306,9 @@ EOF
 
 }
 
-# _read_PROJS() {{{
+# _read_PROJS {{{
 #
-=head3 _read_PROJS()
+=head3 _read_PROJS
 
 =cut 
 
@@ -1318,7 +1317,7 @@ sub _read_PROJS {
 
     my @lines;
     
-    foreach my $id (qw(PROJS MKPROJS )) {
+    foreach my $id (qw( PROJS MKPROJS )) {
         # clear the lists 
 	    eval '$self->' . $id . '_clear()';
         die $@ if $@;
@@ -1357,7 +1356,7 @@ sub _reset_HTMLPROJS {
     }
 
 	File::Find::find(
-		sub{ 
+		sub { 
 			$self->HTMLPROJS_push($_) if (-d && ! /^\.$/)
 		},
 		$self->HTMLOUT);
@@ -1472,7 +1471,7 @@ sub _sys {
 
 }
 
-# _read_MKTARGETS() {{{
+# _read_MKTARGETS {{{
 
 sub _read_MKTARGETS {
     my $self=shift;
