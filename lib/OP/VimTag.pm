@@ -66,8 +66,8 @@ use constant GETOPT => (qw(
 );
 
 use constant GETOPT_DEFAULTS => (
-    verbose => 0, 
-    out => catfile($ENV{HOME},qw( tags perl.tags ))
+    verbose 	=> 0, 
+    out 		=> catfile($ENV{HOME},qw( tags perl.tags ))
 );
 
 # --use: whether to 'use' the package; might gen more tags. The value is the

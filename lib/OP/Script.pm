@@ -32,7 +32,7 @@ use IPC::Cmd qw(can_run run);
 
 use OP::Base qw( readarr readhash );
 
-use OP::VIMPERL qw(
+use Vim::Perl qw(
     VimMsg 
     $UnderVim
 );
@@ -86,11 +86,11 @@ sub _begin {
 # }}}
 # main() {{{
 
-=head3 main()
+=head3 main
 
 =cut
 
-sub main(){
+sub main {
   my $self=shift;
   
   &OP::Base::sbvars();
@@ -111,7 +111,7 @@ sub main(){
 
 # _die() {{{
 
-=head3 _die()
+=head3 _die
 
 =cut
 
@@ -376,11 +376,11 @@ sub _opt_eq(){
 # }}}
 # _opt_get() {{{
 
-=head3 _opt_get()
+=head3 _opt_get
 
 =cut
 
-sub _opt_get(){
+sub _opt_get {
 	my $self=shift;
 
 	my $opt=shift;
@@ -427,11 +427,11 @@ sub _opt_defined(){
 # }}}
 # get_opt() {{{
 
-=head3 get_opt()
+=head3 get_opt
 
 =cut
 
-sub get_opt(){
+sub get_opt {
 	my $self=shift;
 
 	my @argv=@_;
@@ -448,9 +448,10 @@ sub get_opt(){
 	$self->{v}->{cmdline}=$OP::Base::cmdline;
 
   	$self->get_opt_after();
+
 }
 
-=head3 print_help()
+=head3 print_help
 
 =cut
 
@@ -502,7 +503,7 @@ sub acc_arr_printarr(){
 
 =cut
 
-sub print_examples(){
+sub print_examples {
 	my $self=shift;
 
   	&OP::Base::printexamples();
@@ -518,11 +519,11 @@ sub print_pod_options(){
   	&OP::Base::printpodoptions();
 }
 
-=head3 get_opt_after()
+=head3 get_opt_after
 
 =cut
 
-sub get_opt_after(){
+sub get_opt_after {
 	my $self=shift;
 
     #&OP::Base::getopt_after();
