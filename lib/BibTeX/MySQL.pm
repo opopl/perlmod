@@ -3,6 +3,7 @@ package BibTeX::MySQL;
 
 use strict;
 use warnings;
+#use diagnostics;
 
 =head1 NAME
 
@@ -16,6 +17,7 @@ BibTeX::MySQL
 
 use parent qw( Exporter Class::Accessor::Complex );
 use LaTeX::BibTeX;
+use LaTeX::BibTeX::NameFormat;
 use DBI;
 
 use FindBin qw($Script);
@@ -67,6 +69,7 @@ our @scalar_accessors=qw(
 	password
 	table_keys
 	table_bib
+    conffile
 );
 
 our	@CONFKEYS=qw( 
@@ -133,6 +136,10 @@ sub end {
 sub init {
 	my $self=shift;
 
+	$self->_debug('Initializing...');
+
+    $self->readconf;
+
 	# Initialize LaTeX::BibTeX stuff
 	$self->bib(LaTeX::BibTeX::File->new());
 
@@ -157,6 +164,8 @@ sub connect {
 
 	my $dsn="dbi:mysql:" . $self->db;
 
+	$self->_debug('Connecting to the database...');
+
 	my %attr=( 
 		RaiseError => 1, 
 		AutoCommit => 0 
@@ -172,16 +181,22 @@ sub connect {
 sub readconf {
 	my $self=shift;
 
-	unless ( $self->conffile ){
+    my $conffile=shift // $self->conffile // '';
+
+	$self->_debug('Reading configuration file...');
+
+	unless ( $conffile ){
+        $self->_warn('conffile is zero');
 		return 0;
 	}
 
-	unless ( -e $self->conffile ){
+	unless ( -e $conffile ){
+        $self->_warn('provided conffile does not exist');
 		return 0;
 	}
 
 	my $c=Config::YAML->new( 
-		config => $self->conffile,
+		config => $conffile,
 	);
 
 	my %pars;
@@ -194,7 +209,7 @@ sub readconf {
 
 }
 
-sub say {
+sub _say {
 	my $self=shift;
 
 	my $msg=shift;
@@ -203,10 +218,38 @@ sub say {
 	
 }
 
+sub _die {
+	my $self=shift;
+
+	my $msg=shift;
+
+	print "$Script.Error> " . $msg . "\n";
+    exit 1;
+	
+}
+
+sub _warn {
+	my $self=shift;
+
+	my $msg=shift;
+
+	print "$Script.Warning> " . $msg . "\n";
+	
+}
+
+sub _debug {
+	my $self=shift;
+
+	my $msg=shift;
+
+	print "$Script.Debug> " . $msg . "\n";
+	
+}
+
 sub parsebib {
 	my $self=shift;
 
-	$self->say('Parsing BibTeX file...');
+	$self->_debug('Parsing BibTeX file...');
 
 	while (my $entry = new LaTeX::BibTeX::Entry->new($self->bib)){
     	next unless $entry->parse_ok;
@@ -226,13 +269,58 @@ sub fillsql {
 	my $self=shift;
 
 	$self->sql_filltable_pkeys;
+	$self->sql_filltable_authors;
 
+}
+
+sub sql_filltable_authors {
+    my $self=shift;
+
+	my $table='authors';
+
+	$self->_debug('Filling table: ' . $table );
+
+	my $dbh=$self->dbh;
+
+	my $sql=[
+		"drop table if exists $table",
+		qq{ 
+			create table if not exists $table ( 
+				author char(50), 
+				pkey char(50) 
+			) 
+		},
+	];
+
+	foreach my $cmd (@$sql) {
+		$dbh->do($cmd) || die $dbh->errstr;
+	}
+
+	$self->_debug('	Created table: ' . $table );
+
+	my $cmd=qq{
+		insert into $table ( author, pkey ) values ( ?, ? ); 
+	};
+	my $sth=$dbh->prepare($cmd);
+
+	foreach my $pkey($self->pkeys) {
+		my $entry=$self->entries_pkey($pkey);
+
+        my $format = LaTeX::BibTeX::NameFormat->new( 'vljf', 1);
+        my @authors=map { $format->apply($_) } $entry->names('author');
+
+        foreach my $author (@authors) {
+            my @bind=( $author, $pkey );
+            $sth->execute(@bind) || die $sth->errstr;
+        }
+
+	}
 }
 
 sub sql_filltable_pkeys {
 	my $self=shift;
 
-	$self->say('Filling table: ' . $self->table_bib );
+	$self->_debug('Filling table: ' . $self->table_bib );
 
 	my $table=$self->table_bib;
 	my $dbh=$self->dbh;
@@ -243,7 +331,7 @@ sub sql_filltable_pkeys {
 			create table if not exists $table ( 
 				pkey char(50) primary key, 
 				title varchar(200),
-				author varchar(100),
+				authors varchar(100),
 				volume int, 
 				year char(10)
 			) 
@@ -254,15 +342,14 @@ sub sql_filltable_pkeys {
 		$dbh->do($cmd) || die $dbh->errstr;
 	}
 
-	$self->say('	Created table: ' . $self->table_bib );
+	$self->_debug('	Created table: ' . $self->table_bib );
 
 	my $cmd=qq{
-		insert into $table ( pkey, title, author, volume, year ) values ( ?, ?, ?, ?, ? ); 
+		insert into $table ( pkey, title, authors, volume, year ) values ( ?, ?, ?, ?, ? ); 
 	};
 	my $sth=$dbh->prepare($cmd);
 
 	foreach my $pkey($self->pkeys) {
-		print 'Processing key: ' . $pkey . "\n";
 		my $entry=$self->entries_pkey($pkey);
 
 		my @fields=qw( title author volume year );

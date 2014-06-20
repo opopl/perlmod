@@ -53,14 +53,15 @@ my @BIBFIELDS;
 
 my ( $BIBSQL, $DBH );
 
+my %FILES;
+
 my $ROOT;
 
 local $SIG{__DIE__} = \&Apache2::BibMan::mydie;
-local $SIG{__WARN__} = \&Apache2::BibMan::mywarn;
+local $SIG{_mywarn__} = \&Apache2::BibMan::mywarn;
 
 ###subs
 sub init_vars;
-sub read_conf;
 
 sub print_html_;
 sub print_html_view_pkey;
@@ -68,6 +69,8 @@ sub print_html_response;
 
 sub _html_footer;
 sub _html_header;
+
+sub read_configuration;
 
 
 sub mywarn {
@@ -82,6 +85,31 @@ sub mywarn {
 	);
 
 	$LOG->warn($why);
+
+}
+
+sub read_configuration {
+    $FILES{conf}=catfile($hm,qw( config perl bibtex_mysql.yaml ));
+
+	unless ( $FILES{conf} ){
+        mywarn('conffile is zero');
+		return 0;
+	}
+
+	unless ( -e $FILES{conf} ){
+        mywarn('provided conffile does not exist');
+		return 0;
+	}
+
+	my $c=Config::YAML->new( 
+		config => $FILES{conf},
+	);
+	
+	foreach my $id (@CONFKEYS) {
+		next unless defined $c->{$id};
+	
+		$DEFAULTS{$id} =  $c->{$id} ;
+	}
 
 }
 
@@ -103,15 +131,14 @@ sub mydie {
 }
 
 
-
-
 sub init_vars {
 
-	readconf;
-	
+    read_configuration;
+
 	%rows=(
 		bibtex => [
 			TR( 
+                td( 'bibpath' ),
 				td( 'BibTeX file to be loaded:' ),
 				td( textfield(
 					-name 		=> 'bibpath',
@@ -123,6 +150,7 @@ sub init_vars {
 		mysqlconf => [
 			map { 
 				TR( 
+                    td( $_ ),
 					td( $DESC{CONFKEYS}->{$_} ),
 					td( textfield(
 						-name 		=> 'user',
@@ -130,7 +158,7 @@ sub init_vars {
 		            	-size 		=>  50 
 					))
 				) 
-			} map { !/bibpath/ : $_ : () } @CONFKEYS,
+			} map { !/bibpath/ ? $_ : () } @CONFKEYS,
 		],
 	);
 
@@ -156,16 +184,20 @@ sub print_html_ {
 
 sub print_html_options {
 
+    my @table_head=();
+    
+    #@table_head=TR( map { td($_) } qw( Variable Value Description ) );
+
 	$R->print(
 		_html_header,
 		start_form( 
 			-action => "response",
 		),
 		b('MySQL database connection parameters'),
-		table(@{$rows{mysqlconf}}),
+		table({ -border => 1 }, @table_head, @{$rows{mysqlconf}}),
 		hr,
 		b('BibTeX configuration'),
-		table(@{$rows{bibtex}}),
+		table({ -border => 1 }, @table_head, @{$rows{bibtex}}),
 		hr,
 		submit( 
 			-name 	=> 'submit_process_bib', 
@@ -183,7 +215,7 @@ sub print_html_response {
 
 	@pars{@CONFKEYS}=map { $R->param($_) } @CONFKEYS;
 
-	$BIBSQL=BibTeX::MySQL->new( %pars ) 
+	$BIBSQL=BibTeX::MySQL->new( %pars, conffile => $FILES{conf} ) 
 		or die "Failure to create a BibTeX::MySQL object";
 
 	$BIBSQL->connect
