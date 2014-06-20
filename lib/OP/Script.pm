@@ -128,11 +128,11 @@ sub _die {
 # }}}
 # out() {{{
 
-=head3 out()
+=head3 out
 
 =cut
 
-sub out(){
+sub out {
     my $self=shift;
 
 	my $ref=shift;
@@ -147,7 +147,7 @@ sub out(){
     $self->outtext("$text",%opts);
 }
 
-sub saytext() {
+sub saytext {
 	my $self=shift;
 
 	my $text=shift;
@@ -157,7 +157,7 @@ sub saytext() {
 
 }
 
-sub outtext(){
+sub outtext {
 	my $self=shift;
 
 	my $text=shift;
@@ -198,7 +198,7 @@ sub outtext(){
 
 }
 
-sub debugout_var(){
+sub debugout_var {
 	my $self=shift;
 
 	my $var=shift // '';
@@ -220,7 +220,7 @@ sub debugsay(){
 
 }
 
-sub debugout(){
+sub debugout {
 	my $self=shift;
 
 	my $text=shift // '';
@@ -231,11 +231,11 @@ sub debugout(){
 # }}}
 # say() {{{
 
-=head3 say() 
+=head3 say 
 
 =cut
 
-sub say() {
+sub say {
 	my $self=shift;
 
 	my $text=shift;
@@ -280,7 +280,7 @@ sub warn {
 
 }
 
-sub warntext() {
+sub warntext {
 	my $self=shift;
 
 	my $text=shift;

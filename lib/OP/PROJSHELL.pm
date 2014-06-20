@@ -3,6 +3,18 @@ package OP::PROJSHELL;
 use strict;
 use warnings;
 
+
+=head1 NAME
+
+OP::PROJSHELL
+
+=head1 SYNOPSIS
+
+=head1 METHODS
+
+=cut
+
+
 use feature qw(switch);
 use Switch;
 
@@ -144,9 +156,9 @@ sub view_proj_tex;
 # ============================
 # Shell Terminal stuff {{{
 
-# _term_get_commands() {{{
+# _term_get_commands {{{
 
-=head3 _term_get_commands()
+=head3 _term_get_commands
 
 =cut
 
@@ -364,7 +376,7 @@ sub _term_get_commands {
 # }}}
 # _term_list_commands() {{{
 
-=head3 _term_list_commands()
+=head3 _term_list_commands
 
 =cut
 
@@ -375,7 +387,7 @@ sub _term_list_commands {
 # }}}
 # _term_init() {{{
 
-=head3 _term_init()
+=head3 _term_init
 
 Initialize a shell terminal L<Term::ShellUI> instance.
 
@@ -407,7 +419,7 @@ sub _term_init {
 # }}}
 # _term_run() {{{
 
-=head3 _term_run()
+=head3 _term_run
 
 =cut
 
@@ -443,7 +455,7 @@ sub _term_run {
 # }}}
 # _term_exit() {{{
 
-=head3 _term_exit() {{{
+=head3 _term_exit 
 
 =cut
 
@@ -709,7 +721,7 @@ sub _cgi_pdfview {
 
 # get_opt() {{{
 
-=head3 get_opt()
+=head3 get_opt
 
 =cut
 
@@ -851,7 +863,7 @@ sub new {
 
 # }}}
 
-sub runsyscmd{
+sub runsyscmd {
     my $self=shift;
 
     my $cmd=shift;
@@ -862,7 +874,7 @@ sub runsyscmd{
 
 # set_these_cmdopts() {{{
 
-=head3 set_these_cmdopts()
+=head3 set_these_cmdopts
 
 =cut
 
@@ -901,7 +913,7 @@ sub set_these_cmdopts {
 
 # _complete_cmd {{{
 
-=head3 _complete_cmd()
+=head3 _complete_cmd
 
 =cut
 
@@ -1308,6 +1320,8 @@ EOF
 
 # _read_PROJS {{{
 #
+#
+
 =head3 _read_PROJS
 
 =cut 

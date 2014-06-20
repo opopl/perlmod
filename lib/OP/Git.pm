@@ -165,7 +165,7 @@ sub init_vars {
      $REPOS{$repo}->{path}= catfile($hm,qw(wrk),$repo);
   }
 
-  @ListRepos=keys %REPOS;
+  @ListRepos=sort keys %REPOS;
 
 }
 

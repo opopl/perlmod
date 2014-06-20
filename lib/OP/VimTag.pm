@@ -16,6 +16,7 @@ use Hash::Rename;
 use UNIVERSAL::require;
 use OP::VimTag::Null;
 use File::Spec::Functions qw(catfile);
+use Data::Dumper qw(Dumper);
 
 use parent qw(
     Class::Accessor::Constructor 
@@ -25,13 +26,13 @@ use parent qw(
 
 ###__ACCESSORS_SCALAR
 our @scalar_accessors=qw(
-    tags
     tagfile
     textcolor
 );
 
 ###__ACCESSORS_HASH
 our @hash_accessors=qw(
+    tags
     accessors
     is_fake_package 
     filename_for 
@@ -77,14 +78,6 @@ use constant GETOPT_DEFAULTS => (
 # but have it installed as well. Use this option if you index the development
 # directory first and only want to see that version.
 
-#sub new() {
-    #my $self = shift;
-
-    #$self->SUPER::new();
-
-
-#}
-
 sub process_opt {
     my $self = shift;
 
@@ -96,7 +89,7 @@ sub process_opt {
 sub main {
     my $self = shift;
 
-    $self->_begin();
+    $self->_begin;
 
     $self->init_vars;
 
@@ -120,12 +113,14 @@ sub main {
 
 }
 
-sub init_vars() { 
+sub init_vars { 
     my $self=shift;
 
     $self->textcolor('bold blue');
 
     $self->say("Initializing variables ... ");
+
+    $self->tags();
 
 }
 
@@ -139,7 +134,7 @@ sub finalize {
     Test::Builder::plan(1) if $Test::Base::VERSION;
 }
 
-sub _begin() {
+sub _begin {
     my $self = shift;
 
     $self->{package_name} = __PACKAGE__ unless defined $self->{package_name};
@@ -205,7 +200,11 @@ sub generate_tags {
 
     $::PTAGS = $self;
 
-    for ($self->libs) {
+    foreach my $dir  ($self->libs) {
+		next unless -e $dir;
+
+    	$self->say("Processing library directory: " . $dir );
+
         find(
             {   follow => 1,
                 wanted => sub {
@@ -220,7 +219,7 @@ sub generate_tags {
                     }
                   }
             },
-            $_
+            $dir
         );
     }
 }
@@ -278,7 +277,13 @@ sub add_tag {
         && $file =~ m!^/loader/0x[0-9a-f]+/(.*)!o) {
         $file = $INC{$1};
     }
-    push @{ $self->tags->{$tag} } => [ $file, $search ];
+	
+	if ($self->tags_exists($tag)) {
+    	push @{ $self->tags($tag) } => [ $file, $search ] ;
+	}else{
+    	$self->tags($tag => [ [ $file, $search ] ] );
+	}
+
 }
 
 sub make_package_tag {
