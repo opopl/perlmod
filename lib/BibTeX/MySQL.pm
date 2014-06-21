@@ -148,14 +148,14 @@ sub init {
 	{
 		no strict 'refs';
 		foreach my $id (@scalar_accessors) {
-			( defined $self->$id ) || die "scalar accessor not defined: " . $id;
+			( defined $self->$id ) || $self->_die("scalar accessor not defined: " . $id);
 		}
 	}
-	( defined $self->bibpath ) || die "bibpath not defined";
+	( defined $self->bibpath ) || $self->_die("bibpath not defined");
 
-	( -e $self->bibpath ) || die "bib file does not exist: " . $self->bibpath;
+	( -e $self->bibpath ) || $self->_die("bib file does not exist: " . $self->bibpath);
 
-	$self->bib->open($self->bibpath) || die $!;
+	$self->bib->open($self->bibpath) || $self->_die($!);
 
 }
 
@@ -171,7 +171,7 @@ sub connect {
 		AutoCommit => 0 
 	);
 	my $dbh = DBI->connect($dsn, $self->user, $self->password, \%attr )
-					or die $DBI::errstr;
+					or $self->_die($DBI::errstr);
 
 	$self->dbh( $dbh );
 
@@ -271,6 +271,8 @@ sub fillsql {
 	$self->sql_filltable_pkeys;
 	$self->sql_filltable_authors;
 
+    1;
+
 }
 
 sub sql_filltable_authors {
@@ -293,7 +295,7 @@ sub sql_filltable_authors {
 	];
 
 	foreach my $cmd (@$sql) {
-		$dbh->do($cmd) || die $dbh->errstr;
+		$dbh->do($cmd) || $self->_die( $dbh->errstr );
 	}
 
 	$self->_debug('	Created table: ' . $table );
@@ -311,10 +313,12 @@ sub sql_filltable_authors {
 
         foreach my $author (@authors) {
             my @bind=( $author, $pkey );
-            $sth->execute(@bind) || die $sth->errstr;
+            $sth->execute(@bind) || $self->_die( $sth->errstr );
         }
 
 	}
+
+    1;
 }
 
 sub sql_filltable_pkeys {
@@ -339,7 +343,7 @@ sub sql_filltable_pkeys {
 	];
 
 	foreach my $cmd (@$sql) {
-		$dbh->do($cmd) || die $dbh->errstr;
+		$dbh->do($cmd) || $self->_die( $dbh->errstr ); 
 	}
 
 	$self->_debug('	Created table: ' . $self->table_bib );
@@ -360,10 +364,11 @@ sub sql_filltable_pkeys {
 			push(@bind,$val);
 		}
 
-		$sth->execute(@bind) || die $sth->errstr;
+		$sth->execute(@bind) || $self->_die( $sth->errstr );
 
 	}
 
+    1;
 
 }
 

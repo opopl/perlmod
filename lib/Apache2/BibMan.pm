@@ -58,7 +58,7 @@ my %FILES;
 my $ROOT;
 
 local $SIG{__DIE__} = \&Apache2::BibMan::mydie;
-local $SIG{_mywarn__} = \&Apache2::BibMan::mywarn;
+local $SIG{__WARN__} = \&Apache2::BibMan::mywarn;
 
 ###subs
 sub init_vars;
@@ -226,9 +226,9 @@ sub print_html_response {
 	$BIBSQL->parsebib
 		or die "Failure to parse the bib file";
 
-	$LOG->info(Dumper(\%pars));
+	#$LOG->info(Dumper(\%pars));
 
-	die 'aa';
+	#die 'aa';
 
 	$R->print( _html_header,
 		'Select a BibTeX key: ',
@@ -247,8 +247,8 @@ sub print_html_response {
 		_html_footer,
 	);
 
-	$BIBSQL->fillsql
-		or die "Failure to fill the MySQL database";
+	$BIBSQL->fillsql;
+		#or die "Failure to fill the MySQL database: " . $BIBSQL->err;
 
 	$BIBSQL->end;
 
