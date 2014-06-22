@@ -23,7 +23,7 @@ use Apache2::ServerUtil ();
 
 use File::Slurp qw(read_file);
 
-use OP::apache::base qw(
+use Apache2::Basevars qw(
 	$R $Q $H $PINFO $SNAME
 	init_handler_vars $SERVROOT %FILES
 );

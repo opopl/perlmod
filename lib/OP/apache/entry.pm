@@ -24,7 +24,7 @@ use Apache2::Const qw(OK REDIRECT);
 use APR::Table ();
 use CGI::Carp qw(fatalsToBrowser);
 
-use OP::apache::base qw(
+use Apache2::Basevars qw(
 	$R $Q $H $PINFO $SNAME
 	init_handler_vars
 );

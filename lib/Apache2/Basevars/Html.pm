@@ -1,5 +1,5 @@
 
-package OP::apache::base::html;
+package Apache2::Basevars::Html;
  
 use warnings;
 use strict;

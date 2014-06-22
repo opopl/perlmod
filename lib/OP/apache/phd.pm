@@ -20,7 +20,7 @@ use Apache2::RequestRec ( ); # for $r->content_type
 use Apache2::Request ( );
 use Apache2::Const qw(OK );
 
-use OP::apache::base qw($R $Q $PINFO $SNAME);
+use Apache2::Basevars qw($R $Q $PINFO $SNAME);
 
 sub handler {
 	$R = Apache2::Request->new(shift);

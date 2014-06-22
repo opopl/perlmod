@@ -25,13 +25,13 @@ use Data::Dumper;
 use URI::Escape;
 
 use OP::apache::perldoc::pmsearch;
-use OP::apache::base qw(
+use Apache2::Basevars qw(
 	$PINFO $SNAME
 	$R $H $Q
 	init_handler_vars
 	@SUBMITS
 );
-use OP::apache::base::html;
+use Apache2::Basevars::Html;
 use Pod::POM;
 
 ###subs
