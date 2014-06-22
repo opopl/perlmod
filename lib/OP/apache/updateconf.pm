@@ -7,7 +7,6 @@ OP::apache::updateconf - for updating Apache configuration files located
 in C<$APACHEROOT/conf>.
 
 =cut
-
  
 use strict;
 use warnings;
