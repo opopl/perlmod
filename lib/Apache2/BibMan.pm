@@ -32,7 +32,7 @@ use BibTeX::MySQL qw(@CONFKEYS %DESC);
 
 use CGI::Carp qw(fatalsToBrowser);
 
-use OP::apache::base qw(
+use Apache2::Basevars qw(
 	$R $Q $H $PINFO $SNAME
 	$LOG
 	init_handler_vars
@@ -274,7 +274,7 @@ sub print_html_view_pkey {
 
 	my @rows;
 	while (my @ary=$sth->fetchrow_array) {
-		push(@rows,map { p,$_ } @ary);
+		push( @rows, map { p, $_ } @ary );
 	}
 
 	$R->print( 
