@@ -75,7 +75,7 @@ sub init_handler_vars {
 	$LOG->info('<<<<< start: init_handler_vars >>>>>');
 
 	$PINFO = $R->path_info =~ s{^\/}{}gr;
-	$SNAME = $R->uri =~ s{^\/$PINFO}{}gr;
+	$SNAME = $R->uri =~ s{\/$PINFO$}{}gr;
 
 	{
 		no strict 'refs';
