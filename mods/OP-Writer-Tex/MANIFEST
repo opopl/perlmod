@@ -1,8 +1,0 @@
-MANIFEST
-README
-LICENSE
-Todo
-Changes
-Build.PL
-lib/OP/Writer/Tex.pm
-t/001_load.t
