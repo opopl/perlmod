@@ -77,8 +77,6 @@ our @scalar_accessors=qw(
     PROJFILE
 	PDFFILE
 	PDFFILENAME
-	PDFOUT
-	PDFOUT_PERLDOC
 	HTMLDIR
     inputcommands
     LOGFILE
@@ -770,9 +768,9 @@ sub init_vars {
 
     $self->PROJSDIR( $PROJSDIR // catfile($hm, qw( wrk texdocs )) );
 
-	$self->PDFOUT($PDFOUT // catfile($hm,qw(pdf out)));
+	$self->dirs(PDFOUT => $PDFOUT // catfile($hm,qw(pdf out)));
 
-	$self->PDFOUT_PERLDOC(catfile($self->PDFOUT,qw(perldoc)));
+	$self->dirs(PDFOUT_PERLDOC => catfile($self->dirs('PDFOUT'),qw(perldoc)));
 
     chdir($self->PROJSDIR) || die $!;
 
@@ -785,7 +783,7 @@ sub init_vars {
         'maketex_mk'  => catfile($hm,qw(scripts mk maketex.targets.mk ),
     )); 
 
-	$self->HPERLTARGETS(readarr(catfile(qw(/doc perl tex hperl_targets.i.dat ))));
+    $self->_reset_HPERLTARGETS();
 
     $self->LOGFILENAME("ProjShell_log.data.tex");
     $self->LOGFILE( IO::File->new() );
@@ -1090,7 +1088,7 @@ sub _proj_reset {
 
 	$self->PDFFILENAME($self->PROJ . '.pdf');
 	$self->PDFFILE(
-		catfile($self->PDFOUT,$self->PDFFILENAME)
+		catfile($self->dirs('PDFOUT'),$self->PDFFILENAME)
 	);
 
 
@@ -1360,6 +1358,22 @@ sub _read_PROJS {
 
 }
 
+sub _reset_HPERLTARGETS {
+	my $self=shift;
+
+	my $id='hperltargets_dat';
+    $self->files( 
+          $id => catfile(qw(/doc perl tex hperl_targets.i.dat )),
+    ); 
+
+	if (not -e $self->files($id)) {
+		return 0;
+	}
+
+	$self->HPERLTARGETS(readarr($self->files('hperltargets_dat')));
+
+}
+
 sub _reset_HTMLPROJS {
 	my $self=shift;
 
@@ -1394,7 +1408,7 @@ sub _reset_PDFPROJS {
 				}
 			}
 		},
-		$self->PDFOUT);
+		$self->dirs('PDFOUT'));
 
 	$self->PDFPROJS_sort;
 
@@ -1404,6 +1418,11 @@ sub _reset_PDFPERLDOC {
 	my $self=shift;
 
 	$self->PDFPERLDOC_clear;
+
+	if (not -d $self->dirs('PDFOUT_PERLDOC')){
+		return 0;
+	}
+
 	File::Find::find(
 		sub{ 
 			if (-f && /\.pdf$/ ){
@@ -1417,7 +1436,7 @@ sub _reset_PDFPERLDOC {
 
 			}
 		},
-		$self->PDFOUT_PERLDOC);
+		$self->dirs('PDFOUT_PERLDOC'));
 
 	$self->PDFPERLDOC_sort;
 
@@ -1560,7 +1579,6 @@ sub cmd_list {
 # }}}
 # }}}
 # ============================
-# set_accessor_descriptions() {{{
 
 sub set_accessor_descriptions {
     my $self=shift;
@@ -1593,9 +1611,6 @@ sub set_accessor_descriptions {
     $self->accdesc(%accdesc);
 
 }
-# }}}
-# ============================
-# sysrun() {{{
 
 sub sysrun {
     my $self=shift;
@@ -1605,8 +1620,6 @@ sub sysrun {
     system("$cmd");
 }
 
-# }}}
-# ============================
 
 =head3 info
    

@@ -228,6 +228,38 @@ sub _c {
 
 }
 
+=head3 _c_help
+
+X<_c_help,Text::Generate::Base>
+
+=head4 Usage
+
+	_c_help();
+
+=head4 Purpose
+
+=head4 Input
+
+=over 4
+
+=item * C<$> (SCALAR) 
+
+=back
+
+=head4 Returns
+
+=head4 See also
+
+=cut
+
+sub _c_help {
+    my $self = shift;
+
+    my $topic = shift // '';
+
+}
+
+
 =head3 _clear
 
 X<_clear,Text::Generator::Base>
