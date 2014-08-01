@@ -1627,7 +1627,9 @@ sub sysrun {
    
 sub info {
 	my $self=shift;
-    print "\n";
+
+    print $self->PROJ . "\n";
+    print $self->PROJSDIR . "\n";
    
 }
 
