@@ -416,7 +416,7 @@ sub begin {
 sub usepackage {
     my $self = shift;
 
-    my $ref = shift // '';
+    my $ref = shift || '';
 
     return 1 unless $ref;
 
@@ -1313,13 +1313,13 @@ sub init {
 sub AUTOLOAD {
 	my $self=shift;
 
-	my $arg=shift // '';
+	my @args=@_;
 
 	my $cmd = our $AUTOLOAD;
 	
 	$cmd =~ s/^.*::(\w*)$/$1/g;
 
-	$self->_cmd("$cmd","$arg");
+	$self->_cmd("$cmd",@args);
 
 }
 
