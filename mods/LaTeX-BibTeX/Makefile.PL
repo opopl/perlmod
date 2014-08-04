@@ -5,6 +5,11 @@ use strict;
 use ExtUtils::MakeMaker;
 use File::Basename;
 
+our @support_files;
+
+sub configure_btparse;
+sub main;
+
 sub configure_btparse
 {
    my ($dir) = @_;
@@ -26,24 +31,35 @@ sub configure_btparse
    print "btparse distribution in '$dir' is configured and ready to build\n";
 }
 
-my @support_files = ('btxs_support$(OBJ_EXT)');
+sub main {
 
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
-WriteMakefile (
-    'NAME'	=> 'LaTeX::BibTeX',
-    'VERSION'   => '0.34',
-    'XSPROTOARG' => '-prototypes',
-    'LIBS'	=> [''],   # e.g., '-lm' 
-    'DEFINE'	=> '',     # e.g., '-DHAVE_SOMETHING' 
-    'INC'	=> '-Ibtparse/src',
-    'MYEXTLIB'  => 'btparse/src/.libs/libbtparse$(LIB_EXT)',
-    'OBJECT'    => 'BibTeX$(OBJ_EXT) ' . join (' ', @support_files),
-    'dynamic_lib' => { INST_DYNAMIC_DEP => join (' ', @support_files) },
-    'dist'      => { COMPRESS => "gzip", SUFFIX => "gz" }
-);
+	@support_files = ('btxs_support$(OBJ_EXT)');
 
-configure_btparse ('btparse');
+	# See lib/ExtUtils/MakeMaker.pm for details of how to influence
+	# the contents of the Makefile that is written.
+	WriteMakefile (
+	    'NAME'        => 'LaTeX::BibTeX',
+	    'VERSION'     => '0.34',
+	    'XSPROTOARG'  => '-prototypes',
+	    'LIBS'        => [''],   # e.g., '-lm'
+	    'DEFINE'      => '',     # e.g., '-DHAVE_SOMETHING'
+	    'INC'         => '-Ibtparse/src',
+	    'MYEXTLIB'    => 'btparse/src/.libs/libbtparse$(LIB_EXT)',
+	    'OBJECT'      => 'BibTeX$(OBJ_EXT) ' . join (' ', @support_files),
+	    'dynamic_lib' => { 
+			INST_DYNAMIC_DEP  => join (' ', @support_files) 
+		},
+	    'dist'        => { 
+			COMPRESS   => "gzip", 
+			SUFFIX     => "gz" 
+		}
+	);
+	
+	configure_btparse ('btparse');
+
+}
+
+main;
 
 # -- END main ----------------------------------------------------------
 
