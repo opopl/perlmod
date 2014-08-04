@@ -1,5 +1,5 @@
 
-package OP::apache::base;
+package Apache2::Basevars;
 
 use strict;
 use warnings;
@@ -14,7 +14,7 @@ use File::Spec::Functions qw(catfile);
 
 use CGI;
 
-use OP::apache::base::html;
+use Apache2::Basevars::Html;
 
 use Exporter qw( );
 
@@ -75,7 +75,7 @@ sub init_handler_vars {
 	$LOG->info('<<<<< start: init_handler_vars >>>>>');
 
 	$PINFO = $R->path_info =~ s{^\/}{}gr;
-	$SNAME = $R->uri =~ s{^\/$PINFO}{}gr;
+	$SNAME = $R->uri =~ s{\/$PINFO$}{}gr;
 
 	{
 		no strict 'refs';
@@ -96,7 +96,7 @@ sub init_handler_vars {
     
     $Q = CGI->new($R);
 
-	$H=OP::apache::base::html->new( 
+	$H=Apache2::Basevars::Html->new( 
 		R	=> $R,
 		Q	=> CGI->new,
 	);

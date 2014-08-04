@@ -17,7 +17,7 @@ use Getopt::Long;
 use IO::String;
 
 use lib("$PERLMODDIR/mods/OP-Writer-Pod/lib");
-use OP::Writer::Pod;
+use Text::Generate::Pod;
 
 $VERSION = '0.01';
 @ISA     = qw(Exporter);
@@ -172,7 +172,7 @@ sub pre_init {
 
 sub write_help_POD {
 
-    my $podw=OP::Writer::Pod->new;
+    my $podw=Text::Generate::Pod->new;
     my %s;
 
     my $order=$podsectionorder // [qw(NAME USAGE OPTIONS)];

@@ -20,7 +20,7 @@ require IO::Handle;
 use IO::File;
 use Try::Tiny;
 use Data::Dumper;
-#use OP::TEX::Text;
+#use Text::Generate::TeX;
 
 require Debug::Simple;
 

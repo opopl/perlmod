@@ -21,7 +21,7 @@ use FindBin qw( $Bin $Script );
 use Getopt::Long qw(GetOptions);
 use OP::PackName;
 
-use OP::Writer::Pod;
+use Text::Generate::Pod;
 
 use Term::ANSIColor;
 
@@ -161,7 +161,7 @@ sub getopt {
 sub dhelp {
     my $self=shift;
 
-    my $p=OP::Writer::Pod->new;
+    my $p=Text::Generate::Pod->new;
 
     $p->head1('USAGE');
     $p->_pod_line("$Script <options> <perl module pattern>");

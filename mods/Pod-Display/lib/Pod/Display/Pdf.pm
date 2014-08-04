@@ -141,7 +141,6 @@ sub run_tex {
 		$self->{topic} . '.pdf' 
 	);
 
-
 	$drv->_pdflatex($ifname);
 	$drv->_pdflatex($ifname);
 	$drv->_pdflatex($ifname);
@@ -457,7 +456,17 @@ sub main {
 
     $self->get_opt;
 
-
 }
 
 1;
+__END__
+
+=head1 NAME
+
+Pod::Display::Pdf - Pod documentation conversion to PDF. 
+
+=head1 SYNOPSIS
+
+=head1 LICENSE
+
+=cut

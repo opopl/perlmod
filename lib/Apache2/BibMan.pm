@@ -21,7 +21,7 @@ use Env qw($hm);
 
 use Apache2::RequestRec ( ); # for $r->content_type
 use Apache2::Request ( );
-use Apache2::Const qw(OK);
+use Apache2::Const qw( OK REDIRECT );
 use Apache::DBI ();
 
 use CGI qw(:standard);
@@ -32,7 +32,7 @@ use BibTeX::MySQL qw(@CONFKEYS %DESC);
 
 use CGI::Carp qw(fatalsToBrowser);
 
-use OP::apache::base qw(
+use Apache2::Basevars qw(
 	$R $Q $H $PINFO $SNAME
 	$LOG
 	init_handler_vars
@@ -139,7 +139,7 @@ sub init_vars {
 		bibtex => [
 			TR( 
                 td( 'bibpath' ),
-				td( 'BibTeX file to be loaded:' ),
+				td( 'BibTeX file to be loaded' ),
 				td( textfield(
 					-name 		=> 'bibpath',
 					-default 	=> $DEFAULTS{bibpath},
@@ -182,11 +182,19 @@ sub print_html_ {
 	OK;
 }
 
+sub print_html_start {
+
+	$R->custom_response( REDIRECT, "$SNAME/" );
+	return REDIRECT;
+
+
+}
+
 sub print_html_options {
 
     my @table_head=();
     
-    #@table_head=TR( map { td($_) } qw( Variable Value Description ) );
+    @table_head=TR( map { td(b($_)) } qw( Variable Description Value ) );
 
 	$R->print(
 		_html_header,
@@ -261,7 +269,7 @@ sub print_html_view_pkey {
 
 	my $pkey=$R->param('pkey');
 
-	$DBH=$BIBSQL->dbh;
+	$DBH ||= $BIBSQL->dbh;
 
 	$sth=$DBH->prepare('show columns from ' . $BIBSQL->table_bib );
 	$sth->execute;
@@ -274,7 +282,7 @@ sub print_html_view_pkey {
 
 	my @rows;
 	while (my @ary=$sth->fetchrow_array) {
-		push(@rows,map { p,$_ } @ary);
+		push( @rows, map { p, $_ } @ary );
 	}
 
 	$R->print( 
@@ -295,7 +303,8 @@ sub _html_footer {
 
 sub _html_header {
 	start_html, 
-	a({ -href => 'options' }, 'OPTIONS'),
+	a({ -href => "$SNAME/options" }, 'OPTIONS'),' ',
+	a({ -href => "$SNAME/start" }, 'START'),
 	hr;
 }
 
