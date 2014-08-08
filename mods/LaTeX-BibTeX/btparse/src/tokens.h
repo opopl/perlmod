@@ -4,9 +4,9 @@
  *
  * Generated from: bibtex.g
  *
- * Terence Parr, Will Cohen, and Hank Dietz: 1989-2001
+ * Terence Parr, Will Cohen, and Hank Dietz: 1989-1994
  * Purdue University Electrical Engineering
- * ANTLR Version 1.33MR33
+ * ANTLR Version 1.33
  */
 #define zzEOF_TOKEN 1
 #define AT 2
@@ -22,49 +22,49 @@
 #define COMMA 17
 #define STRING 25
 
-#ifdef __USE_PROTOS
+#ifdef __STDC__
 void bibfile(AST**_root);
 #else
 extern void bibfile();
 #endif
 
-#ifdef __USE_PROTOS
+#ifdef __STDC__
 void entry(AST**_root);
 #else
 extern void entry();
 #endif
 
-#ifdef __USE_PROTOS
-void body(AST**_root,bt_metatype metatype);
+#ifdef __STDC__
+void body(AST**_root, bt_metatype metatype );
 #else
 extern void body();
 #endif
 
-#ifdef __USE_PROTOS
-void contents(AST**_root,bt_metatype metatype);
+#ifdef __STDC__
+void contents(AST**_root, bt_metatype metatype );
 #else
 extern void contents();
 #endif
 
-#ifdef __USE_PROTOS
+#ifdef __STDC__
 void fields(AST**_root);
 #else
 extern void fields();
 #endif
 
-#ifdef __USE_PROTOS
+#ifdef __STDC__
 void field(AST**_root);
 #else
 extern void field();
 #endif
 
-#ifdef __USE_PROTOS
+#ifdef __STDC__
 void value(AST**_root);
 #else
 extern void value();
 #endif
 
-#ifdef __USE_PROTOS
+#ifdef __STDC__
 void simple_value(AST**_root);
 #else
 extern void simple_value();
@@ -75,7 +75,6 @@ extern SetWordType zzerr1[];
 extern SetWordType zzerr2[];
 extern SetWordType zzerr3[];
 extern SetWordType zzerr4[];
-extern SetWordType zzerr5[];
 extern SetWordType setwd1[];
-extern SetWordType zzerr6[];
+extern SetWordType zzerr5[];
 extern SetWordType setwd2[];

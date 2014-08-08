@@ -28,8 +28,10 @@ sub init_vars {
 		ctags
 		directfbrc
 		fbtermrc
+		fetchmailrc
 		gitconfig
 		minicpanrc
+		muttrc
 		pinerc
 		screenrc
         zshrc
