@@ -10,7 +10,9 @@ use Exporter ();
 use FindBin qw($Bin $Script);
 use IPC::Cmd qw(run_forked);
 use Term::ANSIColor;
+
 use File::Which qw(which);
+use File::Temp qw(tempdir);
 
 ###our
 our $VERSION = '0.01';
@@ -55,7 +57,10 @@ sub init_vars {
 
     $self->{files}->{pdflatex}=which('pdflatex');
 
-    $self->{opts}->{pdflatex}='-file-line-error';
+    my $tmp=tempdir();
+    $self->{opts}->{pdflatex}=
+            ' -file-line-error'; 
+        #.   ' -output-directory=' . $tmp;
     
 }
 
@@ -216,3 +221,18 @@ sub _die {
 }
 
 1;
+__END__
+
+=head1 NAME
+
+=head1 SYNOPSIS
+
+=head1 LICENSE
+
+=head1 SEE ALSO
+
+=head1 AUTHOR
+
+=cut
+
+=cut
