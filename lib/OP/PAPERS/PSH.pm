@@ -5785,11 +5785,11 @@ sub _pdf2tex {
 
 # _bib_readfile() {{{
 
-=head3 _bib_readfile()
+=head3 _bib_readfile
 
 =cut
 
-sub _bib_readfile() {
+sub _bib_readfile {
     my $self = shift;
 
     my $if = $self->bibfile . ".bib";
@@ -5802,13 +5802,13 @@ sub _bib_readfile() {
 # }}}
 # _bib_expand() {{{
 
-=head3 _bib_expand()
+=head3 _bib_expand
 
 Expand all BibTeX file with all LaTeX definitions
 
 =cut
 
-sub _bib_expand() {
+sub _bib_expand {
     my $self = shift;
 
     my @lines = read_file $self->bibdefs;
@@ -5869,8 +5869,9 @@ sub _bib_expand() {
 
 # }}}
 # _bibtex_rmfields() {{{
+#
 
-sub _bibtex_rmfields() {
+sub _bibtex_rmfields {
     my $self = shift;
 
     my $bibtex   = $self->bibtex;

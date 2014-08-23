@@ -3,15 +3,14 @@
  *
  * Generated from: bibtex.g
  *
- * Terence Parr, Will Cohen, and Hank Dietz: 1989-2001
+ * Terence Parr, Will Cohen, and Hank Dietz: 1989-1994
  * Purdue University Electrical Engineering
  * With AHPCRC, University of Minnesota
- * ANTLR Version 1.33MR33
+ * ANTLR Version 1.33
  */
 
-#define ANTLR_VERSION	13333
-#include "pcctscfg.h"
-#include "pccts_stdio.h"
+#include <stdio.h>
+#define ANTLR_VERSION	133
 
 #define ZZCOL
 #define USER_ZZSYN
@@ -29,13 +28,7 @@ extern char * InputFilename;            /* for zzcr_ast call in pccts/ast.c */
 #include "tokens.h"
 #include "dlgdef.h"
 LOOKAHEAD
-
-void
-#ifdef __USE_PROTOS
-zzerraction(void)
-#else
-zzerraction()
-#endif
+void zzerraction()
 {
 	(*zzerr)("invalid token");
 	zzadvance();
@@ -46,9 +39,9 @@ zzerraction()
  *
  * Generated from: parser.dlg
  *
- * 1989-2001 by  Will Cohen, Terence Parr, and Hank Dietz
+ * 1989-1994 by  Will Cohen, Terence Parr, and Hank Dietz
  * Purdue University Electrical Engineering
- * DLG Version 1.33MR33
+ * DLG Version 1.33
  */
 
 #include "mode.h"
@@ -64,35 +57,35 @@ static void act1()
 static void act2()
 { 
 		NLA = AT;
-    at_sign ();   
+		at_sign ();   
 	}
 
 
 static void act3()
 { 
 		NLA = 3;
-    newline ();   
+		newline ();   
 	}
 
 
 static void act4()
 { 
 		NLA = COMMENT;
-    comment ();   
+		comment ();   
 	}
 
 
 static void act5()
 { 
 		NLA = 5;
-    zzskip ();   
+		zzskip ();   
 	}
 
 
 static void act6()
 { 
 		NLA = 6;
-    toplevel_junk ();   
+		toplevel_junk ();   
 	}
 
 static unsigned char shift0[257] = {
@@ -134,21 +127,21 @@ static void act7()
 static void act8()
 { 
 		NLA = 7;
-    newline ();   
+		newline ();   
 	}
 
 
 static void act9()
 { 
 		NLA = COMMENT;
-    comment ();   
+		comment ();   
 	}
 
 
 static void act10()
 { 
 		NLA = 8;
-    zzskip ();   
+		zzskip ();   
 	}
 
 
@@ -161,35 +154,35 @@ static void act11()
 static void act12()
 { 
 		NLA = NAME;
-    name ();   
+		name ();   
 	}
 
 
 static void act13()
 { 
 		NLA = LBRACE;
-    lbrace ();   
+		lbrace ();   
 	}
 
 
 static void act14()
 { 
 		NLA = RBRACE;
-    rbrace ();   
+		rbrace ();   
 	}
 
 
 static void act15()
 { 
 		NLA = ENTRY_OPEN;
-    lparen ();   
+		lparen ();   
 	}
 
 
 static void act16()
 { 
 		NLA = ENTRY_CLOSE;
-    rparen ();   
+		rparen ();   
 	}
 
 
@@ -214,7 +207,7 @@ static void act19()
 static void act20()
 { 
 		NLA = 18;
-    start_string ('"');   
+		start_string ('"');   
 	}
 
 static unsigned char shift1[257] = {
@@ -224,10 +217,10 @@ static unsigned char shift1[257] = {
   14, 14, 14, 3, 5, 13, 11, 5, 2, 5, 
   14, 8, 9, 5, 5, 12, 5, 5, 5, 4, 
   4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 
-  5, 5, 10, 5, 5, 14, 14, 14, 14, 14, 
-  14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 
-  14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 
-  14, 14, 5, 14, 5, 5, 5, 5, 5, 5, 
+  5, 5, 10, 5, 5, 14, 5, 5, 5, 5, 
+  5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 
+  5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 
+  5, 5, 5, 14, 5, 5, 5, 5, 5, 5, 
   5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 
   5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 
   5, 5, 5, 5, 6, 5, 7, 14, 14, 14, 
@@ -256,56 +249,56 @@ static void act21()
 static void act22()
 { 
 		NLA = 19;
-    check_runaway_string ();   
+		check_runaway_string ();   
 	}
 
 
 static void act23()
 { 
 		NLA = 20;
-    zzreplchar (' '); zzmore ();   
+		zzreplchar (' '); zzmore ();   
 	}
 
 
 static void act24()
 { 
 		NLA = 21;
-    open_brace ();   
+		open_brace ();   
 	}
 
 
 static void act25()
 { 
 		NLA = 22;
-    close_brace ();   
+		close_brace ();   
 	}
 
 
 static void act26()
 { 
 		NLA = 23;
-    lparen_in_string ();   
+		lparen_in_string ();   
 	}
 
 
 static void act27()
 { 
 		NLA = 24;
-    rparen_in_string ();   
+		rparen_in_string ();   
 	}
 
 
 static void act28()
 { 
 		NLA = STRING;
-    quote_in_string ();   
+		quote_in_string ();   
 	}
 
 
 static void act29()
 { 
 		NLA = 26;
-    zzmore ();   
+		zzmore ();   
 	}
 
 static unsigned char shift2[257] = {
@@ -613,51 +606,6 @@ static unsigned char *b_class_no[] = {
 	shift0,
 	shift1,
 	shift2
-};
-
-#define ZZINTERACTIVE
-
-static unsigned char zzalternatives[DfaStates+1] = {
-	1,
-	0,
-	0,
-	0,
-	1,
-	1,
-	1,
-	1,
-	0,
-	1,
-	1,
-	0,
-	0,
-	1,
-	1,
-	1,
-	1,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	0,
-	1,
-	1,
-	0,
-	1,
-	1,
-	1,
-	0,
-	0,
-	0,
-	0,
-	0,
-	1,
-/* must have 0 for zzalternatives[DfaStates] */
-	0
 };
 
 

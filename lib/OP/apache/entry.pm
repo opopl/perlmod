@@ -47,15 +47,15 @@ sub init_vars {
 
 	@APPS=qw(
 		bibtex
-		printenv1
-		printenv2
+		filemanager
+		logs
 		mp_eforms
 		mp_perldoc
 		navbar
-		logs
-		search
 		perldoc
-		filemanager
+		printenv1
+		printenv2
+		search
 	);
 
 	%DOCS=(

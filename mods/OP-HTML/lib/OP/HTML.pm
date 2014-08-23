@@ -8,7 +8,7 @@ use feature qw(switch);
 
 use Env qw( $hm $PERLMODDIR );
 use lib("$PERLMODDIR/mods/OP-Writer/lib");
-use parent qw( OP::Writer );
+use parent qw( Text::Generate::Base );
 
 ###__ACCESSORS_SCALAR
 our @scalar_accessors=qw(
@@ -32,7 +32,7 @@ __PACKAGE__
 sub _init {
     my $self = shift;
 
-    $self->OP::Writer::_init;
+    $self->Text::Generate::Base::_init;
 
     $self->{package_name} = __PACKAGE__ unless defined $self->{package_name};
 

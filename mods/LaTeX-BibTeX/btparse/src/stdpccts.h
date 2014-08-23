@@ -3,18 +3,13 @@
 /*
  * stdpccts.h -- P C C T S  I n c l u d e
  *
- * Terence Parr, Will Cohen, and Hank Dietz: 1989-2001
+ * Terence Parr, Will Cohen, and Hank Dietz: 1989-1994
  * Purdue University Electrical Engineering
  * With AHPCRC, University of Minnesota
- * ANTLR Version 1.33MR33
+ * ANTLR Version 1.33
  */
-
-#ifndef ANTLR_VERSION
-#define ANTLR_VERSION	13333
-#endif
-
-#include "pcctscfg.h"
-#include "pccts_stdio.h"
+#include <stdio.h>
+#define ANTLR_VERSION	133
 
 #define ZZCOL
 #define USER_ZZSYN

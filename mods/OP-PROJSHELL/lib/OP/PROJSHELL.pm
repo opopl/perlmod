@@ -12,7 +12,7 @@ use Term::ShellUI;
 use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 
 use lib("$PERLMODDIR/mods/OP-Writer-Tex/lib");
-use OP::Writer::Tex;
+use Text::Generate::TeX;
 
 #use lib("$PERLMODDIR/mods/OP-Base/lib");
 #use OP::Base qw/:funcs :vars/;

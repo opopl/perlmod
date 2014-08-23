@@ -301,6 +301,10 @@ sub write_tex {
 	        $self->TEX->setlength('topmargin', '-1cm');
 	        $self->TEX->setlength('oddsidemargin', '-0.5cm');
 	        $self->TEX->setlength('textheight', '23cm');
+
+            $self->TEX->_c_delim;
+            $self->TEX->_c_help("marginparwidth");
+            $self->TEX->_c_delim;
 		},
 ###print_makeatletter
 	    'makeatletter' => sub {
