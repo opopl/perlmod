@@ -56,7 +56,7 @@ use IPC::Cmd qw(can_run run run_forked);
 
 =head1 NAME 
 
-op::papers::psh - Perl package implementing shell functionality for dealing
+OP::PAPERS::PSH - Perl package implementing shell functionality for dealing
 with papers and other stuff in the wrk/p/ directory
 
 =head1 INHERITANCE
@@ -67,7 +67,10 @@ L<Class::Accessor::Complex>, L<OP::Script>
 
 =cut
 
-use parent qw( OP::Script Class::Accessor::Complex );
+use base qw( 
+	OP::Script 
+	Class::Accessor::Complex 
+);
 
 # }}}
 # accessors {{{
@@ -4997,6 +5000,55 @@ sub _term_get_commands() {
         # }}}
         #########################
         # View ... {{{
+##cmd_view
+		view => {
+            desc    => "View ...",
+            minargs => 1,
+            args => sub { shift; $self->_complete_cmd( "view", @_ ); },
+            proc => sub { $self->view_tex_short( "ref", @_ ); },
+			cmds => {
+##cmd_view_pdfpaper
+				pdfpaper => {
+					desc => "vep - View original PDF paper(s)",
+					args => sub { shift; $self->_complete_papers( "original_pdf", @_ ); },
+					proc => sub {
+						$self->read_VARS;
+						$self->view_pdf_paper(@_);
+					},
+				},
+##cmd_view_myself
+				myself => {
+					desc => "vm - View myself",
+            		proc => sub { $self->view("vm"); }
+				},
+##cmd_view_confpl
+		        confpl => {
+		            desc    => "vcnf - View the p.PKEY.conf.pl file",
+		            minargs => 1,
+		            args    => sub { shift; $self->_complete_papers( "tex", @_ ); },
+		            proc    => sub { $self->view_tex( "cnf", @_ ); },
+		        },
+##cmd_view_ref
+		        ref => {
+		            desc    => "vref - View the refs",
+		            minargs => 1,
+		            args    => sub { shift; $self->_complete_papers( "tex", @_ ); },
+		            proc    => sub { $self->view_tex( "ref", @_ ); },
+		        },
+##cmd_view_refshort
+		        refshort => {
+		            desc    => "vrefs - View the refs (short)",
+		            minargs => 1,
+		            args => sub { shift; $self->_complete_papers( "short_tex", @_ ); },
+		            proc => sub { $self->view_tex_short( "ref", @_ ); },
+		        },
+##cmd_view_bib
+		        bib => {
+		            desc => "vbib - View the bibtex file currently in use",
+		            proc => sub { $self->view( "bib", @_ ); },
+		        },
+			},
+		},
         vrefs => {
             desc    => "View the refs (short)",
             minargs => 1,
@@ -5130,15 +5182,16 @@ sub _term_get_commands() {
         #args => sub { shift; $self->_complete_papers("pdf",@_); },
         #proc => sub { $self->view_pdf_paper(@_); }
         #},
-        "vep" => {
-            desc    => "View the PDF file for the corresponding paper key",
-            minargs => 1,
-            args =>
-              sub { shift; $self->_complete_papers( "original_pdf", @_ ); },
-            proc => sub {
-                $self->read_VARS;
-                $self->view_pdf_paper(@_);
-              }
+##cmd_vep
+		"vep" => {
+			desc    => "View the PDF file for the corresponding paper key",
+			minargs => 1,
+			args =>
+				sub { shift; $self->_complete_papers( "original_pdf", @_ ); },
+			proc => sub {
+				$self->read_VARS;
+				$self->view_pdf_paper(@_);
+			}
         },
         "veqs" => {
             desc    => "View the PDF eqs file for the corresponding paper key",

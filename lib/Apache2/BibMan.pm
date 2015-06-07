@@ -189,6 +189,15 @@ sub print_html_start {
 
 
 }
+sub print_html_info {
+
+	$R->print(
+		_html_header,
+		_html_footer
+	);
+
+	OK;
+}
 
 sub print_html_options {
 
@@ -304,6 +313,7 @@ sub _html_footer {
 sub _html_header {
 	start_html, 
 	a({ -href => "$SNAME/options" }, 'OPTIONS'),' ',
+	a({ -href => "$SNAME/info" }, 'INFO'),' ',
 	a({ -href => "$SNAME/start" }, 'START'),
 	hr;
 }
