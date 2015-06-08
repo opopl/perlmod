@@ -63,7 +63,7 @@ sub new
     my ($class, %ipars) = @_;
     my $self = bless ({}, ref ($class) || $class);
 
-	$self->_begin();
+	$self->_begin() if $self->can('_begin');
 
 	while (my($k,$v)=each %ipars) {
 		$self->_v_set($k,$v);

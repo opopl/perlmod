@@ -4,9 +4,9 @@ package OP::docperltex::makeshell;
 use warnings;
 use strict;
 
-use parent qw( 
-		OP::Shell 
-		OP::Makefile 
+use base qw( 
+	OP::Shell 
+	OP::Makefile 
 );
 
 use File::Spec::Functions qw(catfile);

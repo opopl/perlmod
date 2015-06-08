@@ -4,8 +4,6 @@ package OP::Writer::Pod;
 use strict;
 use warnings;
 
-use feature qw(switch);
-
 use Env qw( $hm $PERLMODDIR );
 
 use IO::String;

@@ -2,18 +2,21 @@
 package OP::BIBTEX;
 # Intro {{{
 
-#use LaTeX::BibTeX;
 use BibTeX::Parser;
 use File::Spec;
 
 use File::Temp qw( tmpnam );
-use parent qw( OP::Script Class::Accessor::Complex );
+use File::Spec::Functions qw(catfile);
 
 ###__ACCESSORS_SCALAR
 our @scalar_accessors=qw(
 	bibfile
-	bibfname
 	papdir
+);
+
+use base qw( 
+	OP::Script 
+	Class::Accessor::Complex 
 );
 
 ###__ACCESSORS_ARRAY
@@ -42,25 +45,15 @@ __PACKAGE__
 
 =cut
 
-# init_vars() {{{
+# init() {{{
 
-sub init_vars(){
+sub init(){
 	my $self=shift;
 
 	# 
-	$self->bibfname("$ENV{hm}/wrk/p/repdoc.bib");
-
-	# Initialize LaTeX::BibTeX stuff
-	$self->bibfile(LaTeX::BibTeX::File->new());
-
-	my $blog=tmpnam();
-	open(BLOG,">$blog") || die $!;
-	select(BLOG);
-
-	$self->bibfile->open($self->bibfname) || die $!;
-
-	select(STDOUT);
-	close(BLOG);
+	$self->bibfile(
+		catfile( $ENV{TexPapersRoot},qw( repdoc.bib ))
+	);
 
 	# rmfields     - remove specific fields in a BibTeX entry, e.g. month={} etc.
 	$self->rmfields_push( 
@@ -80,62 +73,67 @@ sub init_vars(){
 
 }
 
-# }}}
-# run() {{{
 
-=head3 run()
-
-=cut
-
-sub run(){
+sub run {
 	my $self=shift;
 
-	while (my $entry = new LaTeX::BibTeX::Entry->new($self->bibfile)){
-    	next unless $entry->parse_ok;
-	
-		my $pkey=$entry->key;
-		$self->pkeys_push($pkey);
-		$self->entries_pkey( $pkey => $entry );
-	}
+	$self->load_from_file;
+}
+
+sub load_from_file {
+	my $self=shift;
+
+	my $ref=shift;
+
+	my $fbib   = $ref->{file} || $self->bibfile;
+
+	die	"No file: $fbib" unless -e $fbib;
+
+	my $fh     = IO::File->new("$fbib");
+	my $parser = BibTeX::Parser->new($fh) || die $!;
+
+ 
+	while (my $entry = $parser->next ) {
+        if ($entry->parse_ok) {
+
+			my $pkey=$entry->key;
+			$self->pkeys_push($pkey);
+			$self->entries_pkey( $pkey => $entry );
+ 
+        } else {
+				warn "Error parsing file: " . $entry->error;
+        }
+	}	
 
 	$self->pkeys(sort $self->pkeys);
 }
 
-# }}}
-# main() {{{
-
-=head3 main()
-
-=cut
-
-sub main(){
+sub main {
 	my $self=shift;
 
-	$self->init_vars();
-	$self->run();
+	$self->init();
+	$self->load_from_file();
 }
 
-# }}}
-# _begin() {{{
+sub new
+{
+    my ($class, %ipars) = @_;
+    my $self = bless (\%ipars, ref ($class) || $class);
 
-=head3 _begin()
+	$self->_begin if $self->can('_begin');
+	$self->init if $self->can('init');
 
-=cut
+    return $self;
+}
 
-sub _begin(){
+sub _begin {
 	my $self=shift;
 
 	$self->{package_name}=__PACKAGE__ unless defined $self->{package_name}; 
 
 }
-# }}}
-# delete_fields() {{{
-
-=head3 delete_fields()
-
-=cut
 	
-sub delete_fields(){
+sub delete_fields {
 	my $self=shift;
 
 	my %opts=@_;
@@ -153,28 +151,14 @@ sub delete_fields(){
 	}
 }
 
-
-# }}}
-# list_keys() {{{
-
-=head3 list_keys()
-
-=cut
-
-sub list_keys(){
+sub list_keys {
 	my $self=shift;
 
 	print "$_\n" for($self->pkeys);
 }
 
-# }}}
-# print_entry() {{{
 
-=head3 print_entry()
-
-=cut
-
-sub print_entry(){
+sub print_entry {
 	my $self=shift;
 
 	my $pkey=shift;
@@ -186,9 +170,9 @@ sub print_entry(){
 	print "Paper key: $pkey\n\n";
 
 	if ($self->entry_pdf_file_exists($pkey)){ 
-			print "PDF file: Yes\n\n";
-		}else{
-			print "PDF file: No\n";
+		print "PDF file: Yes\n\n";
+	}else{
+		print "PDF file: No\n";
 	}
 
 	print "	type : " . $entry->type . "\n";
@@ -201,13 +185,6 @@ sub print_entry(){
 	}
 }
 
-# }}}
-
-# entry_pdf_file_exists(){{{
-
-=head3 entry_pdf_file_exists()
-
-=cut
 
 sub entry_pdf_file_exists(){
 	my $self=shift;
@@ -220,7 +197,6 @@ sub entry_pdf_file_exists(){
 	return 1 if (-e $file);
 	return 0;
 }
-# }}}
-# }}}
+
 1;
 

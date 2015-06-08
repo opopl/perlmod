@@ -286,7 +286,7 @@ sub mktex_lang_parts {
 			$TEX->hypertarget($PART);
 			$TEX->bookmark( 
 				dest    => $PART, 
-				title   => $part_desc{$PART} // $PART,
+				title   => $part_desc{$PART} || $PART,
 				level   => 2,
 			);
 			

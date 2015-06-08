@@ -37,8 +37,6 @@ X<SYNOPSIS, OP::Script::Simple>
 
 =cut
 
-use feature qw(switch);
-
 use Exporter ();
 
 
@@ -157,25 +155,28 @@ sub _eval {
 sub _say {
     my $text=shift;
 
-    my $opts=shift // {};
+    my $opts=shift || {};
     my ($color,$prefix)=($TEXTCOLOR,$PREFIX);
 
     unless(keys %$opts){
 
     }else{
         while(my($k,$v)=each %{$opts}){
-            given($k){
-                when('color'){ $color=$v;  }
-                when('prefix'){ $prefix=$v;  }
-                default { }
+            for($k){
+				/^color$/ && do { $color=$v; next; };
+				/^prefix$/ && do { $prefix=$v; next; };
             }
             
         }
     }
 
-    print color $color;
-    print $prefix . $text . "\n";
-    print color 'reset';
+	if ($^O eq 'MSWin32') {
+	    print $prefix . $text . "\n";
+	}else{
+	    print color $color;
+	    print $prefix . $text . "\n";
+	    print color 'reset';
+	}
 
 }
 
@@ -254,14 +255,14 @@ sub write_help_POD {
     my $podw=OP::Writer::Pod->new;
     my %s;
 
-    my $order=$podsectionorder // [qw(NAME USAGE OPTIONS)];
+    my $order=$podsectionorder || [qw(NAME USAGE OPTIONS)];
 
     foreach my $id (@$order) {
-        $s{$id}=$podsections{$id} // '';
+        $s{$id}=$podsections{$id} || '';
     }
 
-    $s{NAME}=$podsections{NAME} // $Script . ' - ...';
-    $s{USAGE}=$podsections{USAGE} // $Script . ' OPTIONS';
+    $s{NAME}=$podsections{NAME} || $Script . ' - ...';
+    $s{USAGE}=$podsections{USAGE} || $Script . ' OPTIONS';
     
     foreach my $id (@$order) {
         $podw->head1($id);
@@ -274,8 +275,8 @@ sub write_help_POD {
                 $podw->_pod_line($pline);
             }
         }
-        given($id){
-            when('OPTIONS') { 
+        for($id){
+            /^OPTIONS$/ && do { 
 			    my @i;
 			    my $width=80;
 			
@@ -284,7 +285,7 @@ sub write_help_POD {
 			        $type='(s)' if ($opt =~ /=s$/);
 			
 			        ( my $o=$opt ) =~ s/=\w+$//g;
-			        my $desc=$optdesc{$o} // '';
+			        my $desc=$optdesc{$o} || '';
 			
 			        my $first='--' . $o;
 			        my $second= $desc;
@@ -297,8 +298,9 @@ sub write_help_POD {
 			    }
 		
 	            $podw->over({ items => \@i });
+
+				next;
             }
-            default { }
         }
     }
 

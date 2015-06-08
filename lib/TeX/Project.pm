@@ -124,9 +124,9 @@ sub get_opt {
 
     $self->dhelp, exit 1 if $opt{help};
 
-    $DIR=$opt{dir} // $PROJSDIR;
+    $DIR=$opt{dir} || $PROJSDIR;
     $PROJ=$opt{proj};
-    $SEC=$opt{sec} // '_main_';
+    $SEC=$opt{sec} || '_main_';
 
 	die "No project name provided"
 		unless $PROJ;
@@ -153,7 +153,7 @@ sub process_opt {
 
     @PROJS=readarr($PFILE);
 
-	$PROJEXISTS= ($PROJ ~~ @PROJS) ? 1 : 0 ;
+	$PROJEXISTS = ( grep { /^$PROJ$/ } @PROJS) ? 1 : 0 ;
 
 	die "PROJS datfile not found: $PFILE"
 	  	unless -e $PFILE;

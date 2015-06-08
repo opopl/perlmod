@@ -51,7 +51,7 @@ sub TEXHT {
 	my $self=shift;
 
 	my $cmd=shift;
-	my $nrm=shift // '';
+	my $nrm=shift || '';
 
 	$self->_add_line('\TEXHT{' . $cmd . '}{' . $nrm . '}' );
 
