@@ -6,7 +6,6 @@ package Text::Generate::TeX;
 use strict;
 use warnings;
 
-use feature qw(switch);
 
 use Data::Dumper;
 use File::Slurp qw(read_file);
@@ -85,8 +84,8 @@ __PACKAGE__
 sub _write_hash {
     my $self = shift;
 
-    my $ncname = shift // '';
-    my $ref    = shift // '';
+    my $ncname = shift || '';
+    my $ref    = shift || '';
     my $str    = '';
 
     if ( ref $ref eq "HASH" ) {
@@ -128,7 +127,7 @@ sub _write_hash {
 sub _cmd {
     my $self = shift;
 
-    my $ref = shift // '';
+    my $ref = shift || '';
     my @opts = @_;
 
     return 1 unless $ref;
@@ -148,7 +147,7 @@ sub _cmd {
     }
     elsif ( ref $ref eq "HASH" ) {
 
-        $cmd = $ref->{cmd} // '';
+        $cmd = $ref->{cmd} || '';
 
         $self->_die("_cmd(): Did not specify command name!")
           unless $cmd;
@@ -156,10 +155,10 @@ sub _cmd {
         $text = "\\$cmd";
 
         # arguments enclosed as {...}
-        $vars = $ref->{vars} // '';
+        $vars = $ref->{vars} || '';
 
         # optional arguments enclosed as [...]
-        $optvars = $ref->{optvars} // '';
+        $optvars = $ref->{optvars} || '';
 
         $self->_die("_cmd(): Did not specify the list of variables!")
           unless $cmd;
@@ -205,12 +204,12 @@ sub _cmd {
 sub def {
     my $self = shift;
 
-    my $def   = shift // '';
+    my $def   = shift || '';
 
     return 1 unless $def;
 
-    my $src   = shift // '';
-    my $nargs = shift // 0;
+    my $src   = shift || '';
+    my $nargs = shift || 0;
 
     unless ($nargs) {
         $self->_add_line( "\\def" . "\\$def" . "{$src}" );
@@ -231,7 +230,7 @@ sub def {
 sub _insert_file {
     my $self = shift;
 
-    my $file = shift // '';
+    my $file = shift || '';
 
     return 1 unless -e $file;
 
@@ -261,8 +260,8 @@ sub _insert_file {
 sub input {
     my $self = shift;
 
-    my $file = shift // '';
-    my $ref  = shift // '';
+    my $file = shift || '';
+    my $ref  = shift || '';
 
     my @options = qw(check_exists);
 
@@ -289,7 +288,7 @@ sub input {
 sub end {
     my $self = shift;
 
-    my $x = shift // '';
+    my $x = shift || '';
     return 1 unless $x;
 
     $self->minus('indent',2);
@@ -335,8 +334,8 @@ X<documentclass,Text::Generate::TeX>
 sub documentclass {
     my $self = shift;
 
-    my $class = shift // '';
-    my $ref   = shift // {};
+    my $class = shift || '';
+    my $ref   = shift || {};
 
     my $stropts;
 
@@ -379,8 +378,8 @@ sub documentclass {
 sub begin {
     my $self = shift;
 
-    my $what = shift // '';
-    my $ref = shift // '';
+    my $what = shift || '';
+    my $ref = shift || '';
     my @rest=@_;
 
     return 1 unless $what;
@@ -395,7 +394,7 @@ sub begin {
 	        push(@$vars,@rest) if @rest;
 	    }elsif(ref $ref eq "HASH"){
 	        push(@$vars,@{$ref->{vars}}) if defined $ref->{vars};
-	        $optvars=$ref->{optvars} // '';
+	        $optvars=$ref->{optvars} || '';
 	    }
     }
 
@@ -424,11 +423,11 @@ sub usepackage {
 
     unless ( ref $ref ) {
         $pack = $ref;
-        $opts = shift // '';
+        $opts = shift || '';
     }
     elsif ( ref $ref eq "HASH" ) {
-        $pack = $ref->{package} // '';
-        $opts = $ref->{options} // '';
+        $pack = $ref->{package} || '';
+        $opts = $ref->{options} || '';
     }
 
     return 1 unless $pack;
@@ -454,13 +453,13 @@ sub usepackage {
 sub usepackages {
     my $self=shift;
 
-    my $packs=shift // [];
-    my $packopts=shift // {};
+    my $packs=shift || [];
+    my $packopts=shift || {};
 
     foreach my $pack (@$packs) {
         $self->usepackage({ 
 				'package' => $pack, 
-				'options' => $packopts->{$pack} // [],
+				'options' => $packopts->{$pack} || [],
 			} );
     }
 }
@@ -663,7 +662,7 @@ sub bookmark {
 sub lof {
     my $self = shift;
 
-    my $ref = shift // '';
+    my $ref = shift || '';
 
     my $opts = {
         title       => "List of Figures",
@@ -714,7 +713,7 @@ sub lof {
 sub lot {
     my $self = shift;
 
-    my $ref = shift // '';
+    my $ref = shift || '';
 
     my $opts = {
         title       => "List of Tables",
@@ -778,7 +777,7 @@ sub true {
 sub toc {
     my $self = shift;
 
-    my $ref = shift // '';
+    my $ref = shift || '';
 
     my $opts = {
         title       => "Table of Contents",
@@ -852,7 +851,7 @@ sub anchor {
 sub bibliography {
     my $self = shift;
 
-    my $ref = shift // '';
+    my $ref = shift || '';
 
     die "No arguments to bibliography()"
       unless $ref;
@@ -869,7 +868,7 @@ sub bibliography {
     }
     elsif ( ref $ref eq "HASH" ) {
         foreach my $k ($self->bibliography_input_opts) {
-            $opts->{$k} = $ref->{$k} // '';
+            $opts->{$k} = $ref->{$k} || '';
         }
     }
     elsif ( ref $ref eq "ARRAY" ) {
@@ -928,7 +927,7 @@ sub bibliography {
 sub _write_fancyhdr_style {
     my $self=shift;
 
-    my $ref=shift // {};
+    my $ref=shift || {};
 
     while(my($k,$v)=each %{$ref}){
         if(grep { /^$k$/ } qw( 
@@ -1014,7 +1013,7 @@ sub printindex {
 sub preamble {
     my $self = shift;
 
-    my $ref = shift // '';
+    my $ref = shift || '';
 
     die "No arguments to preamble()"
       unless $ref;
@@ -1102,7 +1101,7 @@ sub preamble {
             $self->anchor("used_packages");
 
             foreach my $pack (@$usedpacks) {
-                my $opts = $packopts->{$pack} // '';
+                my $opts = $packopts->{$pack} || '';
                 my $s_opts = '';
                 $s_opts = "[$opts]" if $opts;
                 my $text = "\\usepackage" . $s_opts . "{$pack}";
@@ -1176,7 +1175,7 @@ EOF
 sub hypertarget {
     my $self = shift;
 
-    my $ref = shift // '';
+    my $ref = shift || '';
 
     $self->_add_line( '\hypertarget{' . $ref . '}{}' );
 }
@@ -1184,13 +1183,13 @@ sub hypertarget {
 sub includepdf {
     my $self = shift;
 
-    my $iref = shift // '';
+    my $iref = shift || '';
     my $ref;
     my $opts;
     my $optstr='';
 
     if(ref $iref eq "HASH"){
-        $opts=$iref->{opts} // {};
+        $opts=$iref->{opts} || {};
     }
 
     $ref={
@@ -1204,7 +1203,7 @@ sub includepdf {
         }
     }
 
-    my $pfile=$iref->{fname} . '.pdf' // '';
+    my $pfile=$iref->{fname} . '.pdf' || '';
     return '' unless $pfile;
 
     $self->_add_line( '\includepdf[' . $optstr . ']{'  . $pfile . '}' );
@@ -1214,7 +1213,7 @@ sub includepdf {
 sub listopts {
 	my $self=shift;
 
-	my $ref=shift // {};
+	my $ref=shift || {};
 
 	my $name = $ref->{name};
 	my $opts = $ref->{opts};
@@ -1234,7 +1233,7 @@ sub listopts {
 sub hypsetup {
     my $self = shift;
 
-    my $iref = shift // '';
+    my $iref = shift || '';
     my $ref;
 
     my @keys=qw(pdfauthor pdftitle);

@@ -150,7 +150,9 @@ sub item {
     my $self=shift;
 
     my $item=shift;
-    my $start=shift . ' ' // '';
+    my $start;
+
+	$start = shift || '';
 
     $self->_pod_line('=item ' . $start . $item);
 

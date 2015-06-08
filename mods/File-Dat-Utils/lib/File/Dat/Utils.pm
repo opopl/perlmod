@@ -14,12 +14,12 @@ sub readarr;
 sub readhash;
 
 sub readarr {
-    my $if = shift // '';
+    my $if = shift || '';
 
-	my $opts=shift // {};
+	my $opts=shift || {};
 
-	my $splitsep=$opts->{sep} // qr/\s+/;
-	my $joinsep=$opts->{sep} // ' ';
+	my $splitsep=$opts->{sep} || qr/\s+/;
+	my $joinsep=$opts->{sep} || ' ';
 
     unless ($if) {
         warn "empty file name provided: $if";
@@ -53,11 +53,11 @@ sub readarr {
 sub readhash {
     my $if = shift;
 
-    my $opts = shift // {};
+    my $opts = shift || {};
 
-    my $splitsep = $opts->{sep} // qr/\s+/;
-    my $joinsep = $opts->{sep} // ' ';
-	my $valtype=$opts->{valtype} // 'scalar';
+    my $splitsep = $opts->{sep} || qr/\s+/;
+    my $joinsep = $opts->{sep} || ' ';
+	my $valtype=$opts->{valtype} || 'scalar';
 
     unless ( -e $if ) {
         if (wantarray) {

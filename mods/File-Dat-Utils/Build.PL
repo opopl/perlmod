@@ -4,4 +4,6 @@ use Module::Build;
 Module::Build->new
     ( module_name     => 'File::Dat::Utils',
       license         => 'perl',
+	  dist_version   => '0.01',
+	  dist_abstract  => ' ',
     )->create_build_script;

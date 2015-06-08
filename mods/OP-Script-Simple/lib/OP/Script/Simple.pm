@@ -5,7 +5,7 @@ use strict;
 
 use Exporter ();
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-use feature qw(switch);
+#use feature qw(switch);
 
 ###use
 use Term::ANSIColor;
@@ -105,18 +105,20 @@ sub _say_head;
 sub _say {
     my $text=shift;
 
-    my $opts=shift // {};
+    my $opts=shift || {};
     my ($color,$prefix)=($TEXTCOLOR,$PREFIX);
 
     unless(keys %$opts){
 
     }else{
         while(my($k,$v)=each %{$opts}){
-            given($k){
-                when('color'){ $color=$v;  }
-                when('prefix'){ $prefix=$v;  }
-                default { }
-            }
+#            given($k){
+                #when('color'){ $color=$v;  }
+                #when('prefix'){ $prefix=$v;  }
+                #default { }
+            #}
+			$color = $v if $k eq 'color';
+			$prefix = $v if $k eq 'prefix';
             
         }
     }
@@ -175,14 +177,14 @@ sub write_help_POD {
     my $podw=Text::Generate::Pod->new;
     my %s;
 
-    my $order=$podsectionorder // [qw(NAME USAGE OPTIONS)];
+    my $order=$podsectionorder || [qw(NAME USAGE OPTIONS)];
 
     foreach my $id (@$order) {
-        $s{$id}=$podsections{$id} // '';
+        $s{$id}=$podsections{$id} || '';
     }
 
-    $s{NAME}=$podsections{NAME} // $Script . ' - ...';
-    $s{USAGE}=$podsections{USAGE} // $Script . ' OPTIONS';
+    $s{NAME}=$podsections{NAME} || $Script . ' - ...';
+    $s{USAGE}=$podsections{USAGE} || $Script . ' OPTIONS';
     
     foreach my $id (@$order) {
         $podw->head1($id);
@@ -195,8 +197,8 @@ sub write_help_POD {
                 $podw->_pod_line($pline);
             }
         }
-        given($id){
-            when('OPTIONS') { 
+        for($id){
+            /^OPTIONS$/ && do { 
 			    my @i;
 			    my $width=80;
 			
@@ -205,7 +207,7 @@ sub write_help_POD {
 			        $type='(s)' if ($opt =~ /=s$/);
 			
 			        ( my $o=$opt ) =~ s/=\w+$//g;
-			        my $desc=$optdesc{$o} // '';
+			        my $desc=$optdesc{$o} || '';
 			
 			        my $first='--' . $o;
 			        my $second= $desc;
@@ -218,8 +220,9 @@ sub write_help_POD {
 			    }
 		
 	            $podw->over({ items => \@i });
-            }
-            default { }
+
+				next;
+            };
         }
     }
 

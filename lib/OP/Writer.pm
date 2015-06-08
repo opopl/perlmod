@@ -59,7 +59,7 @@ sub _print {
 
     my $opts;
 
-    $opts = shift // '';
+    $opts = shift || '';
 
     unless ($opts) {
         print $self->text;
@@ -103,7 +103,7 @@ sub _print {
 sub _defaults {
     my $self = shift;
 
-    my $opt = shift // '';
+    my $opt = shift || '';
 
     return undef unless $opt;
 
@@ -141,7 +141,7 @@ sub _c_delim {
 sub _c {
     my $self = shift;
 
-    my $ref = shift // '';
+    my $ref = shift || '';
 
     my $text = $ref;
 
@@ -161,7 +161,7 @@ sub _clear {
 sub _empty_lines {
     my $self = shift;
 
-    my $num = shift // 1;
+    my $num = shift || 1;
 
     for ( 1 .. $num ) {
         $self->_add_line(" ");
@@ -186,12 +186,12 @@ sub _flush {
 sub _add_line {
     my $self = shift;
 
-    my $ref = shift // '';
+    my $ref = shift || '';
     my ( $addtext, $oldtext, $text );
 
     return 1 unless $ref;
 
-    $oldtext = $self->text // '';
+    $oldtext = $self->text || '';
 
     # In case a string is supplied, this
     #	string is passed as the value of the
@@ -219,7 +219,7 @@ sub plus {
     my $self=shift;
 
     my $id=shift;
-    my $val=shift // 1;
+    my $val=shift || 1;
 
     for($id){
         /^indent$/ && do {
@@ -233,7 +233,7 @@ sub minus {
     my $self=shift;
 
     my $id=shift;
-    my $val=shift // 1;
+    my $val=shift || 1;
 
     for($id){
         /^indent$/ && do {

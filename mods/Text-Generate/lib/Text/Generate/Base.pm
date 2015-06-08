@@ -124,7 +124,7 @@ L<_writefile>
 sub _print {
     my $self = shift;
 
-    my $opts = shift // '';
+    my $opts = shift || '';
 
     unless ($opts) {
         print $self->text;
@@ -213,7 +213,7 @@ value of C<commentchar> accessor as a comment char, e.g. C<%> for C<LaTeX> etc.
 sub _c {
     my $self = shift;
 
-    my $ref = shift // '';
+    my $ref = shift || '';
 
 	unless(ref $ref){
     	$self->_add_line($self->commentchar . "$ref");
@@ -255,7 +255,7 @@ X<_c_help,Text::Generate::Base>
 sub _c_help {
     my $self = shift;
 
-    my $topic = shift // '';
+    my $topic = shift || '';
 
 }
 
@@ -286,7 +286,7 @@ sub _clear {
 sub _empty_lines {
     my $self = shift;
 
-    my $num = shift // 1;
+    my $num = shift || 1;
 
     for ( 1 .. $num ) {
         $self->_add_line(" ");
@@ -302,12 +302,12 @@ sub _flush {
 sub _add_line {
     my $self = shift;
 
-    my $ref = shift // '';
+    my $ref = shift || '';
     my ( $addtext, $oldtext, $text );
 
     return 1 unless $ref;
 
-    $oldtext = $self->text // '';
+    $oldtext = $self->text || '';
 
     # In case a string is supplied, this
     #	string is passed as the value of the
@@ -335,7 +335,7 @@ sub plus {
     my $self=shift;
 
     my $id=shift;
-    my $val=shift // 1;
+    my $val=shift || 1;
 
     for($id){
         /^indent$/ && do {
@@ -350,7 +350,7 @@ sub minus {
 
     my $id=shift;
 
-    my $value=shift // 1;
+    my $value=shift || 1;
 
     for($id){
         /^indent$/ && do {

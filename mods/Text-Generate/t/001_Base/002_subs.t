@@ -103,34 +103,40 @@ sub ok_lines {
 
 sub test_printing {
 
-    $testdir=tempdir( CLEANUP => 1 );
+	$testdir=tempdir( CLEANUP => 1 );
 
-    my $filemy=catfile($testdir, 'my.txt');
-    my $filepack=catfile($testdir, 'pack.txt');
+	make_path $testdir unless -d $testdir;
 
-    open(F,">$filemy") || die $!;
+	my $filemy=catfile($testdir, 'my.txt');
+	my $filepack=catfile($testdir, 'pack.txt');
+	
+	open(F,">$filemy") || die $!;
+	
+	print F '\begin{document}' . "\n";
+	print F ' \begin{tabular}' . "\n";
+	print F ' \end{tabular}' . "\n";
+	print F '\end{document}' . "\n";
+	
+	close(F);
+	
+	$W->_clear;
+	$W->_add_line('\begin{document}');
+	$W->plus('indent');
+	
+	$W->_add_line('\begin{tabular}');
+	$W->_add_line('\end{tabular}');
+	
+	$W->minus('indent');
+	$W->_add_line('\end{document}');
+	$W->_print( { file => $filepack } );
 
-    print F '\begin{document}' . "\n";
-    print F ' \begin{tabular}' . "\n";
-    print F ' \end{tabular}' . "\n";
-    print F '\end{document}' . "\n";
+	if ($^O eq 'MSWin32') {
+		system("diff -q $filemy $filepack");
+	} else {
+		system("diff -q $filemy $filepack > /dev/null");
+	}
 
-    close(F);
-
-    $W->_clear;
-    $W->_add_line('\begin{document}');
-    $W->plus('indent');
-
-      $W->_add_line('\begin{tabular}');
-      $W->_add_line('\end{tabular}');
-
-    $W->minus('indent');
-    $W->_add_line('\end{document}');
-    $W->_print( { file => $filepack } );
-
-    system("diff -q $filemy $filepack > /dev/null");
-
-    my $same = ( $? ) ? 0 : 1; 
+    my $same = ( $? >> 8 ) ? 0 : 1; 
     
     ok($same,'printing.1> printing to a new file');
 

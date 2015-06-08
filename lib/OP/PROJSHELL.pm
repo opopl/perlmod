@@ -15,7 +15,7 @@ OP::PROJSHELL
 =cut
 
 
-use feature qw(switch);
+#use feature qw(switch);
 use Switch;
 
 #------------------------------
@@ -424,7 +424,7 @@ sub _term_init {
 sub _term_run {
     my $self = shift;
 
-    my $cmds = shift // [qw()];
+    my $cmds = shift || [qw()];
 
     unless (@$cmds) {
         if ( $self->inputcommands ) {
@@ -639,7 +639,7 @@ sub usecgi {
 sub _cgi_error {
 	my $self=shift;
 
-	my $text=shift // '';
+	my $text=shift || '';
 
 	$self->cgi->b({ -style => 'Color: red;' },"$text");
 	
@@ -764,11 +764,11 @@ sub init_vars {
 
     $self->set_accessor_descriptions();
 
-    $self->HTMLOUT(catfile($HTMLOUT,qw(projs)) // catfile( $hm,qw(html projs)));
+    $self->HTMLOUT(catfile($HTMLOUT,qw(projs)) || catfile( $hm,qw(html projs)));
 
-    $self->PROJSDIR( $PROJSDIR // catfile($hm, qw( wrk texdocs )) );
+    $self->PROJSDIR( $PROJSDIR || catfile($hm, qw( wrk texdocs )) );
 
-	$self->dirs(PDFOUT => $PDFOUT // catfile($hm,qw(pdf out)));
+	$self->dirs(PDFOUT => $PDFOUT || catfile($hm,qw(pdf out)));
 
 	$self->dirs(PDFOUT_PERLDOC => catfile($self->dirs('PDFOUT'),qw(perldoc)));
 
@@ -918,7 +918,7 @@ sub set_these_cmdopts {
 sub _complete_cmd {
     my $self = shift;
 
-    my $ref_cmds = shift // '';
+    my $ref_cmds = shift || '';
 
     return [] unless $ref_cmds;
 
@@ -990,7 +990,7 @@ sub view {
 sub view_proj_tex {
     my $self=shift;
 
-    my $proj=shift // $self->PROJ;
+    my $proj=shift || $self->PROJ;
 
     my $file=catfile($self->PROJSDIR, $proj . ".tex");
     system($self->viewcmd . " ". $file );
@@ -1021,7 +1021,7 @@ sub importprojs {
 sub view_html {
     my $self=shift;
 
-    my $proj=shift // $self->PROJ;
+    my $proj=shift || $self->PROJ;
 
     my $htmlfile=catfile($self->HTMLOUT, $proj, "$proj.html");
     system("firefox ". $htmlfile . " &" ) if -e $htmlfile;
@@ -1034,7 +1034,7 @@ sub view_html {
 sub make {
     my $self=shift;
 
-    my $args=shift // '';
+    my $args=shift || '';
 
     my %runopts=@_;
 
@@ -1078,7 +1078,7 @@ sub make {
 sub _proj_reset {
     my $self=shift;
 
-    my $proj=shift // '';
+    my $proj=shift || '';
 
     return 0 unless $proj;
 
@@ -1236,13 +1236,14 @@ sub _cgi_www_header {
 
 	my $pinfo=shift;
 
-	given($pinfo){
-		when(/pdfview/) { 
-		}
-		default { 
-			print $self->cgi->header;
-		}
-	}
+   # given($pinfo){
+		#when(/pdfview/) { 
+		#}
+		#default { 
+		#}
+	#}
+
+	print $self->cgi->header;
 
 }
 
@@ -1509,7 +1510,7 @@ sub _sys {
 sub _read_MKTARGETS {
     my $self=shift;
 
-    my $tmk=shift // $self->files("maketex_mk");
+    my $tmk=shift || $self->files("maketex_mk");
 
     my $makefile_dir=dirname($tmk);
     my $old_dir=rel2abs(curdir());
@@ -1527,15 +1528,15 @@ sub _read_MKTARGETS {
         chomp;
         next if /^\$/ || /^\s*#/;
 
-        if (/^(?<target>[^:\s]+):\s*[^=]*$/){
-            $self->MKTARGETS_push($+{target});
+        if (/^([^:\s]+):\s*[^=]*$/){
+            $self->MKTARGETS_push($1);
         }
         elsif (/^(\S[^:]+):\s*[^=]*$/){
             $self->MKTARGETS_push(split(" ",$1));
         }
 
-        if (/^include\s+(?<file>.+)/){
-          $self->_read_MKTARGETS($+{file});
+        if (/^include\s+(.+)/){
+          $self->_read_MKTARGETS($1);
         }
     }
 
@@ -1551,7 +1552,7 @@ sub _read_MKTARGETS {
 sub cmd_list {
     my $self=shift;
 
-    my $opt=shift // ''; 
+    my $opt=shift || ''; 
 
     foreach($opt){
         /^(projs|mkprojs)$/ && do {

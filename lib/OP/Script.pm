@@ -32,10 +32,12 @@ use IPC::Cmd qw(can_run run);
 
 use OP::Base qw( readarr readhash );
 
-use Vim::Perl qw(
-    VimMsg 
-    $UnderVim
-);
+#use Vim::Perl qw(
+    #VimMsg 
+    #$UnderVim
+#);
+	
+our $UnderVim=0;
 
 our $VERSION     = '0.01';
 
@@ -118,7 +120,7 @@ sub main {
 sub _die {
 	my $self=shift;
 
-	my $ref=shift // '';
+	my $ref=shift || '';
 
 	my $msg=$self->{package_name} . "> _ERROR_ " . $ref;
 	die "$msg";
@@ -168,8 +170,8 @@ sub outtext {
     my $indent=0;
 	my($color);
 
-    eval '$color=$self->textcolor // ""; ';
-    eval '$usecolor=$self->usecolor // ""; ';
+    eval '$color=$self->textcolor || ""; ';
+    eval '$usecolor=$self->usecolor || ""; ';
 
     my $evs='';
     for my $opt (qw( usecolor color indent )){
@@ -186,9 +188,9 @@ sub outtext {
         $text=' ' x $indent . $text;
     }
 
-   if ($UnderVim) {
-      VimMsg("$text",{color => $color});
-   }
+   #if ($UnderVim) {
+      #VimMsg("$text",{color => $color});
+   #}
 
     print "$text";
 
@@ -201,8 +203,8 @@ sub outtext {
 sub debugout_var {
 	my $self=shift;
 
-	my $var=shift // '';
-	my $val=shift // '';
+	my $var=shift || '';
+	my $val=shift || '';
 
 	my $evs= '$self->debugout("_VAR_ \$" . ' . '"' . $var . '=$val' . '") ' ;
 
@@ -214,7 +216,7 @@ sub debugout_var {
 sub debugsay(){
 	my $self=shift;
 
-	my $text=shift // '';
+	my $text=shift || '';
 
     $self->debugout("$text" . "\n");
 
@@ -223,7 +225,7 @@ sub debugsay(){
 sub debugout {
 	my $self=shift;
 
-	my $text=shift // '';
+	my $text=shift || '';
 
 	$self->out("_DEBUG_ " . $text) if $self->_opt_true("debug");
 
@@ -385,7 +387,7 @@ sub _opt_get {
 
 	my $opt=shift;
 
-	my $val=$OP::Base::opts{$opt} // undef;
+	my $val=$OP::Base::opts{$opt} || undef;
 	return $val;
 }
 
@@ -417,7 +419,7 @@ sub _opt_defined(){
 
 	my $opt=shift;
 
-	my $val=$OP::Base::opts{$opt} // undef;
+	my $val=$OP::Base::opts{$opt} || undef;
 
 	return 1 if defined $val;
 	return 0;
@@ -547,7 +549,7 @@ sub get_opt_after {
 sub add_cmd_opts(){
 	my $self=shift;
 
-	my $ref=shift // '';
+	my $ref=shift || '';
 
 	unless ($ref){
 		return 1;
@@ -684,7 +686,7 @@ sub opts_bool_to_scalar_vars(){
 sub exec(){
 	my $self=shift;
 
-	my $ref=shift // '';
+	my $ref=shift || '';
 
 	# Command to be executed
 	my($cmd);
@@ -700,9 +702,9 @@ sub exec(){
 	return 1 unless $ref;
 
 	if (ref $ref eq "HASH"){
-		$cmd=$ref->{cmd} // '';
-		$log=$ref->{log} // '';
-		$verbose=$ref->{verbose} // 0;
+		$cmd=$ref->{cmd} || '';
+		$log=$ref->{log} || '';
+		$verbose=$ref->{verbose} || 0;
 
 		unless($cmd){
 			$self->out("No command provided for OP::Script::exec()!\n");
@@ -983,7 +985,7 @@ sub _h_get_value(){
 	my($ref,$key)=@_;
 
 	unless(ref $ref){
-		my $val= $self->{h}->{$ref}->{$key} // undef;
+		my $val= $self->{h}->{$ref}->{$key} || undef;
 		return $val;
 	}
 
@@ -1045,8 +1047,8 @@ sub _h_set_value(){
 sub _h_change_values(){
 	my $self=shift;
 
-	my $ref=shift // '';
-	my $opts=shift // '';
+	my $ref=shift || '';
+	my $opts=shift || '';
 
 	return 1 unless $ref;
 	return 1 unless $opts;
@@ -1323,15 +1325,15 @@ sub _view(){
 	my($files,$viewer,$view_opts,$view_cmd);
 
 	$files=$opts{files};
-	$viewer=$opts{viewer} // '';
+	$viewer=$opts{viewer} || '';
 	$view_opts="";
 
-	$viewer=$self->_v_get("viewer") // "gvim" unless $viewer;
+	$viewer=$self->_v_get("viewer") || "gvim" unless $viewer;
 
 	foreach($viewer){
 		/^(gvim|vim|vi)$/ && do {
 			$view_opts=$self->_v_get("$viewer" ."_view_opts")
-		   		// "-n -p --remote-tab-silent";
+		   		|| "-n -p --remote-tab-silent";
 			next;
 		};	
 	}

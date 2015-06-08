@@ -37,9 +37,8 @@ use Text::Table;
 
 use Text::TabularDisplay;
 
-use LaTeX::BibTeX;
+#use LaTeX::BibTeX;
 use LaTeX::Table;
-use LaTeX::TOM;
 
 use File::Spec::Functions qw(catfile rel2abs curdir );
 use File::Slurp qw(
@@ -267,18 +266,18 @@ sub init_dirs {
 
 
 sub init_files {
-    my $self = shift;
-
-    $self->files(
-        "done_cbib2cite" =>
-          catfile( $self->texroot, 'keys.done_cbib2cite.i.dat' ),
-        "vars" => catfile( $self->texroot, $ENV{PVARSDAT} // 'vars.i.dat' ),
-        "keys" => catfile( $self->texroot, 'keys.i.dat' ),
-        "parts"    => catfile( $self->texroot, 'pap.parts.i.dat' ),
-        "makefile" => catfile( $self->texroot, 'makefile' ),
-        "targets.mk" => catfile( $self->texroot, qw(targets.mk) ),
+	my $self = shift;
+	
+	$self->files(
+		"done_cbib2cite" =>
+		catfile( $self->texroot, 'keys.done_cbib2cite.i.dat' ),
+		"vars" => catfile( $self->texroot, $ENV{PVARSDAT} || 'vars.i.dat' ),
+		"keys" => catfile( $self->texroot, 'keys.i.dat' ),
+		"parts"    => catfile( $self->texroot, 'pap.parts.i.dat' ),
+		"makefile" => catfile( $self->texroot, 'makefile' ),
+		"targets.mk" => catfile( $self->texroot, qw(targets.mk) ),
 		"history" => catfile( $self->dirs('config'), qw( hist ) ),
-    );
+	);
 
 }
 
@@ -324,14 +323,14 @@ sub init_vars {
     $self->textcolor('bold yellow');
 
     # root directory for the LaTeX files
-    $self->texroot( $ENV{'PSH_TEXROOT'} // catfile( "$ENV{hm}", qw(wrk p) )
-          // catfile( "$hm", qw(wrk p) ) );
+    $self->texroot( $ENV{'PSH_TEXROOT'} || catfile( "$ENV{hm}", qw(wrk p) )
+          || catfile( "$hm", qw(wrk p) ) );
 
     $self->init_dirs;
     $self->init_files;
     $self->init_MAKETARGETS;
 
-    $self->LATEXMK( $ENV{LATEXMK} // "LATEXMK" );
+    $self->LATEXMK( $ENV{LATEXMK} || "LATEXMK" );
 
     $self->read_VARS;
     my $pname = $self->pname;
@@ -412,20 +411,17 @@ sub init_vars {
 
     # List of PDF-papers
 	my $sdir=$self->papdir ;
-	File::Find::find({ 
-		wanted => sub { 
-			return unless /\.pdf$/;
-			my $subdir= $File::Find::dir =~ s{\Q$sdir}{}gr;
+	opendir(D,"$sdir") || die $!;
+	while(my $file=readdir(D)){
+		local $_ = $file;
 
-			return if $subdir;
+		next unless /^(.*)\.pdf$/;
 
-			my $pkey = $_ =~ s{\.pdf$}{}gr;
+		my $pkey = $1;
 
-			$self->original_pdf_papers_push($pkey);
-
-		} 
-	},	$sdir
-	);
+		$self->original_pdf_papers_push($pkey);
+	}
+	closedir(D);
 
 	$self->original_pdf_papers_sort;
 	$self->original_pdf_papers_uniq;
@@ -645,7 +641,7 @@ sub set_these_cmdopts() {
 sub _tex_paper_splitmain {
     my $self = shift;
 
-    my $pkey = shift // $self->pkey;
+    my $pkey = shift || $self->pkey;
     $self->pkey($pkey);
 
     my $mfile = catfile( $self->texroot, 'p.' . $pkey . '.tex' );
@@ -661,10 +657,10 @@ sub _tex_paper_splitmain {
     foreach (@lines) {
         chomp;
 
-        /^\\subsection{(?<ctitle>.*)}$/ && do {
+        /^\\subsection{(.*)}$/ && do {
             $onchapter{$cname} = 0 if defined $onchapter{$cname};
 
-            $ctitle = $+{ctitle};
+            $ctitle = $1;
 
             $cname = join( '_', split( ' ', $ctitle ) );
             $cname =~ s/\\(TeX)/_$1/g;
@@ -740,7 +736,7 @@ sub _tex_paper_splitpiece {
 
     my $piece = shift;
 
-    my $pkey = shift // $self->pkey;
+    my $pkey = shift || $self->pkey;
     $self->pkey($pkey);
 
     my $pfile =
@@ -760,11 +756,11 @@ sub _tex_paper_splitpiece {
         chomp;
 
         if ( $piece eq "fig" ) {
-            /^\\figp\{\w+\}\{(?<num>\w+)\}\[(?<short>.*)\]/ && do {
+            /^\\figp\{\w+\}\{(\w+)\}\[(.*)\]/ && do {
                 $onchapter{$num} = 0 if defined $onchapter{$num};
 
-                $short = $+{short};
-                $num   = $+{num};
+                $num   = $1;
+                $short = $2;
 
                 print "Found figure number: $num \n";
 
@@ -849,7 +845,7 @@ sub _tex_paper_mh_short() {
     my $self = shift;
 
     # Short key
-    my $skey = shift // '';
+    my $skey = shift || '';
 
     # Long key
     my $lkey = $self->_long_key($skey);
@@ -866,7 +862,7 @@ sub _tex_paper_latex_2_html() {
 
     my $self = shift;
 
-    my $pkey = shift // '';
+    my $pkey = shift || '';
     my %nc = ();
 
     my $l2h = "latex2html";
@@ -905,7 +901,7 @@ sub _tex_paper_htlatex() {
 
     my $self = shift;
 
-    my $pkey = shift // '';
+    my $pkey = shift || '';
 
     my $htlatex = "htlx";
     my $if      = "p.$pkey.pdf";
@@ -962,7 +958,7 @@ sub _tex_paper_latex_2_html_short() {
     my $self = shift;
 
     # Short key
-    my $skey = shift // '';
+    my $skey = shift || '';
 
     # Long key
     my $lkey = $self->_long_key($skey);
@@ -979,7 +975,7 @@ sub _tex_paper_latex_2_html_short() {
 sub _tex_paper_view_pdfeqs() {
     my $self = shift;
 
-    my $pkey = shift // $self->pkey // '';
+    my $pkey = shift || $self->pkey || '';
     $self->pkey($pkey);
 
     my $fname = 'p.' . $self->pkey . '.pdfeqs';
@@ -997,7 +993,7 @@ sub _tex_paper_view_pdfeqs() {
 sub _tex_paper_mpdfeqs() {
     my $self = shift;
 
-    my $pkey = shift // $self->pkey // '';
+    my $pkey = shift || $self->pkey || '';
     $self->pkey($pkey);
 
     $self->_tex_paper_sep( 'eqs', $pkey );
@@ -1021,7 +1017,7 @@ sub _tex_paper_mpdfeqs() {
 sub _tex_paper_mpdfrevtex() {
     my $self = shift;
 
-    my $pkey = shift // $self->pkey // '';
+    my $pkey = shift || $self->pkey || '';
     $self->pkey($pkey) if $pkey;
 }
 
@@ -1031,13 +1027,13 @@ sub _tex_paper_mpdfrevtex() {
 sub _tex_paper_write_title_page() {
     my $self = shift;
 
-    my $pkey = shift // '';
+    my $pkey = shift || '';
 
     return 1 unless $pkey;
 
     $self->out("Writing title page for paper: $pkey\n");
 
-    my $config = $self->paperconfig($pkey) // '';
+    my $config = $self->paperconfig($pkey) || '';
 
     my $pname   = $self->pname;
     my $titpage = "p.$pkey.titpage.tex";
@@ -1054,7 +1050,7 @@ sub _tex_paper_write_title_page() {
 
     #print TIT "\\bookmark[dest=$pkey-titpage,level=0]{$pkey}" . "\n";
 
-    my $width = $config->{titpage_width} // "5";
+    my $width = $config->{titpage_width} || "5";
 
     ##################################
     # Print the article reference
@@ -1083,7 +1079,7 @@ sub _tex_paper_write_title_page() {
     }
     $abs;
 
-    my $iabs = $config->{include_abstract} // '';
+    my $iabs = $config->{include_abstract} || '';
 
     if ( ( -e $abs ) && ($iabs) ) {
         print TIT '\vspace*{5pt}' . "\n";
@@ -1160,10 +1156,10 @@ sub _tex_paper_run_latex_short {
     my $self = shift;
 
     # Short key
-    my $skey = shift // '';
+    my $skey = shift || '';
 
     # Long key
-    my $lkey = $self->plongkeys($skey) // '';
+    my $lkey = $self->plongkeys($skey) || '';
 
     return 1 unless $lkey;
 
@@ -1178,10 +1174,10 @@ sub _tex_paper_run_tex_short {
     my $self = shift;
 
     # Short key
-    my $skey = shift // '';
+    my $skey = shift || '';
 
     # Long key
-    my $lkey = $self->plongkeys($skey) // '';
+    my $lkey = $self->plongkeys($skey) || '';
 
     return 1 unless $lkey;
 
@@ -1334,9 +1330,9 @@ sub _tex_paper_cbib2cite() {
 sub _tex_paper_tex_nice() {
     my $self = shift;
 
-    my $pkey = shift // $self->pkey;
+    my $pkey = shift || $self->pkey;
 
-    my $iopts = shift // {
+    my $iopts = shift || {
         TEXNICE_OPTS    => '',
         NICE_ISECS_ONLY => [],
         NICE_FILE       => '',
@@ -1381,7 +1377,7 @@ sub _tex_paper_tex_nice() {
 sub _tex_paper_list_refs() {
     my $self = shift;
 
-    my $pkey = shift // $self->pkey;
+    my $pkey = shift || $self->pkey;
 
     my $refs  = $self->paperrefs_h($pkey);
     my $order = $self->paperrefs_h_order($pkey);
@@ -1393,7 +1389,7 @@ sub _tex_paper_list_refs() {
 sub _tex_paper_list_eqs() {
     my $self = shift;
 
-    my $pkey = shift // $self->pkey;
+    my $pkey = shift || $self->pkey;
 
     my $refs  = $self->papereqs_h($pkey);
     my $order = $self->papereqs_h_order($pkey);
@@ -1420,7 +1416,7 @@ sub _tex_paper_is_compiled() {
 sub _tex_paper_write_conf() {
     my $self = shift;
 
-    my $pkey = shift // '';
+    my $pkey = shift || '';
 
     my $cfile = "p.$pkey.conf.pl";
 
@@ -1442,7 +1438,7 @@ sub _tex_paper_write_conf() {
 sub _tex_paper_gen_secsdat() {
     my $self = shift;
 
-    my $pkey = shift // '';
+    my $pkey = shift || '';
 
     my $fmain    = catfile( $self->texroot, "p.$pkey.tex" );
     my $fsecsdat = catfile( $self->texroot, "p.$pkey.secs.i.dat" );
@@ -1455,8 +1451,12 @@ sub _tex_paper_gen_secsdat() {
     # read in p.PKEY.tex
     while (<F>) {
         chomp;
-        /^\s*\\iii{\s*(?<seckey>\w+)\s*}\s*%(?<sectitle>.*)/ && do {
-            $secdata->{ $+{seckey} } .= $+{sectitle};
+        /^\s*\\iii{\s*(\w+)\s*}\s*%(.*)/ && do {
+
+			my $seckey = $1;
+			my $sectitle = $2;
+
+            $secdata->{ $seckey } .= $sectitle;
             next;
         };
     }
@@ -1478,7 +1478,7 @@ sub _tex_paper_gen_secsdat() {
 sub _tex_paper_gen_refsdat() {
     my $self = shift;
 
-    my $pkey = shift // '';
+    my $pkey = shift || '';
 
     my $frefs    = catfile( $self->texroot, "p.$pkey.refs.tex" );
     my $frefsdat = catfile( $self->texroot, "p.$pkey.refs.i.dat" );
@@ -1491,8 +1491,12 @@ sub _tex_paper_gen_refsdat() {
     # read in p.*.refs.tex
     while (<F>) {
         chomp;
-        /^\\pbib{(?<num>\d+)}{(?<pkey>\w+)}/ && do {
-            $prefs->{ $+{num} } .= ' ' . $+{pkey};
+        /^\\pbib{(\d+)}{(\w+)}/ && do {
+
+			my $num=$1;
+			my $pkey=$2;
+
+            $prefs->{ $num } .= ' ' . $pkey ;
             next;
         };
     }
@@ -1509,7 +1513,7 @@ sub _tex_paper_gen_refsdat() {
 sub _tex_paper_gen_eqsdat() {
     my $self = shift;
 
-    my $pkey = shift // $self->pkey;
+    my $pkey = shift || $self->pkey;
     my %eqdesc;
 
     $self->pkey($pkey);
@@ -1527,8 +1531,8 @@ sub _tex_paper_gen_eqsdat() {
 
     foreach my $file ( $self->papsecfiles ) {
 
-        if ( $file =~ /sec\.(?<sec>\w+)\.i\.tex$/ ) {
-            $sec = $+{sec};
+        if ( $file =~ /sec\.(\w+)\.i\.tex$/ ) {
+            $sec = $1;
         }
         else {
             next;
@@ -1544,17 +1548,17 @@ sub _tex_paper_gen_eqsdat() {
         foreach (@lines) {
             chomp;
 
-            /^\s*\\labeleq\{(?<lab>.*)\}/ && do {
-                $label = $+{lab};
+            /^\s*\\labeleq\{(.*)\}/ && do {
+                $label = $1;
             };
 
-            /^%%equation\s+(eq_|)(?<eqnum>[\w\.]+)/ && do {
-                $eqnum          = $+{eqnum};
+            /^%%equation\s+(eq_|)([\w\.]+)/ && do {
+                $eqnum          = $2;
                 $eqdesc{$eqnum} = '';
                 $labeq{$eqnum}  = $label;
             };
-            /^%%eqdesc\s+(?<eqdesc>.*)/ && do {
-                $eqdesc{$eqnum} = $+{eqdesc};
+            /^%%eqdesc\s+(.*)/ && do {
+                $eqdesc{$eqnum} = $1;
                 push( @{ $eqsec{$sec} }, $eqnum );
               }
         }
@@ -1584,9 +1588,9 @@ sub _tex_paper_gen_eqsdat() {
 sub _tex_paper_sep() {
     my $self = shift;
 
-    my $sectype = shift // '';
+    my $sectype = shift || '';
 
-    my $pkey = shift // $self->pkey;
+    my $pkey = shift || $self->pkey;
     $self->pkey($pkey);
 
     $self->_tex_paper_load_conf($pkey);
@@ -1631,10 +1635,10 @@ sub _tex_paper_sep() {
             /^\s*\\begin{(equation|align)}/
               && do { $insideeq = 1; $starteq = 1; };
             /^\s*\\end{(equation|align)}/  && do { $endeq = 1; };
-            /^\s*\\labeleq{(?<label>\d+)}/ && do { $label = $+{label}; };
+            /^\s*\\labeleq{(\d+)}/ && do { $label = $1; };
 
-            /^%%equation\s+(?<eqtag>.*)/ && do {
-                $eqtag = "$+{eqtag}";
+            /^%%equation\s+(.*)/ && do {
+                $eqtag = $1;
                 append_file( $eqfile, "$_" . "\n" ) if -e $eqfile;
                 $self->paptageqlabels( $label => $eqtag );
                 $label = '';
@@ -1735,8 +1739,8 @@ sub _tex_paper_gen_file() {
 
     my $ThisSubName = ( caller(0) )[3];
 
-    my $sectype = shift // '';
-    my $pkey    = shift // $self->pkey;
+    my $sectype = shift || '';
+    my $pkey    = shift || $self->pkey;
 
     $self->_tex_paper_load_conf($pkey);
 
@@ -1793,10 +1797,10 @@ sub _tex_paper_gen_file() {
             my $evs = ''
               . '$sechash = $self->paper'
               . $sectype
-              . '_h("$pkey") // {}' . ";\n"
+              . '_h("$pkey") || {}' . ";\n"
               . '$horder = $self->paper'
               . $sectype
-              . '_h_order("$pkey") // []' . ";\n";
+              . '_h_order("$pkey") || []' . ";\n";
 
             #. '@nums = sort { $a <=> $b } keys %$sechash;'         . ";\n";
             #. '@nums = sort { $a <=> $b } keys %$sechash;'         . ";\n";
@@ -1819,16 +1823,17 @@ sub _tex_paper_gen_file() {
                 for ($sectype) {
                     /^eqs$/ && do {
 
-                        if ( $n =~ /^sec_(?<sec>\w+)/ ) {
+                        if ( $n =~ /^sec_(\w+)/ ) {
                             my $stitle;
-                            if ( $self->papsecs_exists("$+{sec}") ) {
-                                $stitle = $self->papsecs("$+{sec}");
+							my $sec=$1;
+                            if ( $self->papsecs_exists("$sec") ) {
+                                $stitle = $self->papsecs("$sec");
                             }
                             else {
-                                $stitle = $+{sec};
+                                $stitle = $sec;
                             }
                             print R '\bmksec{'
-                              . $+{sec} . '}{'
+                              . $sec . '}{'
                               . $stitle . '}' . "\n";
                             next;
                         }
@@ -1880,7 +1885,7 @@ sub _tex_paper_gen_file() {
 
                                 my $theme = '';
 
-                          #eval '$theme=$self->VARS("LaTeX_Table_theme") // ""';
+                          #eval '$theme=$self->VARS("LaTeX_Table_theme") || ""';
 
                                 $ref->{table_theme} = $theme if $theme;
 
@@ -1936,7 +1941,7 @@ sub _tex_paper_gen_file() {
 sub _tex_paper_gen_secdata {
     my $self = shift;
 
-    my $allfiles = shift // $self->pap_allfiles;
+    my $allfiles = shift || $self->pap_allfiles;
     my $isecs;
     my %secnums;
 
@@ -1946,8 +1951,8 @@ sub _tex_paper_gen_secdata {
             chomp;
             next if /^\s*%/;
 
-            /^\\i(par|sec|subsec|subsubsec)\{(?<isec>\w+)\}/ && do {
-                my $isec = $+{isec};
+            /^\\i(par|sec|subsec|subsubsec)\{(\w+)\}/ && do {
+                my $isec = $2;
                 push( @$isecs, $isec );
                 if ( $isec =~ /^([\d_]+)/ ) {
                     my $secn = $1;
@@ -1975,15 +1980,15 @@ sub _tex_paper_gen_secdata {
 sub _tex_paper_tabdat2tex {
     my $self = shift;
 
-    my $ref = shift // {};
+    my $ref = shift || {};
 
     my ( $CAPTION, $LABEL );
     my ( $caption, $label );
 
     my $datfile = $ref->{datfile};
 
-    $caption = $ref->{caption} // '';
-    $label   = $ref->{label}   // '';
+    $caption = $ref->{caption} || '';
+    $label   = $ref->{label}   || '';
 
     my @lines = read_file $datfile;
 
@@ -2016,8 +2021,8 @@ sub _tex_paper_tabdat2tex {
 
         #VimMsg($line, {prefix => 'none '});
 
-        if ( $line =~ /^(?<FW>\w+)\s*$/ ) {
-            $FW = $+{FW};
+        if ( $line =~ /^(\w+)\s*$/ ) {
+            $FW = $1;
 
             if ( $FW eq "ROW" ) {
                 $firstrow = 1;
@@ -2168,7 +2173,7 @@ sub _tex_paper_tabdat2tex {
         }
     );
 
-    my $theme = $ref->{table_theme} // '';
+    my $theme = $ref->{table_theme} || '';
 
     $table->set_theme($theme) if $theme;
 
@@ -2240,14 +2245,13 @@ sub _gen_make_pdf_tex_mk {
 ###make_dat
 		my @prereq;
 		foreach my $id (qw(list_tex_papers list_bibkeys)) {
-				given($id){
-					when('list_bibkeys') { push(@prereq,qw( repdoc.bib )); }
-					default { }
+				if($id eq 'list_bibkeys'){
+					push(@prereq,qw( repdoc.bib ));
 				}
-        push( @flines, "$id.i.dat: " . join(' ',@prereq) );
-        push( @flines, "\t" . 'perl _gendat_' . $id . '.pl' );
-
-        push( @flines, ' ' );
+		push( @flines, "$id.i.dat: " . join(' ',@prereq) );
+		push( @flines, "\t" . 'perl _gendat_' . $id . '.pl' );
+		
+		push( @flines, ' ' );
 		}
 
 ###_gen_make_pdf_tex_LOOP
@@ -2378,7 +2382,7 @@ sub _gen_make_pdf_tex_mk {
 
         @prereq_pdf_tex = uniq( sort(@prereq_pdf_tex) );
 
-        $first_prereq = shift(@prereq_pdf_tex) // '';
+        $first_prereq = shift(@prereq_pdf_tex) || '';
 
         push( @flines, "p.$p.pdf.tex: " . $first_prereq . " \\" );
 
@@ -2456,33 +2460,12 @@ sub _gen_make_pdf_tex_mk {
 
 }
 
-# _tex_paper_latex_parse() {{{
-
-sub _tex_paper_latex_parse() {
-    my $self = shift;
-
-    my $pkey = shift // '';
-
-    return 1 unless $pkey;
-
-    my $parser = LaTeX::TOM->new();
-
-    my $f = "p.$pkey.pdf.tex";
-
-    #my $doc=$parser->parseFile($f)->getFirstNode;
-    #my $doc=$parser->parseFile($f);
-
-    #print Dumper($doc);
-    #$doc->print;
-}
-
-# }}}
 # _tex_paper_latexml() {{{
 
 sub _tex_paper_latexml() {
     my $self = shift;
 
-    my $pkey = shift // '';
+    my $pkey = shift || '';
 
     return 1 unless $pkey;
 
@@ -2495,7 +2478,7 @@ sub _tex_paper_latexml() {
 sub _tex_paper_hermes() {
     my $self = shift;
 
-    my $pkey = shift // '';
+    my $pkey = shift || '';
 
     return 1 unless $pkey;
 
@@ -2541,7 +2524,7 @@ sub _tex_paper_hermes() {
 sub _tex_paper_tralics() {
     my $self = shift;
 
-    my $pkey = shift // '';
+    my $pkey = shift || '';
 
     return 1 unless $pkey;
 
@@ -2556,7 +2539,7 @@ sub _tex_paper_tralics() {
 sub _tex_paper_load_conf_short() {
     my $self = shift;
 
-    my $skey = shift // '';
+    my $skey = shift || '';
     my $lkey = $self->_long_key($skey);
 
     $self->_tex_paper_load_conf($lkey);
@@ -2570,7 +2553,7 @@ sub _tex_paper_load_conf_short() {
 sub _tex_paper_load_conf() {
     my $self = shift;
 
-    my $pkey = shift // $self->pkey;
+    my $pkey = shift || $self->pkey;
 
     my $done = "load_conf_$pkey";
 
@@ -2625,7 +2608,7 @@ sub _tex_paper_load_conf() {
 sub _tex_paper_conf_remove() {
     my $self = shift;
 
-    my $pkey = shift // '';
+    my $pkey = shift || '';
     my $cnf = "p.$pkey.conf.pl";
 
     File::Path::remove_tree($cnf) if ( -e $cnf );
@@ -2637,7 +2620,7 @@ sub _tex_paper_conf_remove() {
 sub _tex_paper_conf_exists() {
     my $self = shift;
 
-    my $pkey = shift // '';
+    my $pkey = shift || '';
     my $cnf = "p.$pkey.conf.pl";
 
     return 1 if ( -e $cnf );
@@ -2650,7 +2633,7 @@ sub _tex_paper_conf_exists() {
 sub _tex_paper_conf_create() {
     my $self = shift;
 
-    my $pkey = shift // '';
+    my $pkey = shift || '';
 
     my $tem = "paper_conf_template.pl";
     my $cnf = "p.$pkey.conf.pl";
@@ -2676,10 +2659,10 @@ sub _tex_paper_view_short() {
     my $self = shift;
 
     # Short key
-    my $skey = shift // '';
+    my $skey = shift || '';
 
     # Long key
-    my $lkey = $self->plongkeys($skey) // '';
+    my $lkey = $self->plongkeys($skey) || '';
 
     return 1 unless $lkey;
 
@@ -2724,20 +2707,20 @@ sub _tex_paper_get_secfiles() {
         # Will need to rewrite the original section file?
         my $rewrite = 0;
 
-        $secname = $+{sec} if ( $secfile =~ /sec\.(?<sec>\w+)\.i\.tex$/ );
+        $secname = $1 if ( $secfile =~ /sec\.(\w+)\.i\.tex$/ );
         next unless $secname;
         $self->say( "Current section : " . $secname );
 
         foreach (@lines) {
             chomp;
-            if (/^\\isec\{(?<sec>\w+)\}\{(?<title>.*)\}/) {
-                $secname = $+{sec};
-                $title   = $+{title};
+            if (/^\\isec\{(\w+)\}\{(.*)\}/) {
+                $secname = $1;
+                $title   = $2;
                 $got     = 1;
             }
-            elsif (/^\\(section|subsection)\{(?<title>.*)\}/) {
+            elsif (/^\\(section|subsection)\{(.*)\}/) {
                 $got     = 1;
-                $title   = $+{title};
+                $title   = $2;
                 $rewrite = 1;
             }
 
@@ -2764,9 +2747,9 @@ sub _tex_paper_get_secfiles() {
 
                 s/^\s*\\clearpage//g unless $count;
                 if ( $count == 1 ) {
-                    if (/^\s*\\labelsec{(?<lsec>\w+)}/) {
+                    if (/^\s*\\labelsec{(\w+)}/) {
                         $_ = '';
-                        unless ( "$+{lsec}" == "$secname" ) {
+                        unless ( "$1" == "$secname" ) {
                             $oldsecs{$oldsec} = $secname;
                         }
                     }
@@ -2810,7 +2793,7 @@ sub _tex_paper_get_secfiles() {
         chomp;
         next if /^\s*%/;
         next if /^\s*$/;
-        push( @secorder, $+{sec} ) if /^\s*\\iii{(?<sec>\w+)}/;
+        push( @secorder, $1 ) if /^\s*\\iii{(\w+)}/;
     }
     unless ( -e $sofile ) {
         if (@secorder) {
@@ -2833,7 +2816,7 @@ sub _tex_paper_get_secfiles() {
 sub _tex_paper_renames() {
     my $self = shift;
 
-    my $pkey = shift // '';
+    my $pkey = shift || '';
 
     $self->sysrun("bash renames.sh $pkey");
 }
@@ -2844,8 +2827,8 @@ sub _tex_paper_renames() {
 sub _tex_paper_view() {
     my $self = shift;
 
-    my $pkey  = shift // '';
-    my $vopts = shift // '';
+    my $pkey  = shift || '';
+    my $vopts = shift || '';
 
     return unless $pkey;
 
@@ -2853,7 +2836,7 @@ sub _tex_paper_view() {
 
     $self->_tex_paper_load_conf("$pkey");
 
-    my $viewfiles = $self->paperviewfiles($pkey) // '';
+    my $viewfiles = $self->paperviewfiles($pkey) || '';
 
     unless ($viewfiles) {
         foreach my $piece ( $self->viewtexfiles ) {
@@ -2900,7 +2883,7 @@ sub _tex_paper_make_short() {
     my $skey = shift;
 
     # Long key
-    my $lkey = $self->plongkeys($skey) // '';
+    my $lkey = $self->plongkeys($skey) || '';
 
     return 1 unless $lkey;
 
@@ -2931,10 +2914,10 @@ sub _compiled_tex_paper_view_short() {
     my $self = shift;
 
     # Short key
-    my $skey = shift // '';
+    my $skey = shift || '';
 
     # Long key
-    my $lkey = $self->plongkeys($skey) // '';
+    my $lkey = $self->plongkeys($skey) || '';
 
     return 1 unless $lkey;
 
@@ -2947,7 +2930,7 @@ sub _compiled_tex_paper_view_short() {
 sub _compiled_tex_paper_view() {
     my $self = shift;
 
-    my $ref = shift // '';
+    my $ref = shift || '';
     my @files_to_view = ();
 
     if ($ref) {
@@ -2976,7 +2959,7 @@ sub _compiled_tex_paper_view() {
 sub _part_exists() {
     my $self = shift;
 
-    my $part = shift // '';
+    my $part = shift || '';
 
     unless ($part) { return 0 }
 
@@ -3346,7 +3329,7 @@ sub _part_make_set_opts() {
 sub _part_make_tmpdir() {
     my $self = shift;
 
-    my $part = shift // $self->part // '';
+    my $part = shift || $self->part || '';
 
     if ( $self->compiletex_opts("use_tmpdir") ) {
         $self->out("Will use temporary directory for LaTeX builds.\n");
@@ -3373,7 +3356,7 @@ sub _part_make_tmpdir() {
 sub _part_make() {
     my $self = shift;
 
-    my $part = shift // '';
+    my $part = shift || '';
 
     $self->part($part);
 
@@ -3430,10 +3413,10 @@ sub _part_make() {
 
             # Adjust the TEXINPUTS environment variable
             # ( where latex searches for input files )
-            my $txi = $ENV{TEXINPUTS} // '';
+            my $txi = $ENV{TEXINPUTS} || '';
             $ENV{TEXINPUTS} = ".:" . $self->texroot . ":$txi";
 
-            my $bibi = $ENV{BIBINPUTS} // '';
+            my $bibi = $ENV{BIBINPUTS} || '';
             $ENV{BIBINPUTS} = ".:" . $self->texroot . ":$bibi";
 
             if ( $self->compiletex_opts("nonstopmode") ) {
@@ -3594,13 +3577,13 @@ sub _part_make() {
 sub _part_read_usedpacks($) {
     my $self = shift;
 
-    my $part = shift // '';
+    my $part = shift || '';
 
     # Read in the list of used packages
     $self->out(
         "_part_read_usedpacks(): Reading in the list of used packages...\n");
 
-    my $usedpacks = &readarr("pap.usedpacks.i.dat") // '';
+    my $usedpacks = &readarr("pap.usedpacks.i.dat") || '';
     die
       "_part_make(): (part: $part) Failed to read in the list of used packages "
       unless $usedpacks;
@@ -3615,14 +3598,14 @@ sub _part_read_usedpacks($) {
 sub _part_read_packopts($) {
     my $self = shift;
 
-    my $part = shift // '';
+    my $part = shift || '';
 
     # Read in the list of package options
     $self->out( "_part_read_packopts(): Reading in the "
           . "list of used package options...\n" );
 
     # Read in the list of package options
-    my $packopts = &readhash("pap.packopts.i.dat") // '';
+    my $packopts = &readhash("pap.packopts.i.dat") || '';
 
     die
       "_part_make(): (part: $part) Failed to read in the package options file "
@@ -3657,7 +3640,7 @@ sub _part_tex_clean() {
 sub _part_pdf_remote_copy() {
     my $self = shift;
 
-    my $part = shift // '';
+    my $part = shift || '';
 
     unless ($part) { return 0 }
 
@@ -3674,12 +3657,12 @@ sub _part_pdf_remote_copy() {
 sub _part_read_paps() {
     my $self = shift;
 
-    my $part = shift // '';
+    my $part = shift || '';
 
     #$self->out("_part_read_paps(): read in the list of papers...\n");
 
     # Read in list of papers for the specified part
-    my $paps = &readarr("pap.paps.$part.i.dat") // '';
+    my $paps = &readarr("pap.paps.$part.i.dat") || '';
     die "_part_make(): (part: $part) Failed to read in the list of papers "
       unless $paps;
 
@@ -3722,7 +3705,7 @@ sub _part_view_pdf() {
 sub _part_view_tex() {
     my $self = shift;
 
-    my $part = shift // '';
+    my $part = shift || '';
 
     my $files_to_view = [];
 
@@ -3831,13 +3814,14 @@ sub line_cbibm_to_cite() {
     my @pieces    = split( /\\cbibm\s*{/, $line );
     my $startline = shift @pieces;
 
-    my $re = qr/\s*\s*(?<cites>[\d, ]+)\s*}/;
+    my $re = qr/\s*\s*([\d, ]+)\s*}/;
 
     if (@pieces) {
         foreach my $piece (@pieces) {
             if ( $piece =~ m/$re/ ) {
-                my $cite_str = $self->cbibm_get_cite_str( $+{cites} );
-                my $cbibm    = '\cbibm{' . $+{cites} . '}';
+				my $cites=$1;
+                my $cite_str = $self->cbibm_get_cite_str( $cites );
+                my $cbibm    = '\cbibm{' . $cites . '}';
                 $piece =
 
                  #"\n" . "%$cbibm" . "\n" . $cite_str . substr( $piece, $+[0] );
@@ -3860,14 +3844,15 @@ sub line_cbib2cite {
     my $startline = shift @pieces;
     my $pkey      = $self->pkey;
 
-    my $re = qr/\s*\s*(?<num>\d+)\s*}/;
+    my $re = qr/\s*\s*(\d+)\s*}/;
 
     if (@pieces) {
         foreach my $piece (@pieces) {
             if ( $piece =~ m/$re/ ) {
-                my $cite_str = `cbib.pl --pkey $pkey --N $+{num}`;
-                my $cbib     = '\cbib{' . $+{num} . '}';
-                $piece = $cite_str . substr( $piece, $+[0] );
+				my $num=$1;
+				my $cite_str = `cbib.pl --pkey $pkey --N $num`;
+				my $cbib     = '\cbib{' . $num . '}';
+				$piece = $cite_str . substr( $piece, $+[0] );
             }
         }
         $line = join( '', $startline, @pieces );
@@ -3879,10 +3864,10 @@ sub line_cbib2cite {
 
 # line_cbibr_to_cite() {{{
 
-sub line_cbibr_to_cite() {
+sub line_cbibr_to_cite {
     my $self = shift;
 
-    my $re = qr/\s*\s*(?<min>\d+)\s*}\s*{\s*(?<max>\d+)\s*}/;
+    my $re = qr/\s*\s*(\d+)\s*}\s*{\s*(\d+)\s*}/;
 
     my $line      = shift;
     my @pieces    = split( /\\cbibr\s*{/, $line );
@@ -3891,8 +3876,11 @@ sub line_cbibr_to_cite() {
     if (@pieces) {
         foreach my $piece (@pieces) {
             if ( $piece =~ m/$re/ ) {
-                my $cite_str = $self->cbibr_get_cite_str( $+{min}, $+{max} );
-                my $cbibr = '\cbibr{' . $+{min} . '}{' . $+{max} . '}';
+				my $min=$1;
+				my $max=$2;
+
+                my $cite_str = $self->cbibr_get_cite_str( $min, $max );
+                my $cbibr = '\cbibr{' . $min . '}{' . $max . '}';
                 $piece =
 
                  #"\n" . "%$cbibr" . "\n" . $cite_str . substr( $piece, $+[0] );
@@ -3946,7 +3934,7 @@ sub view_tex_short() {
     my $id = shift;
 
     # Short key
-    my $skey = shift // '';
+    my $skey = shift || '';
 
     # Long key
     my $lkey = $self->_long_key($skey);
@@ -4056,10 +4044,10 @@ sub _pkey_set_current_short() {
     my $self = shift;
 
     # Short key
-    my $skey = shift // '';
+    my $skey = shift || '';
 
     # Long key
-    my $lkey = $self->plongkeys($skey) // '';
+    my $lkey = $self->plongkeys($skey) || '';
 
     return 1 unless $lkey;
 
@@ -4106,7 +4094,7 @@ sub _long_key() {
 
     my $skey = shift;
 
-    my $lkey = $self->plongkeys($skey) // '';
+    my $lkey = $self->plongkeys($skey) || '';
 
     return $lkey;
 }
@@ -4162,7 +4150,7 @@ sub _expand_perltex_ienv() {
 sub _package_is_used() {
     my $self = shift;
 
-    my $package = shift // '';
+    my $package = shift || '';
 
     return 0 unless $package;
     die "part scalar is undefined"
@@ -4314,7 +4302,7 @@ sub list_fig_tex() {
 sub list_partpaps() {
     my $self = shift;
 
-    my $part = shift // $self->part;
+    my $part = shift || $self->part;
     $self->part($part);
 
     $self->_part_read_paps($part);
@@ -4341,7 +4329,7 @@ sub list_vars() {
 sub list_scripts() {
     my $self = shift;
 
-    my $mode = shift // '';
+    my $mode = shift || '';
 
     $self->scripts(qw());
 
@@ -4385,7 +4373,7 @@ sub list_scripts() {
 sub sysrun() {
     my $self = shift;
 
-    my $cmd = shift // '';
+    my $cmd = shift || '';
     my %opts = (
         verbose => 1,
         driver  => 'IPC::Cmd'
@@ -4393,7 +4381,7 @@ sub sysrun() {
 
     while (@_) {
         my $key = shift;
-        my $val = shift // '';
+        my $val = shift || '';
 
         $opts{$key} = $val if $val;
     }
@@ -4620,7 +4608,7 @@ sub _complete_papers() {
 sub _complete_cmd() {
     my $self = shift;
 
-    my $ref_cmds = shift // '';
+    my $ref_cmds = shift || '';
 
     return [] unless $ref_cmds;
 
@@ -4643,8 +4631,10 @@ sub _complete_cmd() {
             };
 
             # Specific accessor
-            /^scalar_accessor_(?<acc>\w+)$/ && do {
-                for ( $+{acc} ) {
+            /^scalar_accessor_(\w+)$/ && do {
+				my $acc=$1;
+
+                for ( $acc ) {
                     /^view_cmd_pdf_(generated|original)$/ && do {
                         push( @comps, qw(evince okular) );
                         next;
@@ -4905,7 +4895,7 @@ sub _term_get_commands() {
                     args =>
                       sub { shift; $self->_complete_papers( "tex", @_ ); },
                     proc => sub {
-                        my $pkey = shift // '';
+                        my $pkey = shift || '';
 
                         $self->pkey($pkey) if $pkey;
                         $self->_tex_paper_load_conf();
@@ -5283,12 +5273,6 @@ sub _term_get_commands() {
             minargs => 1,
             args    => sub { shift; $self->_complete_papers( "tex", @_ ); },
             proc => sub { $self->_tex_paper_load_conf(@_); }
-        },
-        "pp" => {
-            desc    => "LaTeX parsing through LaTeX::TOM parser",
-            minargs => 1,
-            args    => sub { shift; $self->_complete_papers( "tex", @_ ); },
-            proc => sub { $self->_tex_paper_latex_parse(@_); }
         },
         "latexml" => {
             desc    => "LaTeX parsing through LaTeXML",
@@ -5733,7 +5717,7 @@ sub read_cmdfile() {
 sub _term_run() {
     my $self = shift;
 
-    my $cmds = shift // [qw()];
+    my $cmds = shift || [qw()];
 
     unless (@$cmds) {
         if ( $self->inputcommands ) {
@@ -5786,10 +5770,10 @@ sub view_pdf_paper_short() {
     my $self = shift;
 
     # Short key
-    my $skey = shift // '';
+    my $skey = shift || '';
 
     # Long key
-    my $lkey = $self->plongkeys($skey) // '';
+    my $lkey = $self->plongkeys($skey) || '';
 
     return 1 unless $lkey;
 
@@ -5802,7 +5786,7 @@ sub view_pdf_paper_short() {
 sub view_pdf_paper() {
     my $self = shift;
 
-    my $pkey = shift // '';
+    my $pkey = shift || '';
     return 0 unless $pkey;
 
     my $file = catfile( $self->papdir, "$pkey" . ".pdf" );
@@ -6052,7 +6036,7 @@ sub update_ppics() {
 sub _tex_paper_convert_ppics() {
     my $self = shift;
 
-    my $pkey = shift // $self->pkey;
+    my $pkey = shift || $self->pkey;
     $self->pkey($pkey);
 
     my $dir = catfile( $self->texroot, qw(ppics), $pkey );

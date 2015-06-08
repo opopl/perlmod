@@ -585,7 +585,7 @@ EODOC
 
                       my $self=shift;
 
-                      my $mode=shift // 'alph';
+                      my $mode=shift || 'alph';
 
                       for($mode){
                           /^alph$/ && do {
@@ -685,7 +685,7 @@ my @join_methods = uniq "join_${field}", "${field}_join";
                       
                       # separator to be used in join() command
                       #     below
-                      my $sep=shift // ' ';
+                      my $sep=shift || ' ';
 
                       return join($sep,@{ $self->{$field} });
                 },
@@ -1379,13 +1379,13 @@ EODOC
 
                     my $self=shift;
                     
-                    my $sep=shift // '';
-                    my $key=shift // '';
+                    my $sep=shift || '';
+                    my $key=shift || '';
 
                     my @a=();
 
-                    my $hash=$self->{$field} // {};
-                    my $val=$hash->{$key} // '';
+                    my $hash=$self->{$field} || {};
+                    my $val=$hash->{$key} || '';
 
                     @a=split($sep,$val);
 

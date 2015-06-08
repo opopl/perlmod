@@ -4,7 +4,7 @@ package OP::HTML;
 use strict;
 use warnings;
 
-use feature qw(switch);
+#use feature qw(switch);
 
 use parent qw( OP::Writer );
 
@@ -45,8 +45,8 @@ _tag_open('tag',{ name => 'a' });
 sub _tag_open {
     my $self=shift;
 
-    my $tag=shift // '';
-    my $attr=shift // '';
+    my $tag=shift || '';
+    my $attr=shift || '';
 
     my $attr_str='';
 
@@ -66,8 +66,8 @@ sub _tag_open {
 sub _tag_single {
     my $self=shift;
 
-    my $tag=shift // '';
-    my $attr=shift // '';
+    my $tag=shift || '';
+    my $attr=shift || '';
 
     my $attr_str='';
 
@@ -85,10 +85,10 @@ sub _tag_single {
 sub _tag_close {
     my $self=shift;
 
-    my $tag=shift // '';
-    my $title=shift // '';
+    my $tag=shift || '';
+    my $title=shift || '';
 
-    my $attr=shift // '';
+    my $attr=shift || '';
 
     $self->minus('indent');
 
@@ -100,10 +100,10 @@ sub _tag_close {
 sub _tag {
     my $self=shift;
 
-    my $tag=shift // '';
-    my $title=shift // '';
+    my $tag=shift || '';
+    my $title=shift || '';
 
-    my $attr=shift // '';
+    my $attr=shift || '';
 
     my $text="<$tag>" . $title . "</$tag>";
     $self->_add_line($text);
@@ -140,19 +140,21 @@ sub close_tags {
 sub head {
     my $self=shift;
 
-    my $ref=shift // '';
+    my $ref=shift || '';
 
     $self->_tag_open(qw(head));
 
     unless (ref $ref) {
     }elsif(ref $ref eq "HASH"){
         while(my($k,$v)=each %{$ref}){
-            given($k){
-                when('title') { 
+
+			for($k){
+				/^title$/ && do {
                     $self->title($v);
-                }
-                default { }
-            }
+
+					next;
+				};
+			}
         }
     }
 
@@ -229,7 +231,7 @@ sub _end {
 sub li {
     my $self=shift;
 
-    my $title=shift // '';
+    my $title=shift || '';
 
     $self->_tag('li',$title);
 }
@@ -237,7 +239,7 @@ sub li {
 sub h1 {
     my $self=shift;
 
-    my $title=shift // '';
+    my $title=shift || '';
 
     $self->_tag('h1',$title);
 }
@@ -245,7 +247,7 @@ sub h1 {
 sub h2 {
     my $self=shift;
 
-    my $title=shift // '';
+    my $title=shift || '';
 
     $self->_tag('h2',$title);
 }
@@ -253,7 +255,7 @@ sub h2 {
 sub h3 {
     my $self=shift;
 
-    my $title=shift // '';
+    my $title=shift || '';
 
     $self->_tag('h3',$title);
 }
@@ -261,7 +263,7 @@ sub h3 {
 sub h4 {
     my $self=shift;
 
-    my $title=shift // '';
+    my $title=shift || '';
 
     $self->_tag('h4',$title);
 }

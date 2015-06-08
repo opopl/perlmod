@@ -213,7 +213,7 @@ sub entry_pdf_file_exists(){
 	my $self=shift;
 
 	my $pkey=shift;
-	my $papdir=$self->papdir // "$ENV{hm}/doc/papers/ChemPhys";
+	my $papdir=$self->papdir || "$ENV{hm}/doc/papers/ChemPhys";
 
 	my $file=File::Spec->catfile($papdir,"$pkey.pdf");
 
