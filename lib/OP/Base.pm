@@ -408,7 +408,7 @@ sub _hash_add {
 }
 
 sub _import {
-    my $opts=shift // {};
+    my $opts=shift || {};
 
     my $fh;
     my @lines;
@@ -468,15 +468,15 @@ sub _import {
         }
     }
 
-    my $modules=$opts->{modules} // [];
-    my $import=$opts->{import} // {};
+    my $modules=$opts->{modules} || [];
+    my $import=$opts->{import} || {};
 
     my @eva;
     foreach my $module (@$modules) {
 
        ( my $moddef=$module ) =~ s/::/-/g;
        my $use='use ' . $module;
-       my $funcs=$import->{$module} // [];
+       my $funcs=$import->{$module} || [];
 
        if (@$funcs){
            $use.=' qw( ' . join(' ',@$funcs) . ' )' ;
@@ -953,7 +953,7 @@ sub is_const {
 
 sub printpod {
 
-    my $topic = shift // 'help';
+    my $topic = shift || 'help';
     my $o;
 
     open( POD, ">$FILES{pod}{$topic}" ) || die $!;
@@ -1324,12 +1324,12 @@ sub ListModuleSubs {
 
 sub readarr {
 
-    my $if = shift // '';
+    my $if = shift || '';
 
-	my $opts=shift // {};
+	my $opts=shift || {};
 
-	my $splitsep=$opts->{sep} // qr/\s+/;
-	my $joinsep=$opts->{sep} // ' ';
+	my $splitsep=$opts->{sep} || qr/\s+/;
+	my $joinsep=$opts->{sep} || ' ';
 
     unless ($if) {
         warn "OP::Base::readarr(): empty file name provided: $if";
@@ -1368,8 +1368,8 @@ sub readarr {
 
 sub op_write_file {
 
-    my $file=shift // '';
-    my $ref=shift // '';
+    my $file=shift || '';
+    my $ref=shift || '';
 
     return unless $file;
     return unless $ref;
@@ -1396,11 +1396,11 @@ sub op_write_file {
 sub readhash {
     my $if = shift;
 
-    my $opts = shift // {};
+    my $opts = shift || {};
 
-    my $splitsep = $opts->{sep} // qr/\s+/;
-    my $joinsep = $opts->{sep} // ' ';
-	my $valtype=$opts->{valtype} // 'scalar';
+    my $splitsep = $opts->{sep} || qr/\s+/;
+    my $joinsep = $opts->{sep} || ' ';
+	my $valtype=$opts->{valtype} || 'scalar';
 
     unless ( -e $if ) {
         if (wantarray) {
@@ -1563,7 +1563,7 @@ sub sbvars {
 
     %DIRS = (
         pod     => "pod",
-        PERLMOD => $ENV{PERLMODDIR} // catfile( $ENV{HOME}, qw(wrk perlmod) ),
+        PERLMOD => $ENV{PERLMODDIR} || catfile( $ENV{HOME}, qw(wrk perlmod) ),
     );
 
     $endl = "\n";

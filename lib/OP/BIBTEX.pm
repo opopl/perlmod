@@ -2,7 +2,8 @@
 package OP::BIBTEX;
 # Intro {{{
 
-use LaTeX::BibTeX;
+#use LaTeX::BibTeX;
+use BibTeX::Parser;
 use File::Spec;
 
 use File::Temp qw( tmpnam );

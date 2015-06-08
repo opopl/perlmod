@@ -11,7 +11,7 @@ package OP::PAPERS::PSH;
 use strict;
 use warnings;
 
-use feature qw(switch);
+#use feature qw(switch);
 
 use Env qw( $hm );
 
