@@ -188,6 +188,7 @@ our @hash_accessors = qw(
   VARS
 );
 
+
 __PACKAGE__->mk_scalar_accessors(@scalar_accessors)
   ->mk_array_accessors(@array_accessors)->mk_hash_accessors(@hash_accessors);
 
