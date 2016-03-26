@@ -215,7 +215,7 @@ sub init_vars() {
 
     $self->textcolor('bold blue');
 
-    my $pdfout = $ENV{PDFOUT} // "out";
+    my $pdfout = $ENV{PDFOUT} || "out";
     my $packopts;
 
 ###set_optids
@@ -241,14 +241,14 @@ sub init_vars() {
     $self->optids_push( map { "only_" . $_  } @only );
 
     # root directory for the LaTeX files
-    $self->texroot( $ENV{'PSH_TEXROOT'} // catfile( "$ENV{hm}", qw(wrk p) )
-          // catfile( "$ENV{HOME}", qw(wrk p) ) );
+    $self->texroot( $ENV{'PSH_TEXROOT'} || catfile( "$ENV{hm}", qw(wrk p) )
+          || catfile( "$ENV{HOME}", qw(wrk p) ) );
 
     chdir $self->texroot;
 
     $self->files(
         "done_cbib2cite" => catfile($self->texroot,'keys.done_cbib2cite.i.dat'),
-        "vars"  => catfile($self->texroot,$ENV{PVARSDAT} // 'vars.i.dat'),
+        "vars"  => catfile($self->texroot,$ENV{PVARSDAT} || 'vars.i.dat'),
     );
 
     $self->read_VARS;
@@ -310,7 +310,7 @@ sub process_docstyle() {
         $dchash{$ds}.=join(' ',@opts);
     }
     my $val = '';
-    eval '$val=$dchash{$self->docstyle} // ""';
+    eval '$val=$dchash{$self->docstyle} || ""';
 
     return 0 unless $val;
 
@@ -400,7 +400,7 @@ sub pshcmd() {
     my $self = shift;
 
     my $cmd = shift;
-    my $mode = shift // 'call';
+    my $mode = shift || 'call';
 
     $cmd = "pshcmd $cmd";
 
@@ -515,7 +515,7 @@ sub run_tex {
 
           foreach my $id (@ids) {
             my @evs;
-            push(@evs,'$opts.=" -$id=" . $self->' . $id . ' // ""');
+            push(@evs,'$opts.=" -$id=" . $self->' . $id . ' || ""');
 
             eval(join(";",@evs));
             die $@ if $@;
@@ -562,7 +562,7 @@ sub run_htlatex {
 
     my $self = shift;
 
-    my $pkey = shift // $self->pkey;
+    my $pkey = shift || $self->pkey;
     $self->pkey($pkey);
 
     my $htlatex = "HTLATEX";
@@ -638,7 +638,7 @@ sub run_htlatex {
 sub run_only {
     my $self=shift;
 
-    my $only=shift // '';
+    my $only=shift || '';
 
     return unless $only;
 
@@ -667,7 +667,7 @@ sub run_only {
 sub run_switch {
     my $self=shift;
 
-    my $iopts=shift // {};
+    my $iopts=shift || {};
 
     my $runopts;
     
@@ -704,7 +704,7 @@ sub run_switch {
 sub run() {
     my $self = shift;
 
-    my $iopts=shift // {};
+    my $iopts=shift || {};
 
     # load paper configuration from p.PKEY.conf.pl
     $self->load_paper_conf();
@@ -870,7 +870,7 @@ PAP_GenMain() in papers.vim
 sub write_tex_main {
     my $self=shift;
 
-    my $pkey=shift // $self->fpkey;
+    my $pkey=shift || $self->fpkey;
     my $mainfile=$self->catroot('p.' . $pkey . '.tex');
 
     my @outlines=();
@@ -883,7 +883,7 @@ sub write_tex_main {
     push(@outlines,' ');
 
     foreach my $sec ($self->SECORDER) {
-      my $cmds=$self->SECORDER_CMDS("$sec") // [];
+      my $cmds=$self->SECORDER_CMDS("$sec") || [];
       if (@$cmds){
         push(@outlines,@$cmds);
       }
@@ -940,8 +940,8 @@ sub write_tex() {
         }
     }
 
-    my $include_tex_parts=$self->{config}->{include_tex_parts} // [];
-    my $exclude_tex_parts=$self->{config}->{exclude_tex_parts} // [];
+    my $include_tex_parts=$self->{config}->{include_tex_parts} || [];
+    my $exclude_tex_parts=$self->{config}->{exclude_tex_parts} || [];
 
     foreach my $id (@$include_tex_parts) {
         my $f = "p.$fpkey.$id.tex";
@@ -954,7 +954,7 @@ sub write_tex() {
                 $t->_add_line('\def\leqH{1}');
             }
             else {
-                my $newdef=$self->{config}->{texdefs}->{"sec$id"} // '';
+                my $newdef=$self->{config}->{texdefs}->{"sec$id"} || '';
                 if ($newdef){
                     $t->_c_delim;
                     $t->nc("sec$id",$newdef);
@@ -1082,7 +1082,7 @@ sub write_tex_titpage_report() {
     print TIT "\\hypertarget{$fpkey-titpage}{}\n";
     print TIT "\\addcontentsline{toc}{part}{$fpkey} \n";
 
-    my $width = $self->{config}->{titpage_width} // "5";
+    my $width = $self->{config}->{titpage_width} || "5";
 
     ##################################
     # Print the article reference
@@ -1159,7 +1159,7 @@ sub write_tex_start() {
     my $pname = $self->pname;
     my $start = "p.$fpkey.pdf.start.tex";
 
-    my $include = $self->{config}->{include_lists_start} // [qw(toc)];
+    my $include = $self->{config}->{include_lists_start} || [qw(toc)];
 
     my $s=Text::Generate::TeX->new;
 
@@ -1479,7 +1479,7 @@ sub set_lang() {
 sub _package_is_used () {
     my $self = shift;
 
-    my $package = shift // '';
+    my $package = shift || '';
     return 0 unless $package;
 
     return 1 if ( grep { /^$package$/ } $self->usedpacks );
