@@ -142,3 +142,18 @@ sub readhash {
 
 1;
 
+=head1 NAME
+
+File::Dat::Utils - methods for reading text files with dictionaries and list
+
+=head1 EXPORT
+
+=over 4
+
+=item * readarr - read list
+
+=item * readhash - read dictionary
+
+=back
+
+=cut
