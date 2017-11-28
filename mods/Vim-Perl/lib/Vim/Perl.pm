@@ -555,8 +555,9 @@ sub VimChooseFromPrompt {
     unless ($inp) {
         $result = $empty;
     }
-    elsif ( $inp =~ /^\s*(?<num>\d+)\s*$/ ) {
-        $result = $opts[ $+{num} - 1 ];
+    #elsif ( $inp =~ /^\s*(?<num>\d+)\s*$/ ) {
+    elsif ( $inp =~ /^\s*(\d+)\s*$/ ) {
+        $result = $opts[ $1 - 1 ];
     }
     else {
         $result = $inp;
@@ -661,7 +662,7 @@ sub VimPerlGetModuleNameFromDialog {
 sub VimPerlGetModuleName {
     my $module;
 
-    my $opts=shift // {};
+    my $opts=shift || {};
 
     VimMsg(Dumper($opts));
 
@@ -717,7 +718,7 @@ sub VimPerlGetModuleName {
 }
 
 sub VimPerlPathFromModuleName {
-    my $module = shift // $ModuleName // '';
+    my $module = shift || $ModuleName || '';
 
     return '' unless $module;
 
@@ -825,7 +826,7 @@ sub Vim_Files_DAT {
 }
 
 sub VimResetVars {
-    my $vars = shift // '';
+    my $vars = shift || '';
 
     return '' unless $vars;
 
@@ -839,7 +840,7 @@ sub VimResetVars {
 }
 
 sub Vim_MsgPrefix {
-    my $prefix = shift // '';
+    my $prefix = shift || '';
 
     return unless $prefix;
 
@@ -896,7 +897,7 @@ additional options (color, highlighting etc.).
 =cut
 
 sub VimMsg {
-    my $text = shift // '';
+    my $text = shift || '';
 
     return '' unless $text;
 
@@ -942,7 +943,7 @@ sub VimMsg {
         'green'         => 'DiffChange',
     };
 
-    my $color = $MsgColor // '';
+    my $color = $MsgColor || '';
     $color = $opts->{color} if $opts->{color};
 
     $opts->{hl} = $colors->{$color} if $color;
@@ -1144,7 +1145,7 @@ in the optional hash structure C<$opts>.
 sub VimPerlInstallModule {
     my @imodules;
 
-    my $iopts=shift // {};
+    my $iopts=shift || {};
     my $opts;
 
     unless(ref $iopts){
@@ -1192,7 +1193,7 @@ sub VimPerlInstallModule {
 	        my $efmperl=catfile($VDIRS{VIMRUNTIME},qw(tools efm_perl.pl));
 	        my $efmfilter=catfile($VDIRS{VIMRUNTIME},qw(tools efm_filter.pl));
             my $tmpfile=VimEval('tempname()');
-            my $elines=$errorlines->{module} // [];
+            my $elines=$errorlines->{module} || [];
             write_file($tmpfile,join("\n",@$elines) . "\n");
 
             my $qlist;
@@ -1388,7 +1389,7 @@ sub VimCurBuf_Num {
 }
 
 sub VimCurBuf_Basename {
-    my $opts = shift // '';
+    my $opts = shift || '';
 
     my $name=VimCurBuf_Name;
 
@@ -1409,7 +1410,7 @@ sub VimBufFiles_Edit {
 
     my $opts = shift;
 
-    my $editopt = $opts->{editopt} // '';
+    my $editopt = $opts->{editopt} || '';
 
     foreach my $bfile (@BFILES) {
         next unless $bfile =~ /\.vim$/;
@@ -1430,8 +1431,9 @@ sub VimBufFiles_Edit {
 ###BufFiles_InsertSubName
             if ( $editopt == "Insert_SubName" ) {
 
-                /^\s*(?<fdec>fun|function)!\s+(?<fname>\w+)/ && do {
-                    $fname = $+{fname};
+                #/^\s*(?<fdec>fun|function)!\s+(?<fname>\w+)/ && do {
+                /^\s*(fun|function)!\s+(\w+)/ && do {
+                    $fname = $2;
                     $onfun{$fname} = 1;
                     $_ .= "\n" . " let g:SubName='" . $fname . "'";
                     push( @nlines, $_ );
@@ -1513,14 +1515,14 @@ sub init {
 }
 
 sub VimEditBufFiles {
-    my $cmds = shift // $ArgString;
+    my $cmds = shift || $ArgString;
 
     unless ($cmds) {
         VimMsgE("No commands were provided");
         return 0;
     }
 
-    my $slurpsub = shift // 'edit_file_lines';
+    my $slurpsub = shift || 'edit_file_lines';
 
     VimMsg("Will apply to all buffers: $cmds");
 
