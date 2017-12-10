@@ -889,8 +889,6 @@ additional options (color, highlighting etc.).
 
 =back
 
-=item 
-
 =back
 
 
