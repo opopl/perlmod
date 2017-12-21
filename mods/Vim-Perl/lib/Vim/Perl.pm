@@ -908,6 +908,7 @@ sub VimMsg {
     foreach my $k (@$keys) { $opts->{$k} = ''; }
 
     $opts->{prefix} = 'subname';
+    $opts->{prefix} = 'none';
 
     unless ( ref $ref ) {
         if (@o) {
@@ -992,7 +993,6 @@ Set the value of a vimscript variable
 =cut
 
 sub VimLet {
-
     # name of the vimscript variable to be assigned
     my $var = shift;
 
@@ -1004,6 +1004,7 @@ sub VimLet {
     my $lhs = "let $var";
 
     unless ( ref $ref ) {
+		$ref =~ s/"/\\"/g;
         $valstr .= "'$ref'";
     }
     elsif ( ref $ref eq "ARRAY" ) {
