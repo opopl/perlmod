@@ -162,6 +162,7 @@ sub VimInput;
 sub VimJoin;
 sub VimLet;
 sub VimLetEval;
+sub VimListExtend;
 sub VimSet;
 # -------------- messages --------------------
 sub VimMsg;
@@ -1292,7 +1293,8 @@ sub VimPerlViewModule {
 sub VimListExtend {
     my ($vimlist,$arrayref) = @_;
 
-	for(@$arrayref){
+	for my $l(@$arrayref){
+		local $_=$l;
 		s/\\/\\\\/g;
 		s/"/\\"/g;
 		my $cmd = 'call add('.$vimlist.',"'.$_.'")';
