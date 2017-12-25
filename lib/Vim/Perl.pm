@@ -103,6 +103,7 @@ my @ex_vars_array = qw(
           VimLen
           VimLet
           VimLetEval
+		  VimListExtend
           VimSet
           VimStrToOpts
           VimMsg
@@ -1286,6 +1287,17 @@ sub VimPerlViewModule {
         VimCmd("tabnew $path");
     }
 
+}
+
+sub VimListExtend {
+    my ($vimlist,$arrayref) = @_;
+
+	for(@$arrayref){
+		s/\\/\\\\/g;
+		s/"/\\"/g;
+		my $cmd = 'call add('.$vimlist.',"'.$_.'")';
+		VimCmd($cmd);
+	}
 }
 
 sub VimPieceFullFile {
