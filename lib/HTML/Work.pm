@@ -8,12 +8,17 @@ package HTML::Work;
 use strict;
 use warnings;
 
-use utf8;
 use Encode;
+use utf8;
+
+use URI;
+use LWP;
 
 use XML::LibXML;
 use XML::LibXML::PrettyPrint;
 use Data::Dumper;
+
+use HTML::Entities;
 
 sub new
 {
@@ -29,7 +34,7 @@ sub init {
 	my $self=shift;
 
 	my $h={
-		alert => sub { warn $_ for(@_); },
+		sub_log => sub { warn $_ for(@_); },
 	};
 		
 	my @k=keys %$h;
@@ -60,14 +65,19 @@ sub init_dom {
 
 }
 
-sub alert {
+sub xpath {
+	my ($self,$xpath)=@_;
+
+	my $dom=$self->{dom};
+}
+
+sub log {
 	my ($self,@args)=@_;
 
-	my $sub = $self->{sub_alert} || undef;
+	my $sub = $self->{sub_log} || undef;
 	$sub && $sub->(@args);
 
 	return $self;
-
 }
 
 sub html2str {
@@ -113,6 +123,58 @@ sub pretty {
 
 }
 
+sub load_html_from_url {
+	my $self = shift;
+	my $ref  = shift;
+
+	my $xpath = $ref->{xpath} || '';
+	my $url   = $ref->{url} || '';
+
+	my $uri = URI->new($url);
+	my $ua  = LWP::UserAgent->new;
+
+ 	my $response = $ua->get($uri);
+
+	my ($content,$statline);
+ 	if ($response->is_success) {
+		 	$self->log('URL load OK');
+		 	$content =  $response->decoded_content;
+ 	} else { 
+		 	$statline = $response->status_line;
+		 	$self->log('URL load Fail: '.$statline);
+			return $self;
+ 	}
+
+	my $dom = XML::LibXML->load_html(
+			string          => $content,
+			#string          => decode('utf-8',$content),
+			recover         => 1,
+			suppress_errors => 1,
+	);
+	$self->{dom}=$dom;
+
+	return $self;
+}
+
+sub html_saveas {
+	my $self = shift;
+	my $ref  = shift;
+
+	$self->log('aaaa');
+
+	my $html = $self->html2str($ref);
+	my $file = $ref->{file} || '';
+
+
+	if ($file) {
+		open(F,">$file") || die $!;
+		print $html . "\n";
+		close(F);
+	}
+
+	return $self;
+}
+
 sub replace_a {
 	my $self=shift;
 
@@ -130,7 +192,7 @@ sub replace_a {
 			 $parent->replaceChild($new,$node);
 
 		 };
-		 if($@){ $self->alert($@); }
+		 if($@){ $self->log($@); }
 	}
 
 	return $self;
