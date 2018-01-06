@@ -65,11 +65,6 @@ sub init_dom {
 
 }
 
-sub xpath {
-	my ($self,$xpath)=@_;
-
-	my $dom=$self->{dom};
-}
 
 sub log {
 	my ($self,@args)=@_;
@@ -160,15 +155,12 @@ sub html_saveas {
 	my $self = shift;
 	my $ref  = shift;
 
-	$self->log('aaaa');
-
 	my $html = $self->html2str($ref);
 	my $file = $ref->{file} || '';
 
-
 	if ($file) {
 		open(F,">$file") || die $!;
-		print $html . "\n";
+		print F $html . "\n";
 		close(F);
 	}
 
@@ -178,9 +170,20 @@ sub html_saveas {
 sub replace_a {
 	my $self=shift;
 
-	my $dom=$self->{dom};
+	$self->replace_node_with_text({ 'xpath' => '//a' });
+}
 
-	my $xpath='//a';
+sub replace_node_with_text {
+	my $self=shift;
+	my $ref=shift;
+
+	my $dom   = $self->{dom};
+	my $xpath = $ref->{xpath} || '';
+
+	unless ($xpath) {
+		return $self;
+	}
+
 	my @nodes=$dom->findnodes($xpath);
 
 	for my $node(@nodes){
