@@ -14,10 +14,22 @@ use utf8;
 use URI;
 use LWP;
 
+use HTML::Strip;
+use HTML::TreeBuilder;
+use HTML::FormatText;
+
 use XML::LibXML;
 use XML::LibXML::PrettyPrint;
 use Data::Dumper;
 use File::Spec::Functions qw(catfile);
+use File::Slurp qw(
+  append_file
+  edit_file
+  edit_file_lines
+  read_file
+  write_file
+  prepend_file
+);
 
 use HTML::Entities;
 
@@ -163,6 +175,23 @@ sub url_saveas {
 	close(F);
 }
 
+sub load_from_file {
+	my $self = shift;
+	my $ref  = shift;
+
+	my $file   = $ref->{file} || '';
+
+	my $html=read_file $file;
+	my $dom = XML::LibXML->load_html(
+			#string          => $content,
+			string          => decode('utf-8',$html),
+			recover         => 1,
+			suppress_errors => 1,
+	);
+	$self->{dom}              = $dom;
+
+}
+
 sub load_html_from_url {
 	my $self = shift;
 	my $ref  = shift;
@@ -217,6 +246,28 @@ sub replace_a {
 	my $self=shift;
 
 	$self->replace_node_with_text({ 'xpath' => '//a' });
+}
+
+sub node2text {
+	my $self=shift;
+	my ($dom,$node)=@_;
+
+	my $parent = $node->parentNode;
+	my $html   = $node->toString;
+
+	my $htb = HTML::TreeBuilder->new();
+	$htb->parse($html);
+				
+	my $formatter = HTML::FormatText->new(
+		leftmargin => 0, 
+		rightmargin => 50);
+	
+	my $ascii = $formatter->format($htb);
+	 
+	my $new    = $dom->createTextNode($ascii);
+
+	$parent->replaceChild($new,$node);
+
 }
 
 sub replace_node_with_text {
