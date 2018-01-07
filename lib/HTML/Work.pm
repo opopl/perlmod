@@ -119,6 +119,17 @@ sub html2lines {
 
 }
 
+sub node_pretty {
+	my $self=shift;
+	my $node=shift;
+
+	my $pp = XML::LibXML::PrettyPrint->new(indent_string => "  ");
+ 	$pp->pretty_print($node);
+
+	return $self;
+
+}
+
 sub pretty {
 	my $self=shift;
 
@@ -263,10 +274,27 @@ sub node2text {
 		rightmargin => 50);
 	
 	my $ascii = $formatter->format($htb);
+	my @ascii = split("\n",$ascii);
+
+	foreach my $a (@ascii) {
+		my $br=$dom->createElement('br');
+		$br->appendText($a);
+		#print $a . "\n";
+		#print $br->toString . "\n";
+    	$parent->insertBefore( $br, $node );
+	}
+	$parent->removeChild($node);
+	#print $parent->toString . "\n";
+	#$parent->replaceChild($new,$node);
+
 	 
+	#my $text = $ascii;
+	#my $new    = $dom->createTextNode($ascii);
+	#foreach my $br (@ascii_br) {
+		## body...
+	#}
 	my $new    = $dom->createTextNode($ascii);
 
-	$parent->replaceChild($new,$node);
 
 }
 
