@@ -17,6 +17,7 @@ use LWP;
 use XML::LibXML;
 use XML::LibXML::PrettyPrint;
 use Data::Dumper;
+use File::Spec::Functions qw(catfile);
 
 use HTML::Entities;
 
@@ -34,7 +35,7 @@ sub init {
 	my $self=shift;
 
 	my $h={
-		sub_log => sub { warn $_ for(@_); },
+		sub_log => sub { warn $_ . "\n" for(@_); },
 	};
 		
 	my @k=keys %$h;
@@ -118,6 +119,50 @@ sub pretty {
 
 }
 
+sub url_saveas {
+	my $self = shift;
+	my $ref  = shift;
+
+	my $url   = $ref->{url} || '';
+	my $file  = $ref->{file} || '';
+	my $rw = $ref->{rw} || 0;
+
+	unless ($file) { $self->log('url_saveas: no file!');return; }
+
+	my $savedir = $ref->{savedir}||$self->{savedir}||'';
+	unless ($savedir) { $self->log('url_saveas: no savedir!');return; }
+
+	my $fpath   = catfile($savedir,$file);
+
+	if (-e $fpath and not $rw) {
+		$self->log('url_saveas: saved file exists, will not rewrite!');
+		return;
+	}
+	my ($uri,$ua,$response);
+
+	$uri = URI->new($url);
+	$ua  = LWP::UserAgent->new;
+	
+	#eval { $response = $ua->get($uri,$fpath); };
+	eval { $response = $ua->get($uri); };
+	if ($@) { $self->log('Failure to invoke $ua->get method:',$@);  }
+
+	my ($content,$statline);
+ 	if ($response->is_success) {
+		 	$self->log('URL load OK');
+		 	$content =  $response->decoded_content;
+ 	} else { 
+		 	$statline = $response->status_line;
+		 	$self->log('URL load Fail: '.$statline);
+			return $self;
+ 	}
+	#print $fpath . "\n";
+
+	open(F,">$fpath") || die $!;
+	print F $content . "\n";
+	close(F);
+}
+
 sub load_html_from_url {
 	my $self = shift;
 	my $ref  = shift;
@@ -146,7 +191,8 @@ sub load_html_from_url {
 			recover         => 1,
 			suppress_errors => 1,
 	);
-	$self->{dom}=$dom;
+	$self->{dom}              = $dom;
+	$self->{content_from_url} = $content;
 
 	return $self;
 }
