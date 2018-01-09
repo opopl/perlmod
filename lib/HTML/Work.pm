@@ -281,14 +281,37 @@ sub node2text {
 		my $brt=$dom->createTextNode($a);
 		$br->addChild($brt);
 
-		#$br->appendText($a);
-		#print $a . "\n";
-		#print $br->toString . "\n";
     	$parent->insertBefore( $br, $node );
 	}
 	$parent->removeChild($node);
 
 
+}
+
+sub node_getascii {
+	my $self=shift;
+	my $ref=shift;
+
+	my $xpath = $ref->{xpath} || undef;
+	my $node  = $ref->{node} || undef;
+
+	my $dom   = $self->{dom} || undef;
+
+	my @ascii = ();
+	my @nodes = $node->findnodes($xpath);
+
+	foreach my $n (@nodes) {
+		my $html   = $n->toString;
+		my $parent = $n->parentNode;
+
+		$self->node2text($dom,$n);
+
+		my @br=$parent->findnodes('./br');
+		foreach my $a (@br) {
+			push @ascii,$a->textContent;
+		}
+	}
+	return(\@ascii,\@nodes);
 }
 
 sub replace_node_with_text {
