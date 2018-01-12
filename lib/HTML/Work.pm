@@ -95,11 +95,11 @@ sub html2str {
 	my $dom = $self->{dom};
 
 	my $xpath = $ref->{xpath} || '';
-	my $text='';
+	my $text  = '';
 
 	if ($xpath) {
 		my @nodes = $dom->findnodes($xpath);
-		$text = join "\n",map { $_->toString } @nodes;
+		$text     = join "\n",map { $_->toString } @nodes;
 	}else{
 		$self->pretty;
 		$text = $dom->toString;
@@ -112,7 +112,7 @@ sub html2lines {
 	my $self = shift;
 	my $ref  = shift || {};
 
-	my $str = $self->html2str($ref);
+	my $str   = $self->html2str($ref);
 	my @lines = split("\n",$str);
 
 	wantarray ? @lines : \@lines;
