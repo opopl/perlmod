@@ -147,6 +147,20 @@ sub save_to_vh {
 			if($@){ $self->log($@); }
 	}
 
+	# xpath callbacks
+	my $xpath_cb = $ref->{xpath_cb} || [];
+	foreach (@$xpath_cb) {
+		my $xpath = $_->{xpath} || '';
+		my $cb    = $_->{cb} || sub {};
+
+		next unless $xpath;
+
+		my @nodes=$dom->findnodes($xpath);
+		foreach my $node (@nodes) {
+			$cb->($node);
+		}
+	}
+
 	unless ($tmphtml) {
 		(my $fh,$tmphtml) = tempfile(
 			'HTML_Work_save_to_vh_XXXX',
