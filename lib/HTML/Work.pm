@@ -206,6 +206,30 @@ sub htmllines {
 
 }
 
+sub list_h {
+	my $self = shift;
+	my $ref  = shift;
+
+	my $sub = $ref->{sub} || sub { 1 };
+
+	my @headnums=(1..6);
+	my @xp_heads = map { 'self::h'.$_ } @headnums;
+	my $xpath    = join(@xp_heads,' or ');
+
+	my @n=$self->nodes({
+		xpath => $xpath,
+	});
+
+	my @heads;
+	for my $node (@n){
+		my $ok   = $sub->($node);
+
+		local $_;
+		$ok && push @heads,$_;
+	}
+	wantarray ? @heads : \@heads ;
+}
+
 sub list_href {
 	my $self = shift;
 	my $ref  = shift;
