@@ -160,18 +160,18 @@ sub save_to_vh {
 		file => $tmphtml,
 	});
 
-	my @pre=(
+	my $pre=$ref->{insert_vh} || [
 		' ',
-		'*'.$tag.'*',
+		' *'.$tag.'*',
 		'vim:ft=help:foldmethod=indent',
 		' ',
-	);
+	];
 
 
 	my $cmd   = 'lynx -dump -force_html '.$tmphtml;
 	my @lines = map { s/\n//g; $_ } qx{$cmd};
 	
-	unshift @lines,@pre;
+	unshift @lines,@$pre;
 	write_file($out_vh,join("\n",@lines) . "\n");
 
 }
