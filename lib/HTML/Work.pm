@@ -10,6 +10,7 @@ use warnings;
 
 use Encode;
 use utf8;
+use File::Temp qw( tempfile tempdir );
 
 use URI;
 use LWP;
@@ -75,9 +76,7 @@ sub init_dom {
 
 	return $self;
 
-
 }
-
 
 sub log {
 	my ($self,@args)=@_;
@@ -88,11 +87,99 @@ sub log {
 	return $self;
 }
 
-sub html2str {
+sub dom_replace_a {
 	my $self = shift;
-	my $ref  = shift;
 
-	my $dom = $self->{dom};
+	my $dom  = $self->{dom};
+
+	{
+		my @nodes=$dom->findnodes('//a');
+		for my $node (@nodes) {
+			eval {
+				 my $parent = $node->parentNode;
+				 my $text   = $node->textContent;
+				 my $new    = $dom->createTextNode($text);
+		
+				 $parent->replaceChild($new,$node);
+			};
+		if($@){ $self->log($@); }
+		}
+	}
+	return $self;
+
+}
+
+sub save_to_vh {
+	my ($self,$ref) = @_;
+
+	my $tag     = $ref->{tag} || '';
+	my $in_html = $ref->{in_html} || '';
+	my $out_vh  = $ref->{out_vh} || '';
+
+	my $tmpdir  = $ref->{tmpdir} || $ENV{TMP} || '';
+	my $tmphtml = $ref->{tmphtml} || '';
+
+	$self->load_from_file({ 
+		file => $in_html,
+	});
+
+	my $dom      = $self->{dom};
+	$self->{dom} = $dom;
+
+	my $actions = $ref->{actions} || [];
+	foreach my $act (@$actions) {
+		local $_=$act;
+		/^replace_a$/ && do {
+			$self->dom_replace_a;
+			next;
+		};
+	}
+
+	my $xpath_rm = $ref->{xpath_rm} || [];
+	foreach my $xpath (@$xpath_rm) {
+			my @nodes=$dom->findnodes($xpath);
+			for my $node (@nodes) {
+				eval {
+					 my $parent = $node->parentNode;
+					 $parent->removeChild($node);
+				};
+			}
+			if($@){ $self->log($@); }
+	}
+
+	unless ($tmphtml) {
+		(my $fh,$tmphtml) = tempfile(
+			'HTML_Work_save_to_vh_XXXX',
+			SUFFIX => '.htm',
+			DIR    => $tmpdir,
+		);
+
+	}
+
+	$self->save_to_html({
+		file => $tmphtml,
+	});
+
+	my @pre=(
+		' ',
+		'*'.$tag.'*',
+		'vim:ft=help:foldmethod=indent',
+		' ',
+	);
+
+
+	my $cmd   = 'lynx -dump -force_html '.$tmphtml;
+	my @lines = map { s/\n//g; $_ } qx{$cmd};
+	
+	unshift @lines,@pre;
+	write_file($out_vh,join("\n",@lines) . "\n");
+
+}
+
+sub htmlstr {
+	my ($self,$ref) = @_;
+
+	my $dom  = $self->{dom};
 
 	my $xpath = $ref->{xpath} || '';
 	my $text  = '';
@@ -108,15 +195,50 @@ sub html2str {
 
 }
 
-sub html2lines {
+sub htmllines {
 	my $self = shift;
 	my $ref  = shift || {};
 
-	my $str   = $self->html2str($ref);
+	my $str   = $self->htmlstr($ref);
 	my @lines = split("\n",$str);
 
 	wantarray ? @lines : \@lines;
 
+}
+
+sub list_href {
+	my $self = shift;
+	my $ref  = shift;
+
+	my $sub = $ref->{sub} || sub { 1 };
+
+	my @n=$self->nodes({xpath => '//a'});
+	my @href;
+	for(@n){
+		my $a = $_->getAttribute('href');
+
+		{
+			local $_ = $a;
+			my $ok   = $sub->($_);
+
+			$ok && push @href,$_;
+		}
+	}
+	wantarray ? @href : \@href ;
+}
+
+sub nodes { 
+	my $self = shift;
+	my $ref  = shift;
+
+	#my $xpaths=$ref->{xpaths} || [];
+	my $xpath=$ref->{xpath} || '';
+
+	my $dom=$self->{dom};
+
+	my @nodes=$dom->findnodes($xpath);
+
+	wantarray ? @nodes : \@nodes ;
 }
 
 sub node_pretty {
@@ -231,18 +353,22 @@ sub load_html_from_url {
 			recover         => 1,
 			suppress_errors => 1,
 	);
+
 	$self->{dom}              = $dom;
 	$self->{content_from_url} = $content;
 
 	return $self;
 }
 
-sub html_saveas {
+sub save_to_html {
 	my $self = shift;
 	my $ref  = shift;
 
-	my $html = $self->html2str($ref);
+	my $html = $self->htmlstr($ref);
 	my $file = $ref->{file} || '';
+
+	#use Data::Dumper qw(Dumper);
+	#print Dumper($self->htmlstr({xpath => '//a'}));
 
 	if ($file) {
 		open(F,">$file") || die $!;

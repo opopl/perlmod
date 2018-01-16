@@ -5,6 +5,7 @@ use strict;
 use warnings;
 
 use parent qw(Exporter);
+
 use File::Slurp qw(read_file);
 use List::MoreUtils qw(uniq);
 
