@@ -34,6 +34,10 @@ use File::Slurp qw(
 
 use HTML::Entities;
 
+=head1 METHODS
+
+=cut
+
 sub new
 {
 	my ($class, %opts) = @_;
@@ -362,6 +366,21 @@ sub load_from_file {
 	$self->{dom}              = $dom;
 
 }
+
+=head2 load_html_from_url
+
+=over
+
+=item Usage
+
+	my $htw=HTML::Work->new;
+
+	$htw->load_html_from_url({ url => $url });
+	$htw->load_html_from_url({ url => $url, xpath => $xpath });
+
+=back
+
+=cut
 
 sub load_html_from_url {
 	my $self = shift;
