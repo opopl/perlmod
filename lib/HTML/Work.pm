@@ -254,17 +254,34 @@ sub list_h {
 		$ok && push @heads,$_;
 	}
 
-	wantarray ? @heads : \@heads ;
+	wantarray ? @heads: \@heads ;
 }
 
-sub download_href {
+sub download_href_from_url {
 	my $self = shift;
 	my $ref  = shift;
+
+	my $url  = $ref->{url};
+
+	$self->load_html_from_url($ref);
 
 	my @href = $self->list_href;
 
 	foreach my $url (@href) {
+		next unless defined $url;
+		$url =~ s/^\s*//g;
+		$url =~ s/\s*$//g;
+		next unless $url;
 		my $uri = URI->new($url);
+
+		my $path = $uri->path || '';
+		my $host = $uri->host || '';
+
+		print $host . "\n";
+		print $path . "\n";
+
+		#print $uri->as_string . "\n";
+		#print $uri->host . "\n";
 	}
 }
 
