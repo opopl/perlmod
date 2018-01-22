@@ -123,9 +123,11 @@ sub save_to_vh {
 	my $tmpdir  = $ref->{tmpdir} || $ENV{TMP} || '';
 	my $tmphtml = $ref->{tmphtml} || '';
 
-	$self->load_from_file({ 
-		file => $in_html,
-	});
+	if ($in_html) {
+		$self->load_from_file({ 
+			file => $in_html,
+		});
+	}
 
 	my $dom      = $self->{dom};
 	$self->{dom} = $dom;
@@ -185,12 +187,16 @@ sub save_to_vh {
 		' ',
 	];
 
-
 	my $cmd   = 'lynx -dump -force_html '.$tmphtml;
 	my @lines = map { s/\n//g; $_ } qx{$cmd};
 	
 	unshift @lines,@$pre;
-	write_file($out_vh,join("\n",@lines) . "\n");
+
+	if ($out_vh) {
+		write_file($out_vh,join("\n",@lines) . "\n");
+	}
+
+	wantarray ? @lines : \@lines ;
 
 }
 
@@ -232,7 +238,7 @@ sub list_h {
 
 	my @headnums=(1..6);
 	my @xp_heads = map { 'self::h'.$_ } @headnums;
-	my $xpath    = join(@xp_heads,' or ');
+	my $xpath    = '//*['.join(' or ', @xp_heads) . ']';
 
 	my @n=$self->nodes({
 		xpath => $xpath,
@@ -243,8 +249,11 @@ sub list_h {
 		my $ok   = $sub->($node);
 
 		local $_;
+
+		$_=$node->textContent;
 		$ok && push @heads,$_;
 	}
+
 	wantarray ? @heads : \@heads ;
 }
 
@@ -336,7 +345,7 @@ sub url_saveas {
 
 	my ($content,$statline);
  	if ($response->is_success) {
-		 	$self->log('URL load OK');
+		 	$self->log('URL load OK: '.$url);
 		 	$content =  $response->decoded_content;
  	} else { 
 		 	$statline = $response->status_line;
@@ -367,6 +376,15 @@ sub load_from_file {
 
 }
 
+sub url_was_loaded {
+	my $self=shift;
+	my $url=shift;
+
+	my @loaded = @{$self->{loaded_urls}||[]};
+
+	return (grep { /^$url$/ } @loaded ) ? 1 : 0;
+}
+
 =head2 load_html_from_url
 
 =over
@@ -388,6 +406,13 @@ sub load_html_from_url {
 
 	my $xpath = $ref->{xpath} || '';
 	my $url   = $ref->{url} || '';
+	my $reload   = $ref->{reload} || 0;
+
+	if (!$reload && $self->url_was_loaded($url)) {
+		$self->{dom}=$self->{urls_dom}->{$url} || undef;
+		$self->{content_from_url} = $self->{urls_content}->{$url} || undef;
+		return;
+	}
 
 	my $uri = URI->new($url);
 	my $ua  = LWP::UserAgent->new;
@@ -396,11 +421,12 @@ sub load_html_from_url {
 
 	my ($content,$statline);
  	if ($response->is_success) {
-		 	$self->log('URL load OK');
+		 	$self->log('URL load OK:' . $url);
 		 	$content =  $response->decoded_content;
+			push @{$self->{loaded_urls}},$url;
  	} else { 
 		 	$statline = $response->status_line;
-		 	$self->log('URL load Fail: '.$statline);
+		 	$self->log('URL load Fail: '.$url, 'Fail status: ' . $statline);
 			return $self;
  	}
 
@@ -413,6 +439,9 @@ sub load_html_from_url {
 
 	$self->{dom}              = $dom;
 	$self->{content_from_url} = $content;
+
+	$self->{urls_dom}->{$url}     = $dom;
+	$self->{urls_content}->{$url} = $content;
 
 	return $self;
 }
