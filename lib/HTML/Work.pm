@@ -124,7 +124,7 @@ sub save_to_vh {
 	my $tmphtml = $ref->{tmphtml} || '';
 
 	if ($in_html) {
-		$self->load_from_file({ 
+		$self->load_html_from_file({ 
 			file => $in_html,
 		});
 	}
@@ -257,6 +257,17 @@ sub list_h {
 	wantarray ? @heads : \@heads ;
 }
 
+sub download_href {
+	my $self = shift;
+	my $ref  = shift;
+
+	my @href = $self->list_href;
+
+	foreach my $url (@href) {
+		my $uri = URI->new($url);
+	}
+}
+
 sub list_href {
 	my $self = shift;
 	my $ref  = shift;
@@ -359,14 +370,14 @@ sub url_saveas {
 	close(F);
 }
 
-sub load_from_file {
+sub load_html_from_file {
 	my $self = shift;
 	my $ref  = shift;
 
 	my $file   = $ref->{file} || '';
 
-	my $html=read_file $file;
-	my $dom = XML::LibXML->load_html(
+	my $html = read_file $file;
+	my $dom  = XML::LibXML->load_html(
 			#string          => $content,
 			string          => decode('utf-8',$html),
 			recover         => 1,
@@ -404,12 +415,12 @@ sub load_html_from_url {
 	my $self = shift;
 	my $ref  = shift;
 
-	my $xpath = $ref->{xpath} || '';
-	my $url   = $ref->{url} || '';
-	my $reload   = $ref->{reload} || 0;
+	my $xpath  = $ref->{xpath} || '';
+	my $url    = $ref->{url} || '';
+	my $reload = $ref->{reload} || 0;
 
 	if (!$reload && $self->url_was_loaded($url)) {
-		$self->{dom}=$self->{urls_dom}->{$url} || undef;
+		$self->{dom}              = $self->{urls_dom}->{$url} || undef;
 		$self->{content_from_url} = $self->{urls_content}->{$url} || undef;
 		return;
 	}
