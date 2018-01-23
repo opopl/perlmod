@@ -392,6 +392,20 @@ sub load_html_from_file {
 	my $ref  = shift;
 
 	my $file   = $ref->{file} || '';
+	unless($file){
+
+		$self->log(
+			'HTML::Work::load_html_from_file: no filename!',
+		);
+		return;
+	}
+	unless(-e $file){
+		$self->log(
+			'HTML::Work::load_html_from_file: file does not exist:',
+			$file,
+		);
+		return;
+	}
 
 	my $html = read_file $file;
 	my $dom  = XML::LibXML->load_html(
@@ -401,6 +415,8 @@ sub load_html_from_file {
 			suppress_errors => 1,
 	);
 	$self->{dom}              = $dom;
+
+	return $self;
 
 }
 
