@@ -518,11 +518,12 @@ sub VimVar {
         };
         /^List$/ && do {
             my $len = VimEval( 'len(' . $var . ')' );
-            my $i   = 0;
-            $res = [];
+
+            my $i = 0;
+            $res  = [];
 
             while ( $i < $len ) {
-                my @v = split( "\n", VimEval( $var . '[' . $i . ']' ) );
+                my @v     = split( "\n", VimEval( $var . '[' . $i . ']' ) );
                 my $first = shift @v;
 
                 if (@v) {

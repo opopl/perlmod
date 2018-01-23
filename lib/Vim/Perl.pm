@@ -903,6 +903,7 @@ sub VimMsg {
 
     my @o   = @_;
     my $ref = shift @o;
+
     my ($opts);
     my $prefix;
 
@@ -929,8 +930,8 @@ sub VimMsg {
         /^subname$/ && do { $prefix = "$SubName()>> "; next; };
     }
 
-    $prefix = $MsgPrefix if $MsgPrefix;
-    $MsgPrefix=$prefix;
+    $prefix    = $MsgPrefix if $MsgPrefix;
+    $MsgPrefix = $prefix;
 
     $opts->{hl} = 'WarningMsg' if $opts->{warn};
     $opts->{hl} = 'ErrorMsg'   if $opts->{error};
