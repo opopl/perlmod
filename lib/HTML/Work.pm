@@ -13,6 +13,8 @@ use utf8;
 use File::Temp qw( tempfile tempdir );
 
 use URI;
+use URI::Simple;
+
 use LWP;
 
 use HTML::Strip;
@@ -257,52 +259,173 @@ sub list_h {
 	wantarray ? @heads: \@heads ;
 }
 
+sub uri_uh {
+	my $self = shift;
+	my $url  = shift;
+
+	my $uri = URI::Simple->new($url);
+
+	my @v=qw( host path protocol directory file source );
+	#my @v=qw(host path scheme opaque fragment);
+	my $uh;
+
+	foreach my $v (@v) {
+		my $val=($uri->can($v)) ? $uri->$v : '';
+		$uh->{$v}=$val;
+	}
+	$uh->{url}=$url;
+	$uh->{root} = join('/' , @{$uh}{qw(host directory )} );
+
+	return ($uri,$uh);
+}
+
 sub download_href_from_url {
 	my $self = shift;
 	my $ref  = shift;
 
-	my $url  = $ref->{url};
+	my $url     = $ref->{url};
+	my $savedir = $ref->{savedir} || '';
+
+	my ($uri,$uh) = $self->uri_uh($url);
+
+	my ($host,$dir) = @{$uh}{qw(host directory)};
+	my $base_url = $host . '/' . $dir;
 
 	$self->load_html_from_url($ref);
 
-	my @href = $self->list_href;
+	my @href = $self->list_href({
+		base_url => $base_url,
+		add_root => 1,
+		filter 	 => [qw(external id)],
+	});
+
+	mkpath $savedir unless -d $savedir;
 
 	foreach my $url (@href) {
-		next unless defined $url;
-		$url =~ s/^\s*//g;
-		$url =~ s/\s*$//g;
-		next unless $url;
-		my $uri = URI->new($url);
+		my $uh = $self->uri_uh($url);
+		my $file = $uh->{file};
 
-		my $path = $uri->path || '';
-		my $host = $uri->host || '';
+		next unless $file;
+		next if $file =~ s/^\s*$//g;
 
-		print $host . "\n";
-		print $path . "\n";
+		print $url . "\n";
 
-		#print $uri->as_string . "\n";
-		#print $uri->host . "\n";
+		my $saved = catfile($savedir,$file);
+
+		my ($ok,$statline) = $self->download({ 
+				url     => $url,
+				file    => $saved,
+				rewrite => 0,
+		});
 	}
+
+
+}
+
+sub download {
+	my $self = shift;
+	my $ref  = shift;
+
+	my $url  = $ref->{url};
+	my $file = $ref->{file};
+
+	if (!$ref->{redo} && $self->{downloaded}->{$url}) {
+		return;
+	}
+
+
+	$self->log('Download (from/to):',$url,$file);
+
+	my $ua=LWP::UserAgent->new();	
+	#my $res = $ua->get($url,':content_file' => $file );
+	my $res = $ua->get($url);
+	my $content;
+
+	my $ok = $res->is_success;
+
+	$ok ? do { 
+			$self->log('SUCCESS');
+			$content = $res->content;
+
+			if ( ($ref->{rewrite}) || (! -e $file) ){
+				write_file($file,$content . "\n");
+			}
+			$self->{downloaded}->{$url}=1;
+		}	: 
+		do {	
+			$self->log('FAIL: ' . $res->status_line);
+		};
+	return ($ok,$res->status_line);
+
 }
 
 sub list_href {
 	my $self = shift;
 	my $ref  = shift;
 
-	my $sub = $ref->{sub} || sub { 1 };
+	my $sub_node = $ref->{sub_node} || sub { 1 };
+	my $sub_a = $ref->{sub_a} || sub { 1 };
 
-	my @n=$self->nodes({xpath => '//a'});
+	my $base_url = $ref->{base_url} || '';
+
+	my $uh_base = $self->uri_uh($base_url);
+
+	# add base to each relative link?
+	my $add_root = $ref->{add_root} || 0;
+
+	my $filter = $ref->{filter} || [qw( )];
+
+	my @n = $self->nodes({xpath => '//a'});
 	my @href;
+
 	for(@n){
 		my $a = $_->getAttribute('href');
 
 		{
 			local $_ = $a;
-			my $ok   = $sub->($_);
+			my $ok   = $sub_node->($_);
 
 			$ok && push @href,$_;
 		}
 	}
+
+	my @new;
+	HREF: foreach my $a (@href) {
+		next unless defined $a;
+		$a =~ s/^\s*//g;
+		$a =~ s/\s*$//g;
+		next unless $a;
+		my ($uri_a,$uh_a) = $self->uri_uh($a);
+
+		my $type='external';
+
+		next unless $sub_a->($a);
+
+		if (!$uh_a->{host}) {
+			$type='internal';
+			if ($add_root) {
+				my $protocol = $uh_base->{protocol} || 'http';
+				my $host   = $uh_base->{host} || '';
+				my $root   = $uh_base->{root} || '';
+	
+				$a = $protocol . ':/' . $root . '/' . $uh_a->{path}; 
+			}
+		}
+
+		if ($uh_a->{path} =~ /^#/) {
+			$type = 'id';
+		}
+
+		for(@$filter){
+			/^$type$/ && do {
+				next HREF;
+			};
+		}
+
+		push @new,$a;
+	}
+	@href=@new;
+
 	wantarray ? @href : \@href ;
 }
 
@@ -313,7 +436,14 @@ sub nodes {
 	#my $xpaths=$ref->{xpaths} || [];
 	my $xpath=$ref->{xpath} || '';
 
-	my $dom=$self->{dom};
+	my $dom=$self->{dom} || undef;
+	unless ($dom) {
+		$self->log(
+				'"dom" key undefined inside ' . (caller(0))[3],
+				'	input args: '. Dumper($ref),
+			 );
+		return wantarray ? () : [] ;
+	}
 
 	my @nodes=$dom->findnodes($xpath);
 
@@ -391,30 +521,50 @@ sub load_html_from_file {
 	my $self = shift;
 	my $ref  = shift;
 
+	my $sub = (caller(0))[3];
+	my $ret = sub { $self->log( 'end: '.$sub); return $self; };
+
+	$self->log(
+		'start: '.$sub,
+		'input: '.Dumper($ref),
+	);
+
 	my $file   = $ref->{file} || '';
 	unless($file){
-
-		$self->log(
-			'HTML::Work::load_html_from_file: no filename!',
-		);
-		return;
+		$self->log( ' no filename for '. $sub);
+		return $ret->();
 	}
 	unless(-e $file){
-		$self->log(
-			'HTML::Work::load_html_from_file: file does not exist:',
-			$file,
-		);
-		return;
+		$self->log( $sub . ' file does not exist:', $file,);
+		return $ret->();
 	}
 
 	my $html = read_file $file;
-	my $dom  = XML::LibXML->load_html(
-			#string          => $content,
+
+	my ($dom,$opts);
+	eval {
+		my $opts={
 			string          => decode('utf-8',$html),
 			recover         => 1,
 			suppress_errors => 1,
-	);
-	$self->{dom}              = $dom;
+		};
+		$dom  = XML::LibXML->load_html(%$opts);
+		$self->{dom}              = $dom;
+	};
+	if ($@) {
+		$self->log(
+			'Errors while running XML::LibXML->load_html(%$opts):',$@,
+			'	input $opts='. Dumper($opts)
+		);
+	}
+
+	unless(defined $dom){
+		$self->log( ' DOM not created!');
+	}else{
+		$self->log( ' DOM created.');
+	}
+
+	$self->log( 'end: '.$sub);
 
 	return $self;
 
@@ -461,16 +611,22 @@ sub load_html_from_url {
 	my $uri = URI->new($url);
 	my $ua  = LWP::UserAgent->new;
 
+	$self->log( 
+		(caller(0))[3],
+		'Trying to load URI: ', 
+		$uri->as_string
+	);
+
  	my $response = $ua->get($uri);
 
 	my ($content,$statline);
  	if ($response->is_success) {
-		 	$self->log('URL load OK:' . $url);
+		 	$self->log('URL load OK:', $url);
 		 	$content =  $response->decoded_content;
 			push @{$self->{loaded_urls}},$url;
  	} else { 
 		 	$statline = $response->status_line;
-		 	$self->log('URL load Fail: '.$url, 'Fail status: ' . $statline);
+		 	$self->log('URL load Fail: ', $url, 'Fail status line: ' , $statline);
 			return $self;
  	}
 
