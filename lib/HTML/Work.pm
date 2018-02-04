@@ -232,7 +232,7 @@ sub htmllines {
 
 }
 
-sub list_h {
+sub list_heads {
 	my $self = shift;
 	my $ref  = shift;
 
@@ -332,7 +332,6 @@ sub download {
 	if (!$ref->{redo} && $self->{downloaded}->{$url}) {
 		return;
 	}
-
 
 	$self->log('Download (from/to):',$url,$file);
 

@@ -4,6 +4,7 @@
 *.o
 *.lo
 blib
+Build.bat
 mods/*/blib/libdoc/
 mods/**/blib/
 mods/**/Makefile
@@ -13,6 +14,7 @@ mods/**/blib/
 mods/**/_build/
 i.examples.pod  
 tags
+*.tags
 i.help.pod
 mods/**/MYMETA.json
 mods/**/MYMETA.yml

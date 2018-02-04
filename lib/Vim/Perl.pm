@@ -342,11 +342,15 @@ sub VimVar {
 
             next;
         };
+###VimVar_Dictionary
         /^Dictionary$/ && do {
             $res = {};
             my @keys = VimEval( 'keys(' . $var . ')' );
 
+			VimMsg(Dumper(\@keys));
+
             foreach my $k (@keys) {
+				VimMsg($k);
                 $res->{$k} = VimEval( $var . "['" . $k . "']" );
             }
 
@@ -967,6 +971,15 @@ sub VimMsg_PE {
 
     VimMsg( "Error in $subname : " . $text, { error => 1 } );
 
+}
+
+sub VimMsgVar {
+    my $text = shift;
+
+    my $var = shift;
+
+    #VIM::Msg( "$FullSubName() : $text", "ErrorMsg" );
+    VIM::Msg( Dumper(VimVar($var)) );
 }
 
 sub VimMsgE {
