@@ -284,6 +284,7 @@ sub tk_init_tab_test {
 	);
 }
 
+
 ###tab_options
 sub tk_init_tab_options {
 	my $self=shift;
@@ -294,6 +295,8 @@ sub tk_init_tab_options {
 	my $tab  = $tabs->{tab_options};
 
 	my ($paths,$path_order)=$self->config_get_hash('/tk/tab_options/paths');
+
+	my $fr=$tab->Frame->pack(-side => 'top',-fill => 'x');
 
 	$self->{paths}=$paths;
 
@@ -307,20 +310,37 @@ sub tk_init_tab_options {
 
 		#$self->log(Dumper($val));
 
-		my $lb= $tab->LabEntry(
-		     -label        => $pathname,
-		     -labelPack    => [qw/-side left -anchor w/],
-		     -labelFont    => '9x15bold',
-			 #-relief       => 'flat',
-			 #-state        => 'disabled',
+		my $lb = $fr->Label(
+			-text => $pathname,
+		)->pack(qw/-side top/);
+
+		my $e= $fr->Entry(
 		     -textvariable => \$val,
-		     -width        => 35,
-		);
-		$lb->pack(qw/-fill x -expand 1/);
+		     -width        => 20,
+		)->pack(qw/-side top -fill x -expand 1/)
 	}
+ 
+}
 
+sub env { 
+	my $self=shift;
 
+	my $var = shift;
 
+	return $ENV{$var} || '';
+}
+
+sub path {
+	my $self=shift;
+
+	my $pathname = shift;
+
+	my $paths = $self->{paths};
+	my $val   = $paths->{$pathname} || '';
+
+	$val =~ s/\$(\w)/$self->env($1)/g;
+
+	return $val;
 
 }
 
@@ -447,6 +467,36 @@ sub tk_init_tab_xpath {
 		$text_output->Contents(join("\n",@h));
 	};
 
+###sub_select_tag_script_src
+	my $sub_select_tag_script=sub{
+		$reload=0;
+		$sub_load_html->();
+
+		my $c = $htw->htmlstr({xpath => '//script'});
+		$text_output->Contents($c);
+
+	};
+
+###sub_select_tag_script_src
+	my $sub_select_tag_script=sub{
+		$reload=0;
+		$sub_load_html->();
+
+		my $c = $htw->htmlstr({xpath => '//script[contains(.,@src)]'});
+		$text_output->Contents($c);
+
+	};
+
+###sub_select_tag_link
+	my $sub_select_tag_link=sub{
+		$reload=0;
+		$sub_load_html->();
+
+		my $c = $htw->htmlstr({xpath => '//link'});
+		$text_output->Contents($c);
+
+	};
+
 	my $sub_print_links=sub{
 		$reload=0;
 		$sub_load_html->();
@@ -567,6 +617,8 @@ sub tk_init_tab_xpath {
 
 	};
 
+###tab_xpath_frame_input
+###frame_input
 	my $frame_input=$tab->Frame->pack(-side => 'top',-fill => 'x');
 
 ###lb_url
@@ -691,7 +743,7 @@ sub tk_init_tab_xpath {
 			#-indicatoron => 1,
 		#)
 		#->pack(-side => 'left', -fill => 'x');
-
+		#
 	my $lb_xpath=$frame_input
 		->Label(-text => 'XPATH:')
 		->pack('-side'=>'top',-padx => '50');
@@ -752,6 +804,7 @@ sub tk_init_tab_xpath {
 ###btn_goto_heading
 
 
+###frame_control_2
 	my $frame_control_2=$tab->Frame->pack(-side => 'top',-fill => 'x');
 
 	my $btn_goto_heading=$frame_control_2->Button(
@@ -773,7 +826,28 @@ sub tk_init_tab_xpath {
 		#-text    => 'Show HTML',
 		#-command => $sub_show_html,
 	#)->pack(-side => 'left');
+	#
+###frame_tags
+	my $frame_tags=$tab->Frame->pack(-side => 'top',-fill => 'x');
 
+###btn_tag_script
+	my $btn_tag_script=$frame_tags->Button(
+		-text    => '<script>',
+		-command => $sub_select_tag_script,
+	)->pack(-side => 'left');
+
+###btn_tag_script_src
+	my $btn_tag_script=$frame_tags->Button(
+		-text    => '<script src="...">',
+		-command => $sub_select_tag_script_src,
+	)->pack(-side => 'left');
+
+	my $btn_tag_script=$frame_tags->Button(
+		-text    => '<link>',
+		-command => $sub_select_tag_link,
+	)->pack(-side => 'left');
+
+###frame_output
 	my $frame_output=$tab->Frame->pack(-side => 'top',-fill => 'x');
 	my $lb_output = $frame_output->Label(-text => 'Output')->pack(-side =>'top',-fill => 'x');
 
