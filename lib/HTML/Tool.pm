@@ -456,7 +456,9 @@ sub tk_init_tab_xpath {
 		$sub_load_html->();
 
 		my $c = $htw->htmlstr({xpath => $xpath});
-		$text_output->Contents($c);
+		$text_output->set_content({ 
+			items => [$c] 
+		});
 
 	};
 ###sub_print_headings
@@ -465,7 +467,9 @@ sub tk_init_tab_xpath {
 		$sub_load_html->();
 
 		my @h = $htw->list_heads;
-		$text_output->Contents(join("\n",@h));
+		$text_output->set_content(
+			items => [join("\n",@h)]
+		);
 	};
 
 ###sub_select_tag_script
@@ -474,7 +478,7 @@ sub tk_init_tab_xpath {
 		$sub_load_html->();
 
 		my $c = $htw->htmlstr({xpath => '//script'});
-		$text_output->Contents($c);
+		$text_output->set_content($c);
 
 	};
 
@@ -485,7 +489,7 @@ sub tk_init_tab_xpath {
 
 		#my $nodes = $htw->nodes({xpath => '//script]'});
 		#my $c;
-		#$text_output->Contents($c);
+		#$text_output->set_content($c);
 
 		my @src=();
 		my @attr = $htw->list_attr({
@@ -493,7 +497,7 @@ sub tk_init_tab_xpath {
 			attr  => 'src',
 		});
 		my $c=join("\n",@attr);
-		$text_output->Contents($c);
+		$text_output->set_content($c);
 
 	};
 
@@ -503,7 +507,7 @@ sub tk_init_tab_xpath {
 		$sub_load_html->();
 
 		my $c = $htw->htmlstr({xpath => '//link'});
-		$text_output->Contents($c);
+		$text_output->set_content($c);
 
 	};
 
@@ -515,7 +519,7 @@ sub tk_init_tab_xpath {
 		my $c = $htw->htmlstr({
 				xpath => ' //link[@type="text/css"] '
 			});
-		$text_output->Contents($c);
+		$text_output->set_content($c);
 
 	};
 
@@ -529,7 +533,7 @@ sub tk_init_tab_xpath {
 				attr => 'href'
 			});
 		my $c=join("\n",@attr);
-		$text_output->Contents($c);
+		$text_output->set_content($c);
 
 	};
 
@@ -539,14 +543,16 @@ sub tk_init_tab_xpath {
 		$sub_load_html->();
 
 		my @a = map { defined $_ ? $_ : () } $htw->list_href;
-		$text_output->Contents(join("\n",@a));
+		$text_output->set_content({ 
+			items => \@a,
+		});
 	};
 	my $sub_print_forms=sub{
 		$reload=0;
 		$sub_load_html->();
 
 		#my @forms = map { defined $_ ? $_ : () } $htw->list_forms;
-		#$text_output->Contents(join("\n",@forms));
+		#$text_output->set_content(join("\n",@forms));
 	};
 
 ###sub_show_html

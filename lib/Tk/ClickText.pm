@@ -9,7 +9,11 @@ use vars qw($VERSION);
 $VERSION = '1.0';
 
 use Tk qw(Ev);
-use Tk::widgets qw(Text);
+use Tk::widgets qw(
+	Text 
+	LabEntry 
+	DialogBox
+);
 
 use base qw(Tk::Derived Tk::Text);
 
@@ -45,17 +49,39 @@ sub Populate {
 	}
 }
 
-
-sub Contents
+sub set_content
 {
 	my $t    = shift;
-	my @items = @_;
+
+	my $ref=shift;
+
+	my $items = $ref->{items} || [];
 
 	my $tag = "tag000";
 
 	my $mw=$t->parent;
 
 	my $process_link = sub {
+		my $url=shift;
+
+		my $db = $mw->DialogBox(
+			-title          => 'URL Click',
+			-buttons        => ['Ok', 'Cancel'],
+			-default_button => 'Ok',
+		);
+
+		my $le = $db->LabEntry(
+		     -label        => 'URL:',
+		     -labelPack    => [qw/-side left -anchor w/],
+		     -labelFont    => '9x15bold',
+		     -relief       => 'flat',
+			 #-state        => 'disabled',
+		     -textvariable => \$url,
+		     -width        => 35,
+		);
+		$le->pack(qw/-fill x -expand 1/);
+	
+		my $ans=$db->Show();
 	};
 
 ###manipulate_link
@@ -82,10 +108,10 @@ sub Contents
 		}
 	};
 	
-	if (@items) {
+	if (@$items) {
 		$t->delete('1.0','end');
 		my $pat=qr/(https:\S+|http:\S+)/;
-		for my $item (@items){
+		for my $item (@$items){
 	    	my (@http) = split (/$pat/,$item);
 			for(@http){
 				if (/$pat/) {
