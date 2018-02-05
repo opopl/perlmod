@@ -51,6 +51,7 @@ use Tk::widgets qw(
 	NoteBook
 	Tree
 	HyperText
+	ClickText
 );
 
 our $htw=HTML::Work->new();
@@ -898,7 +899,7 @@ sub tk_init_tab_xpath {
 	my $lb_output=$frame_output->Label(-text => 'Output')->pack(-side =>'top',-fill => 'x');
 
 	$text_output=$frame_output->Scrolled(
-		'Text',
+		'ClickText',
 		-height          => 50,
 		-width           => 80,
 		-exportselection => 1,
@@ -1204,6 +1205,14 @@ sub init {
 	for(@k){
 		$self->{$_} = $h->{$_} unless defined $self->{$_};
 	}
+}
+
+sub init_subs {
+	my $self=shift;
+
+	my $subs={
+		tab_xpath => {},
+	};
 }
 
 1;
