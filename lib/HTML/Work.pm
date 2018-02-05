@@ -115,12 +115,51 @@ sub dom_replace_a {
 
 }
 
+=head2 save_to_vh 
+
+=over
+
+=item Usage
+
+	my $htw=HTML::Work->new;
+
+	my $vhref={
+		# input HTML file
+		in_html => $in_html,
+		# output VimHelp file
+		out_vh  => $out_vh,
+		# head Vim tag (to be enclosed as *TAG* at the top of the outcome VimHelp file )
+		tag 	=> $tag,
+		# possible additional actions, may include
+		# 	replace_a - replace all links with text
+		actions => $actions || [],
+		# xpath to select elements to be removed
+		xpath_rm => $xpath_rm || [],
+		# xpath callbacks
+		xpath_cb => $xpath_cb || [],
+	};
+
+	$htw->save_to_vh($vhref);
+
+=back
+
+=cut
+
 sub save_to_vh {
 	my ($self,$ref) = @_;
 
 	my $tag     = $ref->{tag} || '';
+
 	my $in_html = $ref->{in_html} || '';
 	my $out_vh  = $ref->{out_vh} || '';
+
+	my $actions = $ref->{actions} || [];
+
+	# xpath for elements to be removed
+	my $xpath_rm = $ref->{xpath_rm} || [];
+
+	# xpath callbacks
+	my $xpath_cb = $ref->{xpath_cb} || [];
 
 	my $tmpdir  = $ref->{tmpdir} || $ENV{TMP} || '';
 	my $tmphtml = $ref->{tmphtml} || '';
@@ -134,7 +173,6 @@ sub save_to_vh {
 	my $dom      = $self->{dom};
 	$self->{dom} = $dom;
 
-	my $actions = $ref->{actions} || [];
 	foreach my $act (@$actions) {
 		local $_=$act;
 		/^replace_a$/ && do {
@@ -143,7 +181,6 @@ sub save_to_vh {
 		};
 	}
 
-	my $xpath_rm = $ref->{xpath_rm} || [];
 	foreach my $xpath (@$xpath_rm) {
 			my @nodes=$dom->findnodes($xpath);
 			for my $node (@nodes) {
@@ -155,8 +192,6 @@ sub save_to_vh {
 			if($@){ $self->log($@); }
 	}
 
-	# xpath callbacks
-	my $xpath_cb = $ref->{xpath_cb} || [];
 	foreach (@$xpath_cb) {
 		my $xpath = $_->{xpath} || '';
 		my $cb    = $_->{cb} || sub {};
@@ -201,6 +236,8 @@ sub save_to_vh {
 	wantarray ? @lines : \@lines ;
 
 }
+
+
 
 sub htmlstr {
 	my ($self,$ref) = @_;
@@ -476,9 +513,9 @@ sub url_saveas {
 	my $self = shift;
 	my $ref  = shift;
 
-	my $url   = $ref->{url} || '';
-	my $file  = $ref->{file} || '';
-	my $rw = $ref->{rw} || 0;
+	my $url  = $ref->{url} || '';
+	my $file = $ref->{file} || '';
+	my $rw   = $ref->{rw} || 0;
 
 	unless ($file) { $self->log('url_saveas: no file!');return; }
 
