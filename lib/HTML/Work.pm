@@ -248,7 +248,8 @@ sub htmlstr {
 	my $text  = '';
 
 	if ($xpath) {
-		my @nodes = $dom->findnodes($xpath);
+		my @nodes;
+		@nodes = $dom->findnodes($xpath);
 		$text     = join "\n",map { $_->toString } @nodes;
 	}else{
 		$self->pretty;
@@ -524,7 +525,15 @@ sub nodes {
 		return wantarray ? () : [] ;
 	}
 
-	my @nodes=$dom->findnodes($xpath);
+	my @nodes;
+	
+	eval {
+		@nodes=$dom->findnodes($xpath);
+	};
+	if ($@) {
+		$self->log('XPATH ERROR for xpath:',$xpath,'Error message:',$@);
+		return wantarray ? () : [] ;
+	}
 
 	wantarray ? @nodes : \@nodes ;
 }

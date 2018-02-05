@@ -512,11 +512,7 @@ sub tk_init_tab_xpath {
 		$sub_load_html->();
 
 		my $c = $htw->htmlstr({
-				xpath => '
-					//link[@rel="stylesheet" @type="text/css"]
-						||	
-					//link[@type="text/css"]
-					'
+				xpath => ' //link[@type="text/css"] '
 			});
 		$text_output->Contents($c);
 
@@ -528,11 +524,7 @@ sub tk_init_tab_xpath {
 		$sub_load_html->();
 
 		my @attr = $htw->list_attr({
-				xpath => '
-					//link[@rel="stylesheet" @type="text/css"]
-						||	
-					//link[@type="text/css"]
-					',
+				xpath => '//link[@type="text/css"]',
 				attr => 'href'
 			});
 		my $c=join("\n",@attr);
@@ -881,7 +873,7 @@ sub tk_init_tab_xpath {
 	)->pack(-side => 'left');
 
 ###btn_tag_script_src
-	my $btn_tag_script=$frame_tags->Button(
+	my $btn_tag_script_src=$frame_tags->Button(
 		-text    => '<script src="...">',
 		-command => $sub_select_tag_script_src,
 	)->pack(-side => 'left');
@@ -903,9 +895,9 @@ sub tk_init_tab_xpath {
 
 ###frame_output
 	my $frame_output=$tab->Frame->pack(-side => 'top',-fill => 'x');
-	my $lb_output = $frame_output->Label(-text => 'Output')->pack(-side =>'top',-fill => 'x');
+	my $lb_output=$frame_output->Label(-text => 'Output')->pack(-side =>'top',-fill => 'x');
 
-	$text_output = $frame_output->Scrolled(
+	$text_output=$frame_output->Scrolled(
 		'Text',
 		-height          => 50,
 		-width           => 80,
