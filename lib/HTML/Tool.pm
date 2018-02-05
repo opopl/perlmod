@@ -467,9 +467,9 @@ sub tk_init_tab_xpath {
 		$sub_load_html->();
 
 		my @h = $htw->list_heads;
-		$text_output->set_content(
+		$text_output->set_content({
 			items => [join("\n",@h)]
-		);
+		});
 	};
 
 ###sub_select_tag_script
@@ -478,7 +478,9 @@ sub tk_init_tab_xpath {
 		$sub_load_html->();
 
 		my $c = $htw->htmlstr({xpath => '//script'});
-		$text_output->set_content($c);
+		$text_output->set_content({ 
+			items => [$c] 
+		});
 
 	};
 
@@ -489,7 +491,7 @@ sub tk_init_tab_xpath {
 
 		#my $nodes = $htw->nodes({xpath => '//script]'});
 		#my $c;
-		#$text_output->set_content($c);
+		#$text_output->set_content({items => [$c] });
 
 		my @src=();
 		my @attr = $htw->list_attr({
@@ -497,7 +499,7 @@ sub tk_init_tab_xpath {
 			attr  => 'src',
 		});
 		my $c=join("\n",@attr);
-		$text_output->set_content($c);
+		$text_output->set_content({items => [$c] });
 
 	};
 
@@ -507,7 +509,7 @@ sub tk_init_tab_xpath {
 		$sub_load_html->();
 
 		my $c = $htw->htmlstr({xpath => '//link'});
-		$text_output->set_content($c);
+		$text_output->set_content({items => [$c] });
 
 	};
 
@@ -519,7 +521,7 @@ sub tk_init_tab_xpath {
 		my $c = $htw->htmlstr({
 				xpath => ' //link[@type="text/css"] '
 			});
-		$text_output->set_content($c);
+		$text_output->set_content({items => [$c] });
 
 	};
 
@@ -533,7 +535,7 @@ sub tk_init_tab_xpath {
 				attr => 'href'
 			});
 		my $c=join("\n",@attr);
-		$text_output->set_content($c);
+		$text_output->set_content({items => [$c] });
 
 	};
 

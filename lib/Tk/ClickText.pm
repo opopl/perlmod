@@ -16,6 +16,7 @@ use Tk::widgets qw(
 );
 
 use base qw(Tk::Derived Tk::Text);
+use Data::Dumper qw(Dumper);
 
 Construct Tk::Widget 'ClickText';
 
@@ -49,26 +50,25 @@ sub Populate {
 	}
 }
 
-sub set_content
-{
+sub set_content { 
 	my $t    = shift;
 
-	my $ref=shift;
+	my $ref  = shift;
 
 	my $items = $ref->{items} || [];
 
 	my $tag = "tag000";
-
 	my $mw=$t->parent;
 
-	my $process_link = sub {
-		my $url=shift;
+	my $process_link = $ref->{sub_process_link} || sub {
+		my ($l,$url,$tag)=@_;
 
 		my $db = $mw->DialogBox(
 			-title          => 'URL Click',
 			-buttons        => ['Ok', 'Cancel'],
 			-default_button => 'Ok',
 		);
+		my $dump=Dumper([@_]);
 
 		my $le = $db->LabEntry(
 		     -label        => 'URL:',
@@ -84,8 +84,9 @@ sub set_content
 		my $ans=$db->Show();
 	};
 
+
 ###manipulate_link
-	my $manipulate_link = sub {
+	my $manipulate_link = $ref->{sub_manipulate_link} || sub {
 	
 		# manipulate the link as you press the mouse key
 	
