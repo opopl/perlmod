@@ -487,12 +487,11 @@ sub tk_init_tab_xpath {
 		#$text_output->Contents($c);
 
 		my @src=();
-		my @nodes = $htw->nodes({xpath => '//script[@src]'});
-		for(@nodes){
-			push @src,$_->getAttribute('src');
-		}
-		my $c=join("\n",@src);
-		#$c = $htw->htmlstr({xpath => 'string(//script[@src]/@src)'});
+		my @attr = $htw->list_attr({
+			xpath => '//script[@src]',
+			attr  => 'src',
+		});
+		my $c=join("\n",@attr);
 		$text_output->Contents($c);
 
 	};
@@ -506,6 +505,41 @@ sub tk_init_tab_xpath {
 		$text_output->Contents($c);
 
 	};
+
+###sub_select_tag_link_css
+	my $sub_select_tag_link_css=sub{
+		$reload=0;
+		$sub_load_html->();
+
+		my $c = $htw->htmlstr({
+				xpath => '
+					//link[@rel="stylesheet" @type="text/css"]
+						||	
+					//link[@type="text/css"]
+					'
+			});
+		$text_output->Contents($c);
+
+	};
+
+###sub_select_tag_link_css_src
+	my $sub_select_tag_link_css_src=sub{
+		$reload=0;
+		$sub_load_html->();
+
+		my @attr = $htw->list_attr({
+				xpath => '
+					//link[@rel="stylesheet" @type="text/css"]
+						||	
+					//link[@type="text/css"]
+					',
+				attr => 'href'
+			});
+		my $c=join("\n",@attr);
+		$text_output->Contents($c);
+
+	};
+
 
 	my $sub_print_links=sub{
 		$reload=0;
@@ -852,9 +886,19 @@ sub tk_init_tab_xpath {
 		-command => $sub_select_tag_script_src,
 	)->pack(-side => 'left');
 
-	my $btn_tag_script=$frame_tags->Button(
+	my $btn_tag_link=$frame_tags->Button(
 		-text    => '<link>',
 		-command => $sub_select_tag_link,
+	)->pack(-side => 'left');
+
+	my $btn_tag_link_css=$frame_tags->Button(
+		-text    => '<link ...> (CSS)',
+		-command => $sub_select_tag_link_css,
+	)->pack(-side => 'left');
+
+	my $btn_tag_link_css_src=$frame_tags->Button(
+		-text    => '<link ...> (CSS, src)',
+		-command => $sub_select_tag_link_css_src,
 	)->pack(-side => 'left');
 
 ###frame_output

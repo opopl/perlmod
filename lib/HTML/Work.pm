@@ -465,6 +465,30 @@ sub list_href {
 	wantarray ? @href : \@href ;
 }
 
+sub list_attr {
+	my $self=shift;
+
+	my $ref  = shift;
+
+	my $xpath = $ref->{xpath} || '';
+	my $attr  = $ref->{attr} || '';
+
+	unless ($attr) {
+		return;
+	}
+	my @attr;
+
+	my @nodes = $self->nodes({ 
+		xpath => $xpath,
+	});
+
+	foreach my $node (@nodes) {
+		my $val = $node->getAttribute($attr);
+		push @attr,$val;
+	}
+	wantarray ? @attr : \@attr ;
+}
+
 =head2 nodes 
 
 =over
