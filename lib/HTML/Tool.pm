@@ -467,7 +467,7 @@ sub tk_init_tab_xpath {
 		$text_output->Contents(join("\n",@h));
 	};
 
-###sub_select_tag_script_src
+###sub_select_tag_script
 	my $sub_select_tag_script=sub{
 		$reload=0;
 		$sub_load_html->();
@@ -478,11 +478,21 @@ sub tk_init_tab_xpath {
 	};
 
 ###sub_select_tag_script_src
-	my $sub_select_tag_script=sub{
+	my $sub_select_tag_script_src=sub{
 		$reload=0;
 		$sub_load_html->();
 
-		my $c = $htw->htmlstr({xpath => '//script[contains(.,@src)]'});
+		#my $nodes = $htw->nodes({xpath => '//script]'});
+		#my $c;
+		#$text_output->Contents($c);
+
+		my @src=();
+		my @nodes = $htw->nodes({xpath => '//script[@src]'});
+		for(@nodes){
+			push @src,$_->getAttribute('src');
+		}
+		my $c=join("\n",@src);
+		#$c = $htw->htmlstr({xpath => 'string(//script[@src]/@src)'});
 		$text_output->Contents($c);
 
 	};

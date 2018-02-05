@@ -465,11 +465,30 @@ sub list_href {
 	wantarray ? @href : \@href ;
 }
 
+=head2 nodes 
+
+=over
+
+=item Usage
+
+	my $nodes = $htw->nodes({
+		xpath => $xpath,
+	});
+
+	my @nodes = $htw->nodes({
+		xpath => $xpath,
+	});
+
+	
+
+=back
+
+=cut
+
 sub nodes { 
 	my $self = shift;
 	my $ref  = shift;
 
-	#my $xpaths=$ref->{xpaths} || [];
 	my $xpath=$ref->{xpath} || '';
 
 	my $dom=$self->{dom} || undef;
