@@ -8,6 +8,7 @@ use utf8;
 use Data::Dumper qw(Dumper);
 
 use base qw(
+	HTML::Tool::Config
 	HTML::Tool::Tabs
 );
 
@@ -63,163 +64,6 @@ sub log {
 	
 }
 
-sub config_get_xml {
-	my $self  = shift;
-	my $xpath = shift;
-
-	my $dom=$self->{dom_config};
-	my @nodes=$dom->findnodes($xpath);
-
-	my @values;
-	foreach my $n (@nodes) {
-		push @values,$n->toString;
-	}
-	my $xml=join("\n",@values);
-
-	return $xml;
-}
-
-sub config_dump {
-	my $self=shift;
-	my $xpath=shift;
-
-	my $xml=$self->config_get_xml($xpath);
-
-	print Dumper($xml);
-
-}
-
-sub config_get_hash {
-	my $self=shift;
-
-	my $xpath=shift;
-	my %opts=@_;
-
-	my $hash = {};
-	my $order = [];
-
-	my $dom   = $self->{dom_config};
-	my @nodes = $dom->findnodes($xpath);
-
-	my $xml = $self->config_get_xml($xpath);
-
-	my $cb_key=$opts{cb_key} || undef;
-	foreach my $n (@nodes) {
-		my @sn=$n->findnodes('./*');
-		foreach my $sn (@sn) {
-			my $value = $sn->textContent;
-			my $key   = $sn->nodeName;
-
-			push @$order,$key;
-
-			if ($cb_key && ref $cb_key eq 'CODE') {
-				$key = $cb_key->($key);
-			}
-			
-			$hash->{$key}=$value;
-		}
-
-	}
-
-	return ($hash,$order);
-}
-
-sub config_get_nodes {
-	my $self=shift;
-
-	my $xpath=shift;
-
-	my $dom   = $self->{dom_config};
-	my @nodes = $dom->findnodes($xpath);
-
-	wantarray ? @nodes : \@nodes;
-
-}
-
-sub config_get_text_split {
-	my $self=shift;
-
-	my $xpath=shift;
-	my $delim=shift || ",";
-
-	my $dom=$self->{dom_config};
-	my @nodes=$dom->findnodes($xpath);
-
-	my @values;
-	foreach my $n (@nodes) {
-		push @values,split($delim,$n->textContent);
-	}
-	wantarray ? @values : \@values;
-
-}
-
-sub config_get_text {
-	my $self=shift;
-
-	my $xpath=shift;
-
-	my $dom=$self->{dom_config};
-	my @nodes=$dom->findnodes($xpath);
-
-	my @values;
-	foreach my $n (@nodes) {
-		push @values,$n->textContent;
-		#push @values,$n->toString;
-	}
-	wantarray ? @values : \@values;
-
-}
-
-sub init_config {
-	my $self=shift;
-
-	my $bname = basename($Script);
-	my $root  = $bname;
-
-	$root=~s/\.(\w)$//g;
-
-	my $file_xml = catfile($Bin,'config.xml');
-
-
-	unless(-e $file_xml){ return; }
-
-	my @out;
-	open(F,"<$file_xml") || die $!;
-	while(<F>){
-		chomp;
-		my $line=$_;
-		push @out,$line;
-	}
-	close(F);
-	my $xml=join("\n",@out);
-
-	
-    my $doc = XML::LibXML->load_xml(string => $xml);
-
-	my @nodes   = $doc->findnodes('/root/php_net_pl/*');
-	my @l;
-	foreach my $n (@nodes) {
-		push @l,$n->toString;
-	}
-	my $xml_conf = join("\n",@l);
-
-    my $dom_conf = XML::LibXML->load_xml(string => $xml_conf);
-
-	my $xs       = XML::LibXML::Simple->new;
-
-	my $data = $xs->XMLin($xml_conf);
-
-	$self->{config}     = $data;
-	$self->{dom_config} = $dom_conf;
-
-	return $self;		
-
-}
-
-
-
-
-
 sub read_idat {
 	my $self = shift;
 	my $ref=shift;
@@ -259,69 +103,9 @@ sub tk_init_tab {
 	}
 }
 
-###tab_test
-sub tk_init_tab_test {
-	my $self=shift;
-
-	my $tabs = $self->{tk_tabs};
-	my $tab  = $tabs->{tab_test};
-
-	my $htw=$self->{htw};
-
-	my $fr_left= $tab->Frame(
-		-height => '50',
-		-width  => 30,
-	)->pack(
-		-side   => 'top',
-		-expand => 0,
-	);
-
-	my $dt=$fr_left->DirTree(
-		-directory => catfile(qw(c: saved)),
-	)->pack(
-		-side   => 'top',
-		-fill   => 'both',
-		-expand => 1,
-	);
-}
 
 
-###tab_options
-sub tk_init_tab_options {
-	my $self=shift;
 
-	my $mw=$self->{tk_mw};
-
-	my $tabs = $self->{tk_tabs};
-	my $tab  = $tabs->{tab_options};
-
-	my ($paths,$path_order)=$self->config_get_hash('/tk/tab_options/paths');
-
-	my $fr=$tab->Frame->pack(-side => 'top',-fill => 'x');
-
-	$self->{paths}=$paths;
-
-	foreach my $pathname (@$path_order) {
-		$self->log($pathname);
-
-		my $val = $paths->{$pathname} || '';
-		next unless $val;
-
-		$self->log($val);
-
-		#$self->log(Dumper($val));
-
-		my $lb = $fr->Label(
-			-text => $pathname,
-		)->pack(qw/-side top/);
-
-		my $e= $fr->Entry(
-		     -textvariable => \$val,
-		     -width        => 20,
-		)->pack(qw/-side top -fill x -expand 1/)
-	}
- 
-}
 
 sub env { 
 	my $self=shift;
@@ -378,7 +162,6 @@ sub tk_init_tab_xpath {
 	my $reload;
 
 	my $entry_local_html;
-
 
 	my ($headings,$entry_headings);
 
@@ -1003,33 +786,6 @@ sub tk_init_tab_url {
 	push @{$self->{tk_objects}},'tk_text_urls';
 }
 
-sub tk_init_tabs {
-	my $self=shift;
-
-	my $cnf=$self->{config}||{};
-
-	my @tab_names = map { 'tab_'.$_} $self->config_get_text('/tk/tabs/tab');
-
-	$self->{tk_tab_names}=[@tab_names];
-
-	my $w = $self->{tk_mw}->NoteBook()->pack(
-		-expand => 1,
-		-fill   => 'both',
-	);
-
-	my $tabs={};
-	foreach my $tab_name (@tab_names) {
-		my $tab = $w->add($tab_name,-label => $tab_name);
-
-		$tabs->{$tab_name}=$tab;
-		$self->{tk_tabs}=$tabs;
-
-		$self->tk_init_tab($tab_name);
-	}
-
-	push @{$self->{tk_objects}},'tabs';
-	
-}
 
 sub tk_run {
 	my $self=shift;
