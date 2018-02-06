@@ -15,9 +15,9 @@ use base qw(
 use JSON::XS;
 
 use HTML::Work;
-use HTML::Work::PHP qw(
-	$php_net_subs
-);
+#use HTML::Work::PHP qw(
+	#$php_net_subs
+#);
 use File::Find qw(find);
 
 use FindBin qw($Bin $Script);
@@ -66,7 +66,8 @@ sub log {
 
 sub read_idat {
 	my $self = shift;
-	my $ref=shift;
+
+	my $ref  = shift;
 	my $idat = $ref->{'idat'};
 
 	my $f=catfile($Bin,qw(data),$idat .'.i.dat');
