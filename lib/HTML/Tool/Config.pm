@@ -7,6 +7,7 @@ use warnings;
 use Data::Dumper qw(Dumper);
 use FindBin qw($Bin $Script);
 use File::Basename qw(basename dirname);
+use File::Spec::Functions qw(catfile);
 
 sub config_get_hash {
 	my $self=shift;
