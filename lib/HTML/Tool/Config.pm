@@ -10,12 +10,12 @@ use File::Basename qw(basename dirname);
 use File::Spec::Functions qw(catfile);
 
 sub config_get_hash {
-	my $self=shift;
+	my $self = shift;
 
-	my $xpath=shift;
-	my %opts=@_;
+	my $xpath = shift;
+	my %opts  = @_;
 
-	my $hash = {};
+	my $hash  = {};
 	my $order = [];
 
 	my $dom   = $self->{dom_config};
