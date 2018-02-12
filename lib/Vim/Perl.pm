@@ -81,6 +81,7 @@ my @ex_vars_array = qw(
           init_Args
           init_PIECES
           VimArg
+		  VimBufSplit
           VimBufFiles_Insert_SubName
           VimChooseFromPrompt
           VimCreatePrompt
@@ -91,6 +92,7 @@ my @ex_vars_array = qw(
           VimEcho
           VimEditBufFiles
           VimEval
+          VimWarn
           VimExists
           VimPerlGetModuleName
           VimGetFromChooseDialog
@@ -140,6 +142,7 @@ sub init_Args;
 sub init_PIECES;
 
 sub VimArg;
+sub VimBufSplit;
 # ----------- buffers -----------------------
 sub VimCurBuf_Basename;
 sub VimCurBuf_Name;
@@ -152,6 +155,7 @@ sub VimCreatePrompt;
 sub VimEcho;
 sub VimEditBufFiles;
 sub VimEval;
+sub VimWarn;
 sub VimExists;
 sub VimGetFromChooseDialog;
 sub VimGetLine;
@@ -454,6 +458,14 @@ sub VimEcho {
 
     VimMsg( VimEval($cmd), { prefix => 'none' } );
 
+}
+
+sub VimWarn {
+	my @msg=@_;
+
+	for(@msg){
+		VIM::Msg($_,"WarningMsg");
+	}
 }
 
 sub VimEval {
@@ -1302,6 +1314,10 @@ sub VimPerlViewModule {
         VimCmd("tabnew $path");
     }
 
+}
+
+sub VimBufSplit {
+	my $lines = shift;
 }
 
 sub VimListExtend {
