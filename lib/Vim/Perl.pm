@@ -1342,21 +1342,23 @@ sub VimBufSplit {
 	my $lines = $ref->{lines} || [];
 
 	my $cmds=[
-		'split','enew','setlocal buftype=nofile','setlocal nomodifiable'
+		'split',
+		'enew',
+		'setlocal buftype=nofile',
+		#'setlocal nomodifiable'
 	];
 	VimCmd($cmds);
-	#my $lnum=VimThisLine;
 	my $lnum=0;
 
 	if (@$lines) {
 		foreach my $line (@$lines) {
 			$line=~s/"/\\"/g;
 			VimMsg($line);
-			VimCmd(
+			VimCmd([
 				'let line='.'"'.$line.'"',
 				'let lnum='.$lnum,
 				'call append(lnum,line)',
-			);
+			]);
 			$lnum++;
 		}
 	}
