@@ -92,6 +92,7 @@ my @ex_vars_array = qw(
           VimEcho
           VimEditBufFiles
           VimEval
+          VimThisLine
           VimWarn
           VimExists
           VimPerlGetModuleName
@@ -155,6 +156,7 @@ sub VimCreatePrompt;
 sub VimEcho;
 sub VimEditBufFiles;
 sub VimEval;
+sub VimThisLine;
 sub VimWarn;
 sub VimExists;
 sub VimGetFromChooseDialog;
@@ -256,9 +258,21 @@ our $PAPINFO;
 =cut
 
 sub VimCmd {
-    my $cmd = shift;
+    my $ref = shift;
 
-    return VIM::DoCommand("$cmd");
+	if (ref $ref eq "ARRAY"){
+		my $cmds=$ref;
+		foreach my $cmd (@$cmds) {
+			VimCmd($cmd);
+		}
+		return;
+		
+	}elsif(ref $ref eq ''){
+		my $cmd = $ref;
+    	return VIM::DoCommand("$cmd");
+		
+	}
+
 
 }
 
@@ -1316,8 +1330,37 @@ sub VimPerlViewModule {
 
 }
 
+sub VimThisLine {
+	my $id=shift;
+
+	VimEval("line('.')");
+}
+
 sub VimBufSplit {
-	my $lines = shift;
+	my $ref = shift;
+
+	my $lines = $ref->{lines} || [];
+
+	my $cmds=[
+		'split','enew','setlocal buftype=nofile','setlocal nomodifiable'
+	];
+	VimCmd($cmds);
+	#my $lnum=VimThisLine;
+	my $lnum=0;
+
+	if (@$lines) {
+		foreach my $line (@$lines) {
+			$line=~s/"/\\"/g;
+			VimMsg($line);
+			VimCmd(
+				'let line='.'"'.$line.'"',
+				'let lnum='.$lnum,
+				'call append(lnum,line)',
+			);
+			$lnum++;
+		}
+	}
+
 }
 
 sub VimListExtend {
