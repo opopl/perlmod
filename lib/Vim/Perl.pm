@@ -18,6 +18,7 @@ use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 
 use File::Dat::Utils qw( readarr );
 use Text::TabularDisplay;
+use String::Escape qw(escape);
 
 use Data::Dumper;
 use File::Basename qw(basename dirname);
@@ -208,6 +209,8 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
 our @EXPORT    = qw( );
 our $VERSION   = '0.01';
 
+my $MsgHist=[];
+
 ################################
 # GLOBAL VARIABLE DECLARATIONS
 ################################
@@ -269,8 +272,7 @@ sub VimCmd {
 		
 	}elsif(ref $ref eq ''){
 		my $cmd = $ref;
-    	return VIM::DoCommand("$cmd");
-		
+    	return VIM::DoCommand("$cmd"); 
 	}
 
 
@@ -901,13 +903,18 @@ sub VimMsgNL {
 
 =head4 Usage
 
+	my $text='aaa ... ';
+
 	VimMsg($text,$options);
+	VimMsg([ $text ],$options);
+
+	VimMsg([ qw(a b) ],$options);
 
 =head4 Input variables
 
 =over 4
 
-=item C<$text> (SCALAR)
+=item C<$text> (SCALAR,ARRAY)
 
 input text to be displayed by Vim;
 
@@ -941,6 +948,16 @@ sub VimMsg {
     foreach my $k (@$keys) { $opts->{$k} = ''; }
 
     $opts->{prefix} = 'subname';
+
+    if ( ref $text eq "ARRAY" ) {
+		foreach my $msg (@$text) {
+			VimMsg($msg,$ref);
+		}
+		return 1;
+	}
+
+	unless (ref $text eq '') { return; }
+	&_MsgHist_add($text);
 
     unless ( ref $ref ) {
         if (@o) {
@@ -987,6 +1004,8 @@ sub VimMsg {
     else {
         VIM::Msg("$text");
     }
+
+	return 1;
 
 }
 
@@ -1349,13 +1368,25 @@ sub VimBufSplit {
 	];
 	VimCmd($cmds);
 	my $lnum=0;
+	my @nlines;
 
 	if (@$lines) {
-		foreach my $line (@$lines) {
-			$line=~s/"/\\"/g;
-			VimMsg($line);
+		foreach(@$lines) {
+			push @nlines, split ("\n" => $_);
+		}
+
+		foreach(@nlines) {
+			chomp;
+
+			#s/\\/\\\\/g;
+			#s/"/\\"/g;
+			#s/'/\\'/g;
+
+			$_=escape('printable',$_);
+			#VimMsg($_);
+			
 			VimCmd([
-				'let line='.'"'.$line.'"',
+				'let line='.'"'.$_.'"',
 				'let lnum='.$lnum,
 				'call append(lnum,line)',
 			]);
@@ -1671,6 +1702,26 @@ sub init_VDIRS {
         'VIMRUNTIME'  => $ENV{VIMRUNTIME},
     );
 
+}
+
+sub _MsgHist_add {
+	my @m=@_;
+
+	push @{$MsgHist},@_;
+}
+
+sub _MsgHist_set {
+	my @m=@_;
+
+	$MsgHist=[@m];
+}
+
+sub _MsgHist_get {
+	wantarray ? @$MsgHist : $MsgHist ;
+}
+
+sub _MsgHist_clear {
+	$MsgHist=[];
 }
 
 ###BEGIN
