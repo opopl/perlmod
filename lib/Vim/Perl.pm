@@ -31,6 +31,7 @@ use File::Slurp qw(
   prepend_file
 );
 
+
 $VERSION = '0.01';
 @ISA     = qw(Exporter);
 
@@ -239,6 +240,8 @@ our ($CurBuf);
 our ($MsgColor);
 our ($MsgPrefix);
 our ($MsgDebug);
+
+our $SILENT;
 
 # ---
 our ($ModuleName);
@@ -957,7 +960,9 @@ sub VimMsg {
 	}
 
 	unless (ref $text eq '') { return; }
+
 	&_MsgHist_add($text);
+	return if $SILENT;
 
     unless ( ref $ref ) {
         if (@o) {
