@@ -57,8 +57,8 @@ sub readhash {
     my $opts = shift || {};
 
     my $splitsep = $opts->{sep} || qr/\s+/;
-    my $joinsep = $opts->{sep} || ' ';
-	my $valtype=$opts->{valtype} || 'scalar';
+    my $joinsep  = $opts->{sep} || ' ';
+	my $valtype  = $opts->{valtype} || 'scalar';
 
     unless ( -e $if ) {
         if (wantarray) {

@@ -58,6 +58,7 @@ my @ex_vars_scalar = qw(
   $CurBuf
   $UnderVim
   $PAPINFO
+  $SILENT
 );
 ###export_vars_hash
 my @ex_vars_hash = qw(
