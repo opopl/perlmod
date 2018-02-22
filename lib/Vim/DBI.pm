@@ -4,6 +4,11 @@ package Vim::Dbi;
 use strict;
 use warnings;
 
+use utf8;
+use open qw(:std :utf8);
+
+use Encode;
+
 use Vim::Perl qw( :vars :funcs );
 
 use Data::Dumper qw(Dumper);
@@ -113,6 +118,23 @@ sub disconnect {
 	$self;
 }
 
+sub list_from_query_index {
+	my $self=shift;
+
+	my $ref=shift || {};
+
+	my ($index,$query,$listvar)=@{$ref}{qw(index query listvar)};
+	my $list;
+	my $res;
+	
+	eval { $res = $dbh->selectall_arrayref($query); };
+	if ($@) { VimMsg($@); }
+	unless(defined $res){ VimMsg($dbh->errstr); return; }
+
+	@$list  = map { (defined $_->[$index]) ? encode('utf8',$_->[$index]) : () } @$res;
+	VimListExtend('list',$list);
+
+}
 
 
 1;
