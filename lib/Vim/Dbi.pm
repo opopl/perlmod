@@ -15,10 +15,10 @@ use open qw(:std :utf8);
 
 use Encode;
 
-use Vim::Perl qw( :vars :funcs );
+use Vim::Perl qw( :vars :uncs );
 
-use Data::Dumper qw(Dumper);
 use DBI;
+use Data::Dumper qw(Dumper);
 
 our $LastResult;
 our ($dbh,$sth);
@@ -26,6 +26,13 @@ our ($dbh,$sth);
 =head1 METHODS
 
 =cut
+
+BEGIN{
+	use Data::Dumper qw(Dumper);
+	use Vim::Perl qw( :vars :funcs );
+	#print Dumper(\%main::) . "\n";
+	print Dumper(\%Vim::Dbi::) . "\n";
+}
 
 sub new
 {
