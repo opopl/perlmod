@@ -139,72 +139,72 @@ my @ex_vars_array = qw(
     'vars' => [ @ex_vars_scalar, @ex_vars_array, @ex_vars_hash ]
 );
 
-sub _die;
-sub init;
-sub init_Args;
-sub init_PIECES;
+#sub _die;
+#sub init;
+#sub init_Args;
+#sub init_PIECES;
 
-sub VimArg;
-sub VimBufSplit;
-# ----------- buffers -----------------------
-sub VimCurBuf_Basename;
-sub VimCurBuf_Name;
-sub VimCurBuf_Num;
-sub VimBufFiles_Insert_SubName;
+#sub VimArg;
+#sub VimBufSplit;
+## ----------- buffers -----------------------
+#sub VimCurBuf_Basename;
+#sub VimCurBuf_Name;
+#sub VimCurBuf_Num;
+#sub VimBufFiles_Insert_SubName;
 
-sub VimCmd;
-sub VimChooseFromPrompt;
-sub VimCreatePrompt;
-sub VimEcho;
-sub VimEditBufFiles;
-sub VimEval;
-sub VimThisLine;
-sub VimWarn;
-sub VimExists;
-sub VimGetFromChooseDialog;
-sub VimGetLine;
-sub VimSetLine;
-sub VimAppend;
-sub VimGrep;
-sub VimInput;
-sub VimJoin;
-sub VimLet;
-sub VimLetEval;
-sub VimListExtend;
-sub VimSet;
-# -------------- messages --------------------
-sub VimMsg;
-sub VimMsgNL;
-sub VimMsgDebug;
-sub VimMsgE;
-sub VimMsgPack;
-sub VimMsg_PE;
-# -------------- perl --------------------
-sub VimPerlGetModuleName;
-sub VimPerlInstallModule;
-sub VimPerlViewModule;
-sub VimPerlModuleNameFromPath;
-sub VimPerlPathFromModuleName;
-sub VimPerlGetModuleNameFromDialog;
+#sub VimCmd;
+#sub VimChooseFromPrompt;
+#sub VimCreatePrompt;
+#sub VimEcho;
+#sub VimEditBufFiles;
+#sub VimEval;
+#sub VimThisLine;
+#sub VimWarn;
+#sub VimExists;
+#sub VimGetFromChooseDialog;
+#sub VimGetLine;
+#sub VimSetLine;
+#sub VimAppend;
+#sub VimGrep;
+#sub VimInput;
+#sub VimJoin;
+#sub VimLet;
+#sub VimLetEval;
+#sub VimListExtend;
+#sub VimSet;
+## -------------- messages --------------------
+#sub VimMsg;
+#sub VimMsgNL;
+#sub VimMsgDebug;
+#sub VimMsgE;
+#sub VimMsgPack;
+#sub VimMsg_PE;
+## -------------- perl --------------------
+#sub VimPerlGetModuleName;
+#sub VimPerlInstallModule;
+#sub VimPerlViewModule;
+#sub VimPerlModuleNameFromPath;
+#sub VimPerlPathFromModuleName;
+#sub VimPerlGetModuleNameFromDialog;
 
-# -------------- vimrc pieces ------------
-sub VimPieceFullFile;
-sub VimResetVars;
-sub VimQuickFixList;
-sub VimSo;
-sub VimStrToOpts;
-sub VimSetTags;
-sub VimVar;
-sub VimVarEcho;
-sub VimVarType;
-sub VimVarDump;
-sub VimLen;
+## -------------- vimrc pieces ------------
+#sub VimPieceFullFile;
+#sub VimResetVars;
+#sub VimQuickFixList;
+#sub VimSo;
+#sub VimStrToOpts;
+#sub VimSetTags;
+#sub VimVar;
+#sub VimVarEcho;
+#sub VimVarType;
+#sub VimVarDump;
+#sub VimLen;
 
-sub Vim_Files;
-sub Vim_Files_DAT;
-sub Vim_MsgColor;
-sub Vim_MsgPrefix;
-sub Vim_MsgDebug;
+#sub Vim_Files;
+#sub Vim_Files_DAT;
+#sub Vim_MsgColor;
+#sub Vim_MsgPrefix;
+#sub Vim_MsgDebug;
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
 our @EXPORT    = qw( );
@@ -495,7 +495,7 @@ sub VimEval {
     ( $EvalCode, $res ) = VIM::Eval("$cmd");
 
     unless ($EvalCode) {
-        _die "VIM::Eval evaluation failed for command: $cmd";
+        _die("VIM::Eval evaluation failed for command: $cmd");
     }
 
     $res;
@@ -674,7 +674,7 @@ sub VimGetFromChooseDialog {
     $dialog .= $opts->{bottom} . "\n";
 
     $opt = VimChooseFromPrompt( $dialog, $liststr, "\n", $opts->{startopt} );
-    VimMsgNL;
+    VimMsgNL();
     VimMsg( $opts->{selected} . $opt, { hl => 'Title' } );
 
     return $opt;
@@ -725,7 +725,7 @@ sub VimPerlGetModuleName {
         # 3. If no command-line arguments have been supplied,
         #   check for the current buffer's name
         #
-        my $path=VimCurBuf_Name;
+        my $path=VimCurBuf_Name();
 	    $module = '';
 	
 	    if($path) {
@@ -1730,17 +1730,17 @@ sub _MsgHist_clear {
 }
 
 ###BEGIN
-BEGIN {
-    eval 'VIM::Eval("1")';
+#BEGIN {
+    #eval 'VIM::Eval("1")';
 
-    unless ($@) {
-        $UnderVim=1;
-   		init;
-    }else{
-        $UnderVim=0;
-        return;
-    }
-}
+    #unless ($@) {
+        #$UnderVim=1;
+           #init();
+    #}else{
+        #$UnderVim=0;
+        #return;
+    #}
+#}
 
 1;
 __END__

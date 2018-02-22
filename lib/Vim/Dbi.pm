@@ -71,9 +71,9 @@ sub connect {
 	my $ref  = shift || {};
 
 	my $silent_save=$Vim::Perl::SILENT;
-	$Vim::Perl::SILENT=VimVar('silent');
+	$Vim::Perl::SILENT=Vim::Perl::VimVar('silent');
 
-	my $atend = sub{ 
+	my $atend = sub { 
 		my $ref=shift; 
 		my $m=$ref->{m} || []; 
 		
@@ -90,8 +90,6 @@ sub connect {
 	@vconn=@{$ref}{@fconn};
 
 	#VimMsg(Dumper($ref));
-
-	my $silent_save;
 
 	eval { $dbh = DBI->connect(@vconn); };
 	if($@){
