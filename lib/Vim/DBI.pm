@@ -5,6 +5,8 @@ use strict;
 use warnings;
 
 use Vim::Perl qw( :vars :funcs );
+
+use Data::Dumper qw(Dumper);
 use DBI;
 
 our $LastResult;
@@ -49,33 +51,44 @@ sub init {
 =cut
 
 sub connect {
-	my $self=shift;
+	my $self = shift;
 
-	my $ref=shift || {};
+	my $ref  = shift || {};
 
 	my $silent_save=$Vim::Perl::SILENT;
 	$Vim::Perl::SILENT=VimVar('silent');
 
-	my $atend = sub{ $Vim::Perl::SILENT=$silent_save; };
+	my $atend = sub{ 
+		my $ref=shift; 
+		my $m=$ref->{m} || []; 
+		
+		VimMsg($_) for(@$m);
+		$Vim::Perl::SILENT=$silent_save; 
+	};
 
-	my (@f,@v);
+	my (@fref,@fconn,@vconn);
 
-	@f=qw(dsn db user pwd attr);
+	@fref=qw(dsn db user pwd attr);
+	@fconn=qw(dsn user pwd attr);
 
-	for(@f){ $ref->{$_}=$self->{$_} unless defined $ref->{$_}; }
-	@v=@{$ref}{@f};
+	for(@fref){ $ref->{$_}=$self->{$_} unless defined $ref->{$_}; }
+	@vconn=@{$ref}{@fconn};
+
+	#VimMsg(Dumper($ref));
 
 	my $silent_save;
 
-	eval { $dbh = DBI->connect(@v); };
+	eval { $dbh = DBI->connect(@vconn); };
 	if($@){
-		VimMsg([$@]);
-		$atend->();
+		my $m;
+		push @$m, 'Errors while calling DBI->connect(...): ',$@;
+		$atend->({ m => $m});
 		return;
 	}
 	defined $dbh or do { 
-		VimMsg(['dbh undefined',$DBI::errstr]); 
-		$atend->();
+		my $m;
+		push @$m,'dbh undefined, $DBI::errstr=',$DBI::errstr; 
+		$atend->({ m => $m});
 		return; 
 	};
 
@@ -86,6 +99,18 @@ sub connect {
 
 	$self;
 
+}
+
+sub disconnect {
+	my $self=shift;
+
+	VimMsg('Disconnecting...');
+	eval {$dbh->disconnect(); };
+	if ($@) {
+		VimMsg(['Errors while calling $dbh->disconnect():', $@]);
+	}
+
+	$self;
 }
 
 
