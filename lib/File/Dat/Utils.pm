@@ -1,10 +1,23 @@
 
 package File::Dat::Utils;
 
+=head1 NAME
+
+File::Dat::Utils - methods for reading text files with dictionaries and list
+
+=head1 USAGE
+
+	use File::Dat::Utils qw(readarr readhash);
+
+=head1 METHODS
+
+
+=cut
+
 use strict;
 use warnings;
 
-use parent qw(Exporter);
+use base qw(Exporter);
 
 use File::Slurp qw(read_file);
 use List::MoreUtils qw(uniq);
@@ -14,13 +27,29 @@ our @EXPORT_OK=qw( readarr readhash );
 sub readarr;
 sub readhash;
 
+=head2 readarr
+
+=head3 Usage
+
+	# $file - input dat-file
+	my @vars = readarr($file);
+
+	# separator between records on the same line
+	my @vars = readarr($file,{ sep => $sep });
+
+=head3 Returns
+
+	Array in list context, arrayref in scalar context
+
+=cut
+
 sub readarr {
-    my $if = shift || '';
+    my $if   = shift || '';
 
-	my $opts=shift || {};
+	my $opts = shift || {};
 
-	my $splitsep=$opts->{sep} || qr/\s+/;
-	my $joinsep=$opts->{sep} || ' ';
+	my $splitsep = $opts->{sep} || qr/\s+/;
+	my $joinsep  = $opts->{sep} || ' ';
 
     unless ($if) {
         warn "empty file name provided: $if";
@@ -50,6 +79,10 @@ sub readarr {
     wantarray ? @vars : \@vars;
 
 }
+
+=head2 readhash
+
+=cut
 
 sub readhash {
     my $if = shift;
@@ -143,18 +176,3 @@ sub readhash {
 
 1;
 
-=head1 NAME
-
-File::Dat::Utils - methods for reading text files with dictionaries and list
-
-=head1 EXPORT
-
-=over 4
-
-=item * readarr - read list
-
-=item * readhash - read dictionary
-
-=back
-
-=cut
