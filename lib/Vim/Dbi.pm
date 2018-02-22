@@ -15,7 +15,7 @@ use open qw(:std :utf8);
 
 use Encode;
 
-use Vim::Perl qw( :vars :uncs );
+use Vim::Perl qw( :vars :funcs );
 
 use DBI;
 use Data::Dumper qw(Dumper);
@@ -31,7 +31,9 @@ BEGIN{
 	use Data::Dumper qw(Dumper);
 	use Vim::Perl qw( :vars :funcs );
 	#print Dumper(\%main::) . "\n";
-	print Dumper(\%Vim::Dbi::) . "\n";
+	#print Dumper(\%Vim::Dbi::) . "\n";
+	#print Dumper(\%Vim::Perl::) . "\n";
+	return;
 }
 
 sub new
