@@ -27,14 +27,14 @@ our ($dbh,$sth);
 
 =cut
 
-BEGIN{
-	use Data::Dumper qw(Dumper);
-	use Vim::Perl qw( :vars :funcs );
-	#print Dumper(\%main::) . "\n";
-	#print Dumper(\%Vim::Dbi::) . "\n";
-	#print Dumper(\%Vim::Perl::) . "\n";
-	return;
-}
+#BEGIN{
+	#use Data::Dumper qw(Dumper);
+	#use Vim::Perl qw( :vars :funcs );
+	##print Dumper(\%main::) . "\n";
+	##print Dumper(\%Vim::Dbi::) . "\n";
+	##print Dumper(\%Vim::Perl::) . "\n";
+	#return;
+#}
 
 sub new
 {
