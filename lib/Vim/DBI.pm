@@ -1,6 +1,12 @@
 
 package Vim::Dbi;
 
+=head1 NAME
+
+Vim::Dbi
+
+=cut
+
 use strict;
 use warnings;
 
@@ -16,6 +22,10 @@ use DBI;
 
 our $LastResult;
 our ($dbh,$sth);
+
+=head1 METHODS
+
+=cut
 
 sub new
 {
@@ -117,6 +127,20 @@ sub disconnect {
 
 	$self;
 }
+
+=head2 list_from_query_index
+
+=head3 Usage
+
+	my $ref={
+		'listvar' => 'list',
+		'query'   => 'select * from table',
+		'index'   => 0,
+	};
+
+	$vimdbi->list_from_query_index($ref);
+
+=cut
 
 sub list_from_query_index {
 	my $self=shift;
