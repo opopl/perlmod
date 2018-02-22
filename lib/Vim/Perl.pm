@@ -1,4 +1,3 @@
-package Vim::Perl;
 
 =head1 NAME 
 
