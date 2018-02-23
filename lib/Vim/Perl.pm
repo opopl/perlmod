@@ -83,6 +83,7 @@ my @ex_vars_array = qw(
           init
           init_Args
           init_PIECES
+		  EnvVar
           VimArg
 		  VimBufSplit
           VimBufFiles_Insert_SubName
@@ -1596,6 +1597,25 @@ sub VimBufFiles_Edit {
         }
         close(F);
     }
+}
+
+sub EnvVar {
+	my ($varname,$default)=@_;
+
+	my $env=sub { my $vname=shift; $ENV{$vname} || $default; };
+
+	my $val     = $env->($varname);
+
+	if($^O eq 'MSWin32'){
+		local $_=$val;
+		while(/%(\w+)%/){
+			my $vname = $1;
+			my $vval  = $env->($vname);
+			s/%(\w+)%/$vval/g;
+		}
+		$val=$_;
+	}
+	return $val;
 }
 
 sub init {
