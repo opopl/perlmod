@@ -10,6 +10,11 @@ use File::Find qw(find);
 use File::Dat::Utils qw(readarr);
 
 use base qw( Class::Accessor::Complex );
+use DBD::SQLite;
+use DBI;
+
+our $dbh;
+our $dbfile;
 
 
 sub new
@@ -44,14 +49,33 @@ sub init {
 
 	for(@k){ $self->{$_} = $h->{$_} unless defined $self->{$_}; }
 
+	$self->db_init;
 	$self->init_dat;
 }
 
-sub init_dat {
-	my $self=shift;
+sub dat_add {
+		my $self=shift;
+		my $ref=shift;
 
-	my @types=$self->dattypes;
-	my @dirs = map { $self->{dirs}->{'dat_'.$_} } @types;
+		my $file = $ref->{datfile};
+		my $key  = $ref->{key};
+		my $type = $ref->{type};
+
+		$self->datfiles($key => $file );
+
+		$self->db_insert_datfiles($ref);
+}
+
+sub dat_locate {
+	my $self = shift;
+	my $ref  = shift;
+
+	my @dirs   = grep { (-d $_) } @{$ref->{dirs} || []};
+	return unless @dirs;
+
+	my $prefix = $ref->{prefix} || '';
+	my $type   = $ref->{type} || '';
+
 	find({ 
 		wanted => sub { 
 			my $name=$File::Find::name;
@@ -60,16 +84,97 @@ sub init_dat {
 
 			/$pat/ && do {
 					s/$pat//g;
-					$self->datfiles( $_ => $name );
+					my $k=$prefix . $_;
+					$self->dat_add({ 
+							key     => $k,
+							type    => $type,
+							datfile => $name,
+					});
 			};
 			 
 		} 
 	},@dirs
 	);
+}
+
+sub db_init {
+	my $self=shift;
+
+	$dbfile=":memory:";
+	$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile","","");
+
+	my @s=();
+	
+	push @s, 
+				qq{
+					create table plugins (
+						plugin varchar(100)
+					);
+				},
+				qq{
+					create table datfiles (
+						key varchar(100),
+						type varchar(100),
+						datfile varchar(100)
+					);
+				},
+				;
+
+	foreach my $s (@s) {
+		$dbh->do($s);
+	}
+
+}
+
+sub db_insert_plugins {
+	my $self=shift;
+	my @p=@_;
+
+	my $sth = $dbh->prepare("insert into plugins(plugin) values(?)");
+	$sth->execute($_) for(@p);
+}
+
+sub db_insert_datfiles {
+	my $self=shift;
+	my $ref=shift || {};
+
+	my $sth = $dbh->prepare("insert into datfiles(key,type,datfile) values(?,?,?)");
+	$sth->execute(@{$ref}{qw(key type datfile)});
+
+}
+
+sub db_select_datfiles {
+	my $self=shift;
+}
+
+sub init_dat {
+	my $self=shift;
+
+	my @types=$self->dattypes;
+
+	foreach my $type (@types) {
+		my $dir = $self->{dirs}->{'dat_'.$type};
+		next unless -d $dir;
+
+		$self->dat_locate({dirs => [$dir],type => $type});
+	}
 
 	my $dat_plg = $self->datfiles('plugins');
-	my @p       = readarr($dat_plg);
-	$self->plugins([@p]);
+	my @plugins = readarr($dat_plg);
+
+	$self->plugins([@plugins]);
+	$self->db_insert_plugins(@plugins);
+
+	foreach my $p (@plugins) {
+		foreach my $type (@types) {
+			my $pdir = catfile($ENV{VIMRUNTIME},qw(plg),$p,qw(data),$type);
+			$self->dat_locate({ 
+				dirs   => [$pdir],
+				type   => $type,
+				prefix => $p . '_'
+			});
+		}
+	}
 
 }
 
@@ -95,11 +200,16 @@ BEGIN {
 		->mk_hash_accessors(@hash_accessors)
 		->mk_new;
 
+
 	use Data::Dumper qw(Dumper);
 	my $p = __PACKAGE__->new;
-	$p->init_dat;
 	#print Dumper({%{ $p->datfiles } }) . "\n";
-	print Dumper([$p->plugins]) . "\n";
+
+	my $a ;
+	
+	$a = $dbh->selectall_hashref('select * from datfiles','key');
+	#$a = $dbh->selectall_arrayref('select * from datfiles');
+	print Dumper($a) . "\n";
 }
 
 1;
