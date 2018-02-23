@@ -1723,9 +1723,10 @@ sub init_PIECES {
 
 sub init_VDIRS {
     %VDIRS = (
-        'TAGS'    => catfile( $ENV{HOME}, 'tags' ),
-        'MKVIMRC' => catfile( $ENV{HOME}, qw( config mk vimrc ) ),
-        'VIMRUNTIME'  => $ENV{VIMRUNTIME},
+        'TAGS'       => catfile( $ENV{HOME}, 'tags' ),
+        'MKVIMRC'    => catfile( $ENV{HOME}, qw( config mk vimrc ) ),
+        'VIMRUNTIME' => $ENV{VIMRUNTIME},
+        'PLG'        => catfile($ENV{VIMRUNTIME},qw(plg))
     );
 
 }
@@ -1751,17 +1752,17 @@ sub _MsgHist_clear {
 }
 
 ###BEGIN
-#BEGIN {
-    #eval 'VIM::Eval("1")';
+BEGIN {
+	eval 'VIM::Eval("1")';
 
-    #unless ($@) {
-        #$UnderVim=1;
-           #init();
-    #}else{
-        #$UnderVim=0;
-        #return;
-    #}
-#}
+	unless ($@) {
+		$UnderVim=1;
+		   init();
+	}else{
+		$UnderVim=0;
+		return;
+	}
+}
 
 1;
 __END__
@@ -1772,7 +1773,7 @@ Oleksandr Poplavskyy <opopl@cpan.org>
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is copyright (c) 2014 by Oleksandr Poplavskyy.
+This software is copyright (c) 2014-2018 by Oleksandr Poplavskyy.
 
 This is free software; you can redistribute it and/or modify it under the same
 terms as the Perl 5 programming language system itself.
