@@ -3,9 +3,6 @@ package Vim::Xml;
 use strict;
 use warnings;
 
-use warnings;
-use strict;
-
 use Exporter ();
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
@@ -13,6 +10,9 @@ $VERSION = '0.01';
 @ISA     = qw(Exporter);
 
 @EXPORT      = qw();
+
+use Vim::Perl qw( :vars :funcs );
+use XML::LibXML;
 
 ###export_vars_scalar
 my @ex_vars_scalar=qw(
@@ -36,7 +36,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
 our @EXPORT  = qw( );
 our $VERSION = '0.01';
 
-our ($domcache,$dom);
+our ($domcache,$dom,$xpathcache);
 
 1;
  
