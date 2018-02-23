@@ -1602,9 +1602,10 @@ sub VimBufFiles_Edit {
 sub EnvVar {
 	my ($varname,$default)=@_;
 
-	my $env=sub { my $vname=shift; $ENV{$vname} || $default; };
+	my $env=sub { my $vname=shift; $ENV{$vname} || $default || ''; };
 
 	my $val     = $env->($varname);
+	return $val unless $val;
 
 	if($^O eq 'MSWin32'){
 		local $_=$val;

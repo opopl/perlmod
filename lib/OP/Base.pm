@@ -84,6 +84,7 @@ our %EXPORT_TAGS = (
           cmd_opt_add
           is_const
           is_log
+		  env_var
           eoo
           eoo_arr
           eoo_vars
@@ -207,6 +208,7 @@ our %ftype;
 
 ###subs
 sub eoo ;
+sub env_var;
 sub _import;
 sub run_cmd;
 sub eoo ;
@@ -301,6 +303,27 @@ sub modisa {
 	}
 	
 	wantarray ? @isa : \@isa ;
+
+}
+
+sub env_var {
+	my ($varname,$default)=@_;
+
+	my $env=sub { my $vname=shift; $ENV{$vname} || $default || ''; };
+
+	my $val     = $env->($varname);
+	return $val unless $val;
+
+	if($^O eq 'MSWin32'){
+		local $_=$val;
+		while(/%(\w+)%/){
+			my $vname = $1;
+			my $vval  = $env->($vname);
+			s/%(\w+)%/$vval/g;
+		}
+		$val=$_;
+	}
+	return $val;
 
 }
 
@@ -1328,8 +1351,8 @@ sub readarr {
 
 	my $opts=shift || {};
 
-	my $splitsep=$opts->{sep} || qr/\s+/;
-	my $joinsep=$opts->{sep} || ' ';
+	my $splitsep = $opts->{sep} || qr/\s+/;
+	my $joinsep  = $opts->{sep} || ' ';
 
     unless ($if) {
         warn "OP::Base::readarr(): empty file name provided: $if";
