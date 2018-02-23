@@ -18,11 +18,18 @@ use OP::Script::Simple qw(
 	$podsectionorder
 );
 
-use OP::Base qw( readarr readhash );
-use Env qw( $hm $PROJSDIR );
 use FindBin qw($Bin $Script);
 use File::Spec::Functions qw(catfile);
 use File::Slurp qw( edit_file_lines );
+
+our ($PROJSDIR,$hm);
+
+BEGIN {
+	use OP::Base qw( readarr readhash env_var );
+
+	$PROJSDIR = env_var('PROJSDIR');
+	$hm       = env_var('hm');
+}
 
 ###our
 our ( $if, @pdffiles,  %cvtypes, %files );
