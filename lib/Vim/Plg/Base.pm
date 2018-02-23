@@ -8,10 +8,12 @@ use Vim::Perl qw();
 use File::Spec::Functions qw(catfile);
 use File::Find qw(find);
 use File::Dat::Utils qw(readarr);
-
-use base qw( Class::Accessor::Complex );
 use DBD::SQLite;
 use DBI;
+
+use base qw( Class::Accessor::Complex );
+use File::Path qw(make_path remove_tree mkpath rmtree);
+
 
 our $dbh;
 our $dbfile;
@@ -78,9 +80,9 @@ sub dat_locate {
 
 	find({ 
 		wanted => sub { 
-			my $name=$File::Find::name;
-			my $dir=$File::Find::dir;
-			my $pat=qr/\.i\.dat$/;
+			my $name = $File::Find::name;
+			my $dir  = $File::Find::dir;
+			my $pat  = qr/\.i\.dat$/;
 
 			/$pat/ && do {
 					s/$pat//g;
@@ -99,20 +101,29 @@ sub dat_locate {
 
 sub db_init {
 	my $self=shift;
+	my $ref=shift;
 
 	$dbfile=":memory:";
+	my $d = catfile($ENV{APPDATA},qw(vim plg base));;
+	mkpath $d unless -d $d;
+	$dbfile=catfile($d,'main.db');
+
 	$dbh = DBI->connect("dbi:SQLite:dbname=$dbfile","","");
 
 	my @s=();
+
+	push @s, 
+				qq{ drop table if exists plugins; },
+				qq{ drop table if exists datfiles; };
 	
 	push @s, 
 				qq{
-					create table plugins (
+					create table if not exists plugins (
 						plugin varchar(100)
 					);
 				},
 				qq{
-					create table datfiles (
+					create table if not exists datfiles (
 						key varchar(100),
 						type varchar(100),
 						datfile varchar(100)
@@ -148,7 +159,10 @@ sub db_select_datfiles {
 }
 
 sub init_dat {
-	my $self=shift;
+	my $self = shift;
+	my $ref  = shift || {};
+
+	my $actions=$ref->{actions} || [];
 
 	my @types=$self->dattypes;
 
@@ -202,14 +216,14 @@ BEGIN {
 
 
 	use Data::Dumper qw(Dumper);
-	my $p = __PACKAGE__->new;
+	#my $p = __PACKAGE__->new;
 	#print Dumper({%{ $p->datfiles } }) . "\n";
 
-	my $a ;
+	#my $a ;
 	
-	$a = $dbh->selectall_hashref('select * from datfiles','key');
+	#$a = $dbh->selectall_arrayref('select * from plugins','key');
 	#$a = $dbh->selectall_arrayref('select * from datfiles');
-	print Dumper($a) . "\n";
+	#print Dumper($a) . "\n";
 }
 
 1;
