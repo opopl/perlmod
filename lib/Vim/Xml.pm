@@ -16,7 +16,7 @@ use XML::LibXML;
 
 ###export_vars_scalar
 my @ex_vars_scalar=qw(
-	$dom $domcache
+	$DOM $DOMCACHE $XPATHCACHE
 );
 ###export_vars_hash
 my @ex_vars_hash=qw(
@@ -36,7 +36,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
 our @EXPORT  = qw( );
 our $VERSION = '0.01';
 
-our ($domcache,$dom,$xpathcache);
+use vars qw( $DOM $DOMCACHE $XPATHCACHE );
 
 1;
  
