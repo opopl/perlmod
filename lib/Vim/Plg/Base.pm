@@ -127,7 +127,7 @@ sub reload_from_fs {
 			tb_order => [qw(plugins datfiles)],
 		},
 	);
-	$self->update(%o)->init_dat;
+	$self->update(%o)->db_init->init_dat;
 
 	$self;
 }
@@ -272,7 +272,7 @@ sub db_init {
 	$self->dbh($dbh);
 
 	$self->db_drop_tables
-		->db_create_tables;
+		 ->db_create_tables;
 
 }
 
@@ -292,6 +292,9 @@ sub db_drop_tables {
 			push @s, qq{ drop table if exists $tb; };
 		}
 	}
+	use Data::Dumper qw(Dumper);
+	
+	print Dumper(\@s);
 
 	$dbh->do($_) for(@s);
 
@@ -494,7 +497,7 @@ BEGIN {
 
 	my %o=();
     my $p = __PACKAGE__->new(%o);
-	#$p->reload_from_fs;
+	$p->reload_from_fs;
 	#print Dumper([$p->plugins]) . "\n";
 	#print Dumper([$p->db_list_plugins]) . "\n";
 	#print Dumper($p->datfiles_ref) . "\n";
