@@ -108,6 +108,30 @@ sub init {
 
 }
 
+sub update {
+	my $self=shift;
+	my %o=@_;
+
+	foreach my $k (keys %o) {
+		$self->{$k}=$o{$k};
+	}
+	$self;
+}
+
+sub reload_from_fs {
+	my $self=shift;
+
+	my %o=(
+		dbopts       => {
+			tb_reset => {plugins => 1, datfiles => 1},
+			tb_order => [qw(plugins datfiles)],
+		},
+	);
+	$self->update(%o)->init_dat;
+
+	$self;
+}
+
 sub dat_add {
 	my $self=shift;
 
@@ -362,6 +386,7 @@ sub init_dat_plugins {
 				$self->dat_locate({ 
 					dirs   => [$pdir],
 					type   => $type,
+					plugin => $p,
 					prefix => $p . '_'
 				});
 			}
@@ -466,21 +491,18 @@ BEGIN {
 
 
 	use Data::Dumper qw(Dumper);
-	my %o=(
-		dbopts       => {
-			tb_reset => {plugins => 1, datfiles => 1},
-			tb_order => [qw(plugins datfiles)],
-		},
-	);
-	#%o=();
 
-   # my $p = __PACKAGE__->new(%o);
-	##print Dumper([$p->plugins]) . "\n";
-	##print Dumper([$p->db_list_plugins]) . "\n";
+	my %o=();
+    my $p = __PACKAGE__->new(%o);
+	#$p->reload_from_fs;
+	#print Dumper([$p->plugins]) . "\n";
+	#print Dumper([$p->db_list_plugins]) . "\n";
 	#print Dumper($p->datfiles_ref) . "\n";
 
 	##print Dumper({%{ $p->datfiles } }) . "\n";
 }
+
+
 
 1;
  
