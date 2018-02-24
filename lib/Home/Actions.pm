@@ -18,8 +18,7 @@ if (-t)
 	binmode(STDERR, ":encoding(console_out)");
 }
 
-our($dbh,$sth,$dsn);
-our $vimdbi;
+our($dbh,$vimdbi);
 
 sub new
 {
@@ -57,7 +56,7 @@ sub init_vimdbi {
 	);
 	
 	# data source
-	$dsn="DBI:mysql:database=$db;host=localhost";
+	my $dsn="DBI:mysql:database=$db;host=localhost";
 	
 	$vimdbi=Vim::Dbi->new(
 		dsn  => $dsn,

@@ -146,8 +146,8 @@ sub connect {
 
 	my (@fref,@fconn,@vconn);
 
-	@fref=qw(dsn db user pwd attr);
-	@fconn=qw(dsn user pwd attr);
+	@fref  = qw(dsn db user pwd attr);
+	@fconn = qw(dsn user pwd attr);
 
 	for(@fref){ $ref->{$_}=$self->{$_} unless defined $ref->{$_}; }
 	@vconn=@{$ref}{@fconn};

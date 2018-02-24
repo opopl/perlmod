@@ -26,6 +26,8 @@ our $dbfile;
 
 =head1 SYNOPSIS
 
+	my $plgbase=Vim::Plg::Base->new;
+
 =head1 METHODS
 
 =cut
@@ -137,7 +139,8 @@ sub dat_locate {
 sub db_init {
 	my $self=shift;
 
-	my $ref=shift;
+	my $ref    = shift;
+	my $dbopts = $self->dbopts;
 
 	$dbfile=":memory:";
 	my $d=$self->dirs('appdata');
@@ -148,24 +151,28 @@ sub db_init {
 
 	my @s=();
 
-	push @s, 
-				qq{ drop table if exists plugins; },
-				qq{ drop table if exists datfiles; };
+	my $tb_reset=$dbopts->{tb_reset} || [];
+	foreach my $tb (@$tb_reset) {
+		push @s, qq{ drop table if exists $tb; };
+	}
 	
 	push @s, 
-				qq{
-					create table if not exists plugins (
-						plugin varchar(100)
-					);
-				},
-				qq{
-					create table if not exists datfiles (
-						key varchar(100),
-						type varchar(100),
-						datfile varchar(100)
-					);
-				},
-				;
+			qq{
+				create table if not exists plugins (
+					id int,
+					plugin varchar(100)
+				);
+			},
+			qq{
+				create table if not exists datfiles (
+					id int,
+					plugin varchar(100),
+					key varchar(100),
+					type varchar(100),
+					datfile varchar(100)
+				);
+			}
+			;
 
 	foreach my $s (@s) {
 		$dbh->do($s);
@@ -239,6 +246,7 @@ BEGIN {
 	our @hash_accessors=qw(
 		datfiles
 		vars
+		dbopts
 	);
 	
 	###__ACCESSORS_ARRAY
