@@ -84,6 +84,7 @@ my @ex_vars_array = qw(
           init_Args
           init_PIECES
 		  EnvVar
+		  UnderVim
           VimArg
 		  VimBufSplit
           VimBufFiles_Insert_SubName
@@ -1752,17 +1753,23 @@ sub _MsgHist_clear {
 	$MsgHist=[];
 }
 
+
 ###BEGIN
 BEGIN {
-	eval 'VIM::Eval("1")';
 
-	unless ($@) {
-		$UnderVim=1;
-		   init();
-	}else{
-		$UnderVim=0;
-		return;
+	sub UnderVim {
+		eval 'VIM::Eval("1")';
+		
+		my $uv = ($@) ? 0 : 1;
+		return $uv;
 	}
+
+	$UnderVim=0;
+	if (&UnderVim()){
+		$UnderVim=1;
+	   	init();
+	}
+	
 }
 
 1;

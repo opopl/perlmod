@@ -1,6 +1,12 @@
 
 package Vim::Plg::Base;
 
+=head1 NAME
+
+Vim::Plg::Base
+
+=cut
+
 use strict;
 use warnings;
 
@@ -18,6 +24,12 @@ use File::Path qw(make_path remove_tree mkpath rmtree);
 our $dbh;
 our $dbfile;
 
+=head1 SYNOPSIS
+
+=head1 METHODS
+
+=cut
+
 
 sub new
 {
@@ -29,18 +41,28 @@ sub new
 	return $self;
 }
 
+=head2 init 
+
+=over
+
+=item Usage
+
+=back
+
+=cut
+
 sub init {
 	my $self=shift;
 
-
 	my $dirs = {
 		plgroot => catfile($ENV{VIMRUNTIME},qw(plg base)),
+		appdata => catfile($ENV{APPDATA},qw(vim plg base)),
 	};
 
 	my @types=qw(list dict listlines );
 	$self->dattypes(@types);
 	foreach my $type (@types) {
-		$dirs->{'dat_'.$type} =catfile($dirs->{plgroot},qw(data),$type);
+		$dirs->{'dat_'.$type} = catfile($dirs->{plgroot},qw(data),$type);
 	}
 
 	my $h={
@@ -53,19 +75,20 @@ sub init {
 
 	$self->db_init;
 	$self->init_dat;
+
 }
 
 sub dat_add {
-		my $self=shift;
-		my $ref=shift;
+	my $self=shift;
+	my $ref=shift;
 
-		my $file = $ref->{datfile};
-		my $key  = $ref->{key};
-		my $type = $ref->{type};
+	my $file = $ref->{datfile};
+	my $key  = $ref->{key};
+	my $type = $ref->{type};
 
-		$self->datfiles($key => $file );
+	$self->datfiles($key => $file );
 
-		$self->db_insert_datfiles($ref);
+	$self->db_insert_datfiles($ref);
 }
 
 sub dat_locate {
@@ -99,12 +122,25 @@ sub dat_locate {
 	);
 }
 
+=head2 db_init 
+
+=over
+
+=item Usage
+
+	$plgbase->db_init();
+
+=back
+
+=cut
+
 sub db_init {
 	my $self=shift;
+
 	my $ref=shift;
 
 	$dbfile=":memory:";
-	my $d = catfile($ENV{APPDATA},qw(vim plg base));;
+	my $d=$self->dirs('appdata');
 	mkpath $d unless -d $d;
 	$dbfile=catfile($d,'main.db');
 

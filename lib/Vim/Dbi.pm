@@ -13,12 +13,26 @@ use warnings;
 use utf8;
 use open qw(:std :utf8);
 
+if (-t) 
+{
+	binmode(STDIN, ":encoding(console_in)");
+	binmode(STDOUT, ":encoding(console_out)");
+	binmode(STDERR, ":encoding(console_out)");
+}
+
 use Encode;
 
-use Vim::Perl qw( :vars :funcs );
+use Vim::Perl qw( 
+	VimListExtend 
+	VimMsg
+	VimVar
+	$SILENT
+);
 
 use DBI;
 use Data::Dumper qw(Dumper);
+
+our $withvim;
 
 our $LastResult;
 our ($dbh,$sth);
@@ -26,15 +40,6 @@ our ($dbh,$sth);
 =head1 METHODS
 
 =cut
-
-#BEGIN{
-	#use Data::Dumper qw(Dumper);
-	#use Vim::Perl qw( :vars :funcs );
-	##print Dumper(\%main::) . "\n";
-	##print Dumper(\%Vim::Dbi::) . "\n";
-	##print Dumper(\%Vim::Perl::) . "\n";
-	#return;
-#}
 
 sub new
 {
@@ -56,6 +61,53 @@ sub init {
 	for(@k){
 		$self->{$_} = $h->{$_} unless defined $self->{$_};
 	}
+	$self;
+}
+
+=head2 withvim 
+
+=over
+
+=item Usage
+
+=back
+
+=cut
+
+sub withvim {
+	my $self=shift;
+
+	eval 'VIM::Eval("1")';
+	
+	my $uv = ($@) ? 0 : 1;
+	return $uv;
+}
+
+sub log {
+	my $self=shift;
+
+	my $text=shift;
+    return $self unless $text;
+
+    my @o   = @_;
+    my $ref = shift @o;
+
+	if ($withvim) { VimMsg($text,$ref);return;}
+
+    if ( ref $text eq "ARRAY" ) {
+		foreach my $msg (@$text) {
+			$self->log($msg,$ref);
+		}
+		return $self;
+	}
+
+	print $text . "\n";
+	return $self;
+
+}
+
+sub isvim {
+	my $self=shift;
 }
 
 =head2 connect
@@ -79,15 +131,17 @@ sub connect {
 
 	my $ref  = shift || {};
 
-	my $silent_save=$Vim::Perl::SILENT;
-	$Vim::Perl::SILENT=Vim::Perl::VimVar('silent');
+	my $silent_save=$SILENT;
+
+	$withvim && do { $SILENT=VimVar('silent'); };
 
 	my $atend = sub { 
-		my $ref=shift; 
-		my $m=$ref->{m} || []; 
+		my $ref = shift;
+		my $m   = $ref->{m} || [];
 		
-		VimMsg($_) for(@$m);
-		$Vim::Perl::SILENT=$silent_save; 
+		$self->log($_) for(@$m);
+
+		$SILENT=$silent_save; 
 	};
 
 	my (@fref,@fconn,@vconn);
@@ -98,7 +152,7 @@ sub connect {
 	for(@fref){ $ref->{$_}=$self->{$_} unless defined $ref->{$_}; }
 	@vconn=@{$ref}{@fconn};
 
-	#VimMsg(Dumper($ref));
+	#$self->log(Dumper($ref));
 
 	eval { $dbh = DBI->connect(@vconn); };
 	if($@){
@@ -114,7 +168,7 @@ sub connect {
 		return; 
 	};
 
-	VimMsg('Connected to database ' . $ref->{db});
+	$self->log('Connected to database ' . $ref->{db});
 	$dbh->do('set names utf8');
 		
 	$atend->();
@@ -126,10 +180,10 @@ sub connect {
 sub disconnect {
 	my $self=shift;
 
-	VimMsg('Disconnecting...');
+	$self->log('Disconnecting...');
 	eval {$dbh->disconnect(); };
 	if ($@) {
-		VimMsg(['Errors while calling $dbh->disconnect():', $@]);
+		$self->log(['Errors while calling $dbh->disconnect():', $@]);
 	}
 
 	$self;
@@ -159,12 +213,21 @@ sub list_from_query_index {
 	my $res;
 	
 	eval { $res = $dbh->selectall_arrayref($query); };
-	if ($@) { VimMsg($@); }
-	unless(defined $res){ VimMsg($dbh->errstr); return; }
+	if ($@) { $self->log($@); }
+	unless(defined $res){ $self->log($dbh->errstr); return; }
 
 	@$list  = map { (defined $_->[$index]) ? encode('utf8',$_->[$index]) : () } @$res;
-	VimListExtend('list',$list);
 
+	if ($withvim) {
+		VimListExtend('list',$list);
+	}
+
+	$self;
+
+}
+
+BEGIN {
+	$withvim=__PACKAGE__->withvim;
 }
 
 
