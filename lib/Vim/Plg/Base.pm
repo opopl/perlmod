@@ -10,7 +10,8 @@ Vim::Plg::Base
 use strict;
 use warnings;
 
-use Vim::Perl qw();
+use Vim::Perl qw(VimMsg);
+
 use File::Spec::Functions qw(catfile);
 use File::Find qw(find);
 use File::Dat::Utils qw(readarr);
@@ -59,6 +60,8 @@ sub init {
 		appdata => catfile($ENV{APPDATA},qw(vim plg base)),
 	};
 
+	
+
 	my $d=$dirs->{appdata};
 	mkpath $d unless -d $d;
 
@@ -71,6 +74,7 @@ sub init {
 	my $dbfile=catfile($dirs->{appdata},$dbname.'.db');
 
 	my $h={
+		withvim  	 => $self->_withvim(),
 		dbname       => $dbname,
 		dbfile       => $dbfile,
 		dattypes     => [@types],
@@ -129,6 +133,15 @@ sub reload_from_fs {
 	$self->update(%o)->db_init->init_dat;
 
 	$self;
+}
+
+sub _withvim {
+	my $self=shift;
+
+	eval 'VIM::Eval("1")';
+	
+	my $uv = ($@) ? 0 : 1;
+	return $uv;
 }
 
 sub dat_add {
@@ -209,8 +222,24 @@ sub get_datfiles_from_db {
 	my @fields = qw(key plugin datfile);
 	my $f      = join(",",map { '`'.$_.'`'} @fields);
 	my $q      = qq{select $f from datfiles};
-	my $sth    = $dbh->prepare($q);
-	$sth->execute();
+
+	my $sth;
+	eval { $sth    = $dbh->prepare($q); };
+	if ($@) { 
+		my @m; 
+		push @m, 'Errors for $dbh->prepare($q),','$q=',$q,$@;
+		$self->warn(@m); 
+		return;
+	}
+
+	eval { $sth->execute(); };
+	if ($@) { 
+		my @m; 
+		push @m, 'Errors for $sth->execute(),',$@;
+		$self->warn(@m); 
+		return;
+	}
+
 
 	while (my $row=$sth->fetchrow_hashref()) {
 		my ($key,$plugin,$datfile)=@{$row}{@fields};
@@ -245,6 +274,18 @@ sub db_table_exists {
 
 }
 
+=head2 db_dbfile_size
+
+=over
+
+=item Usage
+
+	my $size = $plgbase->db_dbfile_size();
+
+=back
+
+=cut
+
 sub db_dbfile_size {
 	my $self=shift;
 
@@ -272,8 +313,6 @@ sub db_dbfile_size {
 
 sub db_init {
 	my $self=shift;
-
-	my $ref    = shift;
 
 	my $d=$self->dirs('appdata');
 
@@ -421,10 +460,15 @@ sub init_dat_plugins {
 }
 
 sub warn {
-	my $self=shift;
-	my @m=@_;
+	my $self = shift;
+	my @m    = @_;
 
-	warn $_ for (@m);
+	if ($self->withvim) {
+		VimMsg([@m]);
+	}else{
+		warn $_ for (@m);
+	}
+
 }
 
 sub init_plugins {
@@ -488,6 +532,7 @@ BEGIN {
 		dbh
 		dbfile
 		dbname
+		withvim
 	);
 	
 	###__ACCESSORS_HASH
