@@ -355,9 +355,27 @@ sub db_drop_tables {
 		}
 	}
 
-	$dbh->do($_) for(@s);
+	$self->db_do([@s]);
 
 	$self;
+}
+
+sub db_do {
+	my $self = shift;
+
+	my $qs = shift || [];
+	my $ref = shift || {};
+
+	my @q   = @$qs;
+	my $dbh = $self->dbh;
+
+	foreach my $q (@q) {
+		eval { $dbh->do($q); };
+		if ($@) {
+			$self->warn('Errors while dbh->do($q)','$q=',$q,$@);
+		}
+	}
+
 }
 
 sub db_create_tables {
