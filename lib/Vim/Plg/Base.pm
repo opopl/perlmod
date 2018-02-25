@@ -19,12 +19,8 @@ use DBI;
 
 use base qw( Class::Accessor::Complex );
 use File::Path qw(make_path remove_tree mkpath rmtree);
+use File::stat qw(stat);
 
-
-our $dbh;
-our $dbfile;
-
-our $dbname = 'main';
 
 =head1 SYNOPSIS
 
@@ -62,6 +58,9 @@ sub init {
 		plgroot => catfile($ENV{VIMRUNTIME},qw(plg base)),
 		appdata => catfile($ENV{APPDATA},qw(vim plg base)),
 	};
+
+	my $d=$dirs->{appdata};
+	mkpath $d unless -d $d;
 
 	my @types=qw(list dict listlines );
 	foreach my $type (@types) {
@@ -192,19 +191,19 @@ sub db_list_plugins {
 sub get_plugins_from_db {
 	my $self=shift;
 
-	return if $self->done('get_plugins_from_db');
+	#return if $self->done('get_plugins_from_db');
 
 	my @p=$self->db_list_plugins;
 
 	$self->plugins([@p]);
 
-	$self->done('get_plugins_from_db' => 1);
+	#$self->done('get_plugins_from_db' => 1);
 }
 
 sub get_datfiles_from_db {
 	my $self=shift;
 
-	return if $self->done('get_datfiles_from_db');
+	#return if $self->done('get_datfiles_from_db');
 
 	my $dbh    = $self->dbh;
 	my @fields = qw(key plugin datfile);
@@ -220,7 +219,7 @@ sub get_datfiles_from_db {
 		$self->datfiles($key => $datfile);
 	}
 
-	$self->done('get_datfiles_from_db' => 1);
+	#$self->done('get_datfiles_from_db' => 1);
 }
 
 sub db_tables {
@@ -246,6 +245,19 @@ sub db_table_exists {
 
 }
 
+sub db_dbfile_size {
+	my $self=shift;
+
+	my $dbfile=$self->dbfile;
+
+	my $st;
+    eval{ $st = stat($dbfile)};
+	$@ && do { $self->warn("File::stat errors for $dbfile: $@"); return; };
+
+	my $size=$st->size;
+	return $size;
+}
+
 =head2 db_init 
 
 =over
@@ -263,10 +275,9 @@ sub db_init {
 
 	my $ref    = shift;
 
-	$dbfile=":memory:";
 	my $d=$self->dirs('appdata');
-	mkpath $d unless -d $d;
-	$dbfile=catfile($d,'main.db');
+
+	my $dbfile=$self->dbfile;
 
 	my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile","","");
 	$self->dbh($dbh);
@@ -276,25 +287,34 @@ sub db_init {
 
 }
 
+=head2 db_drop_tables 
+
+=head3 Usage
+
+	$plgbase->db_drop_tables({ tb_reset => { ... }});
+
+=head3 Purpose
+
+=cut
+
 sub db_drop_tables {
-	my $self=shift;
+	my $self = shift;
 
-	my $dbopts = $self->dbopts;
-	my @s;
+	my $ref  = shift || {};
 
-	my $tb_reset=$dbopts->{tb_reset} || {};
-	my $tb_order=$dbopts->{tb_order} || [];
+	my $dbopts = $ref->{dbopts} || $self->dbopts;
+
+	my $tb_reset=$ref->{db_reset} || $dbopts->{tb_reset} || {};
+	my $tb_order=$ref->{tb_order} || $dbopts->{tb_order} || [];
 
 	my $dbh=$self->dbh;
 
+	my @s;
 	foreach my $tb (@$tb_order) {
-		if ($tb_reset->{$tb}) {
+		if ($ref->{all} || $tb_reset->{$tb}) {
 			push @s, qq{ drop table if exists $tb; };
 		}
 	}
-	use Data::Dumper qw(Dumper);
-	
-	print Dumper(\@s);
 
 	$dbh->do($_) for(@s);
 
@@ -496,7 +516,7 @@ BEGIN {
 	use Data::Dumper qw(Dumper);
 
 	my %o=();
-    my $p = __PACKAGE__->new(%o);
+    #my $p = __PACKAGE__->new(%o);
 	#$p->reload_from_fs;
 	#print Dumper([$p->plugins]) . "\n";
 	#print Dumper([$p->db_list_plugins]) . "\n";
