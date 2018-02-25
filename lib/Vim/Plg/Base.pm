@@ -497,7 +497,7 @@ BEGIN {
 
 	my %o=();
     my $p = __PACKAGE__->new(%o);
-	$p->reload_from_fs;
+	#$p->reload_from_fs;
 	#print Dumper([$p->plugins]) . "\n";
 	#print Dumper([$p->db_list_plugins]) . "\n";
 	#print Dumper($p->datfiles_ref) . "\n";
