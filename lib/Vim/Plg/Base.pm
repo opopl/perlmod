@@ -81,7 +81,7 @@ sub init {
 		dirs         => $dirs,
 		dbopts       => {
 			tb_reset => {},
-			tb_order => [qw(plugins datfiles)],
+			tb_order => [qw(plugins datfiles files exefiles)],
 		},
 		sqlstm => {
 			create_table_plugins => qq{
@@ -97,6 +97,19 @@ sub init {
 					key varchar(100),
 					type varchar(100),
 					datfile varchar(100)
+				);
+			},
+			create_table_exefiles => qq{
+				create table if not exists exefiles (
+					fileid varchar(100),
+					file varchar(100)
+				);
+			},
+			create_table_files => qq{
+				create table if not exists files (
+					fileid varchar(100),
+					type varchar(100),
+					file varchar(100)
 				);
 			},
 		},
@@ -437,7 +450,7 @@ sub db_create_tables {
 		}
 	}
 
-	$dbh->do($_) for(@s);
+	$self->db_do([@s]);
 
 	$self;
 }
