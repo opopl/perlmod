@@ -86,28 +86,30 @@ sub init {
 		sqlstm => {
 			create_table_plugins => qq{
 				create table if not exists plugins (
-					id int,
-					plugin varchar(100)
+					id integer primary key asc,
+					plugin varchar(100) unique
 				);
 			},
 			create_table_datfiles => qq{
 				create table if not exists datfiles (
-					id int,
+					id integer primary key asc,
+					key varchar(100) unique,
 					plugin varchar(100),
-					key varchar(100),
 					type varchar(100),
 					datfile varchar(100)
 				);
 			},
 			create_table_exefiles => qq{
 				create table if not exists exefiles (
-					fileid varchar(100),
+					id integer primary key asc,
+					fileid varchar(100) unique,
 					file varchar(100)
 				);
 			},
 			create_table_files => qq{
 				create table if not exists files (
-					fileid varchar(100),
+					id integer primary key asc,
+					fileid varchar(100) unique,
 					type varchar(100),
 					file varchar(100)
 				);
