@@ -157,7 +157,23 @@ sub dat_add {
 	$self->db_insert_datfiles($ref);
 }
 
-sub dat_locate {
+=head2 dat_locate_from_fs 
+
+=head3 Usage
+
+	my $ref={
+		type 	=> TYPE (string, one of of: list,dict,listlines - stored in dattypes array),
+		plugin 	=> PLUGIN (string ),
+		prefix 	=> PREFIX (string ),
+	};
+
+	$plgbase->dat_locate_from_fs($ref);
+
+=head3 Purpose
+
+=cut
+
+sub dat_locate_from_fs {
 	my $self = shift;
 	my $ref  = shift;
 
@@ -218,10 +234,11 @@ sub get_datfiles_from_db {
 
 	#return if $self->done('get_datfiles_from_db');
 
-	my $dbh    = $self->dbh;
+	my $dbh = $self->dbh;
+	my $tb  = "datfiles";
 	my @fields = qw(key plugin datfile);
 	my $f      = join(",",map { '`'.$_.'`'} @fields);
-	my $q      = qq{select $f from datfiles};
+	my $q      = qq{select $f from `$tb`};
 
 	my $sth;
 	eval { $sth    = $dbh->prepare($q); };
@@ -229,6 +246,10 @@ sub get_datfiles_from_db {
 		my @m; 
 		push @m, 'Errors for $dbh->prepare($q),','$q=',$q,$@;
 		$self->warn(@m); 
+		return;
+	}
+	unless(defined $sth){
+		$self->warn('$sth undefined after $dbh->prepare($q),','$q=',$q); 
 		return;
 	}
 
@@ -363,7 +384,7 @@ sub db_drop_tables {
 sub db_do {
 	my $self = shift;
 
-	my $qs = shift || [];
+	my $qs  = shift || [];
 	my $ref = shift || {};
 
 	my @q   = @$qs;
@@ -423,6 +444,18 @@ sub db_insert_datfiles {
 
 }
 
+=head2 init_dat_base 
+
+=head3 Usage
+
+	$plgbase->init_dat_base();
+
+=head3 Purpose
+
+	Fill datfiles hash either from FS (if one resets "datfiles" table) or from the database
+
+=cut
+
 
 
 sub init_dat_base {
@@ -431,7 +464,7 @@ sub init_dat_base {
 	my @types    = $self->dattypes;
 	my $dbopts   = $self->dbopts_ref;
 
-	my $tb_reset=$dbopts->{tb_reset} || {};
+	my $tb_reset = $dbopts->{tb_reset} || {};
 
 	if ($tb_reset->{datfiles}) {
 		# find all *.i.dat files in base plugin directory
@@ -439,7 +472,12 @@ sub init_dat_base {
 			my $dir = $self->{dirs}->{'dat_'.$type};
 			next unless -d $dir;
 	
-			$self->dat_locate({dirs => [$dir],type => $type});
+			$self->dat_locate_from_fs({
+				dirs   => [$dir],
+				type   => $type,
+				prefix => '',
+				plugin => 'base',
+			});
 		}
 	}else{
 		$self->get_datfiles_from_db;
@@ -463,7 +501,7 @@ sub init_dat_plugins {
 
 			foreach my $type (@types) {
 				my $pdir = catfile($ENV{VIMRUNTIME},qw(plg),$p,qw(data),$type);
-				$self->dat_locate({ 
+				$self->dat_locate_from_fs({ 
 					dirs   => [$pdir],
 					type   => $type,
 					plugin => $p,
