@@ -647,20 +647,7 @@ BEGIN {
 		->mk_hash_accessors(@hash_accessors)
 		->mk_new;
 
-
-	use Data::Dumper qw(Dumper);
-
-	my %o=();
-    #my $p = __PACKAGE__->new(%o);
-	#$p->reload_from_fs;
-	#print Dumper([$p->plugins]) . "\n";
-	#print Dumper([$p->db_list_plugins]) . "\n";
-	#print Dumper($p->datfiles_ref) . "\n";
-
-	##print Dumper({%{ $p->datfiles } }) . "\n";
 }
-
-
 
 1;
  

@@ -13,6 +13,8 @@ use warnings;
 use utf8;
 use open qw(:std :utf8);
 
+use base qw( Class::Accessor::Complex );
+
 if (-t) 
 {
 	binmode(STDIN, ":encoding(console_in)");
@@ -34,8 +36,6 @@ use Data::Dumper qw(Dumper);
 
 our $withvim;
 
-our $LastResult;
-our ($dbh,$sth);
 
 =head1 METHODS
 
@@ -153,6 +153,8 @@ sub connect {
 	@vconn=@{$ref}{@fconn};
 
 	#$self->log(Dumper($ref));
+	#
+	my ($dbh,$sth);
 
 	eval { $dbh = DBI->connect(@vconn); };
 	if($@){
@@ -168,6 +170,8 @@ sub connect {
 		return; 
 	};
 
+	$self->dbh($dbh);
+
 	$self->log('Connected to database ' . $ref->{db});
 	$dbh->do('set names utf8');
 		
@@ -180,6 +184,7 @@ sub connect {
 sub disconnect {
 	my $self=shift;
 
+	my $dbh=$self->dbh;
 	$self->log('Disconnecting...');
 	eval {$dbh->disconnect(); };
 	if ($@) {
@@ -212,6 +217,7 @@ sub list_from_query_index {
 	my $list;
 	my $res;
 	
+	my $dbh=$self->dbh;
 	eval { $res = $dbh->selectall_arrayref($query); };
 	if ($@) { $self->log($@); }
 	unless(defined $res){ $self->log($dbh->errstr); return; }
@@ -228,6 +234,27 @@ sub list_from_query_index {
 
 BEGIN {
 	$withvim=__PACKAGE__->withvim;
+
+	###__ACCESSORS_SCALAR
+	our @scalar_accessors=qw(
+		dbh
+	);
+	
+	###__ACCESSORS_HASH
+	our @hash_accessors=qw(
+
+	);
+	
+	###__ACCESSORS_ARRAY
+	our @array_accessors=qw(
+	);
+
+	__PACKAGE__
+		->mk_scalar_accessors(@scalar_accessors)
+		->mk_array_accessors(@array_accessors)
+		->mk_hash_accessors(@hash_accessors)
+		->mk_new;
+
 }
 
 
