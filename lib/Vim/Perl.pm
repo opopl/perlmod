@@ -487,7 +487,12 @@ sub VimWarn {
 
 	for(@msg){
 		VIM::Msg($_,"WarningMsg");
+
+		VimLet("msg","$_");
+		VimLet("prf","VimWarn");
+		VimCmd("call base#log(msg,{ 'prf' : prf })");
 	}
+
 }
 
 sub VimEval {
@@ -1016,9 +1021,9 @@ sub VimMsg {
     	VIM::Msg("$text");
 	}
 
-	#VimLet("msg","$text");
-	#VimLet("prf","VimMsg");
-	#VimCmd("call base#log(msg,{ 'prf' : prf })");
+	VimLet("msg","$text");
+	VimLet("prf","VimMsg");
+	VimCmd("call base#log(msg,{ 'prf' : prf })");
 
 	return 1;
 
