@@ -206,13 +206,22 @@ sub dat_locate_from_fs {
 	);
 }
 
+=head2 db_list_plugins 
+
+=head3 Usage
+
+	my @plugins = $plgbase->db_list_plugins();
+
+=head3 Purpose
+
+=cut
+
 sub db_list_plugins {
 	my $self=shift;
 
 	my $dbh = $self->dbh;
 	my $r   = $dbh->selectall_arrayref('select plugin from plugins');
 	my @p   = map { $_->[0] } @$r;
-
 
 	wantarray ? @p : \@p ;
 }
@@ -232,13 +241,22 @@ sub get_plugins_from_db {
 sub get_datfiles_from_db {
 	my $self=shift;
 
-	#return if $self->done('get_datfiles_from_db');
+	my $ref=shift || {};
 
-	my $dbh = $self->dbh;
-	my $tb  = "datfiles";
+	my $dbh    = $self->dbh;
 	my @fields = qw(key plugin datfile);
 	my $f      = join(",",map { '`'.$_.'`'} @fields);
-	my $q      = qq{select $f from `$tb`};
+
+	my $tb = "datfiles";
+	my $q  = qq{select $f from `$tb`};
+
+	if ($self->db_table_exists($tb)) {
+		$self->warn('db table is absent:',$tb);
+		if ($ref->{reload_from_fs}) {
+			$self->reload_from_fs;
+		}
+		return;
+	}
 
 	my $sth;
 	eval { $sth    = $dbh->prepare($q); };
@@ -269,7 +287,6 @@ sub get_datfiles_from_db {
 		$self->datfiles($key => $datfile);
 	}
 
-	#$self->done('get_datfiles_from_db' => 1);
 }
 
 sub db_tables {
@@ -283,6 +300,8 @@ sub db_tables {
 
 	wantarray ? @tables : \@tables ;
 }
+
+#VimMsg($plgbase->db_table_exists('datfiles'));
 
 sub db_table_exists {
 	my $self=shift;

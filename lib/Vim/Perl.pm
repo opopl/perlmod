@@ -940,9 +940,8 @@ additional options (color, highlighting etc.).
 =cut
 
 sub VimMsg {
-    my $text = shift || '';
-
-    return '' unless $text;
+    my $text = shift;
+    return '' unless defined $text;
 
     my @o   = @_;
     my $ref = shift @o;
@@ -1000,18 +999,26 @@ sub VimMsg {
     };
 
     my $color = $MsgColor || '';
-    $color = $opts->{color} if $opts->{color};
+    $color    = $opts->{color} if $opts->{color};
 
     $opts->{hl} = $colors->{$color} if $color;
 
     $text = $prefix . $text;
 
-    if ( $opts->{hl} ) {
-        VIM::Msg( "$text", $opts->{hl} );
-    }
-    else {
-        VIM::Msg("$text");
-    }
+	my @a;
+	push @a,"$text";
+    ( $opts->{hl} ) && do { push @a,$opts->{hl} };
+
+	my $hl=$opts->{hl};
+	if ($hl) {
+    	VIM::Msg("$text",$hl);
+	}else{
+    	VIM::Msg("$text");
+	}
+
+	#VimLet("msg","$text");
+	#VimLet("prf","VimMsg");
+	#VimCmd("call base#log(msg,{ 'prf' : prf })");
 
 	return 1;
 
