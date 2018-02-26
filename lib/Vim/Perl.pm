@@ -350,17 +350,17 @@ sub VimVar {
         /^List$/ && do {
             my $len = VimEval( 'len(' . $var . ')' );
             my $i   = 0;
-            $res = [];
+            $res    = [];
 
             while ( $i < $len ) {
-                my @v = split( "\n", VimEval( $var . '[' . $i . ']' ) );
+                my @v     = split( "\n", VimEval( $var . '[' . $i . ']' ) );
                 my $first = shift @v;
 
                 if (@v) {
-                    $res->[$i] = [ $first, @v ];
+                    push @$res,[ $first, @v ];
                 }
                 else {
-                    $res->[$i] = $first;
+                    push @$res,$first;
                 }
 
                 $i++;
@@ -382,6 +382,7 @@ sub VimVar {
 
             next;
         };
+		last;
     }
 
     unless ( ref $res ) {
@@ -1021,9 +1022,9 @@ sub VimMsg {
     	VIM::Msg("$text");
 	}
 
-	VimLet("msg","$text");
-	VimLet("prf","VimMsg");
-	VimCmd("call base#log(msg,{ 'prf' : prf })");
+	#VimLet("msg","$text");
+	#VimLet("prf","VimMsg");
+	#VimCmd("call base#log(msg,{ 'prf' : prf })");
 
 	return 1;
 
