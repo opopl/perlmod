@@ -101,14 +101,12 @@ sub log {
 		return $self;
 	}
 
-	print $text . "\n";
+	my $prefix=__PACKAGE__;
+	print $prefix. ' '.$text . "\n";
 	return $self;
 
 }
 
-sub isvim {
-	my $self=shift;
-}
 
 =head2 connect
 
@@ -169,6 +167,17 @@ sub connect {
 		$atend->({ m => $m});
 		return; 
 	};
+	$dbh->{Callbacks} = {
+          prepare => sub {
+              my ($dbh, $query, $attrs) = @_;
+              $self->log("Preparing q{$query}");
+          },
+          execute => sub {
+              my ($sth) = @_;
+              $self->log("Executing ".$sth->{Statement});
+          },
+      };
+
 
 	$self->dbh($dbh);
 

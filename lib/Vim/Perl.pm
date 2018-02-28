@@ -489,9 +489,9 @@ sub VimWarn {
 	for(@msg){
 		VIM::Msg($_,"WarningMsg");
 
-		VimLet("msg","$_");
-		VimLet("prf","VimWarn");
-		VimCmd("call base#log(msg,{ 'prf' : prf })");
+		#VimLet("msg","$_");
+		#VimLet("prf","VimWarn");
+		#VimCmd("call base#log(msg,{ 'prf' : prf })");
 	}
 
 }
