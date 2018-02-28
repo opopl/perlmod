@@ -237,12 +237,12 @@ BEGIN {
 
 	###__ACCESSORS_SCALAR
 	our @scalar_accessors=qw(
-		dbh
+		dbh pwd user db dsn
 	);
 	
 	###__ACCESSORS_HASH
 	our @hash_accessors=qw(
-
+		attr
 	);
 	
 	###__ACCESSORS_ARRAY

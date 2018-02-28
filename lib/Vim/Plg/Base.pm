@@ -103,7 +103,8 @@ sub init {
 				create table if not exists exefiles (
 					id integer primary key asc,
 					fileid varchar(100) unique,
-					file varchar(100)
+					file varchar(100),
+					pc varchar(100),
 				);
 			},
 			create_table_files => qq{
@@ -277,7 +278,7 @@ sub get_datfiles_from_db {
 	eval { $sth    = $dbh->prepare($q); };
 	if ($@) { 
 		my @m; 
-		push @m, 'Errors for $dbh->prepare($q),','$q=',$q,$@;
+		push @m, 'Errors for $dbh->prepare($q),','$q=',$q,$@,'$dbh->errstr:',$dbh->errstr;
 		$self->warn(@m); 
 		return;
 	}
@@ -289,7 +290,7 @@ sub get_datfiles_from_db {
 	eval { $sth->execute(); };
 	if ($@) { 
 		my @m; 
-		push @m, 'Errors for $sth->execute(),',$@;
+		push @m, 'Errors for $sth->execute(),',$@,'$dbh->errstr:',$dbh->errstr;
 		$self->warn(@m); 
 		return;
 	}
@@ -398,7 +399,7 @@ sub db_drop_tables {
 
 	my $dbopts = $ref->{dbopts} || $self->dbopts;
 
-	my $tb_reset=$ref->{db_reset} || $dbopts->{tb_reset} || {};
+	my $tb_reset=$ref->{tb_reset} || $dbopts->{tb_reset} || {};
 	my $tb_order=$ref->{tb_order} || $dbopts->{tb_order} || [];
 
 	my $dbh=$self->dbh;
@@ -467,14 +468,97 @@ sub db_insert_plugins {
 	$sth->execute($_) for(@p);
 }
 
+sub warn_dbh_undef {
+	my $self=shift;
+
+	my $pref=(caller[1])[3];
+	$self->warn($pref.': $dbh undefined!'); 
+	return $self;
+}
+
+sub db_prepare {
+	my $self=shift;
+
+	my $q=shift || '';
+
+	my $dbh = $self->dbh;
+
+	unless (defined $dbh) { return $self->warn_dbh_undef; }
+
+	my $sth=undef;
+	eval { $sth = $dbh->prepare($q); };
+	$self->sth($sth);
+
+	if ($@) {
+		my $s='eval { $sth = $dbh->prepare($q); };';
+		my @m;
+		push @m,
+			'db_prepare: errors while executing:',$s,
+			'message thrown:',$@,
+			'$dbh->errstr=',$dbh->errstr,
+			'query $q=',$q,
+		$self->warn(@m);
+		return $self;
+	}
+
+	defined $sth or do { 
+		my @m;
+		push @m,
+			'db_prepare: $sth undefined!',
+			'dbh->errstr=',$dbh->errstr,
+			'query $q=',$q;
+		$self->warn(@m);
+		return $self;
+	};
+
+
+	$self;
+
+}
+
+sub db_execute {
+	my $self=shift;
+
+	my @e=@_;
+
+	my $sth=$self->sth;
+	my $dbh=$self->dbh;
+
+	unless (defined $sth) {
+		$self->warn('db_execute: $sth undefined!'); return $self;
+	}
+	unless (defined $dbh) { return $self->warn_dbh_undef; }
+
+	eval {$sth->execute(@e); };
+	if ($@) {
+		my @m;
+		push @m,
+			'db_execute: $sth undefined!',
+			'dbh->errstr=',$dbh->errstr;
+		$self->warn(@m);
+		return $self;
+	}
+
+
+	$self;
+
+	
+}
+
 sub db_insert_datfiles {
 	my $self = shift;
 	my $ref  = shift || {};
 
-	my $dbh=$self->dbh;
+	my ($dbh,$sth);
+	$dbh=$self->dbh;
+	$sth=$self->sth;
 
-	my $sth = $dbh->prepare("insert into datfiles(key,type,plugin,datfile) values(?,?,?,?)");
-	$sth->execute(@{$ref}{qw(key type plugin datfile)});
+	my $q="insert into datfiles(key,type,plugin,datfile) values(?,?,?,?)";
+	my @e=@{$ref}{qw(key type plugin datfile)};
+
+	$self->db_prepare($q)->db_execute(@e);
+
+	$self;
 
 }
 
@@ -620,6 +704,7 @@ BEGIN {
 	###__ACCESSORS_SCALAR
 	our @scalar_accessors=qw(
 		dbh
+		sth
 		dbfile
 		dbname
 		withvim
