@@ -11,7 +11,6 @@ our $mw;
 
 my @stfx = qw/-side top -fill x/;
 
-
 ###Home::Manager::main
 ###hmm_main
 sub main {
@@ -25,6 +24,10 @@ sub main {
 	)->pack(@stfx);
 
 	MainLoop;
+}
+
+sub print_table_probeg_avto {
+	my $self=shift;
 }
 
 1;

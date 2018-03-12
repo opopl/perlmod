@@ -178,7 +178,6 @@ sub connect {
           },
       };
 
-
 	$self->dbh($dbh);
 
 	$self->log('Connected to database ' . $ref->{db});
