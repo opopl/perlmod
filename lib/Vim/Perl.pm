@@ -18,7 +18,7 @@ use File::Spec::Functions qw(catfile rel2abs curdir catdir );
 
 use File::Dat::Utils qw( readarr );
 use Text::TabularDisplay;
-use String::Escape qw(escape);
+use String::Escape qw(escape printable quote);
 
 use Data::Dumper;
 use File::Basename qw(basename dirname);
@@ -278,6 +278,7 @@ sub VimCmd {
 		
 	}elsif(ref $ref eq ''){
 		my $cmd = $ref;
+		return unless $UnderVim;
     	return VIM::DoCommand("$cmd"); 
 	}
 
@@ -371,12 +372,12 @@ sub VimVar {
 ###VimVar_Dictionary
         /^Dictionary$/ && do {
             $res = {};
-            my @keys = VimEval( 'keys(' . $var . ')' );
+		   	VimCmd( 'let keys = keys(' . $var . ')' );
+			my @keys=VimVar('keys');
 
-			VimMsg(Dumper(\@keys));
+			#VimMsg(Dumper(\@keys));
 
             foreach my $k (@keys) {
-				VimMsg($k);
                 $res->{$k} = VimEval( $var . "['" . $k . "']" );
             }
 
@@ -1086,12 +1087,12 @@ sub VimLet {
     my $lhs = "let $var";
 
     unless ( ref $ref ) {
-        $valstr .= "'$ref'";
+        $valstr .= quote(printable($ref));
     }
     elsif ( ref $ref eq "ARRAY" ) {
-        $valstr .= "[ '";
-        $valstr .= join( "' , '", @$ref );
-        $valstr .= "' ]";
+        $valstr .= "[ ";
+        $valstr .= "'"  . join( ',' =>  map { quote(printable($_)) } @$ref ) . '"';
+        $valstr .= "]";
     }
     elsif ( ref $ref eq "HASH" ) {
         unless (%$ref) {
@@ -1106,9 +1107,17 @@ sub VimLet {
         }
     }
 
+	print $valstr . "\n";
     if ($valstr) {
-        VimCmd( 'if exists("' . $var . '") | unlet ' . $var . ' | endif ' );
-        VimCmd( $lhs . '=' . $valstr );
+		my $cmds =[];
+
+		push @$cmds,
+			'if exists("' . $var . '") | unlet ' . $var . ' | endif ' ,
+			$lhs . '=' . $valstr ;
+
+		for(@$cmds){
+       		VimCmd($_);
+		}
     }
 
 }
