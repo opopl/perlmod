@@ -67,6 +67,7 @@ use vars qw( $DOM $DOMCACHE $XPATHCACHE %nodetypes );
 sub node_cdata2text {
 	my ($node,$dom)=@_;
 
+	#$dom->keep_blanks(0);
 	my $ntype=$node->nodeType;
 	if ($ntype == XML_CDATA_SECTION_NODE) {
 		my $content = $node->textContent;
@@ -75,9 +76,13 @@ sub node_cdata2text {
 		
 		$parent->removeChild($node);
 		$parent->appendChild($tx);
+
+		$node=$tx;
+		print $tx->toString . "\n";
+		return $node;
 	}
 	else {
-		my @tn=$node->findnodes('./*');
+		my @tn=$node->findnodes('./text()');
 		foreach my $n (@tn) {
 			if ($n->nodeType == XML_CDATA_SECTION_NODE) {
 				node_cdata2text($dom,$n);
