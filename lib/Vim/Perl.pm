@@ -334,7 +334,6 @@ Return Perl representation of a VimScript variable
 =cut
 
 sub VimVar {
-
     my $var = shift;
 
     return '' unless VimExists($var);
@@ -1075,7 +1074,6 @@ Set the value of a vimscript variable
 =cut
 
 sub VimLet {
-
     # name of the vimscript variable to be assigned
     my $var = shift;
 
@@ -1091,7 +1089,7 @@ sub VimLet {
     }
     elsif ( ref $ref eq "ARRAY" ) {
         $valstr .= "[ ";
-        $valstr .= "'"  . join( ',' =>  map { quote(printable($_)) } @$ref ) . '"';
+        $valstr .= join( ',' =>  map { quote(printable($_)) } @$ref );
         $valstr .= "]";
     }
     elsif ( ref $ref eq "HASH" ) {

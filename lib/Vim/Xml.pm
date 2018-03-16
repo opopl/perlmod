@@ -17,7 +17,9 @@ use HTML::Entities;
 
 ###export_vars_scalar
 my @ex_vars_scalar=qw(
-	$PARSER $DOM $DOMCACHE $XPATHCACHE
+	$PARSER $PARSER_OPTS
+	$DOM $DOMCACHE 
+	$XPATHCACHE
 );
 ###export_vars_hash
 my @ex_vars_hash=qw(
@@ -39,7 +41,12 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
 our @EXPORT  = qw( );
 our $VERSION = '0.01';
 
-use vars qw( $PARSER $DOM $DOMCACHE $XPATHCACHE %nodetypes );
+use vars qw( 
+	$PARSER $PARSER_OPTS
+	$DOM $DOMCACHE 
+	$XPATHCACHE 
+	%nodetypes 
+);
 
 # XML::LibXML exported constants
 %nodetypes=reverse (
@@ -68,7 +75,6 @@ use vars qw( $PARSER $DOM $DOMCACHE $XPATHCACHE %nodetypes );
 sub node_cdata2text {
 	my ($node,$dom,$parser)=@_;
 
-	#$dom->keep_blanks(0);
 	my $ntype=$node->nodeType;
 	if ($ntype == XML_CDATA_SECTION_NODE) {
 		my $content = $node->textContent;
