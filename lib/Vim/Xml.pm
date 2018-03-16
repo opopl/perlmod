@@ -13,10 +13,11 @@ $VERSION = '0.01';
 
 use Vim::Perl qw( :vars :funcs );
 use XML::LibXML;
+use HTML::Entities;
 
 ###export_vars_scalar
 my @ex_vars_scalar=qw(
-	$DOM $DOMCACHE $XPATHCACHE
+	$PARSER $DOM $DOMCACHE $XPATHCACHE
 );
 ###export_vars_hash
 my @ex_vars_hash=qw(
@@ -38,7 +39,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'funcs'} }, @{ $EXPORT_TAGS{'vars'} } );
 our @EXPORT  = qw( );
 our $VERSION = '0.01';
 
-use vars qw( $DOM $DOMCACHE $XPATHCACHE %nodetypes );
+use vars qw( $PARSER $DOM $DOMCACHE $XPATHCACHE %nodetypes );
 
 # XML::LibXML exported constants
 %nodetypes=reverse (
@@ -65,12 +66,14 @@ use vars qw( $DOM $DOMCACHE $XPATHCACHE %nodetypes );
 );
 
 sub node_cdata2text {
-	my ($node,$dom)=@_;
+	my ($node,$dom,$parser)=@_;
 
 	#$dom->keep_blanks(0);
 	my $ntype=$node->nodeType;
 	if ($ntype == XML_CDATA_SECTION_NODE) {
 		my $content = $node->textContent;
+		$content=decode_entities($content);
+
 		my $tx      = $dom->createTextNode($content);
 		my $parent  = $node->parentNode;
 		
@@ -78,17 +81,18 @@ sub node_cdata2text {
 		$parent->appendChild($tx);
 
 		$node=$tx;
-		print $tx->toString . "\n";
+		#print $tx->toString . "\n";
 		return $node;
 	}
 	else {
 		my @tn=$node->findnodes('./text()');
 		foreach my $n (@tn) {
 			if ($n->nodeType == XML_CDATA_SECTION_NODE) {
-				node_cdata2text($dom,$n);
+				$n = node_cdata2text($dom,$n,$parser);
 			}
 		}
 	}
+	return $node;
 
 }
 
