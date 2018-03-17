@@ -989,6 +989,7 @@ sub VimMsg {
         /^none$/ && do { $prefix = ''; next; };
         /^subname$/ && do { $SubName=(caller(0))[3]; $prefix = "$SubName()>> "; next; };
     }
+	$prefix='';
 
     $prefix    = $MsgPrefix if $MsgPrefix;
     $MsgPrefix = $prefix;
