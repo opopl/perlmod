@@ -72,35 +72,7 @@ use vars qw(
           XML_XINCLUDE_END            => 20,
 );
 
-sub node_cdata2text {
-	my ($node,$dom,$parser)=@_;
 
-	my $ntype=$node->nodeType;
-	if ($ntype == XML_CDATA_SECTION_NODE) {
-		my $content = $node->textContent;
-		$content=decode_entities($content);
-
-		my $tx      = $dom->createTextNode($content);
-		my $parent  = $node->parentNode;
-		
-		$parent->removeChild($node);
-		$parent->appendChild($tx);
-
-		$node=$tx;
-		#print $tx->toString . "\n";
-		return $node;
-	}
-	else {
-		my @tn=$node->findnodes('./text()');
-		foreach my $n (@tn) {
-			if ($n->nodeType == XML_CDATA_SECTION_NODE) {
-				$n = node_cdata2text($dom,$n,$parser);
-			}
-		}
-	}
-	return $node;
-
-}
 
 1;
  
