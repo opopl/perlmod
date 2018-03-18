@@ -55,7 +55,7 @@ my @ex_vars_scalar = qw(
   $ModuleName
   $SubName
   $FullSubName
-  $CurBuf
+  $CURBUF
   $UnderVim
   $PAPINFO
   $SILENT
@@ -84,15 +84,13 @@ my @ex_vars_array = qw(
           init_Args
           init_PIECES
 		  EnvVar
+		  CurBufSet
 		  UnderVim
           VimArg
 		  VimBufSplit
           VimBufFiles_Insert_SubName
           VimChooseFromPrompt
           VimCreatePrompt
-          VimCurBuf_Basename
-          VimCurBuf_Name
-          VimCurBuf_Num
           VimCmd
           VimEcho
           VimEditBufFiles
@@ -150,10 +148,6 @@ my @ex_vars_array = qw(
 #sub VimArg;
 #sub VimBufSplit;
 ## ----------- buffers -----------------------
-#sub VimCurBuf_Basename;
-#sub VimCurBuf_Name;
-#sub VimCurBuf_Num;
-#sub VimBufFiles_Insert_SubName;
 
 #sub VimCmd;
 #sub VimChooseFromPrompt;
@@ -237,7 +231,7 @@ our ($SubName);        #   => x
 our ($FullSubName);    #   => VIMPERL_x
 
 # ---
-our ($CurBuf);
+our ($CURBUF);
 
 # ---
 our ($MsgColor);
@@ -1445,6 +1439,17 @@ sub VimPieceFullFile {
 
 }
 
+sub CurBufSet {
+	my $ref = shift;
+
+	my $text = $ref->{text} || '';
+
+	my $c    = $CURBUF->Count();
+
+	$CURBUF->Delete(1,$c);
+	$CURBUF->Append(1,split("\n",$text));
+}
+
 sub VimGetLine {
     my $num=shift;
 
@@ -1526,32 +1531,6 @@ sub VimJoin {
 
     $res;
 
-}
-
-sub VimCurBuf_Name {
-    return VimEval("bufname('%')");
-}
-
-sub VimCurBuf_Num {
-    return VimEval("bufnr('%')");
-}
-
-sub VimCurBuf_Basename {
-    my $opts = shift || '';
-
-    my $name=VimCurBuf_Name;
-
-	return $name unless $name;
-
-    $name = basename( $name );
-
-    if ($opts) {
-        if ( $opts->{remove_extension} ) {
-            $name =~ s/\.(\w+)$//g;
-        }
-    }
-
-    $name;
 }
 
 sub VimBufFiles_Edit {
@@ -1655,7 +1634,6 @@ sub init {
     @INITIDS = qw(
       Args
       VDIRS
-      CurBuf
       PIECES
       MODULES
     );
@@ -1732,13 +1710,6 @@ sub init_Args {
 
 sub init_MODULES {
     @LOCALMODULES = VimVar('g:PMOD_available_mods');
-}
-
-sub init_CurBuf {
-
-    $CurBuf->{name}   = VimEval("bufname('%')");
-    $CurBuf->{number} = VimEval("bufnr('%')");
-
 }
 
 sub init_PIECES {
