@@ -989,10 +989,11 @@ sub VimMsg {
         /^none$/ && do { $prefix = ''; next; };
         /^subname$/ && do { $SubName=(caller(0))[3]; $prefix = "$SubName()>> "; next; };
     }
-	$prefix='';
 
-    $prefix    = $MsgPrefix if $MsgPrefix;
-    $MsgPrefix = $prefix;
+    #$prefix    = $MsgPrefix if $MsgPrefix;
+    #$MsgPrefix = $prefix;
+
+	$prefix='';
 
     $opts->{hl} = 'WarningMsg' if $opts->{warn};
     $opts->{hl} = 'ErrorMsg'   if $opts->{error};
