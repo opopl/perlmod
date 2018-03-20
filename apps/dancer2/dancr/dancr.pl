@@ -25,9 +25,10 @@ sub init_db {
 }
 
 get '/' => sub {
-	my $db = connect_db();
+	my $db  = connect_db();
 	my $sql = 'select id, title, text from entries order by id desc';
 	my $sth = $db->prepare($sql) or die $db->errstr;
+
 	$sth->execute or die $sth->errstr;
 
 	template 'show_entries.tt', {
