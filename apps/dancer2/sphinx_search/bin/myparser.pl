@@ -3,7 +3,7 @@
 package MyParser;
 
 use strict;
-use vars qw(@ISA);
+use warnings;
 
 use base qw(Pod::Simple::PullParser);
 
@@ -18,15 +18,17 @@ my ($text, $html);
 (my $parser_text = Pod::Simple::Text->new)->output_string(\$text);
 (my $parser_html = Pod::Simple::HTML->new)->output_string(\$html);
 
+my $dbname="docs_sphinx";
+
 # Initialize database connection
-my $dbh = DBI->connect("dbi:mysql:dbname=docs_sphinx;host=localhost", "root","")
+my $dbh = DBI->connect("dbi:mysql:dbname=$dbname;host=localhost", "root","")
 	or die $!;
 	
-	sub run {
-	    my $self = shift;
-	    my (@tokens, $title);
+sub run {
+    my $self = shift;
+	my (@tokens, $title);
 	
-	    while (my $token = $self->get_token) {
+	while (my $token = $self->get_token) {
 	        push @tokens, $token;
 	
 	        # We're looking for a "=head1 NAME" section
@@ -53,21 +55,38 @@ my $dbh = DBI->connect("dbi:mysql:dbname=docs_sphinx;host=localhost", "root","")
 	    $parser_html->parse_file($self->source_filename);
 	
 	    # Add the new document to the database
-	    $dbh->do("INSERT INTO documents (title, contents_text, " .
-	        "contents_html) VALUES(?, ?, ?)", undef, $title, $text, $html);
+        my $q=qq{
+            INSERT INTO documents (
+                title, contents_text, contents_html
+            ) values(?,?,?)
+        };
+	    my $sth = $dbh->prepare($q);
+        my @e   = ($title, $text, $html);
+        $sth->execute(@e);
 	
 	    # Clear the content variables and reinitialize parsers
 	    $text = $html = "";
 	    $parser_text->reinit;
 	    $parser_html->reinit;
-	}
+}
+
+package main;
 	
-	my $parser = MyParser->new;
 	
-	find({ wanted => sub {
-	    if (-f and /\.pm$|\.pod$/) {
-	        $parser->parse_file($File::Find::name);
-	        $parser->reinit;
-	    }
-	}, no_chdir => 1 }, shift || '.');
+#C:\Users\apoplavskiy\repos\git\perlmod\apps\dancer2\sphinx_search\bin
+my @dirs;
+
+push @dirs,@INC,
+    #(shift @ARGV || '.'),
+    ;
+
+use File::Find qw(find);
+
+find({ wanted => sub {
+    if (-f and /\.pm$|\.pod$/) {
+        my $parser = MyParser->new;
+        $parser->parse_file($File::Find::name);
+        #$parser->reinit;
+    }
+}, no_chdir => 1 }, @dirs);
 

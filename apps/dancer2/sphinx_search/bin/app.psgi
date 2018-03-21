@@ -1,5 +1,7 @@
 #!/usr/bin/env perl
 
+#C:\Users\apoplavskiy\repos\git\perlmod\apps\dancer2\sphinx_search\bin
+
 use strict;
 use warnings;
 use FindBin;

@@ -1,7 +1,21 @@
 
+<style type="text/css" src="css/">
+	form { 
+			background-color: green;
+	}
+</style>
+
+<div id="dump">
+	[% dump %]
+</div>
+
+<div id="ret">
+	[% ret %]
+</div>
+
 <form action="/" method="get">
     Поисковый запрос:
     <input type="text" name="query">
-    <input type="submit" value="Search">
+    <input type="submit" value="Поиск">
 </form>
 

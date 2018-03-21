@@ -1443,11 +1443,12 @@ sub CurBufSet {
 	my $ref = shift;
 
 	my $text = $ref->{text} || '';
+	my $curbuf = $ref->{curbuf} || $CURBUF;
 
-	my $c    = $CURBUF->Count();
+	my $c    = $curbuf->Count();
 
-	$CURBUF->Delete(1,$c);
-	$CURBUF->Append(1,split("\n",$text));
+	$curbuf->Delete(1,$c);
+	$curbuf->Append(1,split("\n",$text));
 }
 
 sub VimGetLine {
