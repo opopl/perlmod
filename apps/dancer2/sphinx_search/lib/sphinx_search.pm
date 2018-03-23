@@ -11,7 +11,6 @@ use Sphinx::Search;
 
 our $VERSION = '0.1';
 
-my $sph = Sphinx::Search->new;
 
 #my $dbname="docs_sphinx";
 
@@ -36,6 +35,8 @@ my %sql = (
 # Match all words, sort by relevance, return the first 10 results
 
 #$sph->SetMatchMode(SPH_MATCH_ALL);
+#
+my $sph = Sphinx::Search->new;
 $sph->SetLimits(0, 10);
 $sph->SetSortMode(SPH_SORT_RELEVANCE);
 
@@ -43,7 +44,8 @@ $sph->SetSortMode(SPH_SORT_RELEVANCE);
 ###get_document_id
 
 get '/document/:id' => sub {
-	    my $sth = database->prepare(q{SELECT contents_html FROM documents WHERE id = ?});
+		my $q= q{SELECT contents_html FROM documents WHERE id = ?};
+	    my $sth = database->prepare($q);
 	    $sth->execute(params->{'id'});
 	        
 	    if (my $document = $sth->fetchrow_hashref) {
@@ -72,12 +74,15 @@ get '/' => sub {
 		my $results={};
 		
 		eval { $results = $sph->Query($phrase)
-			or push @ret,$sph->GetLastError.$br; };
+			or push @ret,
+				$sph->GetLastError.$br,
+				$sph->GetLastWarning.$br; 
+			};
 		if ($@) {
 			push @ret,Dumper($@).$br;
 		}
 
-		push @ret,Dumper($results).$br if $results;
+		#push @ret,Dumper($results).$br if $results;
 	
 		my $retrieved_count = 0;
 		my $total_count;
@@ -111,7 +116,7 @@ get '/' => sub {
 			});
 	}else{
 		push @ret, 
-			template( 'index' => {} );
+			template( 'search_form' => {} );
 	}
 	return join("",@ret);
 

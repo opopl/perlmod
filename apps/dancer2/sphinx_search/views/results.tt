@@ -2,22 +2,22 @@
 	    <p>Результаты поиска для <strong>&quot;[% phrase %]&quot;</strong></p>
 	
 	    [% IF total_count %]
-	    <p>
-	        Всего найдено [% total_count %].
-	        Показываю результаты 1 - [% retrieved_count %].
-	    </p>
-	
-	    <ol>
-	    [% FOREACH document IN documents %]
-	        <li>
-	            <a href="/document/[% document.id %]">[% document.title %]</a>
-	        </li>
-	    [% END %]
-	    </ol>
+		    <p>
+		        Всего найдено [% total_count %].
+		        Показываю результаты 1 - [% retrieved_count %].
+		    </p>
+		
+		    <ol>
+			    [% FOREACH document IN documents %]
+			        <li>
+			            <a href="/document/[% document.id %]">[% document.title %]</a>
+			        </li>
+			    [% END %]
+		    </ol>
 	    [% ELSE %]    
-	    <p>
-	        Ничего не найдено --- попробуйте снова!
-	    </p>
+		    <p>
+		        Ничего не найдено --- попробуйте снова!
+		    </p>
 	    [% END %]
 	[% END %]
 
