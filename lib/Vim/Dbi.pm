@@ -83,11 +83,31 @@ sub withvim {
 	return $uv;
 }
 
+sub warn {
+	my $self=shift;
+
+	my @args=@_;
+    return $self unless @_;
+
+	my $sub = $self->{sub_warn} || $self->{sub_log} ||undef;
+	if ($sub) {
+		$sub && $sub->(@args);
+		return;
+	}
+}
+
 sub log {
 	my $self=shift;
 
 	my $text=shift;
     return $self unless $text;
+
+	my $sub = $self->{sub_log} ||undef;
+	my @args=($text);
+	if ($sub) {
+		$sub && $sub->(@args);
+		return;
+	}
 
     my @o   = @_;
     my $ref = shift @o;
@@ -137,7 +157,7 @@ sub connect {
 		my $ref = shift;
 		my $m   = $ref->{m} || [];
 		
-		$self->log($_) for(@$m);
+		$self->warn($_) for(@$m);
 
 		$SILENT=$silent_save; 
 	};
@@ -154,7 +174,9 @@ sub connect {
 	#
 	my ($dbh,$sth);
 
-	eval { $dbh = DBI->connect(@vconn); };
+	eval { $dbh = DBI->connect(@vconn)
+			or do { $self->warn($DBI::errstr); return;  }};
+
 	if($@){
 		my $m;
 		push @$m, 'Errors while calling DBI->connect(...): ',$@;

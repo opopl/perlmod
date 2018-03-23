@@ -1442,7 +1442,7 @@ sub VimPieceFullFile {
 sub CurBufSet {
 	my $ref = shift;
 
-	my $text = $ref->{text} || '';
+	my $text   = $ref->{text} || '';
 	my $curbuf = $ref->{curbuf} || $CURBUF;
 
 	my $c    = $curbuf->Count();
