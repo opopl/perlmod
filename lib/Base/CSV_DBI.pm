@@ -6,7 +6,12 @@ use warnings;
 use LaTeX::Table;
 use LaTeX::Encode;
 use DBI;
+
 use Data::Dumper;
+
+use File::Find qw(find);
+use File::Path qw(mkpath);
+use File::Spec::Functions qw(catfile);
 
 sub new
 {
@@ -36,7 +41,12 @@ sub init {
 	use FindBin qw($Bin $Script);
 
 	my $dir   = $Bin;
-	my $b_csv = Base::CSV_DBI->new( csv_dir => $dir);
+	my $bcsv  = Base::CSV_DBI->new( csv_dir => $dir);
+
+	$bcsv->select_to_latex_table({
+		table   => $table,
+		csv_dir => $dir,
+	});
 
 =head3 Purpose
 
@@ -46,10 +56,61 @@ sub select_to_latex_table  {
 	my $self = shift;
 	my $ref  = shift;
 	
-	my $dir    = $ref->{dir} || $self->{csv_dir} || '';
-	my $fields = $ref->{fields} || '*';
-	my $table  = $ref->{table} || '';
-	my $warn   = sub { $self->warn(@_) };
+	my $dir     = $ref->{csv_dir} || $self->{csv_dir} || '';
+	my $fields  = $ref->{fields} || '*';
+	my $table   = $ref->{table} || '';
+	my $warn    = sub { $self->warn(@_) };
+
+	# LaTeX::Table options
+	my $opts         = $ref->{options_latex_table} || {};
+		
+	my $caption      = $opts->{caption} ||'';
+	my $caption_main = $opts->{caption_main} ||$caption||'';
+	my $label        = $opts->{label} ||'';
+	my $file_tex     = $opts->{file_tex} ||'';
+
+	my $cb_latex_table = $opts->{cb} || undef; 
+	#########################
+	my $out_tex_dir  = $ref->{out_tex_dir} ||'';
+	#########################
+	my $cb_texfile  = $ref->{cb_texfile} || 
+		sub { 
+			my ($table)=@_; 
+			return 'tab_'.$table.'.tex';
+		};
+
+
+	my $output = $ref->{output} || undef;
+
+	my @tables;
+	
+	my @exts=qw(csv);
+	my @dirs;
+	push @dirs,$dir;
+	
+	find({ 
+		wanted => sub { 
+			foreach my $ext (@exts) {
+				if (/(\w+)\.$ext$/) {
+					push @tables,$1;
+				}
+			}
+		} 
+	},@dirs
+	);
+
+	# loop over all existing tables in the given csv directory
+	unless ($table) {
+		foreach my $table (@tables) {
+			$self->select_to_latex_table({ 
+				%$ref,
+				output              => $output,
+				table               => $table,
+				options_latex_table => $opts,
+			});
+		}
+		return $self;
+	}
 	
 	my $dbh = DBI->connect("dbi:CSV:", undef, undef, {
 		f_schema         => undef,
@@ -86,25 +147,49 @@ sub select_to_latex_table  {
 		latex_encode($cell);
 	};
 	while (my $row = $sth->fetchrow_arrayref) {
-			my $r;
-			@$r = map { defined($_) ? $cb_row->($_) : '' } @$row;
-			push @$data,$r;
+		my $r;
+		@$r = map { defined($_) ? $cb_row->($_) : '' } @$row;
+		push @$data,$r;
 	}
-	
-	my $table = LaTeX::Table->new(
+
+	if (($out_tex_dir) && (!$file_tex)) {
+		unless (-d $out_tex_dir) {
+			mkpath $out_tex_dir;
+		}
+		my $bname = $cb_texfile->($table) || 'tab_'.$table . '.tex';
+		$file_tex = catfile($out_tex_dir,$bname);
+	}
+
+	my $lt = LaTeX::Table->new(
 		{   
-			filename    => 'prices.tex',
-			maincaption => 'Price List',
-			caption     => 'Try our special offer today!',
-			label       => 'table:prices',
+			filename    => $file_tex,
+			maincaption => $caption_main,
+			caption     => $caption,
+			label       => $label,
 			position    => 'tbp',
 			header      => $header,
 			data        => $data,
 		}
 	);
 
-	my $tex = $table->generate_string();
+	if ($cb_latex_table) {
+		$lt->set_callback($cb_latex_table);
+	}
+
+	if ($file_tex) {
+		$lt->generate();
+	}
+
+	my $tex = $lt->generate_string();
 	my @tex = split("\n",$tex);
+
+	$self->{tex_lines}=[@tex];
+
+	if ($output) {
+		$output->{$table}=[@tex];
+	}
+
+	$self;
 
 }
 
