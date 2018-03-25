@@ -1,0 +1,14 @@
+
+<div class="navpane">
+	<table>
+		<tr>
+			<a href="[% prev.href %]">Previous ( [% prev.title %] )</a>
+			<a href="[% next.href %]">Next ( [% next.title %] )</a>
+		</tr>
+	</table>
+</div>
+
+<div id="contents_html">
+	[% contents_html %]
+</div>
+

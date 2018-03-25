@@ -12,6 +12,38 @@ body {
 	color:			#333;
 }
 
+table#tab_sphinx_status {
+	border: 4px double black;
+	border-color: 'black';
+	border-width: 3px;
+	border-style: 'solid';
+}
+table#tab_sphinx_results {
+	border: 4px double black;
+	border-color: 'black';
+	border-width: 3px;
+	border-style: 'solid';
+	background-color: white;
+}
+td.document_title {
+	color:red;
+}
+td.table_head_title {
+	font-weight:	bold;
+}
+fieldset{
+	color:orange;
+	background-color:orange;
+}
+span{
+	color:black;
+}
+
+
+form { 
+	background-color: green;
+}
+
 h1 {
 	font-size:	28px;
 	color:		white;
@@ -19,6 +51,11 @@ h1 {
 
 a {
 	color:	#03c;
+}
+
+.navpane a:link {
+	color: green;
+	text-decoration: underline;
 }
 
 a:hover {

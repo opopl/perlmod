@@ -1,0 +1,9 @@
+
+[% USE DBI('dbi:mysql:host=localhost;port=9306;mysql_enable_utf8=1', 'root', '') %]
+
+<table caption="Sphinx Engine Status" id="tab_sphinx_status">
+	[% FOREACH line = DBI.query('show status') %]
+	    <tr><td>[% line.Counter %]</td><td> [% line.Value %]</td></tr>
+	[% END %]
+</table>
+

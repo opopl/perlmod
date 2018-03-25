@@ -8,6 +8,7 @@ use LaTeX::Encode;
 use DBI;
 
 use Data::Dumper;
+use File::stat;
 
 use File::Find qw(find);
 use File::Path qw(mkpath);
@@ -26,7 +27,10 @@ sub new
 sub init {
 	my $self=shift;
 
-	my $h={};
+	my $h={
+		sub_log  => sub { print $_ . "\n" for(@_); },
+		sub_warn => sub { warn $_ . "\n" for(@_); },
+	};
 		
 	my @k=keys %$h;
 
@@ -112,6 +116,7 @@ sub select_to_latex_table  {
 		return $self;
 	}
 	
+	$self->log('Connecting via DBI to CSV directory:',$dir);
 	my $dbh = DBI->connect("dbi:CSV:", undef, undef, {
 		f_schema         => undef,
 		f_dir            => "$dir",
@@ -177,7 +182,28 @@ sub select_to_latex_table  {
 	}
 
 	if ($file_tex) {
+		my ($mtime_before,$mtime);
+		my $fmode='';
+		if (! -e $file_tex){ 
+			$fmode='anew'; 
+		}else{
+			$fmode='rewrite'; 
+			my $st           = stat($file_tex);
+			$mtime_before = $st->mtime;
+		}
 		$lt->generate();
+
+		if ( -e $file_tex){ 
+			if ( $fmode eq 'anew') {
+				$self->log('Have written latex file:',$file_tex);
+			} elsif ( $fmode eq 'rewrite' ) {
+				my $st           = stat($file_tex);
+				if ($st->mtime > $mtime_before ) {
+					$self->log('Have re-written latex file:',$file_tex);
+				}
+			}
+		}
+
 	}
 
 	my $tex = $lt->generate_string();

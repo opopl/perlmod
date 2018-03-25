@@ -1,16 +1,10 @@
 
-<style type="text/css" src="css/">
-	form { 
-		background-color: green;
-	}
-</style>
-
 <div id="dump">
 	[% dump %]
 </div>
 
-<div id="ret">
-	[% ret %]
+<div id="contents_html">
+	[% contents_html %]
 </div>
 
 <form action="/" method="get">

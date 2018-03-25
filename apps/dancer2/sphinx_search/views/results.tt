@@ -7,13 +7,35 @@
 		        Показываю результаты 1 - [% retrieved_count %].
 		    </p>
 		
-		    <ol>
+		    <table id="tab_sphinx_results">
+				<thead>
+					<tr>
+				    	[% FOREACH field IN fields %]
+							<th class="table_head_[% field %]">[% field %]</th>
+						[% END %]
+					</tr>
+				</thead>
+				<tbody>
 			    [% FOREACH document IN documents %]
-			        <li>
-			            <a href="/document/[% document.id %]">[% document.title %]</a>
-			        </li>
+			        <tr>
+				    	[% FOREACH field IN fields %]
+							[% IF field == 'title'  %]
+								[% 	docid=document.id 
+									doctitle=document.title 
+								%]
+								<td class="document_title">
+									<a href="/document/[% docid %]" >
+										[%  doctitle %]
+									</a> 
+								</td>
+							[% ELSE %]
+								<td>[% document.item(field) %]</td>
+							[% END %]
+				    	[% END %]
+			        </tr>
 			    [% END %]
-		    </ol>
+				</tbody>
+		    </table>
 	    [% ELSE %]    
 		    <p>
 		        Ничего не найдено --- попробуйте снова!
