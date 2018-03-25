@@ -76,16 +76,6 @@ get '/document/:id' => sub {
 	    }
 	};
 
-###get /
-get '/' => sub {
-	my @ret;
-	push @ret, template( 
-		'search_form' => { 
-			fields => \@select_fields,
-		});
-	return join("",@ret);
-};
-
 ###get /search_form
 get '/search_form' => sub {
 	my @ret;
@@ -99,6 +89,15 @@ get '/search_form' => sub {
 ###get /
 get '/' => sub {
 	redirect('/search_form');
+};
+
+###get /add_document
+get '/add_document' => sub {
+	my @ret;
+	push @ret, template( 
+		'add_document' => { }
+	);
+	return join("",@ret);
 };
 
 ###post /search_results
@@ -172,6 +171,7 @@ post '/search_results' => sub {
 				total_count     => $total_count,
 				documents       => $documents,
 				fields          => $fields,
+				captions        => 'Search results for: '. $phrase,
 			});
 	}else{
 		push @ret,

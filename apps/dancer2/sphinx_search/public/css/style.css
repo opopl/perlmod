@@ -20,6 +20,13 @@ table#tab_sphinx_status {
 }
 table,th,td {
 	border: 1px solid black;
+	border-collapse: collapse;
+}
+th,td {
+	padding: 15px;
+}
+th {
+    text-align: left;
 }
 table#tab_sphinx_results {
 	border-color: 'black';

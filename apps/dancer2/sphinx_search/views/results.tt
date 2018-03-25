@@ -8,6 +8,7 @@
 		    </p>
 		
 		    <table id="tab_sphinx_results">
+				<caption>[% caption %]</caption>
 				<thead>
 					<tr>
 						<th>Match number</th>
