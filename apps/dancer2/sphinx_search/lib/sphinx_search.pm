@@ -11,6 +11,13 @@ use DBI;
 
 our $VERSION = '0.1';
 
+our @select_fields = qw(
+	id title time_added file_local_text file_local_html
+	tags url_remote
+	doc_id
+	local_id
+);
+
 my $shx = DBI->connect('dbi:mysql:host=localhost;port=9306;mysql_enable_utf8=1') 
 	or die "Failed to connect via DBI";
 
@@ -69,32 +76,55 @@ get '/document/:id' => sub {
 	    }
 	};
 
+###get /
 get '/' => sub {
 	my @ret;
-	push @ret, template( 'search_form' => {} );
+	push @ret, template( 
+		'search_form' => { 
+			fields => \@select_fields,
+		});
 	return join("",@ret);
 };
 
-###post /search
-post '/search' => sub {
-	my $params = params('query') || {};
-
+###get /search_form
+get '/search_form' => sub {
 	my @ret;
-	push @ret,Dumper($params).$br;
+	push @ret, template( 
+		'search_form' => { 
+			fields => \@select_fields,
+		});
+	return join("",@ret);
+};
+
+###get /
+get '/' => sub {
+	redirect('/search_form');
+};
+
+###post /search_results
+post '/search_results' => sub {
+	my @ret;
+
+	push @ret, template( 'dumper', { var => body_parameters->get('phrase') } );
 
 	my $index="test";
 
-	my $phrase = $params->{'query'};
+	my $phrase      = body_parameters->get('phrase');
+	my $max_matches = body_parameters->get('max_matches');
+
 	my $results={};
 
 	my @e = ($phrase);
 
 	my ($query,$sth);
+
+	my $fields=[];
+	@$fields = map { $_->[0] } @{ database->selectall_arrayref("describe documents") };
 	
-	$query = qq{ select * from $index where match(?) };
+	$query = qq{ select * from $index where match(?) limit $max_matches};
 	eval { $sth = $shx->prepare($query)
-		or push @ret, $DBI::errstr;};
-	if ($@) { push @ret,$@,$DBI::errstr; }
+		or push @ret, $DBI::errstr,$query;};
+	if ($@) { push @ret,$@,$DBI::errstr,$query; }
 	
 	@e=($phrase);
 	eval { $sth->execute(@e) or push @ret, $DBI::errstr;};
@@ -113,8 +143,10 @@ post '/search' => sub {
 
     if (@ids) {
 		my $ids_j = join ',', @ids;
+		my $select_f=join(",",@select_fields);
 		my $q = qq{
-			SELECT id, title FROM documents WHERE id IN ($ids_j) ORDER BY FIELD(id, $ids_j)
+			SELECT $select_f
+			FROM documents WHERE id IN ($ids_j) ORDER BY FIELD(id, $ids_j)
 		};
 		my $sth=database->prepare($q);
 		$sth->execute;
@@ -131,8 +163,7 @@ post '/search' => sub {
 			$i++;
 		}
 
-		my $fields=[qw(id time_added title)];
-		@$fields = map { ($params->{'checked_'.$_}) ? $_ : () } @$fields;
+		@$fields = map { (body_parameters->get('checked_'.$_) ) ? $_ : () } @$fields;
 
 		push @ret,
 			template( 'results', {

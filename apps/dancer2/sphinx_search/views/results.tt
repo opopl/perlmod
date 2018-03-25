@@ -10,14 +10,17 @@
 		    <table id="tab_sphinx_results">
 				<thead>
 					<tr>
+						<th>Match number</th>
 				    	[% FOREACH field IN fields %]
 							<th class="table_head_[% field %]">[% field %]</th>
 						[% END %]
 					</tr>
 				</thead>
 				<tbody>
+				[% index=0 %]
 			    [% FOREACH document IN documents %]
 			        <tr>
+						<td>[% index %]</td>
 				    	[% FOREACH field IN fields %]
 							[% IF field == 'title'  %]
 								[% 	docid=document.id 
@@ -33,6 +36,7 @@
 							[% END %]
 				    	[% END %]
 			        </tr>
+					[% index=index+1 %]
 			    [% END %]
 				</tbody>
 		    </table>

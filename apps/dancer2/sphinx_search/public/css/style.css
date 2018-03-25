@@ -18,8 +18,10 @@ table#tab_sphinx_status {
 	border-width: 3px;
 	border-style: 'solid';
 }
+table,th,td {
+	border: 1px solid black;
+}
 table#tab_sphinx_results {
-	border: 4px double black;
 	border-color: 'black';
 	border-width: 3px;
 	border-style: 'solid';
@@ -32,8 +34,8 @@ td.table_head_title {
 	font-weight:	bold;
 }
 fieldset{
-	color:orange;
-	background-color:orange;
+	color:black;
+	background-color:white;
 }
 span{
 	color:black;

@@ -8,19 +8,23 @@
 	[% ret %]
 </div>
 
-[% IF NOT fields %]
-	[% fields = [ 'id', 'title', 'time_added' ] %]
-[% END %]
-
-<form action="/search" method="post">
-	<label for="query"> Поисковый запрос: </label>
-    <input type="text" name="query">
-    <input type="submit" value="Поиск">
+<form action="/search_results" method="POST">
 	<fieldset>
+	<p>
+		<label for="phrase"> Search: </label>
+	    <input type="text" name="phrase">
+	    <input type="submit" value="Search!">
+	</p>
+	<p>
+		<label for="tags"> Tags: </label>
+	    <input type="text" name="tags">
+	</p>
 		[% FOREACH field IN fields %]
 			<label for="checked_[% field %]"><span>[% field %]</span></label>
 			<input type="checkbox" name="checked_[% field %]" checked/>
 		[% END %]
+		<label for="max_matches">Maximal number of matches:</label>
+	    <input type="text" name="max_matches" value="100">
 	</fieldset>
 </form>
 
