@@ -1,11 +1,13 @@
 
 <div class="navpane">
-	<table>
-		<tr>
-			<a href="[% prev.href %]">Previous ( [% prev.title %] )</a>
-			<a href="[% next.href %]">Next ( [% next.title %] )</a>
-		</tr>
-	</table>
+	[% IF search_done %]
+		<table>
+			<tr>
+				<a class="prev" href="[% prev.href %]">Previous ( [% prev.title %] )</a>
+				<a class="next" href="[% next.href %]">Next ( [% next.title %] )</a>
+			</tr>
+		</table>
+	[% END %]
 </div>
 
 <div id="contents_html">

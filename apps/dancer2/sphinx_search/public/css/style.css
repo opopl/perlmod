@@ -67,6 +67,15 @@ a {
 	text-decoration: underline;
 }
 
+a.next:link {
+	color: green;
+	text-decoration: none;
+}
+a.prev:link {
+	color: green;
+	text-decoration: none;
+}
+
 a:hover {
 	background-color:	#03c;
 	color:			white;
