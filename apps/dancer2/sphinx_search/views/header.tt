@@ -1,2 +1,15 @@
 
+[% header_links=[] %]
+[% header_links.push({ 'title' => 'search form', 'url' => '/search_form' }) %]
+[% header_links.push({ 'title' => 'search results', 'url' => '/search_results' }) %]
+[% header_links.push({ 'title' => 'add document', 'url' => '/add_document' }) %]
+[% header_links.push({ 'title' => 'index page', 'url' => '/' }) %]
+[% header_links.push({ 'title' => 'options', 'url' => '/options' }) %]
 
+<table>
+	<tr>
+		[% FOREACH link IN header_links %]
+			<td><a href="[% link.url %]">[% link.title %]</a></td>
+		[% END %]
+	</tr>
+</table>

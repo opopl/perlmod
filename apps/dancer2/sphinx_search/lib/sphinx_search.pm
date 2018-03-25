@@ -47,6 +47,11 @@ get '/database/:sql_id' => sub {
 	}
 };
 
+###get /options
+get '/options' => sub {
+	return template 'options';
+};
+
 ###get /status
 #
 get '/status' => sub {
