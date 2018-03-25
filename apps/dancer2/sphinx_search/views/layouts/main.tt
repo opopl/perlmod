@@ -6,11 +6,11 @@
 	    <link rel="stylesheet" href="css/style.css">
     </head>
     <body>
-	[% INSERT header %]
+	[%# INSERT header %]
     	<h1>Поисковая система Сфинкс</h1>
 	    <div id="content">
 	        [% content %]
 	    </div>
-	[% INSERT footer %]
+	[%# INSERT footer %]
     </body>
 </html>

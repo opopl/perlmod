@@ -20,8 +20,10 @@
 	    <input type="text" name="tags">
 	</p>
 		[% FOREACH field IN fields %]
+		<p>
 			<label for="checked_[% field %]"><span>[% field %]</span></label>
 			<input type="checkbox" name="checked_[% field %]" checked/>
+		</p>
 		[% END %]
 		<label for="max_matches">Maximal number of matches:</label>
 	    <input type="text" name="max_matches" value="100">
