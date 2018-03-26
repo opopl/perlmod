@@ -73,7 +73,7 @@ sub select_to_latex_table  {
 	my $label        = $opts->{label} ||'';
 	my $file_tex     = $opts->{file_tex} ||'';
 
-	my $cb_latex_table = $opts->{cb} || undef; 
+	my $cb_latex_table = $opts->{callback} || undef; 
 	#########################
 	my $out_tex_dir  = $ref->{out_tex_dir} ||'';
 	#########################
@@ -84,7 +84,7 @@ sub select_to_latex_table  {
 		};
 
 
-	my $output = $ref->{output} || undef;
+	my $output = $ref->{tex_output} || undef;
 
 	my @tables;
 	
@@ -108,10 +108,12 @@ sub select_to_latex_table  {
 		foreach my $table (@tables) {
 			$self->select_to_latex_table({ 
 				%$ref,
-				output              => $output,
+				tex_output              => $output,
 				table               => $table,
 				options_latex_table => $opts,
 			});
+			my $cb = $ref->{cb_per_csv}->{$table} || sub { };
+			$cb->($table,$out_tex_dir,$cb_texfile);
 		}
 		return $self;
 	}

@@ -128,6 +128,9 @@ get '/' => sub {
 	redirect('/search_form');
 };
 
+get '/search_online' => sub {
+};
+
 ###get /add_document
 get '/add_document' => sub {
 	my @ret;
