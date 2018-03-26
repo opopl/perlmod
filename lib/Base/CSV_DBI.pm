@@ -61,19 +61,18 @@ sub select_to_latex_table  {
 	my $ref  = shift;
 	
 	my $dir     = $ref->{csv_dir} || $self->{csv_dir} || '';
-	my $fields  = $ref->{fields} || '*';
 	my $table   = $ref->{table} || '';
+	my $fields  = $ref->{fields} || $ref->{fields_per_table}->{$table} || '*';
 	my $warn    = sub { $self->warn(@_) };
 
 	# LaTeX::Table options
 	my $opts         = $ref->{options_latex_table} || {};
+
+	my $opts_per_table  = $ref->{options_latex_table_per_table} || {};
 		
-	my $caption      = $opts->{caption} ||'';
-	my $caption_main = $opts->{caption_main} ||$caption||'';
-	my $label        = $opts->{label} ||'';
 	my $file_tex     = $opts->{file_tex} ||'';
 
-	my $cb_latex_table = $opts->{callback} || undef; 
+	my $cb_latex_table = $ref->{callback_latex_table} || undef; 
 	#########################
 	my $out_tex_dir  = $ref->{out_tex_dir} ||'';
 	#########################
@@ -106,14 +105,13 @@ sub select_to_latex_table  {
 	# loop over all existing tables in the given csv directory
 	unless ($table) {
 		foreach my $table (@tables) {
+			my $o=$opts_per_table->{$table} || {};
 			$self->select_to_latex_table({ 
 				%$ref,
-				tex_output              => $output,
+				tex_output          => $output,
 				table               => $table,
-				options_latex_table => $opts,
+				options_latex_table => { %$opts, %$o },
 			});
-			my $cb = $ref->{cb_per_csv}->{$table} || sub { };
-			$cb->($table,$out_tex_dir,$cb_texfile);
 		}
 		return $self;
 	}
@@ -137,7 +135,13 @@ sub select_to_latex_table  {
 	}) or $warn->($DBI::errstr);
 	
 	my $sth;
-	my $q = qq{ select $fields from $table };
+	my $fields_s='';
+	if (not ref $fields) {
+		$fields_s=$fields;
+	}elsif(ref $fields eq 'ARRAY'){
+		$fields_s=join(",",@$fields);
+	}
+	my $q = qq{ select $fields_s from $table };
 	my @e = ();
 	
 	eval { $sth = $dbh->prepare($q) or $warn->($dbh->errstr); };
@@ -146,7 +150,6 @@ sub select_to_latex_table  {
 	eval {$sth->execute(@e) or $warn->($dbh->errstr);};
 	if ($@) { $warn->($q,$@,$dbh->errstr,Dumper(\@e)); }
 	
-	my $header = [];
 	my $data   = [];
 	
 	my $cb_row = sub { 
@@ -170,17 +173,18 @@ sub select_to_latex_table  {
 	my $lt = LaTeX::Table->new(
 		{   
 			filename    => $file_tex,
-			maincaption => $caption_main,
-			caption     => $caption,
-			label       => $label,
-			position    => 'tbp',
-			header      => $header,
 			data        => $data,
+			%$opts,
 		}
 	);
 
 	if ($cb_latex_table) {
-		$lt->set_callback($cb_latex_table);
+		if (ref $cb_latex_table eq "HASH"){
+			my $cb = $cb_latex_table->{$table} || undef;
+			$lt->set_callback($cb) if ($cb && (ref $cb eq 'CODE'));
+		}elsif(ref $cb_latex_table eq "CODE"){
+			$lt->set_callback($cb_latex_table);
+		}
 	}
 
 	if ($file_tex) {
@@ -207,6 +211,14 @@ sub select_to_latex_table  {
 		}
 
 	}
+
+	my $cb = $ref->{cb_per_csv}->{$table} || sub { };
+	$cb->({ 
+		'table'       => $table,
+		'out_tex_dir' => $out_tex_dir,
+		'cb_texfile'  => $cb_texfile,
+		'file_tex'    => $file_tex,
+	});
 
 	my $tex = $lt->generate_string();
 	my @tex = split("\n",$tex);
