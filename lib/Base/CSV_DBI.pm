@@ -130,6 +130,7 @@ sub select_to_latex_table  {
 		csv_escape_char  => '"',
 		csv_class        => "Text::CSV_XS",
 		csv_null         => 0,
+		csv_allow_whitespace => 1,
 		#RaiseError       => 1,
 		PrintError       => 1,
 	}) or $warn->($DBI::errstr);
