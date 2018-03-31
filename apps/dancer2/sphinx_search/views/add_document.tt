@@ -2,15 +2,31 @@
 
 <form action="/add_document" method="POST">
 	<fieldset>
+	[% FOREACH line = DBI.query('describe documents') %]
+		[% field     = line.Field %]
+		[% type      = line.Type %]
+		[% inputname = field %]
+		[% inputtype = type %]
+
 		<p>
-			<label for="url"> URL: </label>
-		    <input type="text" name="url">
+			<label for="[% field %]"> [% field %]: </label>
+
+		[% IF type =~ 'varchar' %]
+		    <input type="text" name="[% inputname %]">
+		[% ELSIF type == 'datetime' %]
+		[% END %]
+
+		</p>
+		<p>
 		    <input type="submit" value="Add!">
 		</p>
-		<p>
-			<label for="tags"> Tags: </label>
-		    <input type="text" name="tags">
-		</p>
+	[% END %]
 	</fieldset>
 </form>
+
+[% db  = "docs_sphinx" %]
+[% dsn = 'dbi:mysql:db='.db.':host=localhost;mysql_enable_utf8=1' %]
+[% USE DBI(dsn, 'root', '') %]
+
+
 

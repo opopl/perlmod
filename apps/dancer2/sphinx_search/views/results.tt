@@ -1,12 +1,12 @@
 	[% IF phrase %]
 	    <p>Результаты поиска для <strong>&quot;[% phrase %]&quot;</strong></p>
-	
+		
 	    [% IF total_count %]
 		    <p>
 		        Всего найдено [% total_count %].
 		        Показываю результаты 1 - [% retrieved_count %].
 		    </p>
-		
+				
 		    <table id="tab_sphinx_results">
 				<caption>[% caption %]</caption>
 				<thead>

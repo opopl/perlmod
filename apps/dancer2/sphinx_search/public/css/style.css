@@ -34,23 +34,24 @@ table#tab_sphinx_results {
 	border-style: 'solid';
 	background-color: white;
 }
+
 td.document_title {
 	color:red;
 }
+
 td.table_head_title {
 	font-weight:	bold;
 }
-fieldset{
-	color:black;
-	background-color:white;
-}
+
 span{
 	color:black;
 }
 
 
-form { 
-	background-color: green;
+/* only the submit button is matched by this selector,
+   but to be sure you could use an id or class for that button */
+input + input {
+    float: right;
 }
 
 h1 {

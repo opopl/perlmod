@@ -1,0 +1,42 @@
+
+form {
+    width: 90%;
+    margin: 0 auto;
+}
+
+form { 
+	background-color: green;
+}
+
+input, textarea {
+	text-align: left;
+}
+
+label, input {
+    /* in order to define widths */
+    display: inline-block;
+}
+
+label {
+    width: 30%;
+    /* positions the label text beside the input */
+    text-align: right;
+}
+
+label + input {
+    width: 30%;
+    /* large margin-right to force the next element to the new-line
+       and margin-left to create a gutter between the label and input */
+    margin: 0 30% 0 4%;
+}
+
+fieldset{
+	color:black;
+	background-color:white;
+}
+
+label {
+	float: left; 
+	width: 6em; 
+	text-align: right;
+}

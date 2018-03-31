@@ -4,6 +4,7 @@
   		<meta charset="UTF-8">
 	    <title>Поисковая система Сфинкс</title>
 	    <link rel="stylesheet" href="css/style.css">
+	    <link rel="stylesheet" href="css/form.css">
     </head>
     <body>
 	[% INCLUDE header.tt %]

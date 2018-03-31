@@ -42,7 +42,7 @@ get '/database/:sql_id' => sub {
 			);
 		},
 	);
-	my @sql=qw( drop_documents create_documents );
+	my @sql   = qw( drop_documents create_documents );
 	my $query = $sql_queries{$sql_id};
 
 	if ($query) {
@@ -160,7 +160,11 @@ post '/search_results' => sub {
 	my $fields=[];
 	@$fields = map { $_->[0] } @{ database->selectall_arrayref("describe documents") };
 	
-	$query = qq{ select * from $index where match(?) limit $max_matches};
+	$query = qq{ 
+		select * from $index 
+		where match(?) limit $max_matches
+	};
+
 	eval { $sth = $shx->prepare($query)
 		or push @ret, $DBI::errstr,$query;};
 	if ($@) { push @ret,$@,$DBI::errstr,$query; }
@@ -181,8 +185,8 @@ post '/search_results' => sub {
     my $retrieved_count = @ids;
 
     if (@ids) {
-		my $ids_j = join ',', @ids;
-		my $select_f=join(",",@select_fields);
+		my $ids_j    = join ',', @ids;
+		my $select_f = join(",",@select_fields);
 		my $q = qq{
 			DROP TABLE IF EXISTS search_results;
 			CREATE TABLE 

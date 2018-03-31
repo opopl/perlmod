@@ -1447,8 +1447,18 @@ sub CurBufSet {
 
 	my $c    = $curbuf->Count();
 
-	$curbuf->Delete(1,$c);
-	$curbuf->Append(1,split("\n",$text));
+	my @lines;
+	if (ref $text eq "ARRAY"){
+		@lines=@$text;
+		
+	}elsif(not ref $text){
+		@lines=split("\n",$text);
+	}
+
+	if (@lines) {
+		$curbuf->Delete(1,$c);
+		$curbuf->Append(1,@lines);
+	}
 }
 
 sub VimGetLine {
