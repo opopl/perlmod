@@ -8,23 +8,31 @@
 	[% ret %]
 </div>
 
+[% fields=[] %]
+
+[% fields_id=[ 'id', 'doc_id', 'local_id' ] %]
+
 <form action="/search_results" method="POST">
 	<fieldset>
-	<p>
-		<label for="phrase"> Search: </label>
-	    <input type="text" name="phrase">
-	    <input type="submit" value="Search!">
-	</p>
-	<p>
-		<label for="tags"> Tags: </label>
-	    <input type="text" name="tags">
-	</p>
-		[% FOREACH field IN fields %]
 		<p>
-			<label for="checked_[% field %]"><span>[% field %]</span></label>
-			<input type="checkbox" name="checked_[% field %]" checked/>
+			<label for="phrase"> Search: </label>
+		    <input type="text" name="phrase">
+		    <input type="submit" value="Search!">
 		</p>
-		[% END %]
+		<p>
+			<label for="tags"> Tags: </label>
+		    <input type="text" name="tags">
+		</p>
+		<h1>IDS</h1>
+			<table class="fields_id_check">
+			<tr>
+			[% FOREACH field IN fields_id %]
+				<td>
+					<label for="checked_[% field %]"><span>[% field %]</span></label>
+					<input type="checkbox" name="checked_[% field %]" checked/>
+				</td>
+			[% END %]
+			</tr> </table>
 		<label for="max_matches">Maximal number of matches:</label>
 	    <input type="text" name="max_matches" value="100">
 	</fieldset>

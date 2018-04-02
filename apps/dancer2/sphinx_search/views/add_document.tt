@@ -1,6 +1,10 @@
 
 
-<form action="/add_document" method="POST">
+[% db  = "docs_sphinx" %]
+[% dsn = "dbi:mysql:db=$db:host=localhost;mysql_enable_utf8=1" %]
+[% USE DBI(dsn, 'root', '') %]
+
+<form action="/add_document" method="POST" class="add_document" >
 	<fieldset>
 	[% FOREACH line = DBI.query('describe documents') %]
 		[% field     = line.Field %]
@@ -11,22 +15,29 @@
 		<p>
 			<label for="[% field %]"> [% field %]: </label>
 
-		[% IF type =~ 'varchar' %]
+		[% IF type.match('varchar') %]
 		    <input type="text" name="[% inputname %]">
+
 		[% ELSIF type == 'datetime' %]
+		    <input type="text" name="[% inputname %]">
+
+		[% ELSIF type == 'text' %]
+			<textarea id="[% field %]" name="[% field %]" cols="30" rows="10">
+			</textarea>
+
+		[% ELSE %]
+		    <input type="text" name="[% inputname %]">
+
 		[% END %]
 
 		</p>
+	[% END %]
 		<p>
 		    <input type="submit" value="Add!">
 		</p>
-	[% END %]
 	</fieldset>
 </form>
 
-[% db  = "docs_sphinx" %]
-[% dsn = 'dbi:mysql:db='.db.':host=localhost;mysql_enable_utf8=1' %]
-[% USE DBI(dsn, 'root', '') %]
 
 
 

@@ -8,26 +8,31 @@ form {
 	background-color: green;
 }
 
+form.add_document { 
+	background-color: green;
+}
+
 input, textarea {
 	text-align: left;
 }
 
 label, input {
     /* in order to define widths */
-    display: inline-block;
+	display: inline-block;
 }
 
 label {
-    width: 30%;
+    width: 20%;
     /* positions the label text beside the input */
     text-align: right;
+	float: left; 
 }
 
 label + input {
-    width: 30%;
+    width: 50%;
     /* large margin-right to force the next element to the new-line
        and margin-left to create a gutter between the label and input */
-    margin: 0 30% 0 4%;
+    /*margin: 0 30% 0 4%;*/
 }
 
 fieldset{
@@ -35,8 +40,3 @@ fieldset{
 	background-color:white;
 }
 
-label {
-	float: left; 
-	width: 6em; 
-	text-align: right;
-}

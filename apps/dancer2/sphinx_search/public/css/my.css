@@ -1,0 +1,22 @@
+
+.fields_id_check {
+	color: green;
+	float: left;
+}
+
+.fields_id_check label {
+	margin-left:		11px;
+	margin-right:		11px;
+	width: 30%;
+	padding: 3px;
+}
+
+.fields_id_check tr,td {
+	border: 0;
+}
+
+table.fields_id_check {
+	border-collapse: separate;
+	border: 2px solid black;
+	border-radius: 15px;
+}

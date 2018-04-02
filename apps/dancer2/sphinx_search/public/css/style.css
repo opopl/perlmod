@@ -68,6 +68,7 @@ a {
 	text-decoration: underline;
 }
 
+
 a.next:link {
 	color: green;
 	text-decoration: none;
@@ -85,7 +86,7 @@ a:hover {
 
 #page {
 	background-color:	#ddd;
-	width:			750px;
+	width:			1000px;
 	margin:			auto;
 	margin-left:		auto;
 	padding-left:		0px;
@@ -97,7 +98,7 @@ a:hover {
 	border:			3px solid #aaa;
 	border-top:		none;
 	padding:		25px;
-	width:			500px;
+	width:			1000px;
 }
 
 #sidebar {

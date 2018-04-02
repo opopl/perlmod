@@ -144,11 +144,12 @@ get '/add_document' => sub {
 post '/search_results' => sub {
 	my @ret;
 
-	push @ret, template( 'dumper', { var => body_parameters->get('phrase') } );
+	my $phrase      = body_parameters->get('phrase');
+
+	push @ret, template( 'dumper', { var => $phrase } );
 
 	my $index="test";
 
-	my $phrase      = body_parameters->get('phrase');
 	my $max_matches = body_parameters->get('max_matches');
 
 	my $results={};
@@ -173,8 +174,8 @@ post '/search_results' => sub {
 	eval { $sth->execute(@e) or push @ret, $DBI::errstr;};
 	if ($@) { push @ret,$@,$DBI::errstr; }
 	
-	my $fetch='fetchrow_arrayref';
-	my $total_count=0;
+	my $fetch       = 'fetchrow_arrayref';
+	my $total_count = 0;
 	my @ids;
 
 	while(my $row = $sth->$fetch){
