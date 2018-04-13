@@ -1101,7 +1101,6 @@ sub VimLet {
         }
     }
 
-	print $valstr . "\n";
     if ($valstr) {
 		my $cmds =[];
 

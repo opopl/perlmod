@@ -1,0 +1,6 @@
+
+[% INCLUDE header.tt %]
+    [% USE Dumper %]
+    
+    [% Dumper.dump_html(var) %]
+[% INCLUDE footer.tt %]
