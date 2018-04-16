@@ -19,7 +19,7 @@ use DBD::SQLite;
 use DBI;
 
 use base qw( Class::Accessor::Complex );
-use File::Path qw(make_path remove_tree mkpath rmtree);
+use File::Path qw(mkpath);
 use File::stat qw(stat);
 
 
@@ -60,8 +60,6 @@ sub init {
 		appdata => catfile($ENV{APPDATA},qw(vim plg base)),
 	};
 
-	
-
 	my $d=$dirs->{appdata};
 	mkpath $d unless -d $d;
 
@@ -70,11 +68,11 @@ sub init {
 		$dirs->{'dat_'.$type} = catfile($dirs->{plgroot},qw(data),$type);
 	}
 
-	my $dbname='main';
-	my $dbfile=catfile($dirs->{appdata},$dbname.'.db');
+	my $dbname = 'main';
+	my $dbfile = catfile($dirs->{appdata},$dbname.'.db');
 
 	my $h={
-		withvim  	 => $self->_withvim(),
+		withvim      => $self->_withvim(),
 		dbname       => $dbname,
 		dbfile       => $dbfile,
 		dattypes     => [@types],
@@ -87,32 +85,32 @@ sub init {
 			create_table_plugins => qq{
 				create table if not exists plugins (
 					id integer primary key asc,
-					plugin varchar(100) unique
+					plugin varchar(255) unique
 				);
 			},
 			create_table_datfiles => qq{
 				create table if not exists datfiles (
 					id integer primary key asc,
-					key varchar(100) unique,
-					plugin varchar(100),
-					type varchar(100),
-					datfile varchar(100)
+					key varchar(255) unique,
+					plugin varchar(255),
+					type varchar(255),
+					datfile varchar(255)
 				);
 			},
 			create_table_exefiles => qq{
 				create table if not exists exefiles (
 					id integer primary key asc,
-					fileid varchar(100) unique,
-					file varchar(100),
-					pc varchar(100)
+					fileid varchar(255) unique,
+					file varchar(255),
+					pc varchar(255)
 				);
 			},
 			create_table_files => qq{
 				create table if not exists files (
 					id integer primary key asc,
-					fileid varchar(100) unique,
-					type varchar(100),
-					file varchar(100)
+					fileid varchar(255) unique,
+					type varchar(255),
+					file varchar(255)
 				);
 			},
 		},
@@ -122,8 +120,40 @@ sub init {
 
 	for(@k){ $self->{$_} = $h->{$_} unless defined $self->{$_}; }
 
-	$self->db_init;
-	$self->init_dat;
+	$self
+		->db_init
+		->init_dat;
+
+	$self;
+
+}
+
+=head2 db_init 
+
+=over
+
+=item Usage
+
+	$plgbase->db_init();
+
+=back
+
+=cut
+
+sub db_init {
+	my $self=shift;
+
+	my $d=$self->dirs('appdata');
+
+	my $dbfile=$self->dbfile;
+
+	my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile","","");
+	$self->dbh($dbh);
+
+	$self->db_drop_tables
+		 ->db_create_tables;
+
+	$self;
 
 }
 
@@ -251,7 +281,6 @@ sub get_plugins_from_db {
 
 	$self->plugins([@p]);
 
-	#$self->done('get_plugins_from_db' => 1);
 }
 
 sub get_datfiles_from_db {
@@ -266,7 +295,7 @@ sub get_datfiles_from_db {
 	my $tb = "datfiles";
 	my $q  = qq{select $f from `$tb`};
 
-	if ($self->db_table_exists($tb)) {
+	if (! $self->db_table_exists($tb)) {
 		$self->warn('db table is absent:',$tb);
 		if ($ref->{reload_from_fs}) {
 			$self->reload_from_fs;
@@ -355,32 +384,7 @@ sub db_dbfile_size {
 	return $size;
 }
 
-=head2 db_init 
 
-=over
-
-=item Usage
-
-	$plgbase->db_init();
-
-=back
-
-=cut
-
-sub db_init {
-	my $self=shift;
-
-	my $d=$self->dirs('appdata');
-
-	my $dbfile=$self->dbfile;
-
-	my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile","","");
-	$self->dbh($dbh);
-
-	$self->db_drop_tables
-		 ->db_create_tables;
-
-}
 
 =head2 db_drop_tables 
 
@@ -450,7 +454,7 @@ sub db_create_tables {
 	foreach my $tb (@$tb_order) {
 		push @s,$self->sqlstm('create_table_'.$tb);
 		
-		if (! $self->db_table_exists($tb)) {
+		unless ($self->db_table_exists($tb)) {
 			$tb_reset->{$tb}=1;
 		}
 	}
@@ -466,8 +470,16 @@ sub db_insert_plugins {
 
 	my $dbh = $self->dbh;
 
-	my $sth = $dbh->prepare("insert into plugins(plugin) values(?)");
-	$sth->execute($_) for(@p);
+	$self->db_prepare("insert into plugins(plugin) values(?)");
+	my $sth=$self->sth;
+
+	unless ($sth) {
+		$self->warn('db_insert_plugins: sth undefined!');
+		return $self;
+	}
+	for(@p){	
+		$sth->execute($_);
+	}
 
 	$self;
 }
@@ -579,7 +591,6 @@ sub db_insert_datfiles {
 =cut
 
 
-
 sub init_dat_base {
 	my $self=shift;
 
@@ -641,11 +652,11 @@ sub warn {
 	my $self = shift;
 	my @m    = @_;
 
-	if ($self->withvim) {
-		VimMsg([@m]);
-	}else{
-		warn $_ for (@m);
-	}
+	my $sub_warn=$self->{sub_warn} || sub {};
+
+	$sub_warn->(@m);
+
+	$self;
 
 }
 
@@ -682,25 +693,14 @@ sub init_plugins {
 
 sub init_dat {
 	my $self = shift;
-	my $ref  = shift || {};
 
-	my @types    = $self->dattypes;
-	my $dbopts   = $self->dbopts_ref;
-
-	my $tb_reset=$dbopts->{tb_reset} || {};
-	my $tb_order=$dbopts->{tb_order} || [];
-
-	$self->init_dat_base
+	$self
+		->init_dat_base
 		->init_plugins
-		->init_dat_plugins;
+		->init_dat_plugins
+		;
 
-		#use Data::Dumper qw(Dumper);
-		
-		#print Dumper([$self->db_list_plugins]);
-		#exit 0;
-	
 	$self;
-
 
 }
 
@@ -712,6 +712,8 @@ BEGIN {
 		dbfile
 		dbname
 		withvim
+		sub_warn
+		sub_log
 	);
 	
 	###__ACCESSORS_HASH
