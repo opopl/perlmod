@@ -104,7 +104,7 @@ sub init {
 					id integer primary key asc,
 					fileid varchar(100) unique,
 					file varchar(100),
-					pc varchar(100),
+					pc varchar(100)
 				);
 			},
 			create_table_files => qq{
@@ -426,11 +426,13 @@ sub db_do {
 	my $dbh = $self->dbh;
 
 	foreach my $q (@q) {
-		eval { $dbh->do($q); };
+		eval { $dbh->do($q) or do { $self->warn($dbh->errstr,$q)}; };
 		if ($@) {
-			$self->warn('Errors while dbh->do($q)','$q=',$q,$@);
+			$self->warn('Errors while dbh->do($q)','$q=',$q,$dbh->errstr,$@);
 		}
 	}
+
+	$self;
 
 }
 
@@ -466,6 +468,8 @@ sub db_insert_plugins {
 
 	my $sth = $dbh->prepare("insert into plugins(plugin) values(?)");
 	$sth->execute($_) for(@p);
+
+	$self;
 }
 
 sub warn_dbh_undef {
