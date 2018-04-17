@@ -112,7 +112,9 @@ sub dbh_table_fetch {
 	my $q      = qq{select $f from `$table` };
 	my $sth;
 	my @e=();
-	eval { $sth    = $dbh->prepare($q); };
+	eval { $sth    = $dbh->prepare($q)
+	 	or do { $self->warn($dbh->errstr,$q); };
+	};
 	if($@){ $self->warn($@,$dbh->errstr,$q); }
 	
 	eval { $sth->execute(@e) or do { $self->warn($dbh->errstr,$q,Dumper([@e])); }; };
