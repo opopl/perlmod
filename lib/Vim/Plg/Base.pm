@@ -17,6 +17,7 @@ use File::Find qw(find);
 use File::Dat::Utils qw(readarr);
 use DBD::SQLite;
 use DBI;
+use Data::Dumper;
 
 use base qw( Class::Accessor::Complex );
 use File::Path qw(mkpath);
@@ -497,6 +498,8 @@ sub db_prepare {
 
 	my $q=shift || '';
 
+	$self->{prepared_query}=undef;
+
 	my $dbh = $self->dbh;
 
 	unless (defined $dbh) { return $self->warn_dbh_undef; }
@@ -527,6 +530,8 @@ sub db_prepare {
 		return $self;
 	};
 
+	$self->{prepared_query}=$q;
+
 
 	$self;
 
@@ -541,11 +546,23 @@ sub db_execute {
 	my $dbh=$self->dbh;
 
 	unless (defined $sth) {
-		$self->warn('db_execute: $sth undefined!'); return $self;
+		$self->warn('db_execute: $sth undefined!'); 
+		return $self;
 	}
 	unless (defined $dbh) { return $self->warn_dbh_undef; }
 
-	eval {$sth->execute(@e); };
+	my $q=$self->prepared_query || '';
+	unless ($q) {
+		$self->warn('db_execute: no query prepared!');
+		return $self;
+	}
+
+	eval {$sth->execute(@e) or
+	   	do {
+			$self->warn($dbh->errstr,$q,Dumper(\@e));
+			return $self;
+		}; 
+	};
 	if ($@) {
 		my @m;
 		push @m,
@@ -555,9 +572,7 @@ sub db_execute {
 		return $self;
 	}
 
-
 	$self;
-
 	
 }
 
@@ -714,6 +729,7 @@ BEGIN {
 		withvim
 		sub_warn
 		sub_log
+		prepared_query
 	);
 	
 	###__ACCESSORS_HASH

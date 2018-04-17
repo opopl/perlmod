@@ -37,8 +37,10 @@ sub dbh_connect {
 	my $ref  = shift;
 
 	my $cn = $ref || $self->{connect};
-	eval { $self->{dbh} = DBI->connect(@{$cn}{qw(dsn user pwd attr)})
-		or $self->warn($DBI::errstr,$!);
+	eval { $self->{dbh} = DBI->connect(@{$cn}{qw(dsn user pwd attr)}) or
+		do { 
+			$self->warn($DBI::errstr,$!); 
+		};
 	};
 	if ($@) {
 		$self->warn($@,$DBI::errstr);
@@ -177,15 +179,26 @@ sub dbh_cols {
 	my @e      = ();
 	my $q      = qq{select $f from $table limit 1};
 	my $sth;
-	eval { $sth    = $dbh->prepare($q) 
-		or do { $self->warn($q,$dbh->errstr) }; 
+	eval { $sth    = $dbh->prepare($q) or
+		do { 
+			$self->warn($q,$dbh->errstr); 
+			return $self;
+		}; 
 	};
-	if($@){ $self->warn($@,$dbh->errstr,$q); }
+	if($@){ 
+		$self->warn($@,$dbh->errstr,$q);
+		return $self;
+   	}
 	
-	eval { $sth->execute(@e) 
-		or do { $self->warn($dbh->errstr,$q,Dumper([@e])); }; 
+	eval { $sth->execute(@e)  or
+		do { 
+			$self->warn($dbh->errstr,$q,Dumper([@e])); 
+		}; 
 	};
-	if($@){ $self->warn($@,$dbh->errstr,$q,Dumper([@e])); }
+	if($@){ 
+		$self->warn($@,$dbh->errstr,$q,Dumper([@e]));
+		return $self;
+   	}
 
 	@$cols = @{$sth->{NAME_lc}||[]};
 	
