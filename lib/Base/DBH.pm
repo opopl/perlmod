@@ -135,8 +135,13 @@ sub dbh_table_selectall {
 	my $q      = qq{select $f from `$table` };
 	my $res;
 	my @e=();
-	eval { $res    = $dbh->selectall_arrayref($q,@e); };
-	if($@){ $self->warn($@,$dbh->errstr,$q); }
+	eval { $res = $dbh->selectall_arrayref($q,@e)
+		or do {
+			$self->warn($q,Dumper(\@e));
+		};
+
+	};
+	if($@){ $self->warn($@,$dbh->errstr,$q,Dumper(\@e)); }
 
 	$res;
 }
