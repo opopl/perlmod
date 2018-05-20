@@ -110,6 +110,7 @@ my @ex_vars_array = qw(
           VimLet
           VimLetEval
 		  VimListExtend
+          VimLog
           VimSet
           VimStrToOpts
           VimMsg
@@ -903,6 +904,15 @@ sub Vim_MsgDebug {
 
 sub VimMsgNL {
     VimMsg( " ", { prefix => 'none' } );
+}
+
+sub VimLog {
+	my @m = @_;
+
+	for(@m){
+		my $s = escape('printable',$_);
+		VimCmd(qq{ call base#log("$s") });
+	}
 }
 
 =head3 VimMsg
