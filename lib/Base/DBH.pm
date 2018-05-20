@@ -55,7 +55,9 @@ sub dbh_disconnect {
 
 	my $dbh = $ref->{dbh} || $self->{dbh};
 	$dbh->disconnect or 
-		do { $self->warn($DBI::errstr,$!); };
+		do {
+		   	$self->warn($DBI::errstr,$!); 
+		};
 
 	$self;
 }
