@@ -5,6 +5,15 @@ use strict;
 use warnings;
 
 use Env qw( $hm );
+use File::Spec::Functions qw(catfile);
+use File::Slurp qw(
+  append_file
+  edit_file
+  edit_file_lines
+  read_file
+  write_file
+  prepend_file
+);
 
 
 # ********************************
@@ -31,7 +40,7 @@ sub _tex_paper_splitmain {
     foreach (@lines) {
         chomp;
 
-        /^\\subsection{(.*)}$/ && do {
+        /^\\subsection\{(.*)\}$/ && do {
             $onchapter{$cname} = 0 if defined $onchapter{$cname};
 
             $ctitle = $1;
@@ -64,7 +73,7 @@ sub _tex_paper_splitmain {
 
         };
 
-        /^\s*\\labelsec{\d+}\s*$/ && do { $_ = ''; };
+        /^\s*\\labelsec\{\d+\}\s*$/ && do { $_ = ''; };
 
         if ( $onchapter{$cname} ) {
             push( @{ $CHAPTERS->{$cname}->{text} }, $_ );
@@ -825,10 +834,10 @@ sub _tex_paper_gen_secsdat() {
     # read in p.PKEY.tex
     while (<F>) {
         chomp;
-        /^\s*\\iii{\s*(\w+)\s*}\s*%(.*)/ && do {
+        /^\s*\\iii\{\s*(\w+)\s*\}\s*%(.*)/ && do {
 
-			my $seckey = $1;
-			my $sectitle = $2;
+            my $seckey = $1;
+            my $sectitle = $2;
 
             $secdata->{ $seckey } .= $sectitle;
             next;
@@ -865,10 +874,10 @@ sub _tex_paper_gen_refsdat() {
     # read in p.*.refs.tex
     while (<F>) {
         chomp;
-        /^\\pbib{(\d+)}{(\w+)}/ && do {
+        /^\\pbib\{(\d+)\}\{(\w+)\}/ && do {
 
-			my $num=$1;
-			my $pkey=$2;
+            my $num  = $1;
+            my $pkey = $2;
 
             $prefs->{ $num } .= ' ' . $pkey ;
             next;
@@ -1006,10 +1015,10 @@ sub _tex_paper_sep() {
                 @eqlines = ();
             }
 
-            /^\s*\\begin{(equation|align)}/
+            /^\s*\\begin\{(equation|align)\}/
               && do { $insideeq = 1; $starteq = 1; };
-            /^\s*\\end{(equation|align)}/  && do { $endeq = 1; };
-            /^\s*\\labeleq{(\d+)}/ && do { $label = $1; };
+            /^\s*\\end\{(equation|align)\}/  && do { $endeq = 1; };
+            /^\s*\\labeleq\{(\d+)\}/ && do { $label = $1; };
 
             /^%%equation\s+(.*)/ && do {
                 $eqtag = $1;
@@ -1199,7 +1208,7 @@ sub _tex_paper_gen_file() {
 
                         if ( $n =~ /^sec_(\w+)/ ) {
                             my $stitle;
-							my $sec=$1;
+                            my $sec=$1;
                             if ( $self->papsecs_exists("$sec") ) {
                                 $stitle = $self->papsecs("$sec");
                             }
@@ -1575,35 +1584,35 @@ sub catroot {
 
 ###_gen_make_pdf_tex_
 sub _gen_make_pdf_tex_mk {
-	my $self = shift;
-	
-	my $mk = catfile( $self->texroot, 'make_pdf_tex.mk' );
-	
-	my @flines;
-	my @mkopts;
-	
-	require OP::Perl::Installer;
-	require OP::PERL::PMINST;
-	
-	my $i = OP::Perl::Installer->new;
-	$i->main_no_getopt;
-	
-	my $pminst = OP::PERL::PMINST->new;
+    my $self = shift;
+    
+    my $mk = catfile( $self->texroot, 'make_pdf_tex.mk' );
+    
+    my @flines;
+    my @mkopts;
+    
+    require OP::Perl::Installer;
+    require OP::PERL::PMINST;
+    
+    my $i = OP::Perl::Installer->new;
+    $i->main_no_getopt;
+    
+    my $pminst = OP::PERL::PMINST->new;
 
 ###gen_make_perlmods
-	my @needed_mods = qw( OP::PaperConf OP::PAPERS::MKPDF );
-	my %modpaths_installed;
+    my @needed_mods = qw( OP::PaperConf OP::PAPERS::MKPDF );
+    my %modpaths_installed;
 
-	foreach my $module (@needed_mods) {
-		my @ipaths = $i->module_full_installed_paths($module);
-		$modpaths_installed{$module} = \@ipaths;
+    foreach my $module (@needed_mods) {
+        my @ipaths = $i->module_full_installed_paths($module);
+        $modpaths_installed{$module} = \@ipaths;
 
-	}
+    }
     my @req_imods;
 
-	for my $ipaths ( @modpaths_installed{@needed_mods} ) {
-		push( @req_imods, @$ipaths );
-	}
+    for my $ipaths ( @modpaths_installed{@needed_mods} ) {
+        push( @req_imods, @$ipaths );
+    }
 
     my $varsdat = $self->files('vars');
 
@@ -1617,16 +1626,16 @@ sub _gen_make_pdf_tex_mk {
     my @write_tex_ids = qw(preamble titpage start);
 
 ###make_dat
-		my @prereq;
-		foreach my $id (qw(list_tex_papers list_bibkeys)) {
-			if($id eq 'list_bibkeys'){
-				push(@prereq,qw( repdoc.bib ));
-			}
-		push( @flines, "$id.i.dat: " . join(' ',@prereq) );
-		push( @flines, "\t" . 'perl _gendat_' . $id . '.pl' );
-		
-		push( @flines, ' ' );
-		}
+        my @prereq;
+        foreach my $id (qw(list_tex_papers list_bibkeys)) {
+            if($id eq 'list_bibkeys'){
+                push(@prereq,qw( repdoc.bib ));
+            }
+        push( @flines, "$id.i.dat: " . join(' ',@prereq) );
+        push( @flines, "\t" . 'perl _gendat_' . $id . '.pl' );
+        
+        push( @flines, ' ' );
+        }
 
 ###_gen_make_pdf_tex_LOOP
     foreach my $p ( $self->tex_papers ) {
@@ -2121,7 +2130,7 @@ sub _tex_paper_get_secfiles() {
 
                 s/^\s*\\clearpage//g unless $count;
                 if ( $count == 1 ) {
-                    if (/^\s*\\labelsec{(\w+)}/) {
+                    if (/^\s*\\labelsec\{(\w+)\}/) {
                         $_ = '';
                         unless ( "$1" == "$secname" ) {
                             $oldsecs{$oldsec} = $secname;
@@ -2167,7 +2176,7 @@ sub _tex_paper_get_secfiles() {
         chomp;
         next if /^\s*%/;
         next if /^\s*$/;
-        push( @secorder, $1 ) if /^\s*\\iii{(\w+)}/;
+        push( @secorder, $1 ) if /^\s*\\iii\{(\w+)\}/;
     }
     unless ( -e $sofile ) {
         if (@secorder) {
