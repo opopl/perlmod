@@ -570,10 +570,8 @@ sub _tex_paper_run_tex_short {
 
 # }}}
 
-sub _tex_paper_set() {
-    my $self = shift;
-
-    my $pkey = shift;
+sub _tex_paper_set {
+    my ($self, $pkey) = @_;
 
     my $done = "set_paper_$pkey";
 
@@ -594,6 +592,8 @@ sub _tex_paper_set() {
         $self->done( $k => 0 );
     }
     $self->done( $done => 1 );
+
+    return $self;
 
 }
 
@@ -616,10 +616,8 @@ sub _make() {
 
 # _tex_paper_make() {{{
 
-sub _tex_paper_make() {
-    my $self = shift;
-
-    my $pkey = shift;
+sub _tex_paper_make {
+    my ($self, $pkey) = @_;
 
     $self->_tex_paper_set($pkey);
 
@@ -662,18 +660,19 @@ sub _tex_paper_make() {
         print "Success. Look  $log_file for details.\n";
     }
 
+    return $self;
+
 }
 
 # }}}
 # _tex_paper_cbib2cite() {{{
 
-sub _tex_paper_cbib2cite() {
-    my $self = shift;
+sub _tex_paper_cbib2cite {
+    my ($self, $pkey) = @_;
 
-    my $pkey = shift;
     $self->pkey($pkey);
 
-    $self->_tex_paper_get_secfiles();
+    $self->_tex_paper_get_secfiles;
 
     my @done_cbib2cite = readarr( $self->files("done_cbib2cite") );
 
@@ -700,6 +699,8 @@ sub _tex_paper_cbib2cite() {
 
     append_file( $self->files("done_cbib2cite"), $pkey . "\n" );
 
+    return $self;
+
 }
 
 # }}}
@@ -710,10 +711,10 @@ sub _tex_paper_cbib2cite() {
 =cut
 
 ##TODO texnice
-sub _tex_paper_tex_nice() {
-    my $self = shift;
+sub _tex_paper_tex_nice {
+    my ($self, $pkey) = @_;
 
-    my $pkey = shift || $self->pkey;
+    my $pkey ||= $self->pkey;
 
     my $iopts = shift || {
         TEXNICE_OPTS    => '',
@@ -751,6 +752,8 @@ sub _tex_paper_tex_nice() {
         eval( $subname . '()' );
         die $@ if $@;
     }
+
+    return $self;
 
 }
 
@@ -1117,13 +1120,13 @@ sub _tex_paper_sep() {
 
 # _tex_paper_gen_file() {{{
 
-sub _tex_paper_gen_file() {
-    my $self = shift;
+sub _tex_paper_gen_file {
+    my ($self, $sectype, $pkey) = @_;
 
     my $ThisSubName = ( caller(0) )[3];
 
-    my $sectype = shift || '';
-    my $pkey    = shift || $self->pkey;
+    my $sectype ||= '';
+    my $pkey    ||= $self->pkey;
 
     $self->_tex_paper_load_conf($pkey);
 
@@ -1132,7 +1135,7 @@ sub _tex_paper_gen_file() {
         return 0;
     }
 
-    $self->_tex_paper_get_secfiles();
+    $self->_tex_paper_get_secfiles;
 
     # Refs info stored in the Perl conf file will
     #   have priority over the TeX refs-file (if it exists)
@@ -1316,15 +1319,18 @@ sub _tex_paper_gen_file() {
     }
 
     close(R);
+
+    return $self;
 }
 
 # }}}
 
 ###gen_secdata
 sub _tex_paper_gen_secdata {
-    my $self = shift;
+    my ($self, $allfiles) = @_;
 
-    my $allfiles = shift || $self->pap_allfiles;
+    my $allfiles ||= $self->pap_allfiles;
+
     my $isecs;
     my %secnums;
 
@@ -1355,6 +1361,8 @@ sub _tex_paper_gen_secdata {
     $t->load(@d);
     my $secdat = catfile( $self->texroot, 'secdata.' . $self->pkey );
     write_file( $secdat, $t . "\n" );
+
+    return $self;
 
 }
 
@@ -1933,10 +1941,10 @@ sub _tex_paper_load_conf_short() {
 
 ###load_conf
 
-sub _tex_paper_load_conf() {
-    my $self = shift;
+sub _tex_paper_load_conf {
+    my ($self, $pkey) = @_;
 
-    my $pkey = shift || $self->pkey;
+    my $pkey ||= $self->pkey;
 
     my $done = "load_conf_$pkey";
 
@@ -1983,27 +1991,33 @@ sub _tex_paper_load_conf() {
 
     $self->done( "$done" => 1 );
 
+    return $self;
+
 }
 
 # }}}
 # _tex_paper_conf_remove() {{{
 
-sub _tex_paper_conf_remove() {
-    my $self = shift;
+sub _tex_paper_conf_remove {
+    my ($self, $pkey) = @_;
 
-    my $pkey = shift || '';
+    my $pkey ||= '';
+
     my $cnf = "p.$pkey.conf.pl";
 
     File::Path::remove_tree($cnf) if ( -e $cnf );
+
+    return $self;
 }
 
 # }}}
 # _tex_paper_conf_exists() {{{
 
-sub _tex_paper_conf_exists() {
-    my $self = shift;
+sub _tex_paper_conf_exists {
+    my ($self, $pkey) = @_;
 
-    my $pkey = shift || '';
+    my $pkey ||= '';
+
     my $cnf = "p.$pkey.conf.pl";
 
     return 1 if ( -e $cnf );
@@ -2013,10 +2027,10 @@ sub _tex_paper_conf_exists() {
 # }}}
 # _tex_paper_conf_create() {{{
 
-sub _tex_paper_conf_create() {
-    my $self = shift;
+sub _tex_paper_conf_create {
+    my ($self, $pkey) = @_;
 
-    my $pkey = shift || '';
+    my $pkey ||= '';
 
     my $tem = "paper_conf_template.pl";
     my $cnf = "p.$pkey.conf.pl";
@@ -2033,16 +2047,17 @@ sub _tex_paper_conf_create() {
         $cnf;
     }
 
+    return $self;
+
 }
 
 # }}}
 # _tex_paper_view_short() {{{
 
-sub _tex_paper_view_short() {
-    my $self = shift;
+sub _tex_paper_view_short {
+    my ($self, $skey) = @_;
 
-    # Short key
-    my $skey = shift || '';
+    my $skey ||= '';
 
     # Long key
     my $lkey = $self->plongkeys($skey) || '';
@@ -2050,6 +2065,8 @@ sub _tex_paper_view_short() {
     return 1 unless $lkey;
 
     $self->_tex_paper_view("$lkey");
+
+    return $self;
 }
 
 # }}}
@@ -2061,7 +2078,7 @@ sub _tex_paper_get_figs() {
 
 # _tex_paper_get_secfiles() {{{
 
-sub _tex_paper_get_secfiles() {
+sub _tex_paper_get_secfiles {
     my $self = shift;
 
     my $done = "get_secfiles_" . $self->pkey;
@@ -2191,15 +2208,17 @@ sub _tex_paper_get_secfiles() {
 
     $self->done_exists( $done => 1 );
 
+    return $self;
+
 }
 
 # }}}
 # _tex_paper_renames() {{{
 
-sub _tex_paper_renames() {
-    my $self = shift;
+sub _tex_paper_renames {
+    my ($self, $pkey) = shift;
 
-    my $pkey = shift || '';
+    $pkey ||= '';
 
     $self->sysrun("bash renames.sh $pkey");
 }
@@ -2207,11 +2226,11 @@ sub _tex_paper_renames() {
 # }}}
 # _tex_paper_view() {{{
 
-sub _tex_paper_view() {
-    my $self = shift;
+sub _tex_paper_view {
+    my ($self, $pkey, $vopts) = @_;
 
-    my $pkey  = shift || '';
-    my $vopts = shift || '';
+    $pkey  ||= '';
+    $vopts ||= '';
 
     return unless $pkey;
 
@@ -2254,16 +2273,15 @@ sub _tex_paper_view() {
     $view_cmd = $self->viewtexcmd . " $vopts @ptexfiles";
     $self->sysrun($view_cmd);
 
+    return $self;
+
 }
 
 # }}}
 # _tex_paper_make_short() {{{
 
-sub _tex_paper_make_short() {
-    my $self = shift;
-
-    # Short key
-    my $skey = shift;
+sub _tex_paper_make_short {
+    my ($self, $skey) = @_;
 
     # Long key
     my $lkey = $self->plongkeys($skey) || '';
@@ -2271,6 +2289,8 @@ sub _tex_paper_make_short() {
     return 1 unless $lkey;
 
     $self->_tex_paper_make("$lkey");
+
+    return $self;
 }
 
 # }}}
@@ -2278,7 +2298,4 @@ sub _tex_paper_make_short() {
 # }}}
 
 
-
 1;
- 
-

@@ -847,7 +847,7 @@ sub _complete_modules() {
 
 =cut
 
-sub init_vars() {
+sub init_vars {
     my $self = shift;
 
     $self->PERLMODDIR( $ENV{PERLMODDIR}
@@ -856,7 +856,7 @@ sub init_vars() {
     $self->dirs( "mods" => catfile( $self->PERLMODDIR, qw(mods) ) );
         $self->viewcmd($ENV{EDITOR} . " " // "gvim -n -p --remote-tab-silent ");
 
-    $self->_term_get_commands();
+    $self->_term_get_commands;
 
     $self->moddeps( "Directory::Iterator" => "Directory::Iterator::PP" );
     $self->textcolor('blue');
@@ -866,9 +866,11 @@ sub init_vars() {
     $self->rbi_force(0);
     $self->rbi_discard_loaddat(0);
 
+    return $self;
+
 }
 
-sub _term_get_commands() {
+sub _term_get_commands {
     my $self = shift;
 
     $self->{'shell_commands'} = {
