@@ -22,9 +22,9 @@ use File::Slurp qw(
 # _tex_paper_splitmain {{{
 
 sub _tex_paper_splitmain {
-    my $self = shift;
+    my ($self, $pkey) = @_;
 
-    my $pkey = shift || $self->pkey;
+    $pkey ||= $self->pkey;
     $self->pkey($pkey);
 
     my $mfile = catfile( $self->texroot, 'p.' . $pkey . '.tex' );
@@ -109,17 +109,17 @@ sub _tex_paper_splitmain {
         #system("git add $sofile");
     }
 
+    return $self;
+
 }
 
 #                                       }}}
 # _tex_paper_splitpiece {{{
 
 sub _tex_paper_splitpiece {
-    my $self = shift;
+    my ($self, $piece, $pkey) = @_;
 
-    my $piece = shift;
-
-    my $pkey = shift || $self->pkey;
+    $pkey ||= $self->pkey;
     $self->pkey($pkey);
 
     my $pfile =
@@ -200,16 +200,16 @@ sub _tex_paper_splitpiece {
         #system("git add $sofile");
     }
 
+    return $self;
+
 }
 
 #                                       }}}
 
 # _tex_paper_mh()                       {{{
 
-sub _tex_paper_mh() {
-    my $self = shift;
-
-    my $pkey = shift;
+sub _tex_paper_mh {
+    my ($self, $pkey) = @_;
 
     my $f   = "p.$pkey.pdf";
     my $paf = "$f.preamble.tex";
@@ -219,16 +219,18 @@ sub _tex_paper_mh() {
     $self->sysrun("ltm --dvi --perltex $f");
     $self->sysrun("t4ht -f $f");
 
+    return $self;
+
 }
 
 # }}}
 # _tex_paper_mh_short() {{{
 
-sub _tex_paper_mh_short() {
-    my $self = shift;
+sub _tex_paper_mh_short {
+    my ($self, $skey) = @_;
 
     # Short key
-    my $skey = shift || '';
+    $skey ||= '';
 
     # Long key
     my $lkey = $self->_long_key($skey);
@@ -236,16 +238,17 @@ sub _tex_paper_mh_short() {
     return 1 unless $lkey;
 
     $self->_tex_paper_mh($lkey);
+
+    return $self;
 }
 
 # }}}
 # _tex_paper_latex_2_html() {{{
 
-sub _tex_paper_latex_2_html() {
+sub _tex_paper_latex_2_html {
+    my ($self, $pkey) = @_;
 
-    my $self = shift;
-
-    my $pkey = shift || '';
+    $pkey ||= '';
     my %nc = ();
 
     my $l2h = "latex2html";
@@ -272,6 +275,8 @@ sub _tex_paper_latex_2_html() {
     #$opts="\"p.$pkey\"";
     #$self->sysrun("htlatex $ftex \"frames\"");
     #$self->sysrun("tth -a -L < $ftex > $fhtml");
+    #
+    return $self;
 
 }
 
@@ -280,11 +285,10 @@ sub _tex_paper_latex_2_html() {
 
 ###htlatex
 
-sub _tex_paper_htlatex() {
+sub _tex_paper_htlatex {
+    my ($self, $pkey) = @_;
 
-    my $self = shift;
-
-    my $pkey = shift || '';
+    $pkey ||= '';
 
     my $htlatex = "htlx";
     my $if      = "p.$pkey.pdf";
@@ -332,16 +336,18 @@ sub _tex_paper_htlatex() {
         move( $f, $htmlout );
     }
 
+    return $self;
+
 }
 
 # }}}
 # _tex_paper_latex_2_html_short() {{{
 
-sub _tex_paper_latex_2_html_short() {
-    my $self = shift;
+sub _tex_paper_latex_2_html_short {
+    my ($self, $skey) = @_;
 
     # Short key
-    my $skey = shift || '';
+    $skey ||= '';
 
     # Long key
     my $lkey = $self->_long_key($skey);
@@ -349,16 +355,18 @@ sub _tex_paper_latex_2_html_short() {
     return 1 unless $lkey;
 
     $self->_tex_paper_latex_2_html($lkey);
+
+    return $self;
 }
 
 # }}}
 
 # _tex_paper_view_pdfeqs() {{{
 
-sub _tex_paper_view_pdfeqs() {
-    my $self = shift;
+sub _tex_paper_view_pdfeqs {
+    my ($self, $pkey) = @_;
 
-    my $pkey = shift || $self->pkey || '';
+    $pkey ||= $self->pkey || '';
     $self->pkey($pkey);
 
     my $fname = 'p.' . $self->pkey . '.pdfeqs';
@@ -368,15 +376,17 @@ sub _tex_paper_view_pdfeqs() {
         my $view_cmd = "evince " . $file;
         system("$view_cmd &");
     }
+
+    return $self;
 }
 
 #}}}
 # _tex_paper_mpdfeqs() {{{
 
-sub _tex_paper_mpdfeqs() {
-    my $self = shift;
+sub _tex_paper_mpdfeqs {
+    my ($self, $pkey) = @_;
 
-    my $pkey = shift || $self->pkey || '';
+    $pkey ||= $self->pkey || '';
     $self->pkey($pkey);
 
     $self->_tex_paper_sep( 'eqs', $pkey );
@@ -392,22 +402,26 @@ sub _tex_paper_mpdfeqs() {
         $self->warn("PDFEQS file was not found");
     }
 
+    return $self;
+
 }
 
 # }}}
 # _tex_paper_mpdfrevtex() {{{
 
-sub _tex_paper_mpdfrevtex() {
+sub _tex_paper_mpdfrevtex {
     my $self = shift;
 
     my $pkey = shift || $self->pkey || '';
     $self->pkey($pkey) if $pkey;
+
+    return $self;
 }
 
 # }}}
 # _tex_paper_write_title_page() {{{
 
-sub _tex_paper_write_title_page() {
+sub _tex_paper_write_title_page {
     my $self = shift;
 
     my $pkey = shift || '';
@@ -476,6 +490,8 @@ sub _tex_paper_write_title_page() {
 
     print TIT "\\endgroup\n";
     close(TIT);
+
+    return $self;
 }
 
 # }}}
@@ -492,10 +508,7 @@ sub _tex_paper_bundle () {
 # _tex_paper_run_tex {{{
 
 sub _tex_paper_run_tex {
-    my $self = shift;
-
-    my $type = shift;
-    my $ref  = shift;
+    my ($self, $type, $ref) = @_;
 
     my $file;
 
@@ -518,18 +531,20 @@ sub _tex_paper_run_tex {
     my $cmd = $self->texcmd . " $file";
 
     $self->sysrun($cmd);
+
+    return $self;
 }
 
 # }}}
 # _tex_paper_run_latex {{{
 
 sub _tex_paper_run_latex {
-    my $self = shift;
-
-    my $pkey = shift;
+    my ($self, $pkey) = @_;
 
     my $cmd = $self->latexcmd . " p.$pkey.pdf";
     $self->sysrun($cmd);
+
+    return $self;
 }
 
 # }}}
