@@ -1520,6 +1520,8 @@ sub _bib_expand {
     my $of = $self->bibfilex;
     write_file( $of, $self->biblines );
 
+	return $self;
+
 }
 
 # }}}
@@ -1543,18 +1545,22 @@ sub _bibtex_rmfields {
             $e->write($bibout);
         }
     }
+
+	return $self;
 }
 
 # }}}
 
 # }}}
-sub _build() {
+sub _build {
     my $self = shift;
 
     my $build = shift;
 
     my $cmd = "perl psh_build_$build" . ".pl";
     system("$cmd");
+
+	return $self;
 
 }
 
@@ -1563,7 +1569,7 @@ sub _build() {
 
 # _bt() {{{
 
-sub _bt() {
+sub _bt {
     my $self = shift;
 
     my @args = @_;
@@ -1637,21 +1643,25 @@ sub _gitco () {
     }
 
     system("$cmd");
+
+	return $self;
 }
 
 # }}}
 #=================================
 # Sync {{{
 
-sub update_ppics() {
+sub update_ppics {
     my $self = shift;
 
     system("rsync -avz --size-only $ENV{opdesk}:~/wrk/p/ppics/ . ");
 
+	return $self;
+
 }
 
 ###convertppics
-sub _tex_paper_convert_ppics() {
+sub _tex_paper_convert_ppics {
     my $self = shift;
 
     my $pkey = shift || $self->pkey;
@@ -1688,6 +1698,8 @@ sub _tex_paper_convert_ppics() {
 
     }
     closedir(D);
+
+	return $self;
 
 }
 
