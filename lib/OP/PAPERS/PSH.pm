@@ -238,6 +238,8 @@ sub get_opt {
         $self->inputcommands( $self->_opt_get("shcmds") );
     }
 
+	return $self;
+
 }
 
 sub say {
@@ -259,6 +261,8 @@ sub init_MAKETARGETS {
 
     $self->MAKETARGETS( $pshell->MKTARGETS );
 
+	return $self;
+
 }
 
 sub init_dirs {
@@ -273,6 +277,8 @@ sub init_dirs {
 		make_path($dir);
 	}
 
+	return $self;
+
 }
 
 
@@ -282,13 +288,15 @@ sub init_files {
 	$self->files(
 		"done_cbib2cite" =>
 		catfile( $self->texroot, 'keys.done_cbib2cite.i.dat' ),
-		"vars" => catfile( $self->texroot, $ENV{PVARSDAT} || 'vars.i.dat' ),
-		"keys" => catfile( $self->texroot, 'keys.i.dat' ),
-		"parts"    => catfile( $self->texroot, 'pap.parts.i.dat' ),
-		"makefile" => catfile( $self->texroot, 'makefile' ),
+		"vars"       => catfile( $self->texroot, $ENV{PVARSDAT} || 'vars.i.dat' ),
+		"keys"       => catfile( $self->texroot, 'keys.i.dat' ),
+		"parts"      => catfile( $self->texroot, 'pap.parts.i.dat' ),
+		"makefile"   => catfile( $self->texroot, 'makefile' ),
 		"targets.mk" => catfile( $self->texroot, qw(targets.mk) ),
-		"history" => catfile( $self->dirs('config'), qw( hist ) ),
+		"history"    => catfile( $self->dirs('config'), qw( hist ) ),
 	);
+
+	return $self;
 
 }
 
@@ -513,6 +521,8 @@ sub init_vars {
     $self->nltm_clobberfiles(qw( ps pdf dvi ));
 
 	$self->say('End init_vars()');
+
+	return $self;
 
 
 }
@@ -1111,7 +1121,7 @@ sub _expand_perltex_ienv() {
 # }}}
 # _package_is_used() {{{
 
-sub _package_is_used() {
+sub _package_is_used {
     my $self = shift;
 
     my $package = shift || '';
@@ -1129,7 +1139,7 @@ sub _package_is_used() {
 # }}}
 # _tex_clean() {{{
 
-sub _tex_clean() {
+sub _tex_clean {
     my $self = shift;
 
     $self->out( "Cleaning any LaTeX intermediate files"
@@ -1141,13 +1151,15 @@ sub _tex_clean() {
         }
     }
 
+	return $self;
+
     #system("LATEXMK -c");
 }
 
 # }}}
 # _tex_clobber() {{{
 
-sub _tex_clobber() {
+sub _tex_clobber {
     my $self = shift;
 
     $self->out( "Removing generated PDF, PS and dvi files"
@@ -1158,6 +1170,8 @@ sub _tex_clobber() {
             remove_tree($f);
         }
     }
+
+	return $self;
 }
 
 # }}}
@@ -1167,7 +1181,7 @@ sub _tex_clobber() {
 
 =cut
 
-sub sysrun() {
+sub sysrun {
     my $self = shift;
 
     my $cmd = shift || '';
@@ -1220,6 +1234,8 @@ sub sysrun() {
         };
     }
 
+	return $self;
+
 }
 
 # }}}
@@ -1229,13 +1245,14 @@ sub sysrun() {
 
 =cut
 
-sub termcmd_reset() {
-    my $self = shift;
-    my $cmd  = shift;
+sub termcmd_reset {
+    my ($self,$cmd) = @_;
 
     $self->termcmd($cmd);
     $self->termcmdreset(1);
     $self->LOGFILE_PRINTED_TERMCMD(0);
+
+	return $self;
 }
 
 # }}}
@@ -1243,7 +1260,7 @@ sub termcmd_reset() {
 # }}}
 # update_info() {{{
 
-sub update_info() {
+sub update_info {
     my $self = shift;
 
     my $texp = "info";
@@ -1314,13 +1331,14 @@ sub update_info() {
     $s->_print( file => $file );
 
     # Run LaTeX2HTML to re-generate HTML pages
+	#
+	return $self;
 }
 
 # }}}
 # gen_make_sh() {{{
 
-sub gen_make_sh() {
-
+sub gen_make_sh {
     my $self = shift;
 
     my $f        = 'pap';
@@ -1348,6 +1366,8 @@ sub gen_make_sh() {
     write_file $msh, @$mshlines;
     chmod 0755, $msh;
 
+	return $self;
+
 }
 
 # }}}
@@ -1358,7 +1378,7 @@ sub gen_make_sh() {
 
 # view_pdf_paper_short() {{{
 
-sub view_pdf_paper_short() {
+sub view_pdf_paper_short {
     my $self = shift;
 
     # Short key
@@ -1370,12 +1390,14 @@ sub view_pdf_paper_short() {
     return 1 unless $lkey;
 
     $self->view_pdf_paper($lkey);
+
+	return $self;
 }
 
 # }}}
 # view_pdf_paper() {{{
 
-sub view_pdf_paper() {
+sub view_pdf_paper {
     my $self = shift;
 
     my $pkey = shift || '';
@@ -1388,18 +1410,22 @@ sub view_pdf_paper() {
     my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf ) =
       IPC::Cmd::run( command => $cmd, verbose => 1 );
 
+	return $self;
+
 }
 
 # }}}
 # list_pdf_papers() {{{
 
-sub list_pdf_papers() {
+sub list_pdf_papers {
     my $self = shift;
 
     my $pkey = shift;
 
     my $cmd = "bash lsp $pkey";
     $self->sysrun($cmd);
+
+	return $self;
 }
 
 # }}}

@@ -104,6 +104,8 @@ sub main {
   &OP::Base::setcmdopts();
   &OP::Base::getopt();
 
+  return $self;
+
 }
 # }}}
 
@@ -449,7 +451,9 @@ sub get_opt {
 
 	$self->{v}->{cmdline}=$OP::Base::cmdline;
 
-  	$self->get_opt_after();
+  	$self->get_opt_after;
+
+	return $self;
 
 }
 
@@ -515,10 +519,12 @@ sub print_examples {
 
 =cut
 
-sub print_pod_options(){
-	my $self=shift;
+sub print_pod_options {
+	my $self = shift;
 
   	&OP::Base::printpodoptions();
+
+	return $self;
 }
 
 =head3 get_opt_after
@@ -526,16 +532,18 @@ sub print_pod_options(){
 =cut
 
 sub get_opt_after {
-	my $self=shift;
+	my $self = shift;
 
     #&OP::Base::getopt_after();
 
-	$self->print_pod_options();
-	$self->print_help() if $self->_opt_true("help");
-	$self->print_man() if $self->_opt_true("man");
-	$self->print_examples() if $self->_opt_true("examples");
+	$self->print_pod_options;
+	$self->print_help if $self->_opt_true("help");
+	$self->print_man if $self->_opt_true("man");
+	$self->print_examples if $self->_opt_true("examples");
 
 	$self->_opt_set("debug",1) if $self->_opt_true("debug");
+
+	return $self;
 
 }
 

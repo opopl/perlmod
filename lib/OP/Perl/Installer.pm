@@ -25,7 +25,12 @@ use ExtUtils::ModuleMaker;
 use Term::ShellUI;
 use Data::Dumper;
 
-use parent qw( Class::Accessor::Complex OP::Script  );
+use parent qw( 
+    Class::Accessor::Complex 
+    OP::Script 
+);
+
+use Env qw($MAKE);
 
 __PACKAGE__->mk_new
 ###_ACCESSORS_SCALAR
@@ -82,10 +87,13 @@ __PACKAGE__->mk_new
 
 =cut
 
-sub init() {
+sub init {
     my $self = shift;
 
     $self->{package_name} = __PACKAGE__ unless defined $self->{package_name};
+
+    return $self;
+
 }
 
 # module_to_path() {{{
@@ -94,7 +102,7 @@ sub init() {
 
 =cut
 
-sub module_to_path() {
+sub module_to_path {
     my $self = shift;
 
     # input: My::Module::Base
@@ -109,7 +117,7 @@ sub module_to_path() {
 
 # }}}
 
-sub _sys() {
+sub _sys {
     my $self = shift;
 
     my $cmd = shift;
@@ -122,7 +130,8 @@ sub module_full_local_path_relative {
 
     my $module = shift;
 
-    return shift $self->module_full_local_paths($module);
+    my @lpaths = $self->module_full_local_paths($module);
+    return shift @lpaths;
 
 }
 
@@ -140,7 +149,7 @@ sub module_full_installed_paths {
                 excludedirs => catfile( $self->dirs("mods"), $mdef, qw(lib) ),
             }
         );
-	my @p=@{$pminst->MODPATHS($module)};
+    my @p = @{ $pminst->MODPATHS($module) || []};
 
     wantarray ? @p : \@p;
 
@@ -158,7 +167,7 @@ sub module_full_local_path {
 
 }
 
-sub module_full_local_paths() {
+sub module_full_local_paths {
     my $self = shift;
 
     my $module = shift;
@@ -193,7 +202,7 @@ sub module_full_local_paths() {
 
 =cut
 
-sub module_to_def() {
+sub module_to_def {
     my $self = shift;
 
     # input: My::Module::Base
@@ -211,7 +220,7 @@ sub module_to_def() {
 
 =cut
 
-sub def_to_module() {
+sub def_to_module {
     my $self = shift;
 
     # input My-Module-Base
@@ -248,7 +257,7 @@ sub module_local_dir {
 
 }
 
-sub add_modules() {
+sub add_modules {
     my $self = shift;
 
     my ( @modules, %mods, @files );
@@ -303,6 +312,8 @@ sub add_modules() {
 
     system( $self->viewcmd . "@files" );
 
+    return $self;
+
 }
 
 # }}}
@@ -312,8 +323,9 @@ sub add_modules() {
 
 =cut
 
-sub remove_modules() {
+sub remove_modules {
     my $self = shift;
+
     my ( @modules, %mods, @files );
 
     @modules = split( ',', $opt{rm} );
@@ -332,7 +344,7 @@ sub remove_modules() {
 
 =cut
 
-sub edit_modules() {
+sub edit_modules {
     my $self = shift;
 
     my ( @emodules, @files );
@@ -360,6 +372,8 @@ sub edit_modules() {
     if (@files) {
         system( $self->viewcmd . "  @files" );
     }
+
+    return $self;
 }
 
 # }}}
@@ -369,7 +383,7 @@ sub edit_modules() {
 
 =cut
 
-sub set_these_cmdopts() {
+sub set_these_cmdopts {
     my $self = shift;
 
     @cmdopts = (
@@ -382,7 +396,7 @@ sub set_these_cmdopts() {
         { name => "e,edit",   desc => "Edit the chosen modules", type => "s" },
         {
             name => "a,add",
-            desc => "Create modules	 with the given names",
+            desc => "Create modules  with the given names",
             type => "s"
         },
         {
@@ -393,7 +407,7 @@ sub set_these_cmdopts() {
         { name => "sh",     desc => "Run an interactive shell " },
         { name => "shcmds", type => "s", desc => "Run shell commands " }
 
-        #,{ cmd	=>	"<++>", 		desc	=>	"<++>", type	=>	"s"	}
+        #,{ cmd =>  "<++>",         desc    =>  "<++>", type    =>  "s" }
     );
 }
 
@@ -404,7 +418,7 @@ sub set_these_cmdopts() {
 
 =cut
 
-sub choose_modules() {
+sub choose_modules {
     my $self = shift;
 
     my @mods = split( ',', shift );
@@ -419,7 +433,7 @@ sub choose_modules() {
 
 =cut
 
-sub load_modules() {
+sub load_modules {
     my $self = shift;
 
     opendir( D, $self->dirs("mods") );
@@ -451,9 +465,11 @@ sub load_modules() {
     $self->load_dat();
 
     closedir(D);
+
+    return $self;
 }
 
-sub load_dat() {
+sub load_dat {
     my $self = shift;
 
     my $datfile = $DATFILES{modules_to_install};
@@ -461,6 +477,8 @@ sub load_dat() {
         $self->modules_to_install_clear;
         $self->modules_to_install( readarr($datfile) );
     }
+
+    return $self;
 }
 
 #}}}
@@ -470,10 +488,12 @@ sub load_dat() {
 
 =cut
 
-sub list_modules() {
+sub list_modules {
     my $self = shift;
 
-    $self->modules_print();
+    $self->modules_print;
+
+    return $self;
 
 }
 
@@ -486,12 +506,12 @@ sub list_modules() {
 
 ###rbi_
 
-sub run_build_install() {
+sub run_build_install {
     my $self = shift;
 
     my @imodules;
 
-	my $errorlines;
+    my $errorlines;
 
     @imodules = @_ if @_;
 
@@ -607,9 +627,9 @@ sub run_build_install() {
 ###rbi_Makefile_PL
 
             push( @icmds, 'perl Makefile.PL' );
-            push( @icmds, 'make' );
-            push( @icmds, 'make test' );
-            push( @icmds, 'make install' );
+            push( @icmds, qq{make} );
+            push( @icmds, qq{make test} );
+            push( @icmds, qq{make install} );
 
         }
 ###rbi_Build_PL
@@ -670,19 +690,19 @@ sub run_build_install() {
             $self->OP::Script::out( "Building module: $module\n",
                 color => 'blue' );
 
-            #		select $fh{log};
+            #       select $fh{log};
             $build->dispatch('build');
 
-            #		select STDOUT;
+            #       select STDOUT;
             $self->out("Testing module: $module\n");
 
-            ##		select $fh{log};
+            ##      select $fh{log};
             $build->dispatch( 'test', quiet => 1 );
 
-            ##		select STDOUT;
+            ##      select STDOUT;
             $self->out("Installing module: $module\n");
 
-            ##		select $fh{log};
+            ##      select $fh{log};
             $build->dispatch( 'install', install_base => "$ENV{HOME}" );
         }
     }    # end loop over $mod_def_names
@@ -716,7 +736,7 @@ sub run_build_install() {
 
 =cut
 
-sub run_shell() {
+sub run_shell {
     my $self = shift;
 
     my ( $cmd_string, @cmds );
@@ -834,7 +854,7 @@ sub init_vars() {
           // catfile( $ENV{HOME}, qw(wrk perlmod ) ) );
 
     $self->dirs( "mods" => catfile( $self->PERLMODDIR, qw(mods) ) );
-		$self->viewcmd($ENV{EDITOR} . " " // "gvim -n -p --remote-tab-silent ");
+        $self->viewcmd($ENV{EDITOR} . " " // "gvim -n -p --remote-tab-silent ");
 
     $self->_term_get_commands();
 
@@ -993,43 +1013,46 @@ sub _term_get_commands() {
 
 # main() {{{
 
-sub main_no_getopt(){
-    my $self=shift;
+sub main_no_getopt {
+    my $self = shift;
 
-    $self->init();
-    $self->init_vars();
-    $self->load_modules();
+    $self->init;
+    $self->init_vars;
+    $self->load_modules;
 
 }
 
-sub main() {
+sub main  {
     my $self = shift;
 
-    my $iopts = shift // {};
-    my $opts={};
+    my $iopts = shift || {};
+
+    my $opts = {};
     $opts=_hash_add($opts,$iopts);
 
-    $self->init();
+    $self->init;
 
-    $self->get_opt();
+    $self->get_opt;
 
-    $self->init_vars();
+    $self->init_vars;
 
-    $self->load_modules();
+    $self->load_modules;
 
-    do { $self->run_build_install(); exit 0; } if ( $opt{run}  || $opt{r} );
-    do { $self->list_modules();      exit 0; } if ( $opt{list} || $opt{l} );
-    do { $self->edit_modules();      exit 0; } if ( $opt{edit} || $opt{e} );
+    do { $self->run_build_install; exit 0; } if ( $opt{run}  || $opt{r} );
+    do { $self->list_modules;      exit 0; } if ( $opt{list} || $opt{l} );
+    do { $self->edit_modules;      exit 0; } if ( $opt{edit} || $opt{e} );
 
-    $self->add_modules() if ( $opt{add} || $opt{a} );
-    $self->remove_modules() if ( $opt{rm} );
+    $self->add_modules if ( $opt{add} || $opt{a} );
+    $self->remove_modules if ( $opt{rm} );
 
     # Running shell
-    $self->run_shell() if ( $opt{sh} );
+    $self->run_shell if ( $opt{sh} );
 
     if ( $opt{shcmds} ) {
         $self->run_shell( $opt{shcmds} );
     }
+
+    return $self;
 
 }
 
