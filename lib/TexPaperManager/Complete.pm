@@ -4,16 +4,16 @@ package TexPaperManager::Complete;
 use strict;
 use warnings;
 
+=head3 _complete_papers
 
-=head3 _complete_papers()
+=head4 Usage
+
+	my $ref = $self->_complete_cmd($type, $cmpl);
 
 =cut
 
-sub _complete_papers() {
-    my $self = shift;
-
-    my $type = shift;
-    my $cmpl = shift;
+sub _complete_papers {
+    my ($self, $type, $cmpl) = @_;
 
     my ( @comps, @pkeys, $ref );
 
@@ -29,12 +29,11 @@ sub _complete_papers() {
 
         foreach my $pkey (@pkeys) {
             if ( lc($pkey) =~ /^\s*$str/i ) {
-                push( @arr, $pkey );
+                push @arr, $pkey;
             }
         }
         $ref = \@arr;
-    }
-    else {
+    } else {
         $ref = \@pkeys;
     }
 
@@ -42,14 +41,18 @@ sub _complete_papers() {
 
 }
 
-=head3 _complete_cmd()
+=head3 _complete_cmd
+
+=head4 Usage
+
+	my $ref = $self->_complete_cmd($ref_cmds);
 
 =cut
 
-sub _complete_cmd() {
-    my $self = shift;
+sub _complete_cmd {
+    my ($self, $ref_cmds) = @_;
 
-    my $ref_cmds = shift || '';
+    $ref_cmds ||= '';
 
     return [] unless $ref_cmds;
 

@@ -118,17 +118,13 @@ sub module_to_path {
 # }}}
 
 sub _sys {
-    my $self = shift;
-
-    my $cmd = shift;
+    my ($self, $cmd) = @_;
 
     system("$cmd");
 }
 
 sub module_full_local_path_relative {
-    my $self = shift;
-
-    my $module = shift;
+    my ($self, $module) = @_;
 
     my @lpaths = $self->module_full_local_paths($module);
     return shift @lpaths;
@@ -136,9 +132,7 @@ sub module_full_local_path_relative {
 }
 
 sub module_full_installed_paths {
-    my $self=shift;
-
-    my $module = shift;
+    my ($self, $module) = @_;
 
     my $pminst = OP::PERL::PMINST->new;
         ( my $mdef = $module ) =~ s/::/-/g;

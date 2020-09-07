@@ -729,7 +729,7 @@ sub _tex_paper_cbib2cite {
 sub _tex_paper_tex_nice {
     my ($self, $pkey) = @_;
 
-    my $pkey ||= $self->pkey;
+    $pkey ||= $self->pkey;
 
     my $iopts = shift || {
         TEXNICE_OPTS    => '',
@@ -775,10 +775,10 @@ sub _tex_paper_tex_nice {
 # }}}
 # _tex_paper_list_refs() {{{
 
-sub _tex_paper_list_refs() {
-    my $self = shift;
+sub _tex_paper_list_refs {
+    my ($self, $pkey) = @_;
 
-    my $pkey = shift || $self->pkey;
+    $pkey ||= $self->pkey;
 
     my $refs  = $self->paperrefs_h($pkey);
     my $order = $self->paperrefs_h_order($pkey);
@@ -787,10 +787,10 @@ sub _tex_paper_list_refs() {
 
 }
 
-sub _tex_paper_list_eqs() {
-    my $self = shift;
+sub _tex_paper_list_eqs {
+    my ($self, $pkey) = @_;
 
-    my $pkey = shift || $self->pkey;
+    $pkey ||= $self->pkey;
 
     my $refs  = $self->papereqs_h($pkey);
     my $order = $self->papereqs_h_order($pkey);
@@ -1140,8 +1140,8 @@ sub _tex_paper_gen_file {
 
     my $ThisSubName = ( caller(0) )[3];
 
-    my $sectype ||= '';
-    my $pkey    ||= $self->pkey;
+    $sectype ||= '';
+    $pkey    ||= $self->pkey;
 
     $self->_tex_paper_load_conf($pkey);
 
@@ -1344,7 +1344,7 @@ sub _tex_paper_gen_file {
 sub _tex_paper_gen_secdata {
     my ($self, $allfiles) = @_;
 
-    my $allfiles ||= $self->pap_allfiles;
+    $allfiles ||= $self->pap_allfiles;
 
     my $isecs;
     my %secnums;
@@ -1959,7 +1959,7 @@ sub _tex_paper_load_conf_short() {
 sub _tex_paper_load_conf {
     my ($self, $pkey) = @_;
 
-    my $pkey ||= $self->pkey;
+    $pkey ||= $self->pkey;
 
     my $done = "load_conf_$pkey";
 
@@ -2016,7 +2016,7 @@ sub _tex_paper_load_conf {
 sub _tex_paper_conf_remove {
     my ($self, $pkey) = @_;
 
-    my $pkey ||= '';
+    $pkey ||= '';
 
     my $cnf = "p.$pkey.conf.pl";
 
@@ -2031,7 +2031,7 @@ sub _tex_paper_conf_remove {
 sub _tex_paper_conf_exists {
     my ($self, $pkey) = @_;
 
-    my $pkey ||= '';
+    $pkey ||= '';
 
     my $cnf = "p.$pkey.conf.pl";
 
@@ -2045,7 +2045,7 @@ sub _tex_paper_conf_exists {
 sub _tex_paper_conf_create {
     my ($self, $pkey) = @_;
 
-    my $pkey ||= '';
+    $pkey ||= '';
 
     my $tem = "paper_conf_template.pl";
     my $cnf = "p.$pkey.conf.pl";
@@ -2072,7 +2072,7 @@ sub _tex_paper_conf_create {
 sub _tex_paper_view_short {
     my ($self, $skey) = @_;
 
-    my $skey ||= '';
+    $skey ||= '';
 
     # Long key
     my $lkey = $self->plongkeys($skey) || '';
@@ -2086,7 +2086,7 @@ sub _tex_paper_view_short {
 
 # }}}
 
-sub _tex_paper_get_figs() {
+sub _tex_paper_get_figs {
     my $self = shift;
 
 }

@@ -252,14 +252,14 @@ Initialize a shell terminal L<Term::ShellUI> instance.
 =cut
 
 sub _term_init {
-    my $self = shift;
+	my ($self) = @_;
 
     $self->_term_get_commands();
 
-	my $hist=catfile($hm,"ProjShell.history" );
+	my $hist = catfile($hm, "ProjShell.history" );
 
 	if (-e $hist) {
-		chmod 755,$hist;
+		chmod 755, $hist;
 	}
 
     $self->shellterm( history_file => $hist );
@@ -272,6 +272,8 @@ sub _term_init {
     );
 
     $self->shellterm( obj => $term );
+
+	return $self;
 }
 
 # }}}
@@ -282,9 +284,9 @@ sub _term_init {
 =cut
 
 sub _term_run {
-    my $self = shift;
+	my ($self, $cmds) = @_;
 
-    my $cmds = shift || [qw()];
+    $cmds ||= [qw()];
 
     unless (@$cmds) {
         if ( $self->inputcommands ) {
@@ -308,6 +310,8 @@ sub _term_run {
         exit 0 unless $self->_opt_true("shell");
         $self->shellterm("obj")->run();
     }
+
+	return $self;
 }
 
 # }}}

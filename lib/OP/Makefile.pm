@@ -4,66 +4,72 @@ package OP::Makefile;
 use warnings;
 use strict;
 
-use base qw( Class::Accessor::Complex );
+use base qw( 
+    Class::Accessor::Complex 
+);
 
-use File::Basename qw(dirname);
-use File::Spec::Functions qw(catfile rel2abs curdir);
-use File::Slurp qw(read_file);
+use File::Basename qw( dirname );
+use File::Spec::Functions qw( rel2abs curdir );
+use File::Slurp qw( read_file );
 
 ###__ACCESSORS_SCALAR
-my @scalar_accessors=qw(
+my @scalar_accessors = qw(
 );
 
 ###__ACCESSORS_HASH
-my @hash_accessors=qw(
+my @hash_accessors = qw(
 );
 
 ###__ACCESSORS_ARRAY
 my @array_accessors=qw(
-	MKTARGETS
+    MKTARGETS
 );
 
 __PACKAGE__
-	->mk_scalar_accessors(@scalar_accessors)
-	->mk_array_accessors(@array_accessors)
-	->mk_hash_accessors(@hash_accessors);
-	
+    ->mk_scalar_accessors(@scalar_accessors)
+    ->mk_array_accessors(@array_accessors)
+    ->mk_hash_accessors(@hash_accessors);
+    
 sub main {
-	my $self=shift;
-	
-	$self->init_vars;
+    my ($self) = @_;
+    
+    $self->init_vars;
+
+    return $self;
 
 }
 
 sub init_vars {
-	my $self=shift;
+    my ($self) = @_;
 
-    $self->_read_MKTARGETS();
+    $self->_read_MKTARGETS;
+
+    return $self;
 
 }
 
 sub _read_MKTARGETS {
-    my $self=shift;
+    my ($self, $tmk) = @_;
 
-    my $tmk=shift || $self->files("maketex_mk");
+    $tmk ||= $self->files("maketex_mk");
 
-    my $makefile_dir=dirname($tmk);
-    my $old_dir=rel2abs(curdir());
+    my $makefile_dir = dirname($tmk);
+    my $old_dir      = rel2abs(curdir());
 
     chdir $makefile_dir;
 
     unless (-e $tmk) {
-		my @w;
+        my @w;
 
-		push @w, 
-			'_read_MKTARGETS(): input makefile not found:',
-			$tmk;
+        push @w, 
+            '_read_MKTARGETS(): input makefile not found:',
+            $tmk;
 
         $self->warn($_) for(@w);
         return;
     }
 
-    my @lines=read_file $tmk;
+    my @lines = read_file $tmk;
 
     foreach (@lines) {
         chomp;
@@ -81,10 +87,12 @@ sub _read_MKTARGETS {
         }
     }
 
-    $self->MKTARGETS_sort();
-    $self->MKTARGETS_uniq();
+    $self->MKTARGETS_sort;
+    $self->MKTARGETS_uniq;
 
     chdir $old_dir;
+
+    return $self;
 
 }
 

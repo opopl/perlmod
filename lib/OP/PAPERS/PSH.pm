@@ -14,18 +14,18 @@ use warnings;
 use Env qw( $hm );
 
 use OP::Base qw( 
-	readhash 
-	readarr
+    readhash 
+    readarr
 );
 
 use base qw( 
-	OP::Script 
-	Class::Accessor::Complex 
-	TexPaperManager::TexPaper
-	TexPaperManager::TexPart
-	TexPaperManager::Complete
-	TexPaperManager::Term
-	TexPaperManager::List
+    OP::Script 
+    Class::Accessor::Complex 
+    TexPaperManager::TexPaper
+    TexPaperManager::TexPart
+    TexPaperManager::Complete
+    TexPaperManager::Term
+    TexPaperManager::List
 );
 
 
@@ -210,27 +210,29 @@ __PACKAGE__->mk_scalar_accessors(@scalar_accessors)
 
 =cut
 
-sub _begin() {
-    my $self = shift;
+sub _begin {
+    my ($self) = @_;
 
     $self->{package_name} = __PACKAGE__ unless defined $self->{package_name};
 
     $self->accessors(
         array    => \@array_accessors,
         hash     => \@hash_accessors,
-        'scalar' => \@scalar_accessors
+        scalar   => \@scalar_accessors
     );
+
+    return $self;
 
 }
 
 # }}}
 
-=head3 get_opt()
+=head3 get_opt
 
 =cut
 
 sub get_opt {
-    my $self = shift;
+    my ($self) = @_;
 
     $self->OP::Script::get_opt();
 
@@ -238,78 +240,99 @@ sub get_opt {
         $self->inputcommands( $self->_opt_get("shcmds") );
     }
 
-	return $self;
+    return $self;
 
 }
 
 sub say {
-	my $self=shift;
+    my $self=shift;
 
-	print $_ . "\n" for(@_);
+    print $_ . "\n" for(@_);
 
 }
 
+=head3 init_MAKETARGETS
+
+=head4 Call
+
+    OP::PROJSHELL
+        new
+        _read_MKTARGETS
+            OP::Makefile
+            _read_MKTARGETS
+
+=cut
+
 
 sub init_MAKETARGETS {
-    my $self = shift;
+    my ($self) = @_;
 
-    $self->say("Initializing MAKETARGETS...");
+    $self->say("start init_MAKETARGETS()");
 
     my $pshell = OP::PROJSHELL->new;
-
+        
     $pshell->_read_MKTARGETS( $self->files('targets.mk') );
 
     $self->MAKETARGETS( $pshell->MKTARGETS );
 
-	return $self;
+    return $self;
 
 }
 
 sub init_dirs {
-    my $self = shift;
+    my ($self) = @_;
 
-	$self->dirs(
-		'config'	=>	catfile($hm,qw( .pshconfig )),
-	);
+    $self->say('Start init_dirs()');
 
-	foreach my $id ($self->dirs_keys) {
-		my $dir=$self->dirs($id);
-		make_path($dir);
-	}
+    $self->dirs(
+        'config'    =>  catfile($hm,qw( .pshconfig )),
+    );
 
-	return $self;
+    foreach my $id ($self->dirs_keys) {
+        my $dir = $self->dirs($id);
+        make_path($dir);
+    }
+
+    return $self;
 
 }
 
 
 sub init_files {
-	my $self = shift;
-	
-	$self->files(
-		"done_cbib2cite" =>
-		catfile( $self->texroot, 'keys.done_cbib2cite.i.dat' ),
-		"vars"       => catfile( $self->texroot, $ENV{PVARSDAT} || 'vars.i.dat' ),
-		"keys"       => catfile( $self->texroot, 'keys.i.dat' ),
-		"parts"      => catfile( $self->texroot, 'pap.parts.i.dat' ),
-		"makefile"   => catfile( $self->texroot, 'makefile' ),
-		"targets.mk" => catfile( $self->texroot, qw(targets.mk) ),
-		"history"    => catfile( $self->dirs('config'), qw( hist ) ),
-	);
+    my ($self) = @_;
 
-	return $self;
+    $self->say('Start init_files()');
+
+	my $done_cbib2cite = catfile( $self->texroot, 'keys.done_cbib2cite.i.dat' );
+    
+    $self->files(
+        "done_cbib2cite" => $done_cbib2cite,
+        "vars"           => catfile( $self->texroot, $ENV{PVARSDAT} || 'vars.i.dat' ),
+        "keys"           => catfile( $self->texroot, 'keys.i.dat' ),
+        "parts"          => catfile( $self->texroot, 'pap.parts.i.dat' ),
+        "makefile"       => catfile( $self->texroot, 'makefile' ),
+        "targets.mk"     => catfile( $self->texroot, qw(targets.mk) ),
+        "history"        => catfile( $self->dirs('config'), qw( hist ) ),
+    );
+
+    return $self;
 
 }
 
 # init_vars() {{{
 
-=head3 init_vars()
+=head3 init_vars
+
+=head4 Usage
+
+    $self->init_vars;
 
 =cut
 
 sub init_vars {
-    my $self = shift;
+    my ($self) = @_;
 
-	$self->say('Start init_vars()');
+    $self->say('Start init_vars()');
 
     $self->_begin;
 
@@ -344,18 +367,22 @@ sub init_vars {
     $self->textcolor('bold yellow');
 
     # root directory for the LaTeX files
-    $self->texroot( $ENV{'TexPapersRoot'} );
+    $self->texroot( $ENV{'TexPapersRoot'} || catfile($ENV{'REPOSGIT'},qw(p))  );
 
-    $self->init_dirs;
-    $self->init_files;
-    $self->init_MAKETARGETS;
+	print qq{ texroot = } . $self->texroot  . "\n";
 
     $self->LATEXMK( $ENV{LATEXMK} || "LATEXMK" );
 
-    $self->read_VARS;
-    my $pname = $self->pname;
+    $self
+		->init_dirs
+		->init_files
+		->init_MAKETARGETS
+    	->read_VARS
+    	->init_docstyles
+		;
 
-    $self->init_docstyles();
+
+    my $pname = $self->pname;
 
     $self->builds( map { (m/psh_build_(.*)\.pl$/) ? $1 : () }
           glob( $self->texroot . "/psh_build_*.pl" ) );
@@ -390,7 +417,7 @@ sub init_vars {
     # Initialize an op::bibtex instance, then run it
     $self->bibtex( OP::BIBTEX->new );
     $self->bibtex->main;
-	
+    
     $self->bibfile( $self->bibtex->bibfile );
 
     # directory where the PDF files of the articles are stored
@@ -398,8 +425,8 @@ sub init_vars {
 
     my $papdir = catfile( $ENV{PdfPapersRoot}, $self->pdfpapersfield );
 
-	$self->_die("papdir does not exist")
-		unless -e $papdir;
+    $self->_die("papdir does not exist")
+        unless -e $papdir;
 
     $self->papdir($papdir);
     $self->bibtex->papdir($papdir);
@@ -431,21 +458,21 @@ sub init_vars {
     $self->_h_set( "parts_desc", readhash( $self->files('parts') ) );
 
     # List of PDF-papers
-	my $sdir=$self->papdir ;
-	opendir(D,"$sdir") || die $!;
-	while(my $file=readdir(D)){
-		local $_ = $file;
+    my $sdir=$self->papdir ;
+    opendir(D,"$sdir") || die $!;
+    while(my $file=readdir(D)){
+        local $_ = $file;
 
-		next unless /^(.*)\.pdf$/;
+        next unless /^(.*)\.pdf$/;
 
-		my $pkey = $1;
+        my $pkey = $1;
 
-		$self->original_pdf_papers_push($pkey);
-	}
-	closedir(D);
+        $self->original_pdf_papers_push($pkey);
+    }
+    closedir(D);
 
-	$self->original_pdf_papers_sort;
-	$self->original_pdf_papers_uniq;
+    $self->original_pdf_papers_sort;
+    $self->original_pdf_papers_uniq;
 
     # Output directory for compiled PDF files
     my $pdfout = catfile( $self->texroot, "out" );
@@ -520,15 +547,15 @@ sub init_vars {
     # ( 'clobber' target in Rakefile terminology )
     $self->nltm_clobberfiles(qw( ps pdf dvi ));
 
-	$self->say('End init_vars()');
+    $self->say('End init_vars()');
 
-	return $self;
+    return $self;
 
 
 }
 
 sub read_VARS {
-    my $self = shift;
+	my ($self) = @_;
 
     $self->VARS( readhash( $self->files('vars') ) );
 
@@ -548,12 +575,14 @@ sub read_VARS {
         ]
     );
 
+	return $self;
+
 }
 
 sub init_docstyles {
-    my $self = shift;
+	my ($self) = @_;
 
-	$self->say('Initializing docstyles...');
+    $self->say('Initializing docstyles...');
 
     $self->VARS_to_accessors( [qw(docstyle)] );
 
@@ -573,51 +602,62 @@ sub init_docstyles {
     $self->docstyles( \@styles );
     closedir(D);
 
+	return $self;
+
 }
 
 # }}}
 # main() {{{
 
-sub main() {
-    my $self = shift;
+sub main  {
+    my ($self) = @_;
 
-    $self->get_opt();
+    $self
+        ->get_opt
+        ->init_vars
+        ->_term_init
+        ->_term_run
+        ;
 
-    $self->init_vars();
+	return $self;
 
-    $self->_term_init();
     #$self->_term_x();
-
-    $self->_term_run();
 
 }
 
 # }}}
 # new() {{{
 
-sub new() {
-    my $self = shift;
+sub new {
+	my ($self) = @_;
 
-    $self->OP::Script::new();
-
+    return $self->OP::Script::new();
 }
 
 # }}}
-# set_scalar_accessor(){{{
+# set_scalar_accessor {{{
+#
+=head3 set_scalar_accessor 
 
-sub set_scalar_accessor() {
-    my $self = shift;
+=head4 Usage
 
-    # scalar accessor name
-    my $accname = shift;
+	$self->set_scalar_accessor($accname => $accval);
 
-    # scalar accessor assigned value
-    my $accval = shift;
+    $accname - scalar accessor name
+    $accval  - scalar accessor assigned value
 
+=cut 
+
+sub set_scalar_accessor {
+    my ($self, $accname, $accval) = @_;
+
+    
     my $evs = join( '', '$self->', $accname, "('", $accval, "');" );
 
     eval("$evs");
     die $@ if $@;
+
+	return $self;
 
 }
 
@@ -793,7 +833,7 @@ sub line_cbibm_to_cite() {
     if (@pieces) {
         foreach my $piece (@pieces) {
             if ( $piece =~ m/$re/ ) {
-				my $cites=$1;
+                my $cites=$1;
                 my $cite_str = $self->cbibm_get_cite_str( $cites );
                 my $cbibm    = '\cbibm{' . $cites . '}';
                 $piece =
@@ -823,10 +863,10 @@ sub line_cbib2cite {
     if (@pieces) {
         foreach my $piece (@pieces) {
             if ( $piece =~ m/$re/ ) {
-				my $num=$1;
-				my $cite_str = `cbib.pl --pkey $pkey --N $num`;
-				my $cbib     = '\cbib{' . $num . '}';
-				$piece = $cite_str . substr( $piece, $+[0] );
+                my $num=$1;
+                my $cite_str = `cbib.pl --pkey $pkey --N $num`;
+                my $cbib     = '\cbib{' . $num . '}';
+                $piece = $cite_str . substr( $piece, $+[0] );
             }
         }
         $line = join( '', $startline, @pieces );
@@ -850,8 +890,8 @@ sub line_cbibr_to_cite {
     if (@pieces) {
         foreach my $piece (@pieces) {
             if ( $piece =~ m/$re/ ) {
-				my $min=$1;
-				my $max=$2;
+                my $min=$1;
+                my $max=$2;
 
                 my $cite_str = $self->cbibr_get_cite_str( $min, $max );
                 my $cbibr = '\cbibr{' . $min . '}{' . $max . '}';
@@ -1151,7 +1191,7 @@ sub _tex_clean {
         }
     }
 
-	return $self;
+    return $self;
 
     #system("LATEXMK -c");
 }
@@ -1171,7 +1211,7 @@ sub _tex_clobber {
         }
     }
 
-	return $self;
+    return $self;
 }
 
 # }}}
@@ -1234,7 +1274,7 @@ sub sysrun {
         };
     }
 
-	return $self;
+    return $self;
 
 }
 
@@ -1252,7 +1292,7 @@ sub termcmd_reset {
     $self->termcmdreset(1);
     $self->LOGFILE_PRINTED_TERMCMD(0);
 
-	return $self;
+    return $self;
 }
 
 # }}}
@@ -1331,8 +1371,8 @@ sub update_info {
     $s->_print( file => $file );
 
     # Run LaTeX2HTML to re-generate HTML pages
-	#
-	return $self;
+    #
+    return $self;
 }
 
 # }}}
@@ -1366,7 +1406,7 @@ sub gen_make_sh {
     write_file $msh, @$mshlines;
     chmod 0755, $msh;
 
-	return $self;
+    return $self;
 
 }
 
@@ -1391,7 +1431,7 @@ sub view_pdf_paper_short {
 
     $self->view_pdf_paper($lkey);
 
-	return $self;
+    return $self;
 }
 
 # }}}
@@ -1410,7 +1450,7 @@ sub view_pdf_paper {
     my ( $success, $error_message, $full_buf, $stdout_buf, $stderr_buf ) =
       IPC::Cmd::run( command => $cmd, verbose => 1 );
 
-	return $self;
+    return $self;
 
 }
 
@@ -1425,7 +1465,7 @@ sub list_pdf_papers {
     my $cmd = "bash lsp $pkey";
     $self->sysrun($cmd);
 
-	return $self;
+    return $self;
 }
 
 # }}}
@@ -1520,7 +1560,7 @@ sub _bib_expand {
     my $of = $self->bibfilex;
     write_file( $of, $self->biblines );
 
-	return $self;
+    return $self;
 
 }
 
@@ -1546,7 +1586,7 @@ sub _bibtex_rmfields {
         }
     }
 
-	return $self;
+    return $self;
 }
 
 # }}}
@@ -1560,7 +1600,7 @@ sub _build {
     my $cmd = "perl psh_build_$build" . ".pl";
     system("$cmd");
 
-	return $self;
+    return $self;
 
 }
 
@@ -1644,7 +1684,7 @@ sub _gitco () {
 
     system("$cmd");
 
-	return $self;
+    return $self;
 }
 
 # }}}
@@ -1656,7 +1696,7 @@ sub update_ppics {
 
     system("rsync -avz --size-only $ENV{opdesk}:~/wrk/p/ppics/ . ");
 
-	return $self;
+    return $self;
 
 }
 
@@ -1699,7 +1739,7 @@ sub _tex_paper_convert_ppics {
     }
     closedir(D);
 
-	return $self;
+    return $self;
 
 }
 

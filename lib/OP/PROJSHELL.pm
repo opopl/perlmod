@@ -16,18 +16,18 @@ OP::PROJSHELL
 use Switch;
 
 use Env qw(
-	$hm 
-	$HTMLOUT 
-	$PROJSDIR
-	$PDFOUT
+    $hm 
+    $HTMLOUT 
+    $PROJSDIR
+    $PDFOUT
 );
 
 use base qw( 
-	Class::Accessor::Complex 
-	OP::Script 
-	OP::Makefile
-	OP::PROJSHELL::Term
-	OP::PROJSHELL::CGI
+    Class::Accessor::Complex 
+    OP::Script 
+    OP::Makefile
+    OP::PROJSHELL::Term
+    OP::PROJSHELL::CGI
 );
 
 use File::Spec::Functions qw(catfile rel2abs curdir);
@@ -53,23 +53,23 @@ use File::Basename;
 use IO::File;
 
 use File::Slurp qw(
-	append_file
-	read_file
-	write_file
+    append_file
+    read_file
+    write_file
 );
 
 
 ###__ACCESSORS_SCALAR
 our @scalar_accessors=qw(
-	cgi
+    cgi
     HOME
     HTMLOUT
     PROJSDIR
     PROJ
     PROJFILE
-	PDFFILE
-	PDFFILENAME
-	HTMLDIR
+    PDFFILE
+    PDFFILENAME
+    HTMLDIR
     inputcommands
     LOGFILE
     LOGFILE_PRINTED_TERMCMD
@@ -87,24 +87,24 @@ our @hash_accessors=qw(
     files
     shellterm
     term_commands
-	runbufs
+    runbufs
 );
 
 ###__ACCESSORS_ARRAY
 our @array_accessors=qw(
-	shellterm_sys_commands
-	sections
-	PROJS
-	MKNOTPROJS
-	MKPROJS
-	HTMLPROJS
-	PDFPROJS
-	PDFPERLDOC
-	MKTARGETS
-	HTMLFILES
-	HPERLTARGETS
-	submits
-	cmdout
+    shellterm_sys_commands
+    sections
+    PROJS
+    MKNOTPROJS
+    MKPROJS
+    HTMLPROJS
+    PDFPROJS
+    PDFPERLDOC
+    MKTARGETS
+    HTMLFILES
+    HPERLTARGETS
+    submits
+    cmdout
 );
 
 __PACKAGE__
@@ -188,16 +188,16 @@ sub move_html {
 }
 
 sub warn {
-	my $self=shift;
+    my $self=shift;
 
-	warn $_ . "\n" for(@_);
+    warn $_ . "\n" for(@_);
 
 }
 
 sub say {
-	my $self=shift;
+    my $self=shift;
 
-	print $_ . "\n" for(@_);
+    print $_ . "\n" for(@_);
 
 }
 
@@ -218,9 +218,9 @@ sub init_vars {
 
     $self->PROJSDIR( $PROJSDIR || catfile($hm, qw( wrk texdocs )) );
 
-	$self->dirs(PDFOUT => $PDFOUT || catfile($hm,qw(pdf out)));
+    $self->dirs(PDFOUT => $PDFOUT || catfile($hm,qw(pdf out)));
 
-	$self->dirs(PDFOUT_PERLDOC => catfile($self->dirs('PDFOUT'),qw(perldoc)));
+    $self->dirs(PDFOUT_PERLDOC => catfile($self->dirs('PDFOUT'),qw(perldoc)));
 
     chdir($self->PROJSDIR) || die $!;
 
@@ -229,15 +229,15 @@ sub init_vars {
             $id  => catfile($self->PROJSDIR,$id . ".i.dat" ) ); 
     }
 
-	if ($^O eq 'MSWin32') {
-	    $self->files( 
-	        'maketex_mk'  => catfile($ENV{REPOSGIT},qw(scripts mk maketex.targets.mk ),
-	    )); 
-	}else{
-	    $self->files( 
-	        'maketex_mk'  => catfile($hm,qw(scripts mk maketex.targets.mk ),
-	    )); 
-	}
+    if ($^O eq 'MSWin32') {
+        $self->files( 
+            'maketex_mk'  => catfile($ENV{REPOSGIT},qw(scripts mk maketex.targets.mk ),
+        )); 
+    }else{
+        $self->files( 
+            'maketex_mk'  => catfile($hm,qw(scripts mk maketex.targets.mk ),
+        )); 
+    }
 
     $self->_reset_HPERLTARGETS();
 
@@ -251,43 +251,43 @@ sub init_vars {
     # and fill the corresponding arrays
     $self->_read_PROJS();
 
-	# retrieve the list of HTML-generated projects
+    # retrieve the list of HTML-generated projects
     $self->_reset_HTMLPROJS();
 
-	# retrieve the list of PDF-generated projects
+    # retrieve the list of PDF-generated projects
     $self->_reset_PDFPROJS();
 
-	# retrieve the list of PDF-generated perldoc files
+    # retrieve the list of PDF-generated perldoc files
     $self->_reset_PDFPERLDOC();
 
     # read in from ~/scripts/mk/maketex.mk
     #    the list of available makefile targets;
     #   this list will be stored in array $self->MKTARGETS
-    $self->_read_MKTARGETS();
+    $self->_read_MKTARGETS;
 
     $self->viewcmd("gvim -n -p --remote-tab-silent ");
 
 }
 
 sub _reset_HTMLFILES {
-	my $self=shift;
+    my $self=shift;
 
-	$self->HTMLDIR(catfile($self->HTMLOUT,$self->PROJ));
+    $self->HTMLDIR(catfile($self->HTMLOUT,$self->PROJ));
 
-	my $PROJ=$self->PROJ;
+    my $PROJ=$self->PROJ;
 
-	$self->HTMLFILES_clear;
+    $self->HTMLFILES_clear;
 
-	if (! -d $self->HTMLDIR) {
-		#$self->warn('No HTMLDIR exists for project : ' . $self->PROJ );
-		return;
-	}
+    if (! -d $self->HTMLDIR) {
+        #$self->warn('No HTMLDIR exists for project : ' . $self->PROJ );
+        return;
+    }
 
-	find(sub { 
-			if ( /^($PROJ|index)\.html$/ && -f ){
-				$self->HTMLFILES_push($_); 
-			}
-		}, $self->HTMLDIR);
+    find(sub { 
+            if ( /^($PROJ|index)\.html$/ && -f ){
+                $self->HTMLFILES_push($_); 
+            }
+        }, $self->HTMLDIR);
 
 }
 
@@ -312,8 +312,8 @@ sub new
     my ($class, %ipars) = @_;
     my $self = bless (\%ipars, ref ($class) || $class);
 
-	$self->_begin if $self->can('_begin');
-	$self->init if $self->can('init');
+    $self->_begin if $self->can('_begin');
+    $self->init if $self->can('init');
 
     return $self;
 }
@@ -498,34 +498,34 @@ sub make {
 
     chdir($self->PROJSDIR) || die $!;
 
-	switch($args){
-		case(qw/_html _makehtml_tex4ht/) { 
-			$self->_reset_HTMLPROJS;
-		}
-	}
+    switch($args){
+        case(qw/_html _makehtml_tex4ht/) { 
+            $self->_reset_HTMLPROJS;
+        }
+    }
 
     if ($self->belongsto_PROJS($args)){
         $self->_proj_reset($args);
     }
 
-	if ($self->usecgi) {
-		foreach my $id (qw(TEXINPUTS TEXMFLOCAL)) {
-			my $msg;
-			if (defined $ENV{$id}) {
-				my $val=$ENV{$id};
-				$msg="$id : " . $val ;
-			}else{
-				$msg="$id : " . 'undefined' ;
-			}
+    if ($self->usecgi) {
+        foreach my $id (qw(TEXINPUTS TEXMFLOCAL)) {
+            my $msg;
+            if (defined $ENV{$id}) {
+                my $val=$ENV{$id};
+                $msg="$id : " . $val ;
+            }else{
+                $msg="$id : " . 'undefined' ;
+            }
 
-			$self->cgi->br("msg");
-		}
-		$self->cgi->hr;
-	}
+            $self->cgi->br("msg");
+        }
+        $self->cgi->hr;
+    }
 
     my $cmd=join(";", "cd " . $self->PROJSDIR, "make " . $args);
 
-	$self->_sys($cmd,%runopts);
+    $self->_sys($cmd,%runopts);
 
 
 }
@@ -542,29 +542,29 @@ sub _proj_reset {
 
     $self->PROJ($proj);
 
-	$self->_reset_HTMLFILES;
+    $self->_reset_HTMLFILES;
 
-	$self->PDFFILENAME($self->PROJ . '.pdf');
-	$self->PDFFILE(
-		catfile($self->dirs('PDFOUT'),$self->PDFFILENAME)
-	);
+    $self->PDFFILENAME($self->PROJ . '.pdf');
+    $self->PDFFILE(
+        catfile($self->dirs('PDFOUT'),$self->PDFFILENAME)
+    );
 
 
-	if ($self->_opt_true('cgi')){
-		return;
-	}
+    if ($self->_opt_true('cgi')){
+        return;
+    }
 
-	my $file=$self->files('MKPROJS');
+    my $file=$self->files('MKPROJS');
 
-	try {
-	
-	   	$self->say("Project is set to: " . $proj );
-	   	write_file ( $file , "$proj" );
-	   	$self->_read_PROJS();
-	}
-	catch {
-		$self->warn('Failed to write to: ' . $file);
-	}
+    try {
+    
+        $self->say("Project is set to: " . $proj );
+        write_file ( $file , "$proj" );
+        $self->_read_PROJS();
+    }
+    catch {
+        $self->warn('Failed to write to: ' . $file);
+    }
 
 }
 
@@ -590,25 +590,25 @@ sub _read_PROJS {
     
     foreach my $id (qw( PROJS MKPROJS )) {
         # clear the lists 
-	    eval '$self->' . $id . '_clear()';
+        eval '$self->' . $id . '_clear()';
         die $@ if $@;
 
         # read in the corresponding *.i.dat files
-	    eval '@lines=read_file $self->files("' . $id . '")';
+        eval '@lines=read_file $self->files("' . $id . '")';
         die $@ if $@;
-	
-	    foreach (@lines) {
-	        chomp;
-		    next if /^\s*#/ || /^\s*$/;
-	
-	        my @F=split(' ',$_);
-	
-	        eval '$self->' . $id . '_push(@F)' if @F;
+    
+        foreach (@lines) {
+            chomp;
+            next if /^\s*#/ || /^\s*$/;
+    
+            my @F=split(' ',$_);
+    
+            eval '$self->' . $id . '_push(@F)' if @F;
             die $@ if $@;
-	    }
-	    eval '$self->' . $id . '_sort()';
-	    eval '$self->' . $id . '_uniq()';
-	
+        }
+        eval '$self->' . $id . '_sort()';
+        eval '$self->' . $id . '_uniq()';
+    
     }
 
     return 1 unless $self->MKPROJS;
@@ -618,92 +618,92 @@ sub _read_PROJS {
 }
 
 sub _reset_HPERLTARGETS {
-	my $self=shift;
+    my $self=shift;
 
-	my $id='hperltargets_dat';
+    my $id='hperltargets_dat';
     $self->files( 
           $id => catfile(qw(/doc perl tex hperl_targets.i.dat )),
     ); 
 
-	if (not -e $self->files($id)) {
-		return 0;
-	}
+    if (not -e $self->files($id)) {
+        return 0;
+    }
 
-	$self->HPERLTARGETS(readarr($self->files('hperltargets_dat')));
+    $self->HPERLTARGETS(readarr($self->files('hperltargets_dat')));
 
 }
 
 sub _reset_HTMLPROJS {
-	my $self=shift;
+    my $self=shift;
 
-	$self->HTMLPROJS_clear;
+    $self->HTMLPROJS_clear;
 
     unless (-e $self->HTMLOUT) {
         return 0;
     }
 
-	File::Find::find(
-		sub { 
-			$self->HTMLPROJS_push($_) if (-d && ! /^\.$/)
-		},
-		$self->HTMLOUT);
+    File::Find::find(
+        sub { 
+            $self->HTMLPROJS_push($_) if (-d && ! /^\.$/)
+        },
+        $self->HTMLOUT);
 
-	$self->HTMLPROJS_sort;
+    $self->HTMLPROJS_sort;
 
 }
 
 sub _reset_PDFPROJS {
-	my $self=shift;
+    my $self=shift;
 
-	$self->PDFPROJS_clear;
+    $self->PDFPROJS_clear;
 
-	unless(-d $self->dirs('PDFOUT')){
-		$self->warn('No PDFOUT directory');
-		return;
-	}
+    unless(-d $self->dirs('PDFOUT')){
+        $self->warn('No PDFOUT directory');
+        return;
+    }
 
-	File::Find::find(
-		sub{ 
-			if (-f && /\.pdf$/){
-				s/\.pdf$//g;
-				my $proj=$_;
+    File::Find::find(
+        sub{ 
+            if (-f && /\.pdf$/){
+                s/\.pdf$//g;
+                my $proj=$_;
 
-				if(grep { /^$proj$/ } @{$self->PROJS} ){
-					$self->PDFPROJS_push($_);
-				}
-			}
-		},
-		$self->dirs('PDFOUT'));
+                if(grep { /^$proj$/ } @{$self->PROJS} ){
+                    $self->PDFPROJS_push($_);
+                }
+            }
+        },
+        $self->dirs('PDFOUT'));
 
-	$self->PDFPROJS_sort;
+    $self->PDFPROJS_sort;
 
 }
 
 sub _reset_PDFPERLDOC {
-	my $self=shift;
+    my $self=shift;
 
-	$self->PDFPERLDOC_clear;
+    $self->PDFPERLDOC_clear;
 
-	if (not -d $self->dirs('PDFOUT_PERLDOC')){
-		return 0;
-	}
+    if (not -d $self->dirs('PDFOUT_PERLDOC')){
+        return 0;
+    }
 
-	File::Find::find(
-		sub{ 
-			if (-f && /\.pdf$/ ){
-				s/\.pdf$//g;
+    File::Find::find(
+        sub{ 
+            if (-f && /\.pdf$/ ){
+                s/\.pdf$//g;
 
-				my $proj=$_;
+                my $proj=$_;
 
-				if( grep { /^$proj$/ } @{$self->HPERLTARGETS} ){
-					$self->PDFPERLDOC_push($proj);
-				}
+                if( grep { /^$proj$/ } @{$self->HPERLTARGETS} ){
+                    $self->PDFPERLDOC_push($proj);
+                }
 
-			}
-		},
-		$self->dirs('PDFOUT_PERLDOC'));
+            }
+        },
+        $self->dirs('PDFOUT_PERLDOC'));
 
-	$self->PDFPERLDOC_sort;
+    $self->PDFPERLDOC_sort;
 
 }
 
@@ -712,11 +712,11 @@ sub _reset_PDFPERLDOC {
 sub _sys {
     my $self=shift;
 
-	if ($^O eq 'MSWin32') {
-		$self->_sys_win(@_);
-	}else{
-		$self->_sys_unix(@_);
-	}
+    if ($^O eq 'MSWin32') {
+        $self->_sys_win(@_);
+    }else{
+        $self->_sys_unix(@_);
+    }
 }
 
 sub _sys_win {
@@ -726,29 +726,29 @@ sub _sys_win {
 
     my %runopts=@_;
 
-	$self->say('Running command: ',"\t" . $cmd);
+    $self->say('Running command: ',"\t" . $cmd);
 
-	my $tmp=mktemp("XXXXXX");
+    my $tmp=mktemp("XXXXXX");
 
-	system("cmd /c $cmd > $tmp 2>&1");
-	my $c = $self->{runcmd_perl_exitcode} = $? >> 8;
+    system("cmd /c $cmd > $tmp 2>&1");
+    my $c = $self->{runcmd_perl_exitcode} = $? >> 8;
 
-	$self->say('perl system() exit code: ' . $c );
+    $self->say('perl system() exit code: ' . $c );
 
-	$self->cmdout_clear;
+    $self->cmdout_clear;
 
-	open(F,"<$tmp") || die $!;
-	while(<F>){
-		chomp;
-		my $line=$_;
+    open(F,"<$tmp") || die $!;
+    while(<F>){
+        chomp;
+        my $line=$_;
 
-		$self->cmdout_push($line);
-	}
-	close(F);
+        $self->cmdout_push($line);
+    }
+    close(F);
 
-	if ($c) {
-		$self->warn('command output:',$self->cmdout );
-	}
+    if ($c) {
+        $self->warn('command output:',$self->cmdout );
+    }
 }
 
 sub _sys_unix {
@@ -758,55 +758,55 @@ sub _sys_unix {
 
     my %runopts=@_;
 
-	$runopts{runmode}='ipc_cmd_forked' 
-		unless defined  $runopts{runmode};
+    $runopts{runmode}='ipc_cmd_forked' 
+        unless defined  $runopts{runmode};
 
-	unless($self->usecgi) {
+    unless($self->usecgi) {
 
-		for($runopts{runmode}){	
-			/^ipc_cmd_forked$/ && do { 
-		        my $res= IPC::Cmd::run_forked( $cmd );
-		        
-		        if ($res->{exit_code}) {
-		            $self->warn("FAILURE with exit code: " . $res->{exit_code});
-		        
-		        }else{
-		            $self->say("SUCCESS");
-		        
-		        }
-				next;
-			};
+        for($runopts{runmode}){ 
+            /^ipc_cmd_forked$/ && do { 
+                my $res= IPC::Cmd::run_forked( $cmd );
+                
+                if ($res->{exit_code}) {
+                    $self->warn("FAILURE with exit code: " . $res->{exit_code});
+                
+                }else{
+                    $self->say("SUCCESS");
+                
+                }
+                next;
+            };
 
-			/^system$/ && do { 
-				system("$cmd");
-				next;
-			};
+            /^system$/ && do { 
+                system("$cmd");
+                next;
+            };
 
-			system("$cmd");
-		}
+            system("$cmd");
+        }
 
-	}else{
-		my %res;
-		
-		@res{qw( ok error_message full_buf stdout_buf stderr_buf )}=
-			IPC::Cmd::run( command => $cmd, verbose => 0 );
+    }else{
+        my %res;
+        
+        @res{qw( ok error_message full_buf stdout_buf stderr_buf )}=
+            IPC::Cmd::run( command => $cmd, verbose => 0 );
 
-		my $q=$self->cgi;
-		
-		foreach my $id (qw( stdout_buf full_buf stderr_buf )) {
-			$res{$id}= [ 
-					map { "<br/>$_" } 
-					split("\n",join("",@{$res{$id}})) 
-				];
-		}
+        my $q=$self->cgi;
+        
+        foreach my $id (qw( stdout_buf full_buf stderr_buf )) {
+            $res{$id}= [ 
+                    map { "<br/>$_" } 
+                    split("\n",join("",@{$res{$id}})) 
+                ];
+        }
 
-		$self->runbufs(%res);
+        $self->runbufs(%res);
 
-		my @out= @{$res{full_buf}};
+        my @out= @{$res{full_buf}};
 
-		print $_ . "\n" for(@out);
+        print $_ . "\n" for(@out);
 
-	}
+    }
 
 }
 
@@ -891,7 +891,7 @@ sub sysrun {
 =cut
    
 sub info {
-	my $self=shift;
+    my $self=shift;
 
     print $self->PROJ . "\n";
     print $self->PROJSDIR . "\n";
@@ -903,14 +903,14 @@ sub info {
 =cut
 
 sub clean_html {
-	my $self=shift;
+    my $self=shift;
 
-	my @emptydirs;
+    my @emptydirs;
 
-	my $count=0;
+    my $count=0;
 
-	finddepth(sub { rmdir },$self->HTMLOUT);
-	$self->_reset_HTMLPROJS;
+    finddepth(sub { rmdir },$self->HTMLOUT);
+    $self->_reset_HTMLPROJS;
 
 }
 

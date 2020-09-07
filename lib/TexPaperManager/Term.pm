@@ -11,12 +11,12 @@ use File::Spec::Functions qw(catfile rel2abs curdir );
 
 # _term_get_commands()  {{{
 
-=head3 _term_get_commands()
+=head3 _term_get_commands
 
 =cut
 
-sub _term_get_commands() {
-    my $self = shift;
+sub _term_get_commands {
+    my ($self) = @_;
 
     my $commands = {
         #########################
