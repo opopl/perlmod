@@ -8,6 +8,8 @@ package OP::PAPERS::PSH;
 
 # use ... {{{
 
+binmode STDOUT,':encoding(utf8)';
+
 use strict;
 use warnings;
 
@@ -285,7 +287,7 @@ sub init_dirs {
     $self->say('Start init_dirs()');
 
     $self->dirs(
-        'config'    =>  catfile($hm,qw( .pshconfig )),
+        'config'    =>  catfile($ENV{HM},qw( .pshconfig )),
     );
 
     foreach my $id ($self->dirs_keys) {
